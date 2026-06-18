@@ -1,0 +1,33 @@
+services:
+  skillindiaconnect-postgres:
+    image: postgres:16
+    container_name: skillindiaconnect-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-skillindiaconnect_dev}
+    ports:
+      - '5432:5432'
+    volumes:
+      - skillindiaconnect-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  skillindiaconnect-redis:
+    image: redis:7
+    container_name: skillindiaconnect-redis
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  skillindiaconnect-pgdata:

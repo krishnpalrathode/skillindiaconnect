@@ -1,0 +1,13 @@
+// Prisma schema — datasource + generator only. Models are added in Prompt 2.
+// Do NOT run `prisma generate` or `prisma migrate` until models are defined.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgTrgm, citext]
+}
