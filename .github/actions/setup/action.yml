@@ -1,0 +1,14 @@
+name: Setup
+description: Corepack + pnpm + Node 20 + install (generates Prisma client via postinstall)
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: corepack enable
+    - uses: pnpm/action-setup@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc
+        cache: pnpm
+    - shell: bash
+      run: pnpm install --frozen-lockfile

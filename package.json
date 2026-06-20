@@ -17,7 +17,8 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:generate": "pnpm --filter @skillindiaconnect/api db:generate",
-    "db:migrate": "pnpm --filter @skillindiaconnect/api db:migrate"
+    "db:migrate": "pnpm --filter @skillindiaconnect/api db:migrate",
+    "check:env": "tsx scripts/check-env-drift.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.0",
@@ -29,6 +30,7 @@
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.1.0",
     "prettier": "^3.2.0",
+    "tsx": "^4.0.0",
     "typescript": "^5.4.0"
   }
 }

@@ -1,0 +1,10 @@
+# Replace @placeholder-* with real GitHub usernames before relying on this.
+apps/api/prisma/**            @placeholder-lead @placeholder-dev2
+apps/api/src/auth/**          @placeholder-lead @placeholder-dev2
+apps/api/src/payments/**      @placeholder-lead @placeholder-dev2
+# RBAC + purge worker paths (added in later sprints):
+apps/api/src/**/rbac*         @placeholder-lead @placeholder-dev2
+apps/api/src/**/purge*        @placeholder-lead @placeholder-dev2
+.github/**                    @placeholder-lead
+.claude/**                    @placeholder-lead
+CLAUDE.md                     @placeholder-lead

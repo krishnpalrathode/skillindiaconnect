@@ -1,0 +1,180 @@
+name: CI
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup        # Prisma client present via postinstall
+      - run: pnpm typecheck
+
+  test:
+    runs-on: ubuntu-latest                   # integration tests (added later) use Testcontainers;
+    steps:                                   # Docker is available on ubuntu-latest
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm test
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+
+  env-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm check:env
+
+  migrate-check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: sic
+          POSTGRES_PASSWORD: sic
+          POSTGRES_DB: skillindiaconnect_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U sic"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://sic:sic@localhost:5432/skillindiaconnect_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Apply migrations from empty
+        run: pnpm --filter ./apps/api exec prisma migrate deploy
+      - name: Fail on schema↔migration drift
+        run: >-
+          pnpm --filter ./apps/api exec prisma migrate diff
+          --from-migrations ./apps/api/prisma/migrations
+          --to-schema-datamodel ./apps/api/prisma/schema.prisma
+          --exit-code
+
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: sic
+          POSTGRES_PASSWORD: sic
+          POSTGRES_DB: skillindiaconnect_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U sic"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://sic:sic@localhost:5432/skillindiaconnect_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm --filter ./apps/api exec prisma migrate deploy
+      - run: pnpm build
+      - name: Start API + web
+        run: |
+          node apps/api/dist/main.api &
+          pnpm --filter ./apps/web start &
+      - name: Wait for services
+        run: npx --yes wait-on -t 60000 http://localhost:3001/health http://localhost:3000
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0                     # gitleaks needs full history
+      - name: Install gitleaks
+        run: |
+          curl -sSL -o gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks_linux_x64.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo mv gitleaks /usr/local/bin/
+      - name: Scan for secrets
+        run: gitleaks detect --source . --redact --exit-code 1
+
+  pr-guards:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Migration-reviewed gate + small-PR warning
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('node:child_process');
+            const base = `origin/${context.payload.pull_request.base.ref}`;
+            execSync(`git fetch origin ${context.payload.pull_request.base.ref} --depth=1`);
+            const changed = execSync(`git diff --name-only ${base}...HEAD`)
+              .toString().split('\n').filter(Boolean);
+
+            // 1) Migration-reviewed gate (BLOCKING)
+            const touchesMigrations = changed.some(f =>
+              f.startsWith('apps/api/prisma/migrations/'));
+            if (touchesMigrations) {
+              const labels = context.payload.pull_request.labels.map(l => l.name);
+              if (!labels.includes('migration-reviewed')) {
+                core.setFailed(
+                  'This PR changes files under apps/api/prisma/migrations/. ' +
+                  'A second reviewer must review the raw SQL and apply the ' +
+                  '`migration-reviewed` label before it can merge.');
+              }
+            }
+
+            // 2) Small-PR warning (NON-BLOCKING annotation)
+            const numstat = execSync(`git diff --numstat ${base}...HEAD`)
+              .toString().split('\n').filter(Boolean);
+            const isExcluded = f =>
+              f === 'pnpm-lock.yaml' || f.includes('/migrations/') ||
+              f.endsWith('.generated.ts') || f.includes('/generated/');
+            let lines = 0;
+            for (const row of numstat) {
+              const [add, del, file] = row.split('\t');
+              if (add === '-' || isExcluded(file)) continue;
+              lines += Number(add) + Number(del);
+            }
+            if (lines > 400) {
+              core.warning(
+                `This PR changes ~${lines} non-generated lines (soft ceiling 400). ` +
+                `Consider splitting into smaller reviewable units.`);
+            }
