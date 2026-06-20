@@ -1,6 +1,3 @@
-// Prisma schema — datasource + generator only. Models are added in Prompt 2.
-// Do NOT run `prisma generate` or `prisma migrate` until models are defined.
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
@@ -9,5 +6,768 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
-  extensions = [pgTrgm, citext]
+  extensions = [pg_trgm, citext]
+}
+
+// ───────── ENUMS ─────────
+enum UserRole {
+  CANDIDATE
+  EMPLOYER
+  SUPER_ADMIN
+  ADMIN
+  MODERATOR
+  SUPPORT
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_DELETION
+}
+
+enum CompanyType {
+  LOCAL
+  FOREIGN
+}
+
+enum CompanyStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum JobMarket {
+  LOCAL
+  FOREIGN
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+}
+
+enum JobStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum ApplicationStatus {
+  PENDING
+  SHORTLISTED
+  SELECTED
+  REJECTED
+}
+
+enum ExperienceType {
+  INDIA
+  FOREIGN
+}
+
+enum DocumentType {
+  PASSPORT
+  EXPERIENCE_CERT
+  EDUCATIONAL_CERT
+  WORKING_VIDEO
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+enum Currency {
+  INR
+  QAR
+  AED
+  SAR
+  OMR
+  KWD
+  BHD
+}
+
+enum Gateway {
+  RAZORPAY
+  STRIPE
+}
+
+enum OrderStatus {
+  CREATED
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  GRACE
+  EXPIRED
+}
+
+enum PlanPeriod {
+  FOREVER
+  MONTHLY
+  YEARLY
+}
+
+enum NotificationType {
+  APPLICATION_SELECTED
+  APPLICATION_SHORTLISTED
+  APPLICATION_REJECTED
+  NEW_JOB_MATCH
+  PROFILE_REMINDER
+  JOB_CLOSING_SOON
+  PASSPORT_EXPIRY
+  PROFILE_VIEWED
+  EMPLOYER_APPROVED
+  EMPLOYER_REJECTED
+  EMPLOYER_SUSPENDED
+  SUBSCRIPTION_PURCHASED
+  SUBSCRIPTION_EXPIRING
+  SUBSCRIPTION_EXPIRED
+  CANDIDATE_MATCHES
+  RESUME_SENT
+}
+
+enum DeliveryStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  BOUNCED
+}
+
+enum WaMessageKind {
+  OTP
+  STATUS_UPDATE
+  MANUAL_UPDATE
+  RESUME_DOCUMENT
+}
+
+enum ResumeVisibility {
+  DISABLED
+  PUBLIC
+}
+
+enum ResumeTrigger {
+  DOWNLOAD
+  WHATSAPP
+  EMAIL
+}
+
+enum AuditStatus {
+  SUCCESS
+  FAILED
+  BLOCKED
+  DELIVERED
+  ERROR
+}
+
+enum OtpPurpose {
+  PHONE_VERIFY
+}
+
+// ───────── IDENTITY & AUTH ─────────
+model User {
+  id            String     @id @default(uuid())
+  email         String     @unique @db.Citext
+  passwordHash  String?
+  googleId      String?    @unique
+  role          UserRole
+  status        UserStatus @default(ACTIVE)
+  lastLoginAt   DateTime?
+  deletionDueAt DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  candidateProfile CandidateProfile?
+  employerUser     EmployerUser?
+  refreshSessions  RefreshSession[]
+  notifications    Notification[]
+  @@index([role, status])
+  @@map("users")
+}
+
+model RefreshSession {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String
+  ip        String?
+  userAgent String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, expiresAt])
+  @@map("refresh_sessions")
+}
+
+model OtpChallenge {
+  id         String     @id @default(uuid())
+  phone      String
+  userId     String?
+  purpose    OtpPurpose @default(PHONE_VERIFY)
+  codeHash   String
+  attempts   Int        @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime   @default(now())
+  @@index([phone, purpose, createdAt])
+  @@map("otp_challenges")
+}
+
+// ───────── CANDIDATE ─────────
+model JobCategory {
+  id       String  @id @default(uuid())
+  slug     String  @unique
+  nameEn   String
+  nameHi   String?
+  nameAr   String?
+  isActive Boolean @default(true)
+  candidates CandidateProfile[]
+  jobs       Job[]
+  @@map("job_categories")
+}
+
+model CandidateProfile {
+  id              String         @id @default(uuid())
+  userId          String         @unique
+  fullName        String
+  fatherName      String?
+  dob             DateTime?      @db.Date
+  phone           String?
+  phoneVerifiedAt DateTime?
+  whatsappCapable Boolean        @default(false)
+  maritalStatus   MaritalStatus?
+  religion        String?
+  languages       String[]       @default([])
+  jobCategoryId   String?
+  photoKey        String?
+  currentLocation String?
+  nationality     String?
+  noticePeriod    String?
+  salaryExpectationMin      Int?
+  salaryExpectationMax      Int?
+  salaryExpectationCurrency Currency?
+  isAvailable     Boolean        @default(true)
+  profileVisible  Boolean        @default(true)
+  showPhone       Boolean        @default(true)
+  showReligion    Boolean        @default(false)
+  waNotifications Boolean        @default(true)
+  emailNotifs     Boolean        @default(true)
+  completionPct   Int            @default(0)
+  videoR2Key       String?
+  videoDurationSec Int?
+  videoSizeBytes   Int?
+  videoUploadedAt  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobCategory JobCategory?        @relation(fields: [jobCategoryId], references: [id], onDelete: SetNull)
+  experiences WorkExperience[]
+  documents   CandidateDocument[]
+  skills      CandidateSkill[]
+  resume      CandidateResume?
+  applications Application[]
+  savedJobs   SavedJob[]
+  profileViews ProfileView[]
+  @@index([jobCategoryId, isAvailable])
+  @@index([completionPct])
+  @@map("candidate_profiles")
+}
+
+model WorkExperience {
+  id          String         @id @default(uuid())
+  candidateId String
+  type        ExperienceType
+  country     String
+  companyName String
+  role        String
+  years       Int            @default(0)
+  months      Int            @default(0)
+  startDate   DateTime?      @db.Date
+  endDate     DateTime?      @db.Date
+  createdAt   DateTime       @default(now())
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  @@index([candidateId, type])
+  @@map("work_experiences")
+}
+
+model CandidateDocument {
+  id          String       @id @default(uuid())
+  candidateId String
+  type        DocumentType
+  r2Key       String
+  fileName    String
+  mimeType    String
+  sizeBytes   Int
+  expiryDate  DateTime?    @db.Date
+  uploadedAt  DateTime     @default(now())
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  @@unique([candidateId, type])
+  @@index([type, expiryDate])
+  @@map("candidate_documents")
+}
+
+model CandidateSkill {
+  id          String @id @default(uuid())
+  candidateId String
+  name        String
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  @@unique([candidateId, name])
+  @@map("candidate_skills")
+}
+
+model CandidateResume {
+  id                 String           @id @default(uuid())
+  candidateId        String           @unique
+  language           String           @default("en")
+  showPhone          Boolean          @default(true)
+  showReligion       Boolean          @default(false)
+  showFatherName     Boolean          @default(true)
+  showPassportNumber Boolean          @default(false)
+  publicSlug         String?          @unique
+  visibility         ResumeVisibility @default(DISABLED)
+  lastRenderHash     String?
+  lastRenderKey      String?
+  lastRenderedAt     DateTime?
+  updatedAt          DateTime         @updatedAt
+  candidate   CandidateProfile   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  generations ResumeGeneration[]
+  @@map("candidate_resumes")
+}
+
+model ResumeGeneration {
+  id               String        @id @default(uuid())
+  resumeId         String
+  contentHash      String
+  r2Key            String
+  sizeBytes        Int
+  trigger          ResumeTrigger
+  settingsSnapshot Json
+  createdAt        DateTime      @default(now())
+  resume CandidateResume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  @@index([resumeId, createdAt])
+  @@map("resume_generations")
+}
+
+// ───────── EMPLOYER ─────────
+model Company {
+  id                 String        @id @default(uuid())
+  name               String
+  type               CompanyType
+  status             CompanyStatus @default(PENDING)
+  registrationNumber String
+  industryType       String
+  phone              String
+  location           String
+  website            String?
+  employeeRange      String
+  languagePref       String[]      @default([])
+  description        String?
+  logoKey            String?
+  rejectionReason    String?
+  approvedAt         DateTime?
+  reviewedById       String?
+  suspendedAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  employerUsers  EmployerUser[]
+  contactPersons ContactPerson[]
+  documents      CompanyDocument[]
+  hiringPrefs    HiringPreference?
+  jobs           Job[]
+  orders         Order[]
+  subscriptions  Subscription[]
+  profileViews   ProfileView[]
+  @@index([status, type])
+  @@map("companies")
+}
+
+model EmployerUser {
+  id        String  @id @default(uuid())
+  userId    String  @unique
+  companyId String
+  isPrimary Boolean @default(true)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  @@index([companyId])
+  @@map("employer_users")
+}
+
+model ContactPerson {
+  id          String  @id @default(uuid())
+  companyId   String
+  name        String
+  designation String?
+  phone       String?
+  email       String?
+  hasWhatsapp Boolean @default(false)
+  isPrimary   Boolean @default(false)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  @@map("contact_persons")
+}
+
+model CompanyDocument {
+  id           String    @id @default(uuid())
+  companyId    String
+  r2Key        String
+  fileName     String
+  mimeType     String
+  sizeBytes    Int
+  verifiedAt   DateTime?
+  verifiedById String?
+  uploadedAt   DateTime  @default(now())
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  @@map("company_documents")
+}
+
+model HiringPreference {
+  id                 String      @id @default(uuid())
+  companyId          String      @unique
+  categories         String[]    @default([])
+  preferredExp       String?
+  jobMarketsPosted   JobMarket[] @default([])
+  countriesHiredFrom String[]    @default([])
+  languagesRequired  String[]    @default([])
+  updatedAt          DateTime    @updatedAt
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  @@map("hiring_preferences")
+}
+
+// ───────── JOBS ─────────
+model Job {
+  id              String         @id @default(uuid())
+  humanId         String         @unique @default(dbgenerated("((('JB-'::text || to_char(now(), 'YYYY'::text)) || '-'::text) || nextval('job_human_seq'::regclass))"))
+  companyId       String
+  title           String
+  employmentType  EmploymentType @default(FULL_TIME)
+  market          JobMarket
+  status          JobStatus      @default(DRAFT)
+  location        String
+  description     String
+  categoryId      String
+  requirements            String[] @default([])
+  experienceRequiredYears Int?
+  salaryMin       Int
+  salaryMax       Int
+  currency        Currency
+  accommodation      Boolean @default(true)
+  healthInsurance    Boolean @default(true)
+  transportation     Boolean @default(true)
+  foodAllowance      Boolean @default(false)
+  airTicketArrival   Boolean @default(false)
+  airTicketDeparture Boolean @default(false)
+  otherAllowance     String?
+  hoursPerDay          Int
+  daysPerWeek          Int
+  overtime             Boolean @default(false)
+  overtimeRateSubunits Int?
+  contractPeriodMonths Int?
+  vacancies            Int?
+  genderPreference     String?
+  isFeatured      Boolean   @default(false)
+  isUrgent        Boolean   @default(false)
+  publishedAt     DateTime?
+  pausedAt        DateTime?
+  archivedAt      DateTime?
+  autoArchiveAt   DateTime?
+  viewsCount      Int       @default(0)
+  postedByAdminId String?
+  searchVector    Unsupported("tsvector")? @default(dbgenerated("(setweight(to_tsvector('english'::regconfig, COALESCE(title, ''::text)), 'A'::\"char\") || setweight(to_tsvector('english'::regconfig, COALESCE(description, ''::text)), 'B'::\"char\"))"))
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  category     JobCategory   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  applications Application[]
+  savedBy      SavedJob[]
+  @@index([status, market, categoryId, publishedAt(sort: Desc)])
+  @@index([companyId, status])
+  @@index([status, autoArchiveAt])
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([searchVector], type: Gin)
+  @@map("jobs")
+}
+
+model SavedJob {
+  candidateId String
+  jobId       String
+  createdAt   DateTime @default(now())
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  job       Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  @@id([candidateId, jobId])
+  @@map("saved_jobs")
+}
+
+model ProfileView {
+  id          String   @id @default(uuid())
+  candidateId String
+  companyId   String
+  viewedAt    DateTime @default(now())
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  company   Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  @@index([candidateId, viewedAt(sort: Desc)])
+  @@map("profile_views")
+}
+
+// ───────── APPLICATIONS ─────────
+model Application {
+  id                   String            @id @default(uuid())
+  humanId              String            @unique @default(dbgenerated("((('AP-'::text || to_char(now(), 'YYYY'::text)) || '-'::text) || nextval('application_human_seq'::regclass))"))
+  jobId                String
+  candidateId          String?
+  candidateTombstone   Json?
+  status               ApplicationStatus @default(PENDING)
+  coverLetter          String?           @db.VarChar(500)
+  matchScore           Int
+  matchBreakdown       Json
+  docsCompleteCount    Int
+  docsRequiredCount    Int
+  passportValidAtApply Boolean
+  selectedNotifiedAt   DateTime?
+  rejectionFeedback    String?
+  archivedAt           DateTime?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  job       Job               @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  candidate CandidateProfile? @relation(fields: [candidateId], references: [id], onDelete: Restrict)
+  timeline  ApplicationTimelineEntry[]
+  notes     ApplicationNote[]
+  @@unique([jobId, candidateId])
+  @@index([jobId, status, matchScore(sort: Desc)])
+  @@index([candidateId, status])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("applications")
+}
+
+model ApplicationTimelineEntry {
+  id              String             @id @default(uuid())
+  applicationId   String
+  fromStatus      ApplicationStatus?
+  toStatus        ApplicationStatus
+  actorUserId     String?
+  actorRole       UserRole?
+  isAdminOverride Boolean            @default(false)
+  overrideReason  String?
+  createdAt       DateTime           @default(now())
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  @@index([applicationId, createdAt])
+  @@map("application_timeline")
+}
+
+model ApplicationNote {
+  id            String   @id @default(uuid())
+  applicationId String
+  authorId      String
+  body          String
+  createdAt     DateTime @default(now())
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  @@map("application_notes")
+}
+
+// ───────── PAYMENTS & BILLING ─────────
+model Plan {
+  id            String     @id @default(uuid())
+  code          String     @unique
+  name          String
+  priceSubunits Int
+  period        PlanPeriod
+  maxActiveJobs Int?
+  features      Json
+  isActive      Boolean    @default(true)
+  orders        Order[]
+  subscriptions Subscription[]
+  @@map("plans")
+}
+
+model Order {
+  id             String      @id @default(uuid())
+  companyId      String
+  planId         String
+  gateway        Gateway
+  amountSubunits Int
+  gstSubunits    Int         @default(0)
+  totalSubunits  Int
+  currency       Currency    @default(INR)
+  gatewayOrderId String?     @unique
+  status         OrderStatus @default(CREATED)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  company  Company       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  plan     Plan          @relation(fields: [planId], references: [id], onDelete: Restrict)
+  payments Payment[]
+  invoice  Invoice?
+  subscription Subscription?
+  @@index([companyId, status])
+  @@map("orders")
+}
+
+model Payment {
+  id               String        @id @default(uuid())
+  orderId          String
+  gatewayPaymentId String        @unique
+  method           String?
+  status           PaymentStatus @default(PENDING)
+  paidAt           DateTime?
+  rawPayload       Json
+  createdAt        DateTime      @default(now())
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  @@map("payments")
+}
+
+model Subscription {
+  id               String             @id @default(uuid())
+  companyId        String
+  planId           String
+  orderId          String?            @unique
+  status           SubscriptionStatus @default(ACTIVE)
+  startsAt         DateTime
+  expiresAt        DateTime?
+  graceEndsAt      DateTime?
+  renewalReminders Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  plan    Plan    @relation(fields: [planId], references: [id], onDelete: Restrict)
+  order   Order?  @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  @@index([companyId, status, startsAt(sort: Desc)])
+  @@index([status, expiresAt])
+  @@map("subscriptions")
+}
+
+model Invoice {
+  id       String   @id @default(uuid())
+  orderId  String   @unique
+  number   String   @unique
+  pdfKey   String?
+  issuedAt DateTime @default(now())
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  @@map("invoices")
+}
+
+model WebhookEvent {
+  id          String    @id @default(uuid())
+  provider    String
+  eventId     String
+  payload     Json
+  receivedAt  DateTime  @default(now())
+  processedAt DateTime?
+  status      String    @default("RECEIVED")
+  @@unique([provider, eventId])
+  @@map("webhook_events")
+}
+
+// ───────── NOTIFICATIONS ─────────
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  data      Json             @default("{}")
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, readAt, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model WhatsappMessage {
+  id                 String         @id @default(uuid())
+  userId             String?
+  phone              String
+  kind               WaMessageKind
+  templateName       String
+  waMessageId        String?        @unique
+  status             DeliveryStatus @default(QUEUED)
+  statusUpdatedAt    DateTime?
+  applicationId      String?
+  resumeGenerationId String?
+  errorCode          String?
+  createdAt          DateTime       @default(now())
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([kind, status])
+  @@map("whatsapp_messages")
+}
+
+model EmailMessage {
+  id           String           @id @default(uuid())
+  userId       String?
+  toEmail      String
+  type         NotificationType
+  sesMessageId String?          @unique
+  status       DeliveryStatus   @default(QUEUED)
+  bounceType   String?
+  createdAt    DateTime         @default(now())
+  @@index([toEmail, status])
+  @@map("email_messages")
+}
+
+model NotificationTemplate {
+  id               String    @id @default(uuid())
+  key              String    @unique
+  channel          String
+  metaTemplateName String?
+  language         String    @default("en")
+  body             String?
+  approvedAt       DateTime?
+  costSubunits     Int?
+  updatedAt        DateTime  @updatedAt
+  @@map("notification_templates")
+}
+
+// ───────── PLATFORM ─────────
+model Setting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       Json
+  isCoreRule  Boolean  @default(false)
+  version     Int      @default(1)
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+  @@map("settings")
+}
+
+model RolePermission {
+  id            String   @id @default(uuid())
+  role          UserRole
+  permissionKey String
+  enabled       Boolean  @default(false)
+  isLocked      Boolean  @default(false)
+  updatedAt     DateTime @updatedAt
+  @@unique([role, permissionKey])
+  @@map("role_permissions")
+}
+
+model AuditLog {
+  id          BigInt      @id @default(autoincrement())
+  createdAt   DateTime    @default(now())
+  actorUserId String?
+  actorRole   UserRole?
+  action      String
+  module      String
+  targetType  String?
+  targetId    String?
+  ip          String?
+  userAgent   String?
+  status      AuditStatus
+  meta        Json        @default("{}")
+  @@index([module, createdAt(sort: Desc)])
+  @@index([actorUserId, createdAt(sort: Desc)])
+  @@index([createdAt], type: Brin)
+  @@map("audit_logs")
 }
