@@ -1,7 +1,7 @@
 # Multi-stage build for the Next.js 14 web app.
 # Build context: repository root (docker build -f apps/web/Dockerfile .)
 
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -21,7 +21,7 @@ COPY --from=builder /repo .
 RUN pnpm deploy --filter @skillindiaconnect/web --prod /deploy
 
 # ── Slim runtime image ────────────────────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
