@@ -66,7 +66,11 @@ jobs:
       - name: Apply migrations from empty
         run: pnpm --filter ./apps/api exec prisma migrate deploy
       - name: Create shadow database
-        run: PGPASSWORD=sic psql -h localhost -U sic -d skillindiaconnect_test -c "CREATE DATABASE skillindiaconnect_shadow;"
+        run: |
+          PGPASSWORD=sic psql -h localhost -U sic -c "CREATE DATABASE skillindiaconnect_shadow;" || true
+          # Verify the database was created
+          PGPASSWORD=sic psql -h localhost -U sic -lqt | cut -d \| -f 1 | grep -qw skillindiaconnect_shadow || \
+          (echo "Shadow database creation failed" && exit 1)
       - name: Fail on schema↔migration drift
         run: >-
           pnpm --filter ./apps/api exec prisma migrate diff
