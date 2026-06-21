@@ -5,6 +5,7 @@ import { CoreModule } from './core/core.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/auth.guard';
+import { PermissionsGuard } from './auth/rbac/permissions.guard';
 
 // WARNING: ThrottlerModule is using in-memory storage.
 // Throttle limits are per-process replica, NOT global.
@@ -19,10 +20,12 @@ import { JwtAuthGuard } from './auth/guards/auth.guard';
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
   ],
   providers: [
-    // ThrottlerGuard runs first (rate-limit before auth to protect unauthenticated endpoints).
+    // Guard execution order: ThrottlerGuard → JwtAuthGuard → PermissionsGuard.
+    // NestJS APP_GUARD providers are applied in registration order.
     { provide: APP_GUARD, useClass: ThrottlerGuard },
-    // JwtAuthGuard is global + deny-by-default; routes opt out with @Public().
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    // PermissionsGuard runs last — req.user is already set by JwtAuthGuard.
+    { provide: APP_GUARD, useClass: PermissionsGuard },
   ],
 })
 export class AppApiModule {}

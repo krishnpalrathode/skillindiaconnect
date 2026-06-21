@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { PasswordService } from './password.service';
 import { TokenService } from './token.service';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { PermissionService } from './rbac/permission.service';
 
 @Module({
   imports: [
@@ -14,8 +15,9 @@ import { GoogleStrategy } from './strategies/google.strategy';
     JwtModule.register({}),
   ],
   controllers: [AuthController],
-  providers: [AuthService, PasswordService, TokenService, GoogleStrategy],
+  providers: [AuthService, PasswordService, TokenService, GoogleStrategy, PermissionService],
   // JwtModule re-exported so AppApiModule can resolve JwtService for JwtAuthGuard (APP_GUARD).
-  exports: [TokenService, JwtModule],
+  // PermissionService exported so other modules (S6 Admin) can inject it without owning the table.
+  exports: [TokenService, JwtModule, PermissionService],
 })
 export class AuthModule {}

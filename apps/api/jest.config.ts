@@ -14,9 +14,11 @@ const config: Config = {
     '^@skillindiaconnect/shared-types$': '<rootDir>/../../packages/shared-types/src',
     '^@skillindiaconnect/resume-template$': '<rootDir>/../../packages/resume-template/src',
   },
-  // Testcontainers is installed as a devDependency for future integration tests
-  // that require a real Postgres or Redis instance. Container-backed tests are
-  // added in Prompt 2 alongside PrismaService. See: https://testcontainers.com/
+  // Cap parallelism so that testcontainers integration tests (which spin up Docker
+  // containers and consume significant memory) don't OOM when running alongside
+  // CPU-heavy specs like argon2. 2 workers is enough for CI speed without the
+  // memory spike from fully parallel execution.
+  maxWorkers: 2,
 };
 
 export default config;
