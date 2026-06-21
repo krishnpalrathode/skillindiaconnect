@@ -25,7 +25,7 @@ export default defineConfig({
   webServer: {
     command: 'pnpm --filter @skillindiaconnect/web dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env['CI'],
+    reuseExistingServer: true,
     timeout: 120_000,
   },
 });
