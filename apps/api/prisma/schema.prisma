@@ -185,16 +185,17 @@ enum OtpPurpose {
 
 // ───────── IDENTITY & AUTH ─────────
 model User {
-  id            String     @id @default(uuid())
-  email         String     @unique @db.Citext
-  passwordHash  String?
-  googleId      String?    @unique
-  role          UserRole
-  status        UserStatus @default(ACTIVE)
-  lastLoginAt   DateTime?
-  deletionDueAt DateTime?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id               String     @id @default(uuid())
+  email            String     @unique @db.Citext
+  passwordHash     String?
+  googleId         String?    @unique
+  role             UserRole
+  status           UserStatus @default(ACTIVE)
+  lastLoginAt      DateTime?
+  termsAcceptedAt  DateTime?
+  deletionDueAt    DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
   candidateProfile CandidateProfile?
   employerUser     EmployerUser?
   refreshSessions  RefreshSession[]

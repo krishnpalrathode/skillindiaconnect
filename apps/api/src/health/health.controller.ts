@@ -2,6 +2,7 @@ import { Controller, Get, Inject, VERSION_NEUTRAL } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import { REDIS_CLIENT } from '../core/redis/redis.provider';
 import { PrismaService } from '../core/prisma/prisma.service';
+import { Public } from '../auth/decorators/public.decorator';
 
 interface HealthResponse {
   status: 'ok';
@@ -12,6 +13,7 @@ interface HealthResponse {
 
 // VERSION_NEUTRAL + excluded from global prefix → reachable at /health (not /api/v1/health).
 // Load balancers and k8s liveness probes depend on this path never changing.
+@Public()
 @Controller({ path: 'health', version: VERSION_NEUTRAL })
 export class HealthController {
   constructor(

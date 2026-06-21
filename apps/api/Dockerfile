@@ -8,7 +8,8 @@
 FROM node:22-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+# python3 + make + g++ are required for argon2's native bindings (node-gyp).
+RUN corepack enable && apk add --no-cache python3 make g++
 
 # ── Install all dependencies ──────────────────────────────────────────────────
 FROM base AS deps
