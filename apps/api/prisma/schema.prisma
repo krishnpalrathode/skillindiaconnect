@@ -181,6 +181,7 @@ enum AuditStatus {
 
 enum OtpPurpose {
   PHONE_VERIFY
+  LOGIN
 }
 
 // ───────── IDENTITY & AUTH ─────────
