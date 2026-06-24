@@ -55,19 +55,20 @@ module.exports = {
 
         // Cross-module zone enforcement.
         // Paths below are relative to the monorepo root (where ESLint runs).
-        // ADD ONE ENTRY PER MODULE AS YOU CREATE IT (S1+). Example:
-        //   { target: './apps/api/src/employer',
-        //     from:   './apps/api/src/candidate',
-        //     except: ['./candidate.service.ts'] }
+        // ADD ONE ENTRY PER MODULE AS YOU CREATE IT (S1+).
         //
         // When zone count reaches ~3+, migrate to eslint-plugin-boundaries for
         // auto-enforcement without per-module zone boilerplate.
-        //
-        // The placeholder zone targets a path that does not exist, so it never
-        // fires. Replace it with real module pairs as modules are created.
         'import/no-restricted-paths': ['error', {
           zones: [
-            { target: './apps/api/src/_zones_not_configured_yet', from: './apps/api/src/_zones_not_configured_yet' },
+            // candidate: other modules must not import candidate internals directly.
+            // They import CandidateReadService via the public export from CandidateModule.
+            {
+              target: './apps/api/src/auth',
+              from: './apps/api/src/candidate',
+              except: ['./candidate-read.service.ts'],
+              message: 'Auth must not reach into candidate internals. Import CandidateReadService via CandidateModule export.',
+            },
           ],
         }],
       },

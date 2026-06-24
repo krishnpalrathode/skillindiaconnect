@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CoreModule } from './core/core.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
+import { CandidateModule } from './candidate/candidate.module';
 import { JwtAuthGuard } from './auth/guards/auth.guard';
 import { PermissionsGuard } from './auth/rbac/permissions.guard';
 
@@ -17,6 +19,8 @@ import { PermissionsGuard } from './auth/rbac/permissions.guard';
     CoreModule,
     HealthModule,
     AuthModule,
+    CandidateModule,
+    EventEmitterModule.forRoot(),
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
   ],
   providers: [
