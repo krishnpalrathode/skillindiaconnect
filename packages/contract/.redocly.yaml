@@ -1,0 +1,11 @@
+# Redocly lint configuration for the SkillIndiaConnect OpenAPI contract.
+#
+# Suppressed warnings explained:
+#   info-license              — no open-source license; internal platform.
+#   operation-2xx-response    — stub endpoints intentionally only return 501.
+#   operation-4xx-response    — stub endpoints and some OAuth redirect flows
+#                               do not carry 4XX bodies.
+rules:
+  info-license: off
+  operation-2xx-response: off
+  operation-4xx-response: off

@@ -19,6 +19,7 @@
     "db:generate": "pnpm --filter @skillindiaconnect/api db:generate",
     "db:migrate": "pnpm --filter @skillindiaconnect/api db:migrate",
     "db:seed": "pnpm --filter ./apps/api exec prisma db seed",
+    "contract:generate": "pnpm --filter @skillindiaconnect/contract validate && pnpm --filter @skillindiaconnect/shared-types generate",
     "check:env": "tsx scripts/check-env-drift.ts"
   },
   "devDependencies": {

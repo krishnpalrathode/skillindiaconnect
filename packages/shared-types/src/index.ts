@@ -1,2 +1,3 @@
-// Placeholder — OpenAPI-generated types are added at contract-freeze (Prompt 3+).
-export const SHARED_TYPES_READY = true;
+// Generated from packages/contract/openapi.yaml — do not hand-edit generated/.
+// Run `pnpm contract:generate` after any openapi.yaml change.
+export type * from './generated/api';
