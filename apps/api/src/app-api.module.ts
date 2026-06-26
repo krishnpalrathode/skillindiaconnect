@@ -6,6 +6,8 @@ import { CoreModule } from './core/core.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { CandidateModule } from './candidate/candidate.module';
+import { AccountModule } from './account/account.module';
+import { R2Module } from './core/storage/r2.module';
 import { JwtAuthGuard } from './auth/guards/auth.guard';
 import { PermissionsGuard } from './auth/rbac/permissions.guard';
 
@@ -19,7 +21,9 @@ import { PermissionsGuard } from './auth/rbac/permissions.guard';
     CoreModule,
     HealthModule,
     AuthModule,
+    R2Module,
     CandidateModule,
+    AccountModule,
     EventEmitterModule.forRoot(),
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
   ],

@@ -5,15 +5,23 @@ import { CandidateReadService } from './candidate-read.service';
 import { ExperienceService } from './experience.service';
 import { SkillService } from './skill.service';
 import { CompletionService } from './completion/completion.service';
+import { DocumentController } from './document.controller';
+import { DocumentService } from './document.service';
+import { OnboardingController } from './onboarding.controller';
+import { OnboardingService } from './onboarding.service';
+import { QueueModule } from '../queue/queue.module';
 
 @Module({
-  controllers: [CandidateController],
+  imports: [QueueModule],
+  controllers: [CandidateController, DocumentController, OnboardingController],
   providers: [
     CandidateService,
     CandidateReadService,
     ExperienceService,
     SkillService,
     CompletionService,
+    DocumentService,
+    OnboardingService,
   ],
   exports: [
     // CandidateReadService is the seam for cross-module reads.

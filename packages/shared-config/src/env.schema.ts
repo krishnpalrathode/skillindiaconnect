@@ -19,6 +19,14 @@ export const envSchema = z.object({
 
   // Frontend base URL — OAuth redirect + CORS origin
   WEB_APP_URL: z.string().url(),
+
+  // Cloudflare R2 (S3-compatible object storage for documents, photos, resumes)
+  // Local dev can point at an R2 dev bucket or any S3-compatible mock (e.g. MinIO).
+  R2_ACCOUNT_ID: z.string().min(1),
+  R2_ACCESS_KEY_ID: z.string().min(1),
+  R2_SECRET_ACCESS_KEY: z.string().min(1),
+  R2_BUCKET: z.string().min(1),
+  R2_ENDPOINT: z.string().url(),
 });
 
 export type Env = z.infer<typeof envSchema>;
