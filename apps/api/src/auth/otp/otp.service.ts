@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { createHash } from 'node:crypto';
-import { OtpChallenge, OtpPurpose } from '@prisma/client';
+import { OtpChallenge, OtpPurpose, Prisma } from '@prisma/client';
 import type { Redis } from 'ioredis';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { REDIS_CLIENT } from '../../core/redis/redis.provider';
@@ -52,7 +52,7 @@ export class OtpService {
 
     // Invalidate any prior unconsumed challenge for (phone, purpose) then create
     // the new one atomically so there is always at most one live challenge.
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.otpChallenge.updateMany({
         where: { phone, purpose, consumedAt: null },
         data: { consumedAt: new Date() },

@@ -28,7 +28,7 @@ export class PermissionService {
       where: { role, enabled: true },
       select: { permissionKey: true },
     });
-    const keys = rows.map((r) => r.permissionKey);
+    const keys = rows.map((r: { permissionKey: string }) => r.permissionKey);
     await this.redis.setex(key, CACHE_TTL_SECONDS, JSON.stringify(keys));
     return new Set<string>(keys);
   }

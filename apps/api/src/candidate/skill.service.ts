@@ -26,13 +26,16 @@ export class SkillService {
         data: { candidateId, name: dto.name },
       });
     } catch (err) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-        // Unique constraint on (candidateId, name) — return the existing row.
-        const existing = await this.prisma.candidateSkill.findUnique({
-          where: { candidateId_name: { candidateId, name: dto.name } },
-        });
-        if (!existing) throw err;
-        return existing;
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        const prismaErr = err as Prisma.PrismaClientKnownRequestError;
+        if (prismaErr.code === 'P2002') {
+          // Unique constraint on (candidateId, name) — return the existing row.
+          const existing = await this.prisma.candidateSkill.findUnique({
+            where: { candidateId_name: { candidateId, name: dto.name } },
+          });
+          if (!existing) throw err;
+          return existing;
+        }
       }
       throw err;
     }

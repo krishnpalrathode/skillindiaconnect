@@ -5,7 +5,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { UserRole } from '@prisma/client';
+import { DocumentType, UserRole, WorkExperience } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { CompletionService } from './completion/completion.service';
 import {
@@ -116,8 +116,10 @@ export class CandidateService {
     const minPct = await this.getMinCompletionPct();
 
     const mandatoryDocTypesPresent = profile.documents
-      .filter((d) => (MVP_MANDATORY_DOC_TYPES as readonly string[]).includes(d.type))
-      .map((d) => d.type as string);
+      .filter((d: { type: DocumentType; expiryDate: Date | null }) =>
+        (MVP_MANDATORY_DOC_TYPES as readonly string[]).includes(d.type),
+      )
+      .map((d: { type: DocumentType; expiryDate: Date | null }) => d.type as string);
 
     const result = compute({
       profile: {
@@ -132,7 +134,7 @@ export class CandidateService {
         currentLocation: profile.currentLocation,
         nationality: profile.nationality,
       },
-      experiences: profile.experiences.map((e) => ({
+      experiences: profile.experiences.map((e: WorkExperience) => ({
         type: e.type as string,
         country: e.country,
         companyName: e.companyName,
@@ -156,7 +158,9 @@ export class CandidateService {
       }
     }
 
-    const passport = profile.documents.find((d) => d.type === 'PASSPORT');
+    const passport = profile.documents.find(
+      (d: { type: DocumentType; expiryDate: Date | null }) => d.type === 'PASSPORT',
+    );
     if (!passport || (passport.expiryDate && passport.expiryDate < new Date())) {
       missingForApply.push('passport_expiry');
     }
