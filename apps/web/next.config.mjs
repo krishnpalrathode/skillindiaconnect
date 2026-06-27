@@ -1,3 +1,7 @@
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // output: 'standalone' is enabled only in the Docker build (Linux) via NEXT_STANDALONE=1.
@@ -6,4 +10,4 @@ const nextConfig = {
   transpilePackages: ['@skillindiaconnect/shared-types'],
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

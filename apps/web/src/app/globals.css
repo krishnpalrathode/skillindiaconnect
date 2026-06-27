@@ -1,3 +1,56 @@
+/* RTL / logical properties convention (enforced in code review):
+   Use ps-/pe-/ms-/me-/start-/end-/text-start/text-end — NOT pl-/pr-/ml-/mr-/left-/right-/text-left.
+   Tailwind v3 logical utilities are available; primitives and screens must follow this rule. */
+
+@import '../styles/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    /* Inter is applied via layout.tsx font variable; Arabic font swaps on dir=rtl */
+    font-size: 16px; /* base minimum — never below 16px per spec */
+    @apply font-sans antialiased;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    /* Warm neutral for body text (neutral-700 = #4D4C43, 10:1 on white) */
+    color: var(--color-neutral-700);
+    line-height: 1.6;
+    min-height: 100svh;
+  }
+
+  /* Focus-visible ring: only show on keyboard nav, not mouse clicks */
+  :focus-visible {
+    outline: 3px solid rgb(var(--ring) / 0.7);
+    outline-offset: 2px;
+    border-radius: inherit;
+  }
+
+  /* Remove focus ring on mouse interactions */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Headings inherit font; weights ≥400 only */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold;
+    line-height: 1.3;
+  }
+}
