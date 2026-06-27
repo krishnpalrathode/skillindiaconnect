@@ -51,16 +51,86 @@
     "expired": "[hi] Expired"
   },
   "auth": {
-    "phone": "[hi] Phone number",
-    "phonePlaceholder": "[hi] Enter your phone number",
-    "otp": "[hi] One-time password",
-    "otpPlaceholder": "[hi] Enter OTP",
-    "sendOtp": "[hi] Send OTP",
-    "verifyOtp": "[hi] Verify OTP",
-    "resendOtp": "[hi] Resend OTP",
-    "resendIn": "[hi] Resend in {seconds}s",
-    "loginTitle": "[hi] Log in to SkillIndiaConnect",
-    "loginSubtitle": "[hi] Enter your phone number to get started"
+    "loginTitle": "SkillIndiaConnect में लॉग इन करें",
+    "loginSubtitle": "वापस स्वागत है — अपना सफ़र जारी रखें",
+    "signupTitle": "अपना खाता बनाएं",
+    "signupSubtitle": "हज़ारों कामगारों के साथ जुड़ें जो नौकरियाँ ढूंढ रहे हैं",
+
+    "googleLogin": "Google से जारी रखें",
+    "googleSignup": "Google से साइन अप करें",
+    "googleCandidateOnly": "Google साइन-अप केवल नौकरी खोजने वालों के लिए है",
+
+    "orDivider": "या",
+    "tabEmail": "ईमेल",
+    "tabPhone": "फ़ोन",
+
+    "emailLabel": "ईमेल पता",
+    "emailPlaceholder": "aap@example.com",
+    "passwordLabel": "पासवर्ड",
+    "passwordPlaceholder": "अपना पासवर्ड दर्ज करें",
+
+    "forgotPassword": "पासवर्ड भूल गए?",
+    "loginButton": "लॉग इन करें",
+    "signupButton": "खाता बनाएं",
+
+    "noAccount": "खाता नहीं है?",
+    "signupLink": "साइन अप करें",
+    "hasAccount": "पहले से खाता है?",
+    "loginLink": "लॉग इन करें",
+
+    "roleSwitcherLabel": "मैं हूँ",
+    "roleCandidate": "नौकरी खोजने वाला",
+    "roleEmployer": "नियोक्ता",
+
+    "strength": {
+      "weak": "कमज़ोर",
+      "fair": "ठीक-ठाक",
+      "good": "अच्छा",
+      "strong": "मज़बूत"
+    },
+
+    "termsText": "मैं <terms>सेवा की शर्तों</terms> और <privacy>गोपनीयता नीति</privacy> से सहमत हूँ",
+    "mustAcceptTerms": "जारी रखने के लिए कृपया सेवा की शर्तें और गोपनीयता नीति स्वीकार करें",
+    "emailTaken": "इस ईमेल से पहले से खाता है। लॉग इन करने का प्रयास करें।",
+    "invalidEmail": "कृपया एक मान्य ईमेल पता दर्ज करें",
+    "passwordTooWeak": "पासवर्ड कम से कम 8 अक्षरों का होना चाहिए जिसमें अक्षर, अंक और प्रतीक हों",
+    "invalidCredentials": "ईमेल या पासवर्ड गलत है",
+    "accountSuspended": "आपका खाता निलंबित कर दिया गया है। सहायता से संपर्क करें।",
+    "genericError": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
+
+    "countryCode": "कोड",
+    "phoneLabel": "फ़ोन नंबर",
+    "phonePlaceholder": "9876543210",
+    "phoneLoginSubtitle": "अपना पंजीकृत मोबाइल नंबर दर्ज करें",
+    "sendOtp": "OTP भेजें",
+    "otpSentMessage": "आपके नंबर पर भेजा गया 6-अंकीय कोड दर्ज करें",
+    "invalidOtp": "OTP अमान्य या समाप्त हो गया है। कृपया पुनः प्रयास करें।",
+    "otpRateLimited": "बहुत अधिक प्रयास। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
+    "otpDidntGet": "कोड नहीं मिला?",
+    "wrongNumber": "गलत नंबर",
+    "resendCode": "फिर से भेजें",
+
+    "forgotTitle": "पासवर्ड रीसेट करें",
+    "forgotSubtitle": "अपना ईमेल दर्ज करें और हम एक रीसेट लिंक भेजेंगे",
+    "sendResetEmail": "रीसेट ईमेल भेजें",
+    "forgotSentTitle": "अपना इनबॉक्स देखें",
+    "forgotSentBody": "यदि उस ईमेल से कोई खाता है, तो आपको जल्द ही पासवर्ड रीसेट लिंक मिलेगा।",
+    "backToLogin": "लॉग इन पर वापस जाएं",
+    "rateLimited": "बहुत अधिक अनुरोध। कृपया बाद में पुनः प्रयास करें।",
+
+    "callbackError": "साइन-इन विफल। कृपया पुनः प्रयास करें।",
+    "signingIn": "साइन इन हो रहा है…",
+
+    "onboardingComingSoon": "उम्मीदवार ऑनबोर्डिंग — जल्द आ रहा है",
+    "employerOnboardingComingSoon": "नियोक्ता ऑनबोर्डिंग — जल्द आ रहा है",
+
+    "phone": "फ़ोन नंबर",
+    "phonePlaceholderLegacy": "अपना फ़ोन नंबर दर्ज करें",
+    "otp": "एकमुश्त पासवर्ड",
+    "otpPlaceholder": "OTP दर्ज करें",
+    "verifyOtp": "OTP सत्यापित करें",
+    "resendOtp": "OTP फिर से भेजें",
+    "resendIn": "{seconds} सेकंड में फिर से भेजें"
   },
   "profile": {
     "title": "[hi] My Profile",

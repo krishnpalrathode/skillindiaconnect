@@ -1,6 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { MockSetup } from '@/mocks/mock-setup';
+import { AuthProvider } from '@/lib/auth/auth-context';
 import { routing } from '@/i18n/routing';
 import { notFound } from 'next/navigation';
 
@@ -25,7 +26,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       <MockSetup />
-      {children}
+      <AuthProvider>{children}</AuthProvider>
     </NextIntlClientProvider>
   );
 }

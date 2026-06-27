@@ -51,16 +51,86 @@
     "expired": "Expired"
   },
   "auth": {
+    "loginTitle": "Log in to SkillIndiaConnect",
+    "loginSubtitle": "Welcome back — continue your journey",
+    "signupTitle": "Create your account",
+    "signupSubtitle": "Join thousands of workers finding opportunities",
+
+    "googleLogin": "Continue with Google",
+    "googleSignup": "Sign up with Google",
+    "googleCandidateOnly": "Google sign-up is for job seekers only",
+
+    "orDivider": "or",
+    "tabEmail": "Email",
+    "tabPhone": "Phone",
+
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+
+    "forgotPassword": "Forgot password?",
+    "loginButton": "Log in",
+    "signupButton": "Create account",
+
+    "noAccount": "Don't have an account?",
+    "signupLink": "Sign up",
+    "hasAccount": "Already have an account?",
+    "loginLink": "Log in",
+
+    "roleSwitcherLabel": "I am a",
+    "roleCandidate": "Job Seeker",
+    "roleEmployer": "Employer",
+
+    "strength": {
+      "weak": "Weak",
+      "fair": "Fair",
+      "good": "Good",
+      "strong": "Strong"
+    },
+
+    "termsText": "I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>",
+    "mustAcceptTerms": "Please accept the Terms of Service and Privacy Policy to continue",
+    "emailTaken": "An account with this email already exists. Try logging in.",
+    "invalidEmail": "Please enter a valid email address",
+    "passwordTooWeak": "Password must be at least 8 characters with a mix of letters, numbers, and symbols",
+    "invalidCredentials": "Incorrect email or password",
+    "accountSuspended": "Your account has been suspended. Contact support.",
+    "genericError": "Something went wrong. Please try again.",
+
+    "countryCode": "Code",
+    "phoneLabel": "Phone number",
+    "phonePlaceholder": "9876543210",
+    "phoneLoginSubtitle": "Enter your registered mobile number",
+    "sendOtp": "Send OTP",
+    "otpSentMessage": "Enter the 6-digit code we sent to your number",
+    "invalidOtp": "Invalid or expired OTP. Please try again.",
+    "otpRateLimited": "Too many attempts. Please wait before trying again.",
+    "otpDidntGet": "Didn't receive the code?",
+    "wrongNumber": "Wrong number",
+    "resendCode": "Resend",
+
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "Enter your email and we'll send a reset link",
+    "sendResetEmail": "Send reset email",
+    "forgotSentTitle": "Check your inbox",
+    "forgotSentBody": "If an account with that email exists, you'll receive a password reset link shortly.",
+    "backToLogin": "Back to log in",
+    "rateLimited": "Too many requests. Please try again later.",
+
+    "callbackError": "Sign-in failed. Please try again.",
+    "signingIn": "Signing you in…",
+
+    "onboardingComingSoon": "Candidate onboarding — coming soon",
+    "employerOnboardingComingSoon": "Employer onboarding — coming soon",
+
     "phone": "Phone number",
-    "phonePlaceholder": "Enter your phone number",
+    "phonePlaceholderLegacy": "Enter your phone number",
     "otp": "One-time password",
     "otpPlaceholder": "Enter OTP",
-    "sendOtp": "Send OTP",
     "verifyOtp": "Verify OTP",
     "resendOtp": "Resend OTP",
-    "resendIn": "Resend in {seconds}s",
-    "loginTitle": "Log in to SkillIndiaConnect",
-    "loginSubtitle": "Enter your phone number to get started"
+    "resendIn": "Resend in {seconds}s"
   },
   "profile": {
     "title": "My Profile",

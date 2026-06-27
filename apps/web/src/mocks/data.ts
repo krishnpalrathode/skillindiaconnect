@@ -160,7 +160,20 @@ function buildProfile(
 }
 
 export function makeAccessToken(userId: string): string {
-  return `mock-access-token-${userId}-${Date.now()}`;
+  const user = db.users.get(userId);
+  // Produce a decodable JWT-shaped token so auth-context can decode user claims
+  // without an extra profile roundtrip. Not cryptographically signed — dev/test only.
+  const header = btoa(JSON.stringify({ alg: 'mock', typ: 'JWT' }));
+  const payload = btoa(
+    JSON.stringify({
+      sub: userId,
+      email: user?.email ?? '',
+      role: user?.role ?? 'CANDIDATE',
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 900,
+    }),
+  );
+  return `${header}.${payload}.mock-sig`;
 }
 
 export function makeRefreshToken(userId: string): string {
