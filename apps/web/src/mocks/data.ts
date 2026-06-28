@@ -128,7 +128,11 @@ export const db = {
 
   sessions: new Map<string, MockSession>(),
 
-  verifiedPhones: new Map<string, string>([['+919876543210', 'mock-user-candidate-1']]),
+  verifiedPhones: new Map<string, string>([
+    ['+919876543210', 'mock-user-candidate-1'],
+    // Also seed the 10-digit variant (no +91 prefix) so tests that type bare digits work
+    ['9876543210', 'mock-user-candidate-1'],
+  ]),
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

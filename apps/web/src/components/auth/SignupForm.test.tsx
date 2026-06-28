@@ -33,7 +33,9 @@ describe('SignupForm', () => {
     // amir@example.com is pre-seeded in the mock db
     await fillAndSubmit('amir@example.com', 'AnyP@ssw0rd');
     await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent(/account with this email already exists/i),
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        /account with this email already exists/i,
+      ),
     );
   });
 
@@ -53,7 +55,13 @@ describe('SignupForm', () => {
     render(<SignupForm onSuccess={vi.fn()} />);
 
     await user.click(screen.getByRole('radio', { name: /employer/i }));
-    expect(screen.getByRole('radio', { name: /employer/i })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByRole('radio', { name: /job seeker/i })).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByRole('radio', { name: /employer/i })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    expect(screen.getByRole('radio', { name: /job seeker/i })).toHaveAttribute(
+      'aria-checked',
+      'false',
+    );
   });
 });

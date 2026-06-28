@@ -149,19 +149,16 @@ export function PhoneLoginFlow({ onSuccess }: PhoneLoginFlowProps) {
       <div className="flex items-center justify-between">
         <button
           type="button"
-          onClick={() => { setStep('phone'); setError(''); }}
+          onClick={() => {
+            setStep('phone');
+            setError('');
+          }}
           className="text-sm text-primary-600 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
         >
           {t('wrongNumber')}
         </button>
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          loading={loading}
-          onClick={handleResend}
-        >
+        <Button type="button" variant="ghost" size="sm" loading={loading} onClick={handleResend}>
           {t('resendCode')}
         </Button>
       </div>

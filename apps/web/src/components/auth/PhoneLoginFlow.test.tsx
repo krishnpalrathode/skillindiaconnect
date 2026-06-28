@@ -16,9 +16,7 @@ describe('PhoneLoginFlow — enumeration safety', () => {
     await user.click(screen.getByRole('button', { name: /send otp/i }));
 
     // UI must always advance — no error revealing account existence
-    await waitFor(() =>
-      expect(screen.getByText(/6-digit code/i)).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText(/6-digit code/i)).toBeInTheDocument());
     expect(screen.queryByText(/no account/i)).not.toBeInTheDocument();
   });
 });
@@ -57,9 +55,7 @@ describe('PhoneLoginFlow — OTP verification', () => {
       clipboardData: { getData: () => '000000' },
     });
 
-    await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent(/invalid or expired/i),
-    );
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/invalid or expired/i));
     expect(onSuccess).not.toHaveBeenCalled();
   });
 

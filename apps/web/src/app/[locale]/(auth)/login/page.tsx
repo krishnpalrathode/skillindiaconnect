@@ -53,7 +53,9 @@ export default function LoginPage() {
           className={[
             'flex-1 py-2 font-medium transition-colors',
             'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
-            method === 'email' ? 'bg-primary-50 text-primary-700 border-b-2 border-primary-600' : 'text-neutral-600 hover:bg-neutral-50',
+            method === 'email'
+              ? 'bg-primary-50 text-primary-700 border-b-2 border-primary-600'
+              : 'text-neutral-600 hover:bg-neutral-50',
           ].join(' ')}
         >
           {t('tabEmail')}
@@ -66,7 +68,9 @@ export default function LoginPage() {
           className={[
             'flex-1 py-2 font-medium transition-colors',
             'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
-            method === 'phone' ? 'bg-primary-50 text-primary-700 border-b-2 border-primary-600' : 'text-neutral-600 hover:bg-neutral-50',
+            method === 'phone'
+              ? 'bg-primary-50 text-primary-700 border-b-2 border-primary-600'
+              : 'text-neutral-600 hover:bg-neutral-50',
           ].join(' ')}
         >
           {t('tabPhone')}

@@ -74,11 +74,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       )}
 
       {/* Role toggle — default CANDIDATE */}
-      <div
-        role="group"
-        aria-labelledby="role-group-label"
-        className="flex flex-col gap-1.5"
-      >
+      <div role="group" aria-labelledby="role-group-label" className="flex flex-col gap-1.5">
         <span id="role-group-label" className="text-sm font-medium text-neutral-700">
           {t('roleSwitcherLabel')}
         </span>

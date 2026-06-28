@@ -39,7 +39,13 @@ export class ApiRequestError extends Error {
 
 // ─── Core fetch ───────────────────────────────────────────────────────────────
 
-const API_BASE = process.env['NEXT_PUBLIC_API_URL'] ?? '/api/v1';
+// When MSW mocking is enabled the service worker intercepts same-origin requests.
+// MSW handlers register with relative paths (/api/v1), which resolve to localhost:3000.
+// Sending to http://localhost:3001 would miss the service worker entirely.
+const API_BASE =
+  process.env['NEXT_PUBLIC_API_MOCKING'] === 'enabled'
+    ? '/api/v1'
+    : `${process.env['NEXT_PUBLIC_API_URL'] ?? ''}/api/v1`;
 
 async function rawFetch(path: string, init: RequestInit): Promise<Response> {
   const headers: Record<string, string> = {

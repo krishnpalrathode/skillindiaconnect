@@ -170,5 +170,122 @@
     "notFound": "[ar] Page not found",
     "unauthorized": "[ar] Please log in to continue",
     "forbidden": "[ar] You don't have permission to do this"
+  },
+  "onboarding": {
+    "pageTitle": "أكمل ملفك الشخصي",
+    "loading": "جارٍ تحميل ملفك الشخصي…",
+    "stepOf": "الخطوة {current} من {total}",
+    "steps": {
+      "personalInfo": "المعلومات الشخصية",
+      "workExperience": "الخبرة العملية",
+      "documentsSkills": "الوثائق والمهارات",
+      "preview": "المعاينة"
+    },
+    "personalInfo": {
+      "title": "أخبرنا عن نفسك",
+      "subtitle": "تساعد بياناتك الشخصية أصحاب العمل على التعرف عليك",
+      "photoLabel": "صورة الملف الشخصي",
+      "photoHint": "JPG أو PNG، حتى 2 ميغابايت",
+      "photoUpload": "رفع صورة",
+      "nameLabel": "الاسم الكامل",
+      "namePlaceholder": "اسمك الكامل",
+      "dobLabel": "تاريخ الميلاد",
+      "maritalStatusLabel": "الحالة الاجتماعية",
+      "languagesLabel": "اللغات المتحدث بها",
+      "languagesPlaceholder": "اكتب اللغات مفصولة بفواصل",
+      "jobCategoryLabel": "فئة الوظيفة",
+      "phoneVerifyTitle": "تحقق من هاتفك",
+      "phoneVerifySubtitle": "سنرسل رمز OTP عبر WhatsApp للتحقق من رقمك",
+      "phoneLabel": "رقم الجوال",
+      "phonePlaceholder": "9876543210",
+      "phoneVerified": "تم التحقق من الهاتف",
+      "phoneVerify": "تحقق من الهاتف",
+      "otpSent": "أدخل الرمز المكوّن من 6 أرقام الذي أرسلناه إلى رقمك",
+      "otpInvalid": "رمز التحقق غير صحيح أو منتهي الصلاحية. يرجى المحاولة مرة أخرى.",
+      "otpNotOnWhatsapp": "هذا الرقم غير متوفر على WhatsApp. يرجى تجربة رقم آخر.",
+      "resendOtp": "إعادة إرسال الرمز",
+      "resendIn": "إعادة الإرسال خلال {seconds} ثانية"
+    },
+    "experience": {
+      "title": "الخبرة العملية",
+      "subtitle": "أضف تاريخ عملك السابق",
+      "noExperience": "لم تتم إضافة أي خبرة بعد",
+      "addExperience": "إضافة خبرة",
+      "editExperience": "تعديل الخبرة",
+      "deleteExperience": "حذف الخبرة",
+      "typeLabel": "نوع الخبرة",
+      "typeDomestic": "محلي (الهند)",
+      "typeForeign": "دولي",
+      "countryLabel": "البلد",
+      "companyLabel": "اسم الشركة",
+      "roleLabel": "المسمى الوظيفي / الدور",
+      "yearsLabel": "سنوات",
+      "monthsLabel": "أشهر",
+      "softBlock": "إضافة الخبرة يحسّن نقاط المطابقة لديك",
+      "saveExperience": "حفظ الخبرة",
+      "cancel": "إلغاء"
+    },
+    "documentsSkills": {
+      "title": "الوثائق والمهارات",
+      "subtitle": "ارفع وثائقك وأضف مهاراتك",
+      "passportLabel": "جواز السفر",
+      "passportHint": "PDF أو صورة، حتى 10 ميغابايت",
+      "experienceCertLabel": "شهادة الخبرة",
+      "experienceCertHint": "PDF أو صورة، حتى 5 ميغابايت",
+      "educationalCertLabel": "الشهادة التعليمية",
+      "educationalCertHint": "PDF أو صورة، حتى 5 ميغابايت",
+      "skillsLabel": "المهارات",
+      "skillsPlaceholder": "اكتب مهارة واضغط Enter",
+      "skillsHint": "أضف حتى 10 مهارات. أول 3 مهارات تعزز نقاط المطابقة.",
+      "locationLabel": "الموقع الحالي",
+      "locationPlaceholder": "المدينة أو الولاية أو البلد",
+      "nationalityLabel": "الجنسية",
+      "nationalityPlaceholder": "مثال: هندي",
+      "noticePeriodLabel": "فترة الإشعار (بالأيام)",
+      "noticePeriodPlaceholder": "مثال: 30",
+      "softBlockDocs": "ارفع جواز سفرك لتحسين ملفك الشخصي",
+      "softBlockSkills": "أضف مهارات لتحسين نقاط المطابقة",
+      "documentStatus": {
+        "PENDING": "في انتظار المراجعة",
+        "VERIFIED": "تم التحقق",
+        "REJECTED": "مرفوض"
+      }
+    },
+    "preview": {
+      "title": "المعاينة والتصدير",
+      "subtitle": "راجع اكتمال ملفك الشخصي وصدّر سيرتك الذاتية",
+      "completionTitle": "اكتمال الملف الشخصي",
+      "exportTitle": "تصدير السيرة الذاتية",
+      "downloadPdf": "تنزيل PDF",
+      "sendWhatsapp": "إرسال عبر WhatsApp",
+      "sendEmail": "إرسال بالبريد الإلكتروني",
+      "exportComingSoon": "تصدير السيرة الذاتية قادم في Sprint 7",
+      "saveAndContinue": "حفظ والمتابعة إلى الملف الشخصي",
+      "videoTitle": "مقدمة فيديو",
+      "videoComingSoon": "قريباً"
+    },
+    "upload": {
+      "selectFile": "اختر ملفاً",
+      "changeFile": "تغيير الملف",
+      "uploading": "جارٍ الرفع… {pct}%",
+      "retryUpload": "إعادة الرفع",
+      "uploadComplete": "تم الرفع",
+      "fileTooLarge": "الملف كبير جداً",
+      "uploadFailed": "فشل الرفع. اضغط للمحاولة مجدداً.",
+      "dropzoneHint": "اسحب وأفلت أو انقر للاختيار",
+      "maxSize": "الحد الأقصى {size} ميغابايت"
+    },
+    "nav": {
+      "back": "رجوع",
+      "next": "التالي",
+      "saveAndContinue": "حفظ ومتابعة",
+      "skipForNow": "تخطي الآن"
+    },
+    "maritalStatus": {
+      "SINGLE": "أعزب / عزباء",
+      "MARRIED": "متزوج / متزوجة",
+      "DIVORCED": "مطلق / مطلقة",
+      "WIDOWED": "أرمل / أرملة"
+    }
   }
 }

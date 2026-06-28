@@ -14,7 +14,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
         <blockquote className="space-y-2 max-w-sm">
           <p className="text-xl font-medium leading-relaxed">
-            &ldquo;Connecting skilled workers with trusted employers across India and the Gulf.&rdquo;
+            &ldquo;Connecting skilled workers with trusted employers across India and the
+            Gulf.&rdquo;
           </p>
           <footer className="text-sm text-white/70">SkillIndiaConnect platform</footer>
         </blockquote>

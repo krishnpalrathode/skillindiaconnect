@@ -170,5 +170,122 @@
     "notFound": "[hi] Page not found",
     "unauthorized": "[hi] Please log in to continue",
     "forbidden": "[hi] You don't have permission to do this"
+  },
+  "onboarding": {
+    "pageTitle": "अपनी प्रोफ़ाइल पूरी करें",
+    "loading": "आपकी प्रोफ़ाइल लोड हो रही है…",
+    "stepOf": "चरण {current} / {total}",
+    "steps": {
+      "personalInfo": "व्यक्तिगत जानकारी",
+      "workExperience": "कार्य अनुभव",
+      "documentsSkills": "दस्तावेज़ और कौशल",
+      "preview": "पूर्वावलोकन"
+    },
+    "personalInfo": {
+      "title": "अपने बारे में बताएं",
+      "subtitle": "आपकी व्यक्तिगत जानकारी नियोक्ताओं को आपके बारे में जानने में मदद करती है",
+      "photoLabel": "प्रोफ़ाइल फ़ोटो",
+      "photoHint": "JPG या PNG, अधिकतम 2 MB",
+      "photoUpload": "फ़ोटो अपलोड करें",
+      "nameLabel": "पूरा नाम",
+      "namePlaceholder": "आपका पूरा नाम",
+      "dobLabel": "जन्म तिथि",
+      "maritalStatusLabel": "वैवाहिक स्थिति",
+      "languagesLabel": "बोली जाने वाली भाषाएँ",
+      "languagesPlaceholder": "अल्पविराम से अलग करके भाषाएँ लिखें",
+      "jobCategoryLabel": "नौकरी श्रेणी",
+      "phoneVerifyTitle": "अपना फ़ोन सत्यापित करें",
+      "phoneVerifySubtitle": "हम आपके नंबर की पुष्टि के लिए WhatsApp OTP भेजेंगे",
+      "phoneLabel": "मोबाइल नंबर",
+      "phonePlaceholder": "9876543210",
+      "phoneVerified": "फ़ोन सत्यापित",
+      "phoneVerify": "फ़ोन सत्यापित करें",
+      "otpSent": "आपके नंबर पर भेजा गया 6-अंकीय कोड दर्ज करें",
+      "otpInvalid": "OTP अमान्य या समाप्त हो गया है। कृपया पुनः प्रयास करें।",
+      "otpNotOnWhatsapp": "यह नंबर WhatsApp पर नहीं है। कृपया दूसरा नंबर आज़माएं।",
+      "resendOtp": "OTP फिर से भेजें",
+      "resendIn": "{seconds} सेकंड में फिर से भेजें"
+    },
+    "experience": {
+      "title": "कार्य अनुभव",
+      "subtitle": "अपना पिछला कार्य इतिहास जोड़ें",
+      "noExperience": "अभी तक कोई अनुभव नहीं जोड़ा",
+      "addExperience": "अनुभव जोड़ें",
+      "editExperience": "अनुभव संपादित करें",
+      "deleteExperience": "अनुभव हटाएं",
+      "typeLabel": "अनुभव का प्रकार",
+      "typeDomestic": "घरेलू (भारत)",
+      "typeForeign": "अंतर्राष्ट्रीय",
+      "countryLabel": "देश",
+      "companyLabel": "कंपनी का नाम",
+      "roleLabel": "नौकरी का पद / भूमिका",
+      "yearsLabel": "वर्ष",
+      "monthsLabel": "महीने",
+      "softBlock": "अनुभव जोड़ने से आपका मैच स्कोर बेहतर होता है",
+      "saveExperience": "अनुभव सहेजें",
+      "cancel": "रद्द करें"
+    },
+    "documentsSkills": {
+      "title": "दस्तावेज़ और कौशल",
+      "subtitle": "अपने दस्तावेज़ अपलोड करें और कौशल जोड़ें",
+      "passportLabel": "पासपोर्ट",
+      "passportHint": "PDF या छवि, अधिकतम 10 MB",
+      "experienceCertLabel": "अनुभव प्रमाण पत्र",
+      "experienceCertHint": "PDF या छवि, अधिकतम 5 MB",
+      "educationalCertLabel": "शैक्षिक प्रमाण पत्र",
+      "educationalCertHint": "PDF या छवि, अधिकतम 5 MB",
+      "skillsLabel": "कौशल",
+      "skillsPlaceholder": "कौशल लिखें और Enter दबाएं",
+      "skillsHint": "10 तक कौशल जोड़ें। पहले 3 आपका मैच स्कोर बढ़ाते हैं।",
+      "locationLabel": "वर्तमान स्थान",
+      "locationPlaceholder": "शहर, राज्य या देश",
+      "nationalityLabel": "राष्ट्रीयता",
+      "nationalityPlaceholder": "जैसे भारतीय",
+      "noticePeriodLabel": "नोटिस अवधि (दिन)",
+      "noticePeriodPlaceholder": "जैसे 30",
+      "softBlockDocs": "अपनी प्रोफ़ाइल सुधारने के लिए पासपोर्ट अपलोड करें",
+      "softBlockSkills": "मैच स्कोर सुधारने के लिए कौशल जोड़ें",
+      "documentStatus": {
+        "PENDING": "समीक्षा लंबित",
+        "VERIFIED": "सत्यापित",
+        "REJECTED": "अस्वीकृत"
+      }
+    },
+    "preview": {
+      "title": "पूर्वावलोकन और निर्यात",
+      "subtitle": "अपनी प्रोफ़ाइल की पूर्णता देखें और रिज्यूमे निर्यात करें",
+      "completionTitle": "प्रोफ़ाइल पूर्णता",
+      "exportTitle": "रिज्यूमे निर्यात करें",
+      "downloadPdf": "PDF डाउनलोड करें",
+      "sendWhatsapp": "WhatsApp पर भेजें",
+      "sendEmail": "ईमेल पर भेजें",
+      "exportComingSoon": "रिज्यूमे निर्यात Sprint 7 में आएगा",
+      "saveAndContinue": "सहेजें और प्रोफ़ाइल पर जाएं",
+      "videoTitle": "वीडियो परिचय",
+      "videoComingSoon": "जल्द आ रहा है"
+    },
+    "upload": {
+      "selectFile": "फ़ाइल चुनें",
+      "changeFile": "फ़ाइल बदलें",
+      "uploading": "अपलोड हो रहा है… {pct}%",
+      "retryUpload": "पुनः अपलोड करें",
+      "uploadComplete": "अपलोड हो गया",
+      "fileTooLarge": "फ़ाइल बहुत बड़ी है",
+      "uploadFailed": "अपलोड विफल। पुनः प्रयास करें।",
+      "dropzoneHint": "खींचें और छोड़ें या क्लिक करके चुनें",
+      "maxSize": "अधिकतम {size} MB"
+    },
+    "nav": {
+      "back": "वापस",
+      "next": "आगे",
+      "saveAndContinue": "सहेजें और जारी रखें",
+      "skipForNow": "अभी के लिए छोड़ें"
+    },
+    "maritalStatus": {
+      "SINGLE": "अविवाहित",
+      "MARRIED": "विवाहित",
+      "DIVORCED": "तलाकशुदा",
+      "WIDOWED": "विधवा/विधुर"
+    }
   }
 }

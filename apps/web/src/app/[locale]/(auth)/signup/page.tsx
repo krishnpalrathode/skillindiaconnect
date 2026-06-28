@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -11,13 +12,19 @@ export default function SignupPage() {
   const t = useTranslations('auth');
   const router = useRouter();
   const { user } = useAuth();
+  // Prevents the "already authenticated" guard from firing after a successful
+  // signup on this very page. signup() sets the user in context which re-renders
+  // SignupPage — without this ref the guard would race and redirect to /dashboard
+  // instead of letting handleSuccess() reach /onboarding.
+  const postSignupRef = useRef(false);
 
-  if (user) {
+  if (user && !postSignupRef.current) {
     router.replace('/dashboard');
     return null;
   }
 
   function handleSuccess(role: 'CANDIDATE' | 'EMPLOYER') {
+    postSignupRef.current = true;
     // Employer goes through a separate onboarding flow
     router.replace(role === 'EMPLOYER' ? '/onboarding/employer' : '/onboarding');
   }

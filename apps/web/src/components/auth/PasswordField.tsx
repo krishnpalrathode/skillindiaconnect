@@ -18,10 +18,7 @@ function scorePassword(pw: string): 0 | 1 | 2 | 3 | 4 {
   return score as 0 | 1 | 2 | 3 | 4;
 }
 
-const STRENGTH_META: Record<
-  0 | 1 | 2 | 3 | 4,
-  { label: string; color: string; bars: number }
-> = {
+const STRENGTH_META: Record<0 | 1 | 2 | 3 | 4, { label: string; color: string; bars: number }> = {
   0: { label: '', color: 'bg-neutral-200', bars: 0 },
   1: { label: 'Weak', color: 'bg-red-500', bars: 1 },
   2: { label: 'Fair', color: 'bg-yellow-500', bars: 2 },
@@ -107,7 +104,11 @@ export function PasswordField({
           )}
           tabIndex={0}
         >
-          {visible ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
+          {visible ? (
+            <EyeOff className="size-4" aria-hidden />
+          ) : (
+            <Eye className="size-4" aria-hidden />
+          )}
         </button>
       </div>
 
@@ -133,14 +134,14 @@ export function PasswordField({
           {meta.label && (
             <p className="text-xs text-neutral-500 mt-0.5">
               {strengthLabels
-                ? (
+                ? ((
                     {
                       1: strengthLabels.weak,
                       2: strengthLabels.fair,
                       3: strengthLabels.good,
                       4: strengthLabels.strong,
                     } as Record<number, string>
-                  )[score] ?? meta.label
+                  )[score] ?? meta.label)
                 : meta.label}
             </p>
           )}

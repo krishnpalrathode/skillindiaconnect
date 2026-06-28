@@ -170,5 +170,122 @@
     "notFound": "Page not found",
     "unauthorized": "Please log in to continue",
     "forbidden": "You don't have permission to do this"
+  },
+  "onboarding": {
+    "pageTitle": "Complete your profile",
+    "loading": "Loading your profile…",
+    "stepOf": "Step {current} of {total}",
+    "steps": {
+      "personalInfo": "Personal Info",
+      "workExperience": "Work Experience",
+      "documentsSkills": "Documents & Skills",
+      "preview": "Preview"
+    },
+    "personalInfo": {
+      "title": "Tell us about yourself",
+      "subtitle": "Your personal details help employers learn more about you",
+      "photoLabel": "Profile photo",
+      "photoHint": "JPG or PNG, up to 2 MB",
+      "photoUpload": "Upload photo",
+      "nameLabel": "Full name",
+      "namePlaceholder": "Your full name",
+      "dobLabel": "Date of birth",
+      "maritalStatusLabel": "Marital status",
+      "languagesLabel": "Languages spoken",
+      "languagesPlaceholder": "Type languages separated by commas",
+      "jobCategoryLabel": "Job category",
+      "phoneVerifyTitle": "Verify your phone",
+      "phoneVerifySubtitle": "We'll send a WhatsApp OTP to confirm your number",
+      "phoneLabel": "Mobile number",
+      "phonePlaceholder": "9876543210",
+      "phoneVerified": "Phone verified",
+      "phoneVerify": "Verify phone",
+      "otpSent": "Enter the 6-digit code sent to your number",
+      "otpInvalid": "Invalid or expired OTP. Please try again.",
+      "otpNotOnWhatsapp": "This number is not on WhatsApp. Please try another number.",
+      "resendOtp": "Resend OTP",
+      "resendIn": "Resend in {seconds}s"
+    },
+    "experience": {
+      "title": "Work experience",
+      "subtitle": "Add your previous work history",
+      "noExperience": "No experience added yet",
+      "addExperience": "Add experience",
+      "editExperience": "Edit experience",
+      "deleteExperience": "Delete experience",
+      "typeLabel": "Experience type",
+      "typeDomestic": "Domestic (India)",
+      "typeForeign": "International",
+      "countryLabel": "Country",
+      "companyLabel": "Company name",
+      "roleLabel": "Job title / Role",
+      "yearsLabel": "Years",
+      "monthsLabel": "Months",
+      "softBlock": "Adding experience improves your match score",
+      "saveExperience": "Save experience",
+      "cancel": "Cancel"
+    },
+    "documentsSkills": {
+      "title": "Documents & Skills",
+      "subtitle": "Upload your documents and add your skills",
+      "passportLabel": "Passport",
+      "passportHint": "PDF or image, up to 10 MB",
+      "experienceCertLabel": "Experience certificate",
+      "experienceCertHint": "PDF or image, up to 5 MB",
+      "educationalCertLabel": "Educational certificate",
+      "educationalCertHint": "PDF or image, up to 5 MB",
+      "skillsLabel": "Skills",
+      "skillsPlaceholder": "Type a skill and press Enter",
+      "skillsHint": "Add up to 10 skills. First 3 boost your match score.",
+      "locationLabel": "Current location",
+      "locationPlaceholder": "City, State or Country",
+      "nationalityLabel": "Nationality",
+      "nationalityPlaceholder": "e.g. Indian",
+      "noticePeriodLabel": "Notice period (days)",
+      "noticePeriodPlaceholder": "e.g. 30",
+      "softBlockDocs": "Upload your passport to improve your profile",
+      "softBlockSkills": "Add skills to improve your match score",
+      "documentStatus": {
+        "PENDING": "Pending review",
+        "VERIFIED": "Verified",
+        "REJECTED": "Rejected"
+      }
+    },
+    "preview": {
+      "title": "Preview & Export",
+      "subtitle": "Review your profile completion and export your resume",
+      "completionTitle": "Profile completion",
+      "exportTitle": "Export resume",
+      "downloadPdf": "Download PDF",
+      "sendWhatsapp": "Send via WhatsApp",
+      "sendEmail": "Send to email",
+      "exportComingSoon": "Resume export coming in Sprint 7",
+      "saveAndContinue": "Save & continue to profile",
+      "videoTitle": "Video introduction",
+      "videoComingSoon": "Coming soon"
+    },
+    "upload": {
+      "selectFile": "Select file",
+      "changeFile": "Change file",
+      "uploading": "Uploading… {pct}%",
+      "retryUpload": "Retry upload",
+      "uploadComplete": "Uploaded",
+      "fileTooLarge": "File is too large",
+      "uploadFailed": "Upload failed. Tap to retry.",
+      "dropzoneHint": "Drag & drop or click to select",
+      "maxSize": "Max {size} MB"
+    },
+    "nav": {
+      "back": "Back",
+      "next": "Next",
+      "saveAndContinue": "Save & Continue",
+      "skipForNow": "Skip for now"
+    },
+    "maritalStatus": {
+      "SINGLE": "Single",
+      "MARRIED": "Married",
+      "DIVORCED": "Divorced",
+      "WIDOWED": "Widowed"
+    }
   }
 }

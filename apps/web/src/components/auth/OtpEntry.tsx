@@ -4,7 +4,6 @@ import React, { useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 const CELL_COUNT = 6;
-const DIGIT_RE = /^\d$/;
 
 interface OtpEntryProps {
   /** Called when all 6 digits are filled. Receives the 6-digit string. */
@@ -88,11 +87,7 @@ export function OtpEntry({ onComplete, disabled, className }: OtpEntryProps) {
   };
 
   return (
-    <div
-      className={cn('flex gap-2', className)}
-      role="group"
-      aria-label="One-time password"
-    >
+    <div className={cn('flex gap-2', className)} role="group" aria-label="One-time password">
       {Array.from({ length: CELL_COUNT }, (_, i) => (
         <input
           key={i}
