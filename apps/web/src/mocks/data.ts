@@ -5,6 +5,12 @@ type WorkExperience = components['schemas']['WorkExperience'];
 type CandidateSkill = components['schemas']['CandidateSkill'];
 type CandidateDocument = components['schemas']['CandidateDocument'];
 type ResumeSettings = components['schemas']['ResumeSettings'];
+type Company = components['schemas']['Company'];
+type Job = components['schemas']['Job'];
+type JobCard = components['schemas']['JobCard'];
+type JobDetail = components['schemas']['JobDetail'];
+type Notification = components['schemas']['Notification'];
+type Setting = components['schemas']['Setting'];
 
 // ─── Fixed mock constants ────────────────────────────────────────────────────
 
@@ -18,7 +24,7 @@ export interface MockUser {
   id: string;
   email: string;
   passwordHash: string;
-  role: 'CANDIDATE' | 'EMPLOYER';
+  role: 'CANDIDATE' | 'EMPLOYER' | 'ADMIN' | 'SUPER_ADMIN';
   status: 'ACTIVE' | 'SUSPENDED' | 'PENDING_DELETION';
 }
 
@@ -33,6 +39,19 @@ export interface MockSession {
   userId: string;
   accessToken: string;
 }
+
+export interface MockCompany extends Company {}
+
+export interface MockJob extends Job {}
+
+export interface MockNotification extends Notification {}
+
+export interface MockSetting extends Setting {}
+
+// ─── Seeded data ─────────────────────────────────────────────────────────────
+
+const NOW = new Date().toISOString();
+const PAST_DATE = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
 export const db = {
   users: new Map<string, MockUser>([
@@ -53,6 +72,26 @@ export const db = {
         email: 'nowa@example.com',
         passwordHash: 'hashed-password',
         role: 'CANDIDATE',
+        status: 'ACTIVE',
+      },
+    ],
+    [
+      'mock-user-employer-1',
+      {
+        id: 'mock-user-employer-1',
+        email: 'employer@example.com',
+        passwordHash: 'hashed-password',
+        role: 'EMPLOYER',
+        status: 'ACTIVE',
+      },
+    ],
+    [
+      'mock-user-admin-1',
+      {
+        id: 'mock-user-admin-1',
+        email: 'admin@example.com',
+        passwordHash: 'hashed-password',
+        role: 'ADMIN',
         status: 'ACTIVE',
       },
     ],
@@ -130,9 +169,265 @@ export const db = {
 
   verifiedPhones: new Map<string, string>([
     ['+919876543210', 'mock-user-candidate-1'],
-    // Also seed the 10-digit variant (no +91 prefix) so tests that type bare digits work
     ['9876543210', 'mock-user-candidate-1'],
   ]),
+
+  // ── S2: Employer companies ─────────────────────────────────────────────────
+  employers: new Map<string, MockCompany>([
+    [
+      'mock-user-employer-1',
+      {
+        id: 'mock-company-1',
+        name: 'Gulf Builders Arabia',
+        type: 'FOREIGN',
+        status: 'APPROVED',
+        registrationNumber: 'AUH-2024-98765',
+        industryType: 'Construction',
+        phone: '+971501234567',
+        location: 'Abu Dhabi, UAE',
+        website: 'https://gulfbuilders.example.com',
+        employeeRange: '201-500',
+        languagePref: 'en',
+        description:
+          'Leading construction company operating across the GCC with 20+ years of experience.',
+        registrationCertKey: 'employer-docs/mock-company-1/reg-cert.pdf',
+        rejectionReason: null,
+        createdAt: PAST_DATE,
+        approvedAt: PAST_DATE,
+      } satisfies MockCompany,
+    ],
+  ]),
+
+  // ── S2: Job postings ───────────────────────────────────────────────────────
+  jobs: new Map<string, MockJob>([
+    [
+      'job-1',
+      {
+        id: 'job-1',
+        title: 'Experienced Mason',
+        status: 'ACTIVE',
+        market: 'GULF',
+        location: 'Abu Dhabi, UAE',
+        description:
+          'We are looking for experienced masons for a large construction project in Abu Dhabi. Minimum 3 years of experience required.',
+        categoryId: 'cat-construction',
+        salaryMin: 1200,
+        salaryMax: 1800,
+        salaryCurrency: 'AED',
+        accommodation: true,
+        healthInsurance: true,
+        transportation: true,
+        workConditions: '8 hours/day, 6 days/week. All PPE provided.',
+        requirements: [
+          '3+ years masonry experience',
+          'Valid passport',
+          'Gulf experience preferred',
+        ],
+        experienceRequiredYears: 3,
+        vacancies: 10,
+        genderPreference: 'MALE',
+        companyId: 'mock-company-1',
+        companyName: 'Gulf Builders Arabia',
+        createdAt: PAST_DATE,
+        publishedAt: PAST_DATE,
+        archivedAt: null,
+      } satisfies MockJob,
+    ],
+    [
+      'job-2',
+      {
+        id: 'job-2',
+        title: 'Senior Electrician',
+        status: 'ACTIVE',
+        market: 'LOCAL',
+        location: 'Mumbai, Maharashtra',
+        description:
+          'Certified electrician needed for residential and commercial wiring projects in Mumbai.',
+        categoryId: 'cat-electrical',
+        salaryMin: 25000,
+        salaryMax: 40000,
+        salaryCurrency: 'INR',
+        accommodation: true,
+        healthInsurance: true,
+        transportation: true,
+        workConditions: 'Monday to Saturday, 9am-6pm.',
+        requirements: ['ITI certification in Electrician trade', '2+ years experience'],
+        experienceRequiredYears: 2,
+        vacancies: 3,
+        genderPreference: 'ANY',
+        companyId: 'mock-company-1',
+        companyName: 'Gulf Builders Arabia',
+        createdAt: PAST_DATE,
+        publishedAt: PAST_DATE,
+        archivedAt: null,
+      } satisfies MockJob,
+    ],
+    [
+      'job-3',
+      {
+        id: 'job-3',
+        title: 'Plumber — Gulf Project',
+        status: 'ACTIVE',
+        market: 'GULF',
+        location: 'Dubai, UAE',
+        description:
+          'Skilled plumbers required for large residential development in Dubai. 2-year contract.',
+        categoryId: 'cat-plumbing',
+        salaryMin: 1000,
+        salaryMax: 1500,
+        salaryCurrency: 'AED',
+        accommodation: true,
+        healthInsurance: true,
+        transportation: true,
+        workConditions: '10 hours/day, 6 days/week.',
+        requirements: ['ITI Plumber trade', 'Gulf experience a plus'],
+        experienceRequiredYears: 1,
+        vacancies: 5,
+        genderPreference: 'ANY',
+        companyId: 'mock-company-1',
+        companyName: 'Gulf Builders Arabia',
+        createdAt: PAST_DATE,
+        publishedAt: PAST_DATE,
+        archivedAt: null,
+      } satisfies MockJob,
+    ],
+    [
+      'job-4',
+      {
+        id: 'job-4',
+        title: 'General Helper',
+        status: 'DRAFT',
+        market: 'GULF',
+        location: 'Riyadh, Saudi Arabia',
+        description: 'General helpers needed for a construction site in Riyadh.',
+        categoryId: 'cat-general',
+        salaryMin: 800,
+        salaryMax: 1000,
+        salaryCurrency: 'SAR',
+        // Missing all three benefits — this job will fail publish with WORKER_PROTECTION_VIOLATION
+        accommodation: false,
+        healthInsurance: false,
+        transportation: false,
+        workConditions: 'On-site, shifts may vary.',
+        requirements: ['Physical fitness'],
+        experienceRequiredYears: 0,
+        vacancies: 20,
+        genderPreference: 'MALE',
+        companyId: 'mock-company-1',
+        companyName: 'Gulf Builders Arabia',
+        createdAt: NOW,
+        publishedAt: null,
+        archivedAt: null,
+      } satisfies MockJob,
+    ],
+  ]),
+
+  // ── S2: Saved jobs (candidateId → Set of jobIds) ──────────────────────────
+  savedJobs: new Map<string, Set<string>>([['mock-user-candidate-1', new Set(['job-1'])]]),
+
+  // ── S2: Notifications (userId → notifications array) ──────────────────────
+  notifications: new Map<string, MockNotification[]>([
+    [
+      'mock-user-candidate-1',
+      [
+        {
+          id: 'notif-1',
+          type: 'APPLICATION_UPDATE',
+          title: 'Application Update',
+          body: 'Your application for Mason at Gulf Builders Arabia has been shortlisted.',
+          read: true,
+          readAt: PAST_DATE,
+          relatedEntityId: 'job-1',
+          relatedEntityType: 'application',
+          createdAt: PAST_DATE,
+        } satisfies MockNotification,
+        {
+          id: 'notif-2',
+          type: 'JOB_MATCH',
+          title: 'New Job Match',
+          body: 'A new Gulf job matching your Mason skills is available.',
+          read: false,
+          readAt: null,
+          relatedEntityId: 'job-3',
+          relatedEntityType: 'job',
+          createdAt: NOW,
+        } satisfies MockNotification,
+        {
+          id: 'notif-3',
+          type: 'SYSTEM',
+          title: 'Platform Update',
+          body: 'New features are available on SkillIndiaConnect. Check out your profile.',
+          read: false,
+          readAt: null,
+          createdAt: NOW,
+        } satisfies MockNotification,
+      ],
+    ],
+  ]),
+
+  // ── S2: Platform settings ──────────────────────────────────────────────────
+  settings: [
+    {
+      key: 'REQUIRE_ACCOMMODATION',
+      group: 'WORKER_PROTECTION',
+      label: 'Require Accommodation',
+      description: 'All jobs must offer accommodation to publish.',
+      value: true,
+      isCoreRule: true,
+      updatedAt: null,
+      updatedBy: null,
+    },
+    {
+      key: 'REQUIRE_HEALTH_INSURANCE',
+      group: 'WORKER_PROTECTION',
+      label: 'Require Health Insurance',
+      description: 'All jobs must offer health insurance to publish.',
+      value: true,
+      isCoreRule: true,
+      updatedAt: null,
+      updatedBy: null,
+    },
+    {
+      key: 'REQUIRE_TRANSPORTATION',
+      group: 'WORKER_PROTECTION',
+      label: 'Require Transportation',
+      description: 'All jobs must offer transportation to publish.',
+      value: true,
+      isCoreRule: true,
+      updatedAt: null,
+      updatedBy: null,
+    },
+    {
+      key: 'PROFILE_COMPLETION_THRESHOLD',
+      group: 'COMPLETION',
+      label: 'Apply Gate Threshold (%)',
+      description: 'Minimum profile completion percentage required to apply for a job.',
+      value: 70,
+      isCoreRule: false,
+      updatedAt: null,
+      updatedBy: null,
+    },
+    {
+      key: 'FREE_PLAN_JOB_LIMIT',
+      group: 'APPLICATION',
+      label: 'Free Plan Active Job Limit',
+      description: 'Maximum number of active jobs for Free plan employers.',
+      value: 1,
+      isCoreRule: false,
+      updatedAt: null,
+      updatedBy: null,
+    },
+    {
+      key: 'PLATFORM_NAME',
+      group: 'PLATFORM',
+      label: 'Platform Name',
+      description: 'Display name used in email templates and WhatsApp messages.',
+      value: 'SkillIndiaConnect',
+      isCoreRule: false,
+      updatedAt: null,
+      updatedBy: null,
+    },
+  ] as MockSetting[],
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -165,8 +460,6 @@ export function buildProfile(
 
 export function makeAccessToken(userId: string): string {
   const user = db.users.get(userId);
-  // Produce a decodable JWT-shaped token so auth-context can decode user claims
-  // without an extra profile roundtrip. Not cryptographically signed — dev/test only.
   const header = btoa(JSON.stringify({ alg: 'mock', typ: 'JWT' }));
   const payload = btoa(
     JSON.stringify({
@@ -238,4 +531,54 @@ export function computeCompletion(profile: CandidateProfile) {
   if (!hasPassport) missingForApply.push('Verified passport document required');
 
   return { pct, sections, canApply, missingForApply };
+}
+
+// ─── S2 Job helpers ───────────────────────────────────────────────────────────
+
+export function toJobCard(job: MockJob, savedJobIds: Set<string> | null): JobCard {
+  return {
+    id: job.id,
+    title: job.title,
+    market: job.market,
+    location: job.location,
+    categoryId: job.categoryId ?? null,
+    salaryMin: job.salaryMin ?? null,
+    salaryMax: job.salaryMax ?? null,
+    salaryCurrency: job.salaryCurrency,
+    accommodation: job.accommodation,
+    healthInsurance: job.healthInsurance,
+    transportation: job.transportation,
+    companyName: job.companyName,
+    createdAt: job.createdAt,
+    publishedAt: job.publishedAt ?? null,
+    isSaved: savedJobIds !== null ? savedJobIds.has(job.id) : null,
+  };
+}
+
+export function toJobDetail(
+  job: MockJob,
+  savedJobIds: Set<string> | null,
+  allJobs: Map<string, MockJob>,
+): JobDetail {
+  const card = toJobCard(job, savedJobIds);
+  const similarJobs = [...allJobs.values()]
+    .filter(
+      (j) =>
+        j.id !== job.id &&
+        j.status === 'ACTIVE' &&
+        (j.market === job.market || j.categoryId === job.categoryId),
+    )
+    .slice(0, 5)
+    .map((j) => toJobCard(j, savedJobIds));
+
+  return {
+    ...card,
+    description: job.description ?? '',
+    requirements: job.requirements ?? [],
+    workConditions: job.workConditions ?? '',
+    experienceRequiredYears: job.experienceRequiredYears ?? null,
+    vacancies: job.vacancies ?? null,
+    genderPreference: job.genderPreference ?? 'ANY',
+    similarJobs,
+  };
 }
