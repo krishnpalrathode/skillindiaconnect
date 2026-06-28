@@ -128,12 +128,16 @@ export const db = {
 
   sessions: new Map<string, MockSession>(),
 
-  verifiedPhones: new Map<string, string>([['+919876543210', 'mock-user-candidate-1']]),
+  verifiedPhones: new Map<string, string>([
+    ['+919876543210', 'mock-user-candidate-1'],
+    // Also seed the 10-digit variant (no +91 prefix) so tests that type bare digits work
+    ['9876543210', 'mock-user-candidate-1'],
+  ]),
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function buildProfile(
+export function buildProfile(
   id: string,
   email: string,
   overrides: Partial<CandidateProfile>,
@@ -160,7 +164,20 @@ function buildProfile(
 }
 
 export function makeAccessToken(userId: string): string {
-  return `mock-access-token-${userId}-${Date.now()}`;
+  const user = db.users.get(userId);
+  // Produce a decodable JWT-shaped token so auth-context can decode user claims
+  // without an extra profile roundtrip. Not cryptographically signed — dev/test only.
+  const header = btoa(JSON.stringify({ alg: 'mock', typ: 'JWT' }));
+  const payload = btoa(
+    JSON.stringify({
+      sub: userId,
+      email: user?.email ?? '',
+      role: user?.role ?? 'CANDIDATE',
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 900,
+    }),
+  );
+  return `${header}.${payload}.mock-sig`;
 }
 
 export function makeRefreshToken(userId: string): string {

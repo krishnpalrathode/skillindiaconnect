@@ -50,8 +50,11 @@ export class AuthService {
         select: { id: true, email: true, role: true },
       });
     } catch (err) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-        throw new ConflictException({ code: 'EMAIL_TAKEN', message: 'Email already registered' });
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        const prismaErr = err as Prisma.PrismaClientKnownRequestError;
+        if (prismaErr.code === 'P2002') {
+          throw new ConflictException({ code: 'EMAIL_TAKEN', message: 'Email already registered' });
+        }
       }
       throw err;
     }

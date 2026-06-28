@@ -7,6 +7,11 @@
     "node": ">=22.0.0",
     "pnpm": ">=9.0.0"
   },
+  "pnpm": {
+    "overrides": {
+      "typescript": "~5.7.2"
+    }
+  },
   "scripts": {
     "dev": "concurrently -n web,api,worker -c blue,green,yellow --kill-others-on-fail \"pnpm --filter @skillindiaconnect/web dev\" \"pnpm --filter @skillindiaconnect/api dev:api\" \"pnpm --filter @skillindiaconnect/api dev:worker\"",
     "build": "pnpm -r build",

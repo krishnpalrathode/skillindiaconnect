@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DocumentType } from '@prisma/client';
+import { DocumentType, WorkExperience } from '@prisma/client';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import {
   MVP_MANDATORY_DOC_COUNT,
@@ -148,7 +148,7 @@ export class CompletionService {
       },
     });
 
-    const mandatoryDocTypesPresent = profile.documents.map((d) => d.type as string);
+    const mandatoryDocTypesPresent = profile.documents.map((d: { type: DocumentType }) => d.type as string);
 
     const result = compute({
       profile: {
@@ -163,7 +163,7 @@ export class CompletionService {
         currentLocation: profile.currentLocation,
         nationality: profile.nationality,
       },
-      experiences: profile.experiences.map((e) => ({
+      experiences: profile.experiences.map((e: WorkExperience) => ({
         type: e.type as string,
         country: e.country,
         companyName: e.companyName,

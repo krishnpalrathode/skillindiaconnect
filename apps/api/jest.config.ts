@@ -5,7 +5,7 @@ const config: Config = {
   rootDir: 'src',
   testRegex: '.*\\.spec\\.ts$',
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.(t|j)s$': ['ts-jest', { isolatedModules: true }],
   },
   testEnvironment: 'node',
   // Resolve @skillindiaconnect/* workspace packages to their TypeScript source

@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 import type { components } from '@skillindiaconnect/shared-types';
 import {
   db,
+  buildProfile,
   MOCK_OTP,
   NOT_ON_WHATSAPP_PHONE,
   NOT_WHATSAPP_CAPABLE_USER_ID,
@@ -87,6 +88,23 @@ const authSignup = http.post(`${BASE}/auth/signup`, async ({ request }) => {
     status: 'ACTIVE' as const,
   };
   db.users.set(id, user);
+
+  // Create candidate profile immediately on signup so GET /candidates/me works
+  // from the first onboarding page load — mirrors what the real API does.
+  if (body.role === 'CANDIDATE') {
+    db.candidates.set(id, {
+      userId: id,
+      profile: buildProfile(id, body.email, {}),
+      resumeSettings: {
+        language: 'en',
+        showPhone: true,
+        showReligion: false,
+        showFatherName: false,
+        showPassportNumber: false,
+      },
+      lastRenderedAt: null,
+    });
+  }
 
   const { accessToken } = issueTokens(id);
 
