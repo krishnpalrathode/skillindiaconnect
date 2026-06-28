@@ -116,6 +116,29 @@ export function confirmDocument(key: string, expiryDate?: string): Promise<Candi
   });
 }
 
+// ─── Settings ─────────────────────────────────────────────────────────────────
+
+export interface PatchCandidateSettingsBody {
+  showPhone?: boolean;
+  showReligion?: boolean;
+  waNotifications?: boolean;
+  emailNotifs?: boolean;
+  profileVisible?: boolean;
+  isAvailable?: boolean;
+  salaryExpectationMin?: number;
+  salaryExpectationMax?: number;
+  salaryExpectationCurrency?: string;
+}
+
+export function patchCandidateSettings(
+  body: PatchCandidateSettingsBody,
+): Promise<CandidateProfile> {
+  return apiFetch<CandidateProfile>('/candidates/me/settings', {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
+}
+
 // ─── OTP (phone-verify during onboarding — distinct from login OTP) ───────────
 
 export function postOtpSend(phone: string): Promise<{ sent: boolean }> {

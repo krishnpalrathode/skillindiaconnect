@@ -149,7 +149,99 @@
     "passportExpiry": "Passport expiry date",
     "skills": "Skills",
     "experience": "Experience",
-    "education": "Education"
+    "education": "Education",
+
+    "loading": "Loading your profile…",
+    "loadingError": "Failed to load your profile. Please refresh.",
+    "retry": "Retry",
+
+    "hero": {
+      "changePhoto": "Change photo",
+      "photoComingSoon": "Photo upload coming soon",
+      "editProfile": "Edit profile",
+      "downloadResume": "Download resume",
+      "shareProfile": "Share profile",
+      "comingSoon": "Coming soon",
+      "availableForWork": "Active — Available for Work",
+      "notAvailable": "Not currently available",
+      "memberSince": "Member since {date}"
+    },
+
+    "sections": {
+      "personalInfo": "Personal Info",
+      "workExperience": "Work Experience",
+      "documents": "Documents & Certificates",
+      "skills": "Skills",
+      "accountSettings": "Account Settings"
+    },
+
+    "stats": {
+      "yearsExperience": "Yrs exp.",
+      "skills": "Skills",
+      "applications": "Applications",
+      "shortlisted": "Shortlisted"
+    },
+
+    "personalInfo": {
+      "phoneLabel": "Mobile number",
+      "phoneVerifiedBadge": "Verified",
+      "verifyPhoneLink": "Verify phone",
+      "nameLabel": "Full name",
+      "namePlaceholder": "Your full name",
+      "fatherNameLabel": "Father's name",
+      "fatherNamePlaceholder": "Father's full name",
+      "dobLabel": "Date of birth",
+      "maritalStatusLabel": "Marital status",
+      "religionLabel": "Religion",
+      "religionPlaceholder": "e.g. Islam, Hindu, Christian",
+      "languagesLabel": "Languages spoken",
+      "languagesPlaceholder": "e.g. Hindi, English, Arabic",
+      "nationalityLabel": "Nationality",
+      "nationalityPlaceholder": "e.g. Indian",
+      "locationLabel": "Current location",
+      "locationPlaceholder": "City, State or Country",
+      "noticePeriodLabel": "Notice period",
+      "noticePeriodPlaceholder": "e.g. 30",
+      "noticePeriodUnit": "{days} days"
+    },
+
+    "documents": {
+      "count": "{count} / 3 documents uploaded",
+      "passport": "Passport",
+      "passportHint": "PDF or image, up to 10 MB",
+      "experienceCert": "Experience Certificate",
+      "experienceCertHint": "PDF or image, up to 5 MB",
+      "educationalCert": "Educational Certificate",
+      "educationalCertHint": "PDF or image, up to 5 MB",
+      "videoIntro": "Video Introduction",
+      "videoComingSoon": "Coming soon (B6)",
+      "reupload": "Re-upload",
+      "notUploaded": "Not uploaded",
+      "uploadNow": "Upload now",
+      "validUntil": "Valid until {date}",
+      "expiredOn": "Expired {date}"
+    },
+
+    "settings": {
+      "privacyHeading": "Privacy Controls",
+      "notificationsHeading": "Notifications",
+      "salaryHeading": "Salary Expectation",
+      "showPhone": "Show phone to employers",
+      "showPhoneHint": "Controls what employers see — you always see your phone here",
+      "showReligion": "Show religion to employers",
+      "showReligionHint": "Controls what employers see — you always see your religion here",
+      "waNotifications": "WhatsApp notifications",
+      "emailNotifications": "Email notifications",
+      "profileVisible": "Profile visible to employers",
+      "isAvailable": "Available for work",
+      "salaryMinLabel": "Minimum (per month)",
+      "salaryMaxLabel": "Maximum (per month)",
+      "currencyLabel": "Currency",
+      "salaryMinPlaceholder": "e.g. 25000",
+      "salaryMaxPlaceholder": "e.g. 50000",
+      "saveSalary": "Save salary",
+      "salaryNote": "Unscored — for matching guidance only"
+    }
   },
   "document": {
     "upload": "Upload document",
