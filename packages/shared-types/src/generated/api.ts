@@ -162,20 +162,12 @@ export interface paths {
         /**
          * Send a phone-verification OTP
          * @description Sends a one-time password to the given phone number via WhatsApp for the
-         *     purpose of **phone verification** during candidate onboarding
-         *     (`purpose = PHONE_VERIFY`).
+         *     purpose of **phone verification** during candidate onboarding.
          *
-         *     **Rate limits (shared with `/auth/login/phone/start`):**
-         *     - 5 sends / hour / phone number
-         *     - Per-IP limit applies
+         *     **Rate limits:** 5 sends / hour / phone number.
          *
          *     **409 PHONE_NOT_ON_WHATSAPP** — returned when the number is valid but
-         *     not reachable via the WhatsApp channel. The client should prompt the user
-         *     to try a different number or contact support.
-         *
-         *     Note: the actual send budget and `purpose` enum are enforced by the
-         *     backend (Sprint 1-1); this endpoint ALWAYS sends (unlike the
-         *     enumeration-safe login/phone/start which may silently no-op).
+         *     not reachable via the WhatsApp channel.
          */
         post: operations["postAuthOtpSend"];
         delete?: never;
@@ -197,9 +189,6 @@ export interface paths {
          * Verify the phone-verification OTP
          * @description Verifies a `purpose = PHONE_VERIFY` OTP for the caller's candidate profile.
          *     On success, sets `phoneVerifiedAt` and `whatsappCapable` on the candidate row.
-         *
-         *     Requires a valid access token (the candidate must be logged in to verify
-         *     their own phone number during onboarding).
          *
          *     **401 INVALID_OTP** covers: wrong OTP, expired OTP, and maximum-attempts exceeded.
          */
@@ -223,25 +212,13 @@ export interface paths {
          * Start OTP-based phone login
          * @description Initiates OTP-based login for an existing candidate account.
          *
-         *     **ENUMERATION-SAFE: this endpoint ALWAYS returns 200 regardless of whether
-         *     a verified candidate exists for the phone number.** This prevents callers from
-         *     inferring whether a phone number has an account.
+         *     **ENUMERATION-SAFE: always returns 200 regardless of whether a verified
+         *     candidate exists for the phone number.**
          *
-         *     Internal behavior (not visible to callers):
-         *     - If a CANDIDATE user with a VERIFIED phone matching `phone` exists → sends a
-         *       `purpose = LOGIN` OTP via WhatsApp.
-         *     - If the phone belongs to a non-candidate, an unverified candidate, or is
-         *       unknown → silently no-ops (no OTP sent, same 200 response).
+         *     Internal behavior: if a CANDIDATE with a VERIFIED phone matching `phone`
+         *     exists → sends a `purpose = LOGIN` OTP via WhatsApp. Otherwise → silent no-op.
          *
          *     **OTP login is for existing candidates only. It never creates accounts.**
-         *     There is no phone-signup endpoint.
-         *
-         *     **Rate limits (shared with `/auth/otp/send`):**
-         *     - 5 sends / hour / phone number
-         *     - Per-IP limit applies
-         *
-         *     The 200 body is identical regardless of whether an OTP was actually sent,
-         *     so the client MUST NOT branch on the response body.
          */
         post: operations["postAuthLoginPhoneStart"];
         delete?: never;
@@ -262,8 +239,7 @@ export interface paths {
         /**
          * Verify OTP and issue tokens for phone login
          * @description Verifies a `purpose = LOGIN` OTP and, on success, issues an access token
-         *     and sets the `sic_refresh` HttpOnly cookie — the identical rotation/
-         *     blacklist path used by email/password and Google OAuth login.
+         *     and sets the `sic_refresh` HttpOnly cookie.
          *
          *     **Candidates only.** Non-candidate callers always receive 401 INVALID_OTP
          *     (to preserve enumeration safety).
@@ -287,8 +263,7 @@ export interface paths {
         /**
          * Request a password-reset link
          * @description Sends a password-reset link to the email via AWS SES — **if the email
-         *     exists**. Always returns 200 regardless (enumeration-safe). The reset link
-         *     embeds a short-lived signed token.
+         *     exists**. Always returns 200 regardless (enumeration-safe).
          */
         post: operations["postAuthForgotPassword"];
         delete?: never;
@@ -326,7 +301,7 @@ export interface paths {
         };
         /**
          * Get the authenticated candidate's profile (self-view)
-         * @description Returns the full profile including phone and religion regardless of privacy toggles, since this is the candidate's own data. See CandidateProfile schema for non-self privacy rules.
+         * @description Returns the full profile including phone and religion regardless of privacy toggles, since this is the candidate's own data.
          */
         get: operations["getCandidateMe"];
         put?: never;
@@ -350,7 +325,7 @@ export interface paths {
         };
         /**
          * Get profile completion breakdown
-         * @description Returns server-computed completion percentage, per-section breakdown, and whether the candidate passes the apply gate (pct ≥ threshold AND mandatory docs AND passport not expired). The apply gate is enforced at apply time (Sprint 4), not here.
+         * @description Returns server-computed completion percentage, per-section breakdown, and whether the candidate passes the apply gate. The gate is enforced at apply time (Sprint 4), not here.
          */
         get: operations["getCandidateMeCompletion"];
         put?: never;
@@ -462,15 +437,13 @@ export interface paths {
         /**
          * Get a presigned R2 upload URL
          * @description Issues a short-lived presigned PUT URL for direct R2 upload.
-         *     The client PUTs the file to `uploadUrl`, then calls
-         *     `POST /candidates/me/documents/confirm` with the `key`.
          *
          *     **Accepted types and size limits:**
          *     - `PASSPORT`: 10 MB max; image/jpeg, image/png, application/pdf
          *     - `EXPERIENCE_CERT`: 5 MB max; application/pdf
          *     - `EDUCATIONAL_CERT`: 5 MB max; application/pdf
          *
-         *     `WORKING_VIDEO` is **Phase 2 only** — not accepted at MVP.
+         *     `WORKING_VIDEO` is Phase 2 only — not accepted at MVP.
          */
         post: operations["postCandidateMeDocumentsPresign"];
         delete?: never;
@@ -488,16 +461,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Confirm an uploaded document
-         * @description After the client successfully PUTs the file to the presigned URL, calls
-         *     this endpoint to record the document in the database.
-         *
-         *     The API performs a HEAD check on the R2 key to confirm the upload succeeded.
-         *     If the key is not found, returns `422 UPLOAD_NOT_FOUND`.
-         *
-         *     For PASSPORT documents, `expiryDate` is accepted (and required) here.
-         */
+        /** Confirm an uploaded document */
         post: operations["postCandidateMeDocumentsConfirm"];
         delete?: never;
         options?: never;
@@ -516,15 +480,60 @@ export interface paths {
         put?: never;
         /**
          * Mark onboarding as complete
-         * @description Marks the candidate's onboarding step as done and returns the current
-         *     completion percentage.
-         *
-         *     **SOFT-BLOCK:** This endpoint succeeds even if mandatory documents are
-         *     missing or completion is below the apply threshold. The apply gate
-         *     (≥ 70 % completion + mandatory docs + valid passport) is enforced
-         *     separately at job-apply time (Sprint 4), not here.
+         * @description **SOFT-BLOCK:** Succeeds even if mandatory documents are missing or
+         *     completion is below the apply threshold. The apply gate is enforced at
+         *     job-apply time (Sprint 4), not here.
          */
         post: operations["postCandidateMeCompleteOnboarding"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/candidates/me/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the candidate's in-app notifications (cursor-paginated)
+         * @description Returns cursor-paginated notifications for the authenticated candidate.
+         *
+         *     **Filter categories:**
+         *     - `applications` — APPLICATION_UPDATE type
+         *     - `jobs` — JOB_MATCH type
+         *     - `profile` — PROFILE_REMINDER and DOCUMENT_STATUS types
+         *     - `system` — SYSTEM type
+         *     - (omit `filter`) — all types
+         *
+         *     `unread=true` restricts to unread notifications only.
+         */
+        get: operations["getCandidateMeNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/candidates/me/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark notifications as read
+         * @description Marks specific notifications (by `ids`) or all notifications (`all: true`) as read. If both are provided, `all` takes precedence.
+         */
+        post: operations["postCandidateMeNotificationsRead"];
         delete?: never;
         options?: never;
         head?: never;
@@ -546,8 +555,8 @@ export interface paths {
          * @description Sets the account status to `PENDING_DELETION` and schedules a 30-day
          *     purge job. Returns the deletion due date.
          *
-         *     Financial records (orders, payments, subscriptions, invoices) and
-         *     `audit_logs` are never cascade-deleted per the platform invariants.
+         *     Financial records and `audit_logs` are never cascade-deleted per the
+         *     platform invariants.
          */
         delete: operations["deleteAccount"];
         options?: never;
@@ -562,10 +571,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Get resume settings and last-rendered timestamp
-         * @description Returns the candidate's resume rendering settings and the timestamp of the last successful PDF generation. Built in Sprint 7; mocked in S1.
-         */
+        /** Get resume settings and last-rendered timestamp */
         get: operations["getCandidateMeResume"];
         put?: never;
         post?: never;
@@ -588,10 +594,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /**
-         * Update resume rendering settings
-         * @description Updates which fields appear in the PDF. Hidden fields (showPassportNumber = false, showReligion = false) must be absent from PDF bytes, not just hidden in preview (enforced at generation time).
-         */
+        /** Update resume rendering settings */
         patch: operations["patchCandidateMeResumeSettings"];
         trace?: never;
     };
@@ -604,10 +607,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Enqueue a resume PDF generation
-         * @description Enqueues an async PDF generation job (BullMQ). Returns a `generationId` that can be used to poll status. Built in Sprint 7.
-         */
+        /** Enqueue a resume PDF generation */
         post: operations["postCandidateMeResumeGenerate"];
         delete?: never;
         options?: never;
@@ -622,10 +622,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Get a signed download URL for the candidate's resume PDF
-         * @description Returns a short-expiry signed R2 URL for the most recently generated PDF. Every URL issuance is audited. Built in Sprint 7.
-         */
+        /** Get a signed download URL for the candidate's resume PDF */
         get: operations["getCandidateMeResumeDownload"];
         put?: never;
         post?: never;
@@ -646,12 +643,8 @@ export interface paths {
         put?: never;
         /**
          * Send resume PDF via WhatsApp to the candidate
-         * @description Sends the candidate's resume PDF to their own verified WhatsApp number.
-         *     Rate-limited: 5 sends / day / candidate.
-         *
-         *     **409 WHATSAPP_NOT_CAPABLE** — returned when the candidate's
-         *     `whatsappCapable = false`. In that case the client should fall back to
-         *     `POST /candidates/me/resume/send-email`.
+         * @description Rate-limited: 5 sends / day / candidate.
+         *     **409 WHATSAPP_NOT_CAPABLE** — candidate's `whatsappCapable = false`.
          */
         post: operations["postCandidateMeResumeSendWhatsapp"];
         delete?: never;
@@ -671,12 +664,8 @@ export interface paths {
         put?: never;
         /**
          * Send resume PDF via email to the candidate
-         * @description Sends the candidate's resume PDF via AWS SES to their own registered
-         *     account email address.
-         *
-         *     **HARD RULE:** sends ONLY to the candidate's account email — never to
-         *     an arbitrary address supplied in the request body. No `to` field is
-         *     accepted. Rate-limited: 5 sends / day / candidate (shared with WhatsApp).
+         * @description Sends to the candidate's own registered account email ONLY — no `to`
+         *     field is accepted. Rate-limited: 5 sends / day.
          */
         post: operations["postCandidateMeResumeSendEmail"];
         delete?: never;
@@ -695,8 +684,14 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * [S3] Register employer company profile
-         * @description **Sprint 3 — not yet implemented.** Registers the employer's company details after account creation.
+         * Register employer company profile
+         * @description Registers the employer's company details after account creation.
+         *     The company starts with status PENDING and must be approved by an admin
+         *     before the employer can post jobs.
+         *
+         *     **Requires EMPLOYER role.** CANDIDATE callers receive 403 FORBIDDEN.
+         *     Only one company per employer account — 409 COMPANY_ALREADY_EXISTS if
+         *     the employer has already registered.
          */
         post: operations["postEmployersRegister"];
         delete?: never;
@@ -712,21 +707,61 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * [S3] Get employer company profile
-         * @description **Sprint 3 — not yet implemented.**
-         */
+        /** Get the authenticated employer's company profile */
         get: operations["getEmployersMeCompany"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /**
-         * [S3] Update employer company profile
-         * @description **Sprint 3 — not yet implemented.**
-         */
+        /** Update the authenticated employer's company profile */
         patch: operations["patchEmployersMeCompany"];
+        trace?: never;
+    };
+    "/employers/me/company/documents/presign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get a presigned R2 URL to upload the registration certificate
+         * @description Issues a short-lived presigned PUT URL for direct R2 upload of the
+         *     registration certificate. After upload, call
+         *     `POST /employers/me/company/documents/confirm` with the returned `key`.
+         *
+         *     Accepted: application/pdf, image/jpeg, image/png. Max 10 MB.
+         */
+        post: operations["postEmployersMeCompanyDocumentsPresign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employers/me/company/documents/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm the uploaded registration certificate
+         * @description After PUT to the presigned URL succeeds, call this to record the
+         *     certificate key on the company profile. The API performs a HEAD check;
+         *     returns 422 UPLOAD_NOT_FOUND if the object is missing.
+         */
+        post: operations["postEmployersMeCompanyDocumentsConfirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/employers/me/dashboard": {
@@ -737,8 +772,14 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [S3] Employer dashboard summary
-         * @description **Sprint 3 — not yet implemented.**
+         * Get the employer's dashboard summary (Screen 15)
+         * @description Returns KPIs (active jobs, total applications, shortlisted, selected)
+         *     and the most recent jobs and applicants.
+         *
+         *     `recentApplicants` uses employer-context viewer-aware DTO masking:
+         *     phone and religion are omitted based on candidate privacy toggles.
+         *
+         *     **403 EMPLOYER_NOT_APPROVED** if the company status is not APPROVED.
          */
         get: operations["getEmployersMeDashboard"];
         put?: never;
@@ -756,10 +797,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * [S3] List employer's job postings
-         * @description **Sprint 3 — not yet implemented.**
-         */
+        /** List the employer's job postings — offset-paginated (Screen 17) */
         get: operations["getEmployersMeJobs"];
         put?: never;
         post?: never;
@@ -767,6 +805,323 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Browse active job listings (public, SSR-crawlable, cursor-paginated)
+         * @description **PUBLIC endpoint — no authentication required.** Returns only ACTIVE jobs.
+         *
+         *     **FTS + trigram behavior:** `q` performs full-text search on title and
+         *     description. `sort=relevance` ranks by FTS rank then `publishedAt` desc.
+         *     `sort=recent` orders by `publishedAt` desc. `sort=salary` orders by
+         *     `salaryMax` desc (nulls last).
+         *
+         *     **Cursor pagination:** pass `nextCursor` from the previous response as
+         *     `cursor` in the next request. `nextCursor = null` means no more results.
+         *
+         *     `isSaved` is populated for authenticated candidate callers; null for
+         *     unauthenticated (SSR / crawler) requests.
+         */
+        get: operations["getJobs"];
+        put?: never;
+        /**
+         * Create a new job posting as DRAFT (approved employer)
+         * @description Creates a new job in DRAFT status. Not publicly visible until published.
+         *
+         *     **Requires EMPLOYER role with an APPROVED company.** Returns 403
+         *     EMPLOYER_NOT_APPROVED if the company is PENDING, REJECTED, or SUSPENDED.
+         *
+         *     **Publish-time rules (NOT enforced at create — documented here for reference):**
+         *     1. EMPLOYER_NOT_APPROVED (403) — enforced at publish only if company status changes.
+         *     2. WORKER_PROTECTION_VIOLATION (422) — accommodation, healthInsurance, and
+         *        transportation must all be `true`. `meta.violations[]` lists which rules failed.
+         *     3. JOB_QUOTA_EXCEEDED (422) — Free plan: max 1 ACTIVE job. `meta.planLimit = 1`.
+         */
+        post: operations["postJobs"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/jobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get public job detail (SSR-crawlable)
+         * @description **PUBLIC endpoint — no authentication required.** Returns the full detail
+         *     for a single ACTIVE job, including description, requirements, and up to
+         *     5 similar jobs.
+         *
+         *     `isSaved` is populated for authenticated candidate callers; null for
+         *     unauthenticated requests.
+         *
+         *     **No `companyId` or internal/employer-PII fields are returned.**
+         *     404 is returned for non-ACTIVE (draft, paused, archived) jobs.
+         */
+        get: operations["getJobById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update a job posting (owning employer)
+         * @description Partial update of an employer's own job. Allowed on DRAFT, ACTIVE, and PAUSED jobs. ARCHIVED jobs are read-only — returns 422 ILLEGAL_TRANSITION.
+         */
+        patch: operations["patchJobById"];
+        trace?: never;
+    };
+    "/jobs/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish a job posting (owning employer)
+         * @description Moves a DRAFT or PAUSED job to ACTIVE status.
+         *
+         *     **Enforcement order (first failure short-circuits):**
+         *
+         *     1. **EMPLOYER_NOT_APPROVED (403)** — The employer's company must have
+         *        `status = APPROVED`. PENDING, REJECTED, and SUSPENDED companies cannot
+         *        publish.
+         *
+         *     2. **WORKER_PROTECTION_VIOLATION (422)** — All three of `accommodation`,
+         *        `healthInsurance`, and `transportation` must be `true`. Returns 422 with
+         *        `meta.violations[]` listing which fields failed (e.g.
+         *        `["accommodation", "healthInsurance"]`).
+         *
+         *     3. **JOB_QUOTA_EXCEEDED (422)** — Free plan employers may have at most 1
+         *        ACTIVE job at a time. Returns 422 with `meta.planLimit = 1` and
+         *        `meta.activeCount = N`.
+         */
+        post: operations["publishJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/jobs/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pause an active job (owning employer)
+         * @description Moves an ACTIVE job to PAUSED status. Paused jobs are hidden from public search but can be resumed. Use archive for a permanent removal.
+         */
+        post: operations["pauseJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/jobs/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resume a paused job (owning employer)
+         * @description Moves a PAUSED job back to ACTIVE status. The same publish-time rules (worker protection + quota) are re-evaluated.
+         */
+        post: operations["resumeJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/jobs/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive a job (owning employer)
+         * @description Moves a DRAFT, ACTIVE, or PAUSED job to ARCHIVED status. Archived jobs are permanently read-only and not visible in public search. This transition is permanent — use pause to temporarily hide an active job.
+         */
+        post: operations["archiveJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/jobs/{id}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Duplicate a job as a new DRAFT (owning employer)
+         * @description Creates a new DRAFT job by copying all fields from the specified job. The new job starts in DRAFT status and must be published separately.
+         */
+        post: operations["duplicateJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/jobs/{id}/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save a job (authenticated candidate) */
+        post: operations["saveJob"];
+        /** Unsave a job (authenticated candidate) */
+        delete: operations["unsaveJob"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/employers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all employer companies (admin, offset-paginated)
+         * @description Returns offset-paginated list of all employer companies. Filterable by status and type. Requires admin bearer token.
+         */
+        get: operations["getAdminEmployers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/employers/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve an employer company (admin)
+         * @description Sets the employer's company status to APPROVED. After approval the employer can post jobs. Requires `employers.approve_reject` permission.
+         */
+        post: operations["postAdminEmployerApprove"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/employers/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reject an employer company (admin)
+         * @description Sets the employer's company status to REJECTED. A `reason` is required and is visible to the employer via `Company.rejectionReason`. Requires `employers.approve_reject` permission.
+         */
+        post: operations["postAdminEmployerReject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/employers/{id}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suspend an employer company (admin)
+         * @description Sets the employer's company status to SUSPENDED. All their ACTIVE jobs are paused automatically. Requires `employers.approve_reject` permission.
+         */
+        post: operations["postAdminEmployerSuspend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get platform settings (admin)
+         * @description Returns all platform settings grouped by SettingGroup (matches the tabs on Screen 28). Requires admin bearer token.
+         */
+        get: operations["getAdminSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update platform settings (admin; core rules require SUPER_ADMIN)
+         * @description Updates one or more settings by key. Settings where `isCoreRule = true`
+         *     (WORKER_PROTECTION group) require SUPER_ADMIN — ADMIN callers receive
+         *     403 CORE_RULE_FORBIDDEN for those keys.
+         *
+         *     Send only the keys to update; other settings remain unchanged.
+         */
+        patch: operations["patchAdminSettings"];
         trace?: never;
     };
     "/employers/candidates/{id}": {
@@ -789,78 +1144,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/jobs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * [S2] Browse job listings (cursor-paginated feed)
-         * @description **Sprint 2 — not yet implemented.**
-         */
-        get: operations["getJobs"];
-        put?: never;
-        /**
-         * [S4] Create a new job posting (employer)
-         * @description **Sprint 4 — not yet implemented.**
-         */
-        post: operations["postJobs"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/jobs/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * [S2] Get job details
-         * @description **Sprint 2 — not yet implemented.**
-         */
-        get: operations["getJobById"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * [S4] Update a job posting
-         * @description **Sprint 4 — not yet implemented.**
-         */
-        patch: operations["patchJobById"];
-        trace?: never;
-    };
-    "/jobs/{id}/save": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * [S2] Save a job
-         * @description **Sprint 2 — not yet implemented.**
-         */
-        post: operations["saveJob"];
-        /**
-         * [S2] Unsave a job
-         * @description **Sprint 2 — not yet implemented.**
-         */
-        delete: operations["unsaveJob"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/jobs/{id}/apply": {
         parameters: {
             query?: never;
@@ -875,26 +1158,6 @@ export interface paths {
          * @description **Sprint 4 — not yet implemented.** The apply gate enforces profile completion ≥ threshold, all mandatory documents present, and passport not expired. Match score is computed once at apply time and snapshotted.
          */
         post: operations["applyToJob"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/jobs/{id}/publish": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * [S4] Publish a job posting (employer)
-         * @description **Sprint 4 — not yet implemented.** Cannot publish when accommodation / health insurance / transportation settings require it but are not set. Free plan is limited to 1 active job (subscription quota enforced here).
-         */
-        post: operations["publishJob"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1061,86 +1324,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/employers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * [S6] List all employers (admin)
-         * @description **Sprint 6 — not yet implemented.**
-         */
-        get: operations["getAdminEmployers"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/employers/{id}/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * [S6] Approve an employer
-         * @description **Sprint 6 — not yet implemented.**
-         */
-        post: operations["postAdminEmployerApprove"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/employers/{id}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * [S6] Reject an employer
-         * @description **Sprint 6 — not yet implemented.**
-         */
-        post: operations["postAdminEmployerReject"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/employers/{id}/suspend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * [S6] Suspend an employer
-         * @description **Sprint 6 — not yet implemented.**
-         */
-        post: operations["postAdminEmployerSuspend"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/jobs": {
         parameters: {
             query?: never;
@@ -1225,30 +1408,6 @@ export interface paths {
         patch: operations["patchAdminRolePermissions"];
         trace?: never;
     };
-    "/admin/settings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * [S6] Get platform settings
-         * @description **Sprint 6 — not yet implemented.**
-         */
-        get: operations["getAdminSettings"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * [S6] Update platform settings (Super-Admin only)
-         * @description **Sprint 6 — not yet implemented.**
-         */
-        patch: operations["patchAdminSettings"];
-        trace?: never;
-    };
     "/admin/logs": {
         parameters: {
             query?: never;
@@ -1295,11 +1454,11 @@ export interface components {
              */
             detail: string;
             /**
-             * @description Machine-readable error code — the stable contract field. Examples: EMAIL_TAKEN, INVALID_CREDENTIALS, ACCOUNT_SUSPENDED, INVALID_OTP, PHONE_NOT_ON_WHATSAPP, PROFILE_INCOMPLETE, MANDATORY_DOCS_MISSING, ILLEGAL_TRANSITION, NOT_IMPLEMENTED.
+             * @description Machine-readable error code — the stable contract field. Examples: EMAIL_TAKEN, INVALID_CREDENTIALS, ACCOUNT_SUSPENDED, INVALID_OTP, PHONE_NOT_ON_WHATSAPP, PROFILE_INCOMPLETE, MANDATORY_DOCS_MISSING, ILLEGAL_TRANSITION, EMPLOYER_NOT_APPROVED, WORKER_PROTECTION_VIOLATION, JOB_QUOTA_EXCEEDED, CORE_RULE_FORBIDDEN, NOT_IMPLEMENTED.
              * @example EMAIL_TAKEN
              */
             code: string;
-            /** @description Additional context. Validation errors carry `meta.errors[]` with per-field machine codes. */
+            /** @description Additional context. Validation errors carry `meta.errors[]` with per-field machine codes. Publish errors carry `meta.violations[]` or `meta.planLimit`. */
             meta?: {
                 [key: string]: unknown;
             };
@@ -1319,6 +1478,34 @@ export interface components {
         DocumentType: "PASSPORT" | "EXPERIENCE_CERT" | "EDUCATIONAL_CERT";
         /** @enum {string} */
         DocumentStatus: "PENDING" | "VERIFIED" | "REJECTED";
+        /**
+         * @description LOCAL = Indian company hiring domestically; FOREIGN = Gulf/overseas employer.
+         * @enum {string}
+         */
+        CompanyType: "LOCAL" | "FOREIGN";
+        /**
+         * @description Lifecycle of an employer company profile. New registrations start PENDING. An admin with `employers.approve_reject` moves them to APPROVED or REJECTED. APPROVED employers can post jobs. SUSPENDED employers cannot post; their active jobs are paused automatically.
+         * @enum {string}
+         */
+        CompanyStatus: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+        /** @enum {string} */
+        EmployeeRange: "1-10" | "11-50" | "51-200" | "201-500" | "500+";
+        /**
+         * @description DRAFT — visible only to the owning employer, not in public search. ACTIVE — live in public search; candidates can save and apply (S4). PAUSED — hidden from public search; can be resumed to ACTIVE. ARCHIVED — permanent, read-only; cannot be un-archived.
+         * @enum {string}
+         */
+        JobStatus: "DRAFT" | "ACTIVE" | "PAUSED" | "ARCHIVED";
+        /** @enum {string} */
+        JobMarket: "GULF" | "LOCAL";
+        /** @enum {string} */
+        GenderPreference: "MALE" | "FEMALE" | "ANY";
+        /** @enum {string} */
+        NotificationType: "APPLICATION_UPDATE" | "JOB_MATCH" | "PROFILE_REMINDER" | "DOCUMENT_STATUS" | "SYSTEM";
+        /**
+         * @description Maps to the tabs on the Admin Settings screen (Screen 28). WORKER_PROTECTION settings are core rules — only SUPER_ADMIN may update them.
+         * @enum {string}
+         */
+        SettingGroup: "WORKER_PROTECTION" | "COMPLETION" | "APPLICATION" | "PLATFORM";
         UserSummary: {
             /** Format: uuid */
             id: string;
@@ -1451,6 +1638,177 @@ export interface components {
             showFatherName: boolean;
             /** @default false */
             showPassportNumber: boolean;
+        };
+        /**
+         * @description Employer company profile. Returned to the owning employer and to admins.
+         *     Never returned on public job endpoints — use `JobCard.companyName` there.
+         */
+        Company: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            type: components["schemas"]["CompanyType"];
+            status: components["schemas"]["CompanyStatus"];
+            registrationNumber?: string;
+            industryType?: string;
+            phone?: string;
+            location?: string;
+            /** Format: uri */
+            website?: string;
+            employeeRange?: components["schemas"]["EmployeeRange"];
+            /**
+             * @default en
+             * @enum {string}
+             */
+            languagePref: "en" | "hi" | "ar";
+            description?: string;
+            /** @description R2 key for the uploaded registration certificate document */
+            registrationCertKey?: string | null;
+            /** @description Populated after admin rejection; visible to the employer */
+            rejectionReason?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            approvedAt?: string | null;
+        };
+        EmployerDashboardKpi: {
+            activeJobs: number;
+            totalApplications: number;
+            shortlisted: number;
+            selected: number;
+        };
+        /** @description Employer dashboard summary (Screen 15). `recentApplicants` applies viewer-aware DTO masking — phone and religion follow candidate privacy toggles. */
+        EmployerDashboard: {
+            kpis: components["schemas"]["EmployerDashboardKpi"];
+            recentJobs: components["schemas"]["JobCard"][];
+            recentApplicants: components["schemas"]["CandidateProfile"][];
+        };
+        /**
+         * @description Full internal job schema — returned to the owning employer and admins only.
+         *     **Never return this schema on public endpoints** — use `JobCard` or `JobDetail`.
+         *
+         *     **Publish-time enforcement order** (documented here, enforced at `POST /jobs/{id}/publish`):
+         *     1. `EMPLOYER_NOT_APPROVED` (403) — company.status must be APPROVED.
+         *     2. `WORKER_PROTECTION_VIOLATION` (422) — accommodation, healthInsurance, and
+         *        transportation must all be true. `meta.violations[]` lists which failed.
+         *     3. `JOB_QUOTA_EXCEEDED` (422) — Free plan: max 1 ACTIVE job. `meta.planLimit = 1`.
+         */
+        Job: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            status: components["schemas"]["JobStatus"];
+            market: components["schemas"]["JobMarket"];
+            location: string;
+            description?: string;
+            /** Format: uuid */
+            categoryId?: string | null;
+            salaryMin?: number | null;
+            salaryMax?: number | null;
+            /** @example AED */
+            salaryCurrency: string;
+            /** @description Must be true to publish — worker-protection rule enforced at publish time */
+            accommodation: boolean;
+            /** @description Must be true to publish — worker-protection rule enforced at publish time */
+            healthInsurance: boolean;
+            /** @description Must be true to publish — worker-protection rule enforced at publish time */
+            transportation: boolean;
+            workConditions?: string;
+            requirements?: string[];
+            experienceRequiredYears?: number | null;
+            vacancies?: number | null;
+            genderPreference?: components["schemas"]["GenderPreference"];
+            /**
+             * Format: uuid
+             * @description Internal — not returned on public endpoints
+             */
+            companyId: string;
+            /** @description Denormalized for display */
+            companyName: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            publishedAt?: string | null;
+            /** Format: date-time */
+            archivedAt?: string | null;
+        };
+        /**
+         * @description **Public search-result shape.** Deliberately excludes internal employer fields
+         *     (`companyId`, employer PII, internal metadata). Only ACTIVE jobs appear in
+         *     public feeds (`GET /jobs`).
+         *
+         *     `isSaved` is populated for authenticated candidate callers; `null` for
+         *     unauthenticated (SSR / crawler) requests.
+         */
+        JobCard: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            market: components["schemas"]["JobMarket"];
+            location: string;
+            /** Format: uuid */
+            categoryId?: string | null;
+            salaryMin?: number | null;
+            salaryMax?: number | null;
+            /** @example AED */
+            salaryCurrency: string;
+            accommodation: boolean;
+            healthInsurance: boolean;
+            transportation: boolean;
+            companyName: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            publishedAt?: string | null;
+            /** @description Whether the authenticated candidate has saved this job. null for unauthenticated callers. */
+            isSaved?: boolean | null;
+        };
+        JobDetail: components["schemas"]["JobCard"] & {
+            description?: string;
+            requirements?: string[];
+            workConditions?: string;
+            experienceRequiredYears?: number | null;
+            vacancies?: number | null;
+            genderPreference?: components["schemas"]["GenderPreference"];
+            /** @description Up to 5 similar active jobs in the same market/category. */
+            similarJobs?: components["schemas"]["JobCard"][];
+        };
+        Notification: {
+            /** Format: uuid */
+            id: string;
+            type: components["schemas"]["NotificationType"];
+            title: string;
+            body: string;
+            read: boolean;
+            /** Format: date-time */
+            readAt?: string | null;
+            /** @description ID of the related job or application (if applicable) */
+            relatedEntityId?: string;
+            /** @enum {string} */
+            relatedEntityType?: "job" | "application";
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /**
+         * @description Platform configuration setting. Settings where `isCoreRule = true` (the
+         *     WORKER_PROTECTION group) may only be updated by SUPER_ADMIN — ADMIN callers
+         *     receive 403 `CORE_RULE_FORBIDDEN` for those keys.
+         */
+        Setting: {
+            /** @description Machine-readable unique key (e.g. REQUIRE_ACCOMMODATION) */
+            key: string;
+            group: components["schemas"]["SettingGroup"];
+            /** @description Human-readable label for the admin UI */
+            label: string;
+            description?: string;
+            /** @description The current value. Type varies by key: boolean for flags, integer for numeric limits, string for text settings. */
+            value: unknown;
+            /** @description If true, only SUPER_ADMIN may update this setting */
+            isCoreRule: boolean;
+            /** Format: date-time */
+            updatedAt?: string | null;
+            /** @description User ID of the last updater */
+            updatedBy?: string | null;
         };
     };
     responses: never;
@@ -1829,15 +2187,9 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /**
-                     * @description Must match the phone sent in /auth/otp/send
-                     * @example +919876543210
-                     */
+                    /** @example +919876543210 */
                     phone: string;
-                    /**
-                     * @description 6-digit OTP received via WhatsApp
-                     * @example 123456
-                     */
+                    /** @example 123456 */
                     otp: string;
                 };
             };
@@ -1889,16 +2241,13 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /**
-                     * @description E.164 phone number to log in with
-                     * @example +919876543210
-                     */
+                    /** @example +919876543210 */
                     phone: string;
                 };
             };
         };
         responses: {
-            /** @description Always returned (enumeration-safe). An OTP was sent only if a verified candidate account exists for this phone — the response body does not distinguish the two cases. */
+            /** @description Always returned (enumeration-safe) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1918,15 +2267,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Too many requests",
-                     *       "status": 429,
-                     *       "detail": "OTP send limit reached. Try again in an hour.",
-                     *       "code": "RATE_LIMIT_EXCEEDED"
-                     *     }
-                     */
                     "application/json": components["schemas"]["Error"];
                 };
             };
@@ -1997,7 +2337,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Always returned (enumeration-safe). A reset email was sent only if the email has a matching account. */
+            /** @description Always returned (enumeration-safe) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2023,9 +2363,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description Signed reset token from the email link */
                     token: string;
-                    /** @description New password; must meet the strength policy */
                     password: string;
                 };
             };
@@ -2069,15 +2407,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Validation failed",
-                     *       "status": 422,
-                     *       "detail": "Password does not meet the strength requirements.",
-                     *       "code": "VALIDATION_ERROR"
-                     *     }
-                     */
                     "application/json": components["schemas"]["Error"];
                 };
             };
@@ -2135,7 +2464,6 @@ export interface operations {
                     jobCategoryId?: string;
                     currentLocation?: string;
                     nationality?: string;
-                    /** @description Notice period in days */
                     noticePeriod?: number;
                 };
             };
@@ -2425,7 +2753,6 @@ export interface operations {
                     fileName: string;
                     /** @example application/pdf */
                     mimeType: string;
-                    /** @description File size in bytes; validated against per-type limits */
                     sizeBytes: number;
                 };
             };
@@ -2439,12 +2766,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: {
-                            /**
-                             * Format: uri
-                             * @description Presigned PUT URL; client PUTs the file directly
-                             */
+                            /** Format: uri */
                             uploadUrl: string;
-                            /** @description R2 object key; pass to /documents/confirm */
                             key: string;
                             /** @example 300 */
                             expiresInSeconds: number;
@@ -2473,7 +2796,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description R2 key returned by /documents/presign */
                     key: string;
                     /**
                      * Format: date
@@ -2535,6 +2857,89 @@ export interface operations {
                             completionPct: number;
                         };
                     };
+                };
+            };
+        };
+    };
+    getCandidateMeNotifications: {
+        parameters: {
+            query?: {
+                /** @description Notification category filter */
+                filter?: "applications" | "jobs" | "profile" | "system";
+                /** @description If true, return only unread notifications */
+                unread?: boolean;
+                /** @description Opaque keyset cursor for cursor-paginated feeds */
+                cursor?: components["parameters"]["CursorParam"];
+                /** @description Page size for cursor-paginated feeds (default 20, max 100) */
+                limit?: components["parameters"]["LimitParam"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cursor-paginated notifications */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Notification"][];
+                        nextCursor: string | null;
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postCandidateMeNotificationsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Specific notification IDs to mark read */
+                    ids?: string[];
+                    /** @description If true, mark every notification as read */
+                    all?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Notifications marked as read */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            markedCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
                 };
             };
         };
@@ -2694,7 +3099,6 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: {
-                            /** @example true */
                             sent: boolean;
                         };
                     };
@@ -2746,7 +3150,6 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: {
-                            /** @example true */
                             sent: boolean;
                         };
                     };
@@ -2770,10 +3173,41 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    type: components["schemas"]["CompanyType"];
+                    registrationNumber?: string;
+                    industryType?: string;
+                    phone: string;
+                    location: string;
+                    /** Format: uri */
+                    website?: string;
+                    employeeRange: components["schemas"]["EmployeeRange"];
+                    /**
+                     * @default en
+                     * @enum {string}
+                     */
+                    languagePref?: "en" | "hi" | "ar";
+                    description?: string;
+                };
+            };
+        };
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Company profile created (status PENDING) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Company"];
+                    };
+                };
+            };
+            /** @description Caller is not an EMPLOYER role */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2781,12 +3215,39 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 3.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Only EMPLOYER role users may register a company.",
+                     *       "code": "FORBIDDEN"
                      *     }
                      */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Company already registered for this account */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Company already registered",
+                     *       "status": 409,
+                     *       "detail": "This employer account already has a registered company profile.",
+                     *       "code": "COMPANY_ALREADY_EXISTS"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };
@@ -2801,8 +3262,19 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Company profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Company"];
+                    };
+                };
+            };
+            /** @description No company profile registered yet */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2810,10 +3282,10 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 3.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Not found",
+                     *       "status": 404,
+                     *       "detail": "No company profile found. Use POST /employers/register first.",
+                     *       "code": "NOT_FOUND"
                      *     }
                      */
                     "application/json": components["schemas"]["Error"];
@@ -2828,14 +3300,131 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
-                "application/json": Record<string, never>;
+                "application/json": {
+                    name?: string;
+                    registrationNumber?: string;
+                    industryType?: string;
+                    phone?: string;
+                    location?: string;
+                    /** Format: uri */
+                    website?: string;
+                    employeeRange?: components["schemas"]["EmployeeRange"];
+                    /** @enum {string} */
+                    languagePref?: "en" | "hi" | "ar";
+                    description?: string;
+                };
             };
         };
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Updated company profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Company"];
+                    };
+                };
+            };
+            /** @description Company not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postEmployersMeCompanyDocumentsPresign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @example registration-cert.pdf */
+                    fileName: string;
+                    /** @example application/pdf */
+                    mimeType: string;
+                    sizeBytes: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Presigned URL ready */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** Format: uri */
+                            uploadUrl: string;
+                            key: string;
+                            /** @example 300 */
+                            expiresInSeconds: number;
+                        };
+                    };
+                };
+            };
+            /** @description Invalid file type or exceeds 10 MB limit */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postEmployersMeCompanyDocumentsConfirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description R2 key returned by the presign endpoint */
+                    key: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Certificate recorded on company profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Company"];
+                    };
+                };
+            };
+            /** @description Company not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Upload not found (HEAD check failed) */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2843,10 +3432,10 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 3.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Upload not found",
+                     *       "status": 422,
+                     *       "detail": "The uploaded file was not found in storage. Please try uploading again.",
+                     *       "code": "UPLOAD_NOT_FOUND"
                      *     }
                      */
                     "application/json": components["schemas"]["Error"];
@@ -2863,8 +3452,19 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Dashboard data */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EmployerDashboard"];
+                    };
+                };
+            };
+            /** @description Company not yet approved */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2872,10 +3472,213 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 3.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Employer not approved",
+                     *       "status": 403,
+                     *       "detail": "Your company profile is pending admin approval.",
+                     *       "code": "EMPLOYER_NOT_APPROVED"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description No company profile registered */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getEmployersMeJobs: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["JobStatus"];
+                /** @description Title keyword search */
+                search?: string;
+                /** @description 1-based page number for offset-paginated admin tables */
+                page?: components["parameters"]["PageParam"];
+                /** @description Items per page for offset-paginated admin tables (default 20, max 100) */
+                pageSize?: components["parameters"]["PageSizeParam"];
+                /** @description Sort expression in the format `field:asc` or `field:desc`. Allowed fields are whitelisted per endpoint. */
+                sort?: components["parameters"]["SortParam"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated list of the employer's jobs (full Job schema) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Job"][];
+                        meta: {
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getJobs: {
+        parameters: {
+            query?: {
+                market?: components["schemas"]["JobMarket"];
+                /** @description Filter by job category ID */
+                category?: string;
+                /** @description Minimum salary filter (inclusive) */
+                salaryMin?: number;
+                /** @description Maximum salary filter (inclusive) */
+                salaryMax?: number;
+                /** @description Filter by salary currency (e.g. AED, INR) */
+                currency?: string;
+                /** @description Benefit badge filter — returns only jobs where the named benefit is true. Accepted: accommodation, healthInsurance, transportation. */
+                badge?: "accommodation" | "healthInsurance" | "transportation";
+                /** @description Full-text / trigram search query (title + description) */
+                q?: string;
+                sort?: "relevance" | "recent" | "salary";
+                /** @description Opaque keyset cursor for cursor-paginated feeds */
+                cursor?: components["parameters"]["CursorParam"];
+                /** @description Page size for cursor-paginated feeds (default 20, max 100) */
+                limit?: components["parameters"]["LimitParam"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cursor-paginated list of job cards */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JobCard"][];
+                        nextCursor: string | null;
+                    };
+                };
+            };
+        };
+    };
+    postJobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title: string;
+                    market: components["schemas"]["JobMarket"];
+                    location: string;
+                    description?: string;
+                    /** Format: uuid */
+                    categoryId?: string;
+                    salaryMin?: number;
+                    salaryMax?: number;
+                    /** @example AED */
+                    salaryCurrency: string;
+                    accommodation: boolean;
+                    healthInsurance: boolean;
+                    transportation: boolean;
+                    workConditions?: string;
+                    requirements?: string[];
+                    experienceRequiredYears?: number;
+                    vacancies?: number;
+                    genderPreference?: components["schemas"]["GenderPreference"];
+                };
+            };
+        };
+        responses: {
+            /** @description Job created (DRAFT) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Job"];
+                    };
+                };
+            };
+            /** @description Employer company not approved */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Employer not approved",
+                     *       "status": 403,
+                     *       "detail": "Your company must be approved by an admin before posting jobs.",
+                     *       "code": "EMPLOYER_NOT_APPROVED"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getJobById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Job detail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JobDetail"];
+                    };
+                };
+            };
+            /** @description Job not found or not active */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not found",
+                     *       "status": 404,
+                     *       "detail": "Job not found or is not currently active.",
+                     *       "code": "NOT_FOUND"
                      *     }
                      */
                     "application/json": components["schemas"]["Error"];
@@ -2883,7 +3686,570 @@ export interface operations {
             };
         };
     };
-    getEmployersMeJobs: {
+    patchJobById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title?: string;
+                    market?: components["schemas"]["JobMarket"];
+                    location?: string;
+                    description?: string;
+                    /** Format: uuid */
+                    categoryId?: string;
+                    salaryMin?: number;
+                    salaryMax?: number;
+                    salaryCurrency?: string;
+                    accommodation?: boolean;
+                    healthInsurance?: boolean;
+                    transportation?: boolean;
+                    workConditions?: string;
+                    requirements?: string[];
+                    experienceRequiredYears?: number;
+                    vacancies?: number;
+                    genderPreference?: components["schemas"]["GenderPreference"];
+                };
+            };
+        };
+        responses: {
+            /** @description Updated job */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Job"];
+                    };
+                };
+            };
+            /** @description Not the owning employer */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description ARCHIVED job is read-only */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Invalid transition",
+                     *       "status": 422,
+                     *       "detail": "Archived jobs are read-only and cannot be edited.",
+                     *       "code": "ILLEGAL_TRANSITION"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    publishJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Job published (status ACTIVE) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Job"];
+                    };
+                };
+            };
+            /** @description Employer company not approved */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Employer not approved",
+                     *       "status": 403,
+                     *       "detail": "Your company must be approved before publishing jobs.",
+                     *       "code": "EMPLOYER_NOT_APPROVED"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Worker protection violation or quota exceeded */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    pauseJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Job paused */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Job"];
+                    };
+                };
+            };
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Job is not in ACTIVE status */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Invalid transition",
+                     *       "status": 422,
+                     *       "detail": "Only ACTIVE jobs can be paused.",
+                     *       "code": "ILLEGAL_TRANSITION"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    resumeJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Job resumed (ACTIVE) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Job"];
+                    };
+                };
+            };
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Job is not PAUSED or publish rules fail */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    archiveJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Job archived */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Job"];
+                    };
+                };
+            };
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Job is already ARCHIVED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Invalid transition",
+                     *       "status": 422,
+                     *       "detail": "Job is already archived.",
+                     *       "code": "ILLEGAL_TRANSITION"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    duplicateJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description New DRAFT job created from the copy */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Job"];
+                    };
+                };
+            };
+            /** @description Source job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    saveJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Job saved */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** @example true */
+                            saved: boolean;
+                        };
+                    };
+                };
+            };
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Job already saved */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Already saved",
+                     *       "status": 409,
+                     *       "detail": "This job is already in your saved list.",
+                     *       "code": "ALREADY_SAVED"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    unsaveJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Job unsaved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Job not found or not in saved list */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getAdminEmployers: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["CompanyStatus"];
+                type?: components["schemas"]["CompanyType"];
+                /** @description 1-based page number for offset-paginated admin tables */
+                page?: components["parameters"]["PageParam"];
+                /** @description Items per page for offset-paginated admin tables (default 20, max 100) */
+                pageSize?: components["parameters"]["PageSizeParam"];
+                /** @description Sort expression in the format `field:asc` or `field:desc`. Allowed fields are whitelisted per endpoint. */
+                sort?: components["parameters"]["SortParam"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated employer list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Company"][];
+                        meta: {
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+            /** @description Insufficient admin permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAdminEmployerApprove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Employer approved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Company"];
+                    };
+                };
+            };
+            /** @description Employer not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAdminEmployerReject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Reason for rejection (shown to the employer) */
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Employer rejected */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Company"];
+                    };
+                };
+            };
+            /** @description Employer not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Reason is missing */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAdminEmployerSuspend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Employer suspended */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Company"];
+                    };
+                };
+            };
+            /** @description Employer not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getAdminSettings: {
         parameters: {
             query?: never;
             header?: never;
@@ -2892,8 +4258,60 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description All platform settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Setting"][];
+                    };
+                };
+            };
+            /** @description Not an admin */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    patchAdminSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    updates: {
+                        key: string;
+                        /** @description New value (type depends on the setting key) */
+                        value: unknown;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Updated settings list (all settings, not just changed ones) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Setting"][];
+                    };
+                };
+            };
+            /** @description ADMIN attempting to modify a core-rule setting */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2901,12 +4319,21 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 3.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Core rule forbidden",
+                     *       "status": 403,
+                     *       "detail": "Only SUPER_ADMIN may modify worker-protection core rules.",
+                     *       "code": "CORE_RULE_FORBIDDEN"
                      *     }
                      */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Unknown setting key or invalid value type */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };
@@ -2935,201 +4362,6 @@ export interface operations {
                      *       "title": "Not implemented",
                      *       "status": 501,
                      *       "detail": "This endpoint is planned for Sprint 3.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getJobs: {
-        parameters: {
-            query?: {
-                /** @description Opaque keyset cursor for cursor-paginated feeds */
-                cursor?: components["parameters"]["CursorParam"];
-                /** @description Page size for cursor-paginated feeds (default 20, max 100) */
-                limit?: components["parameters"]["LimitParam"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 2.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    postJobs: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": Record<string, never>;
-            };
-        };
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 4.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getJobById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 2.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    patchJobById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": Record<string, never>;
-            };
-        };
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 4.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    saveJob: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 2.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    unsaveJob: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 2.",
                      *       "code": "NOT_IMPLEMENTED"
                      *     }
                      */
@@ -3169,37 +4401,6 @@ export interface operations {
             };
         };
     };
-    publishJob: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 4.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
     getJobApplicants: {
         parameters: {
             query?: {
@@ -3207,8 +4408,6 @@ export interface operations {
                 page?: components["parameters"]["PageParam"];
                 /** @description Items per page for offset-paginated admin tables (default 20, max 100) */
                 pageSize?: components["parameters"]["PageSizeParam"];
-                /** @description Sort expression in the format `field:asc` or `field:desc`. Allowed fields are whitelisted per endpoint. */
-                sort?: components["parameters"]["SortParam"];
             };
             header?: never;
             path: {
@@ -3463,135 +4662,6 @@ export interface operations {
             };
         };
     };
-    getAdminEmployers: {
-        parameters: {
-            query?: {
-                /** @description 1-based page number for offset-paginated admin tables */
-                page?: components["parameters"]["PageParam"];
-                /** @description Items per page for offset-paginated admin tables (default 20, max 100) */
-                pageSize?: components["parameters"]["PageSizeParam"];
-                /** @description Sort expression in the format `field:asc` or `field:desc`. Allowed fields are whitelisted per endpoint. */
-                sort?: components["parameters"]["SortParam"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    postAdminEmployerApprove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    postAdminEmployerReject: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    postAdminEmployerSuspend: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
     getAdminJobs: {
         parameters: {
             query?: {
@@ -3737,68 +4807,6 @@ export interface operations {
             path: {
                 role: components["schemas"]["UserRole"];
             };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": Record<string, never>;
-            };
-        };
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getAdminSettings: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    patchAdminSettings: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
             cookie?: never;
         };
         requestBody?: {
