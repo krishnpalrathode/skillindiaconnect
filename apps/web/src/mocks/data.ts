@@ -137,7 +137,7 @@ export const db = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function buildProfile(
+export function buildProfile(
   id: string,
   email: string,
   overrides: Partial<CandidateProfile>,

@@ -25,8 +25,9 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <MockSetup />
-      <AuthProvider>{children}</AuthProvider>
+      <MockSetup>
+        <AuthProvider>{children}</AuthProvider>
+      </MockSetup>
     </NextIntlClientProvider>
   );
 }
