@@ -64,6 +64,38 @@ module.exports = {
             from: './src/settings/settings.controller.ts',
             message: 'Use SettingsService — never import the settings controller directly.',
           },
+          // audit module: other modules must inject AuditService (exported from AuditModule).
+          // Never import audit.subscriber.ts or audit.module.ts directly.
+          {
+            target: './src/auth',
+            from: './src/audit/audit.subscriber.ts',
+            message: 'Use AuditService.log() — never import the audit subscriber directly.',
+          },
+          {
+            target: './src/candidate',
+            from: './src/audit/audit.subscriber.ts',
+            message: 'Use AuditService.log() — never import the audit subscriber directly.',
+          },
+          {
+            target: './src/account',
+            from: './src/audit/audit.subscriber.ts',
+            message: 'Use AuditService.log() — never import the audit subscriber directly.',
+          },
+          {
+            target: './src/settings',
+            from: './src/audit/audit.subscriber.ts',
+            message: 'Use AuditService.log() — never import the audit subscriber directly.',
+          },
+          {
+            target: './src/notifications',
+            from: './src/audit/audit.subscriber.ts',
+            message: 'Use AuditService.log() — never import the audit subscriber directly.',
+          },
+          {
+            target: './src/queue',
+            from: './src/audit/audit.subscriber.ts',
+            message: 'Use AuditService.log() — never import the audit subscriber directly.',
+          },
         ],
       },
     ],
