@@ -18,6 +18,16 @@ export const MOCK_OTP = '123456';
 export const NOT_ON_WHATSAPP_PHONE = '+919999999999';
 export const NOT_WHATSAPP_CAPABLE_USER_ID = 'mock-user-no-wa';
 
+// Employer fixture user IDs (seeded into db.users + db.employers above)
+export const EMPLOYER_APPROVED_USER_ID = 'mock-user-employer-1';
+export const EMPLOYER_APPROVED_EMAIL = 'employer@example.com';
+export const EMPLOYER_PENDING_USER_ID = 'mock-user-employer-pending';
+export const EMPLOYER_PENDING_EMAIL = 'employer-pending@example.com';
+export const EMPLOYER_REJECTED_USER_ID = 'mock-user-employer-rejected';
+export const EMPLOYER_REJECTED_EMAIL = 'employer-rejected@example.com';
+export const EMPLOYER_SUSPENDED_USER_ID = 'mock-user-employer-suspended';
+export const EMPLOYER_SUSPENDED_EMAIL = 'employer-suspended@example.com';
+
 // ─── In-memory stores ────────────────────────────────────────────────────────
 
 export interface MockUser {
@@ -93,6 +103,36 @@ export const db = {
         passwordHash: 'hashed-password',
         role: 'ADMIN',
         status: 'ACTIVE',
+      },
+    ],
+    [
+      'mock-user-employer-pending',
+      {
+        id: 'mock-user-employer-pending',
+        email: 'employer-pending@example.com',
+        passwordHash: 'hashed-password',
+        role: 'EMPLOYER',
+        status: 'ACTIVE',
+      },
+    ],
+    [
+      'mock-user-employer-rejected',
+      {
+        id: 'mock-user-employer-rejected',
+        email: 'employer-rejected@example.com',
+        passwordHash: 'hashed-password',
+        role: 'EMPLOYER',
+        status: 'ACTIVE',
+      },
+    ],
+    [
+      'mock-user-employer-suspended',
+      {
+        id: 'mock-user-employer-suspended',
+        email: 'employer-suspended@example.com',
+        passwordHash: 'hashed-password',
+        role: 'EMPLOYER',
+        status: 'SUSPENDED',
       },
     ],
   ]),
@@ -191,6 +231,66 @@ export const db = {
         description:
           'Leading construction company operating across the GCC with 20+ years of experience.',
         registrationCertKey: 'employer-docs/mock-company-1/reg-cert.pdf',
+        rejectionReason: null,
+        createdAt: PAST_DATE,
+        approvedAt: PAST_DATE,
+      } satisfies MockCompany,
+    ],
+    [
+      'mock-user-employer-pending',
+      {
+        id: 'mock-company-pending',
+        name: 'New Horizons Staffing',
+        type: 'LOCAL',
+        status: 'PENDING',
+        registrationNumber: 'MH-2025-11111',
+        industryType: 'Staffing',
+        phone: '+919988776655',
+        location: 'Mumbai, India',
+        employeeRange: '11-50',
+        languagePref: 'en',
+        description: 'A new staffing agency pending admin review.',
+        registrationCertKey: null,
+        rejectionReason: null,
+        createdAt: NOW,
+        approvedAt: null,
+      } satisfies MockCompany,
+    ],
+    [
+      'mock-user-employer-rejected',
+      {
+        id: 'mock-company-rejected',
+        name: 'Apex Manpower Solutions',
+        type: 'LOCAL',
+        status: 'REJECTED',
+        registrationNumber: 'DL-2024-22222',
+        industryType: 'Manpower',
+        phone: '+919876500000',
+        location: 'Delhi, India',
+        employeeRange: '51-200',
+        languagePref: 'en',
+        description: 'Company registration was rejected.',
+        registrationCertKey: null,
+        rejectionReason: 'Registration certificate could not be verified. Please resubmit with a valid certificate.',
+        createdAt: PAST_DATE,
+        approvedAt: null,
+      } satisfies MockCompany,
+    ],
+    [
+      'mock-user-employer-suspended',
+      {
+        id: 'mock-company-suspended',
+        name: 'Blacklisted Corp',
+        type: 'FOREIGN',
+        status: 'SUSPENDED',
+        registrationNumber: 'INT-2023-33333',
+        industryType: 'Construction',
+        phone: '+971509876543',
+        location: 'Dubai, UAE',
+        employeeRange: '201-500',
+        languagePref: 'en',
+        description: 'Company account is suspended.',
+        registrationCertKey: 'employer-docs/suspended-company/reg-cert.pdf',
         rejectionReason: null,
         createdAt: PAST_DATE,
         approvedAt: PAST_DATE,

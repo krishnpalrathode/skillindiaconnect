@@ -379,5 +379,47 @@
       "DIVORCED": "Divorced",
       "WIDOWED": "Widowed"
     }
+  },
+  "employer": {
+    "nav": {
+      "ariaLabel": "Employer navigation",
+      "openSidebar": "Open navigation menu",
+      "closeSidebar": "Close navigation menu",
+      "dashboard": "Dashboard",
+      "postJob": "Post a Job",
+      "postJobPendingHint": "Available after approval",
+      "myJobs": "My Jobs",
+      "candidates": "Candidates",
+      "subscription": "Subscription",
+      "profile": "Company Profile"
+    },
+    "header": {
+      "notifications": "Notifications",
+      "accountMenu": "Account menu",
+      "logout": "Log out"
+    },
+    "banner": {
+      "pendingTitle": "Your company is under review.",
+      "pendingBody": "Verification usually takes up to 24 hours. You can set up your profile now — job posting unlocks after approval.",
+      "rejectedTitle": "Company registration rejected.",
+      "rejectedBodyFallback": "Please review your submission and resubmit.",
+      "rejectedAction": "Resubmit registration →",
+      "suspendedTitle": "Account suspended.",
+      "suspendedBody": "Please contact support for assistance."
+    },
+    "plan": {
+      "freePlan": "Free Plan",
+      "proPlan": "Pro Plan",
+      "freeHint": "Upgrade for more active jobs",
+      "daysLeft": "{count, plural, one {# day left} other {# days left}}",
+      "upgrade": "Upgrade plan",
+      "manage": "Manage Subscription"
+    },
+    "shell": {
+      "loadingCompany": "Loading company…",
+      "errorTitle": "Could not load company profile.",
+      "errorBody": "Please check your connection and try again.",
+      "retry": "Retry"
+    }
   }
 }

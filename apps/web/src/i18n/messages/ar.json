@@ -379,5 +379,47 @@
       "DIVORCED": "مطلق / مطلقة",
       "WIDOWED": "أرمل / أرملة"
     }
+  },
+  "employer": {
+    "nav": {
+      "ariaLabel": "تنقل صاحب العمل",
+      "openSidebar": "فتح قائمة التنقل",
+      "closeSidebar": "إغلاق قائمة التنقل",
+      "dashboard": "لوحة التحكم",
+      "postJob": "نشر وظيفة",
+      "postJobPendingHint": "متاح بعد الموافقة",
+      "myJobs": "وظائفي",
+      "candidates": "المرشحون",
+      "subscription": "الاشتراك",
+      "profile": "ملف الشركة"
+    },
+    "header": {
+      "notifications": "الإشعارات",
+      "accountMenu": "قائمة الحساب",
+      "logout": "تسجيل الخروج"
+    },
+    "banner": {
+      "pendingTitle": "شركتك قيد المراجعة.",
+      "pendingBody": "يستغرق التحقق عادةً حتى 24 ساعة. يمكنك إعداد ملفك الشخصي الآن — سيتوفر نشر الوظائف بعد الموافقة.",
+      "rejectedTitle": "تم رفض تسجيل الشركة.",
+      "rejectedBodyFallback": "يرجى مراجعة طلبك وإعادة تقديمه.",
+      "rejectedAction": "إعادة التقديم ←",
+      "suspendedTitle": "الحساب موقوف.",
+      "suspendedBody": "يرجى التواصل مع الدعم للمساعدة."
+    },
+    "plan": {
+      "freePlan": "الخطة المجانية",
+      "proPlan": "الخطة الاحترافية",
+      "freeHint": "قم بالترقية للمزيد من الوظائف النشطة",
+      "daysLeft": "{count} يوم متبقٍ",
+      "upgrade": "ترقية الخطة",
+      "manage": "إدارة الاشتراك"
+    },
+    "shell": {
+      "loadingCompany": "جارٍ تحميل الشركة…",
+      "errorTitle": "تعذّر تحميل ملف الشركة.",
+      "errorBody": "يرجى التحقق من اتصالك والمحاولة مجدداً.",
+      "retry": "إعادة المحاولة"
+    }
   }
 }
