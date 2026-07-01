@@ -1,7 +1,7 @@
-/**
+﻿/**
  * Integration tests for DocumentService + OnboardingService against a real
  * Postgres container. StorageService is stubbed at the boundary so tests don't
- * require a live R2 bucket. The BullMQ queue is also stubbed (jest.fn()) —
+ * require a live R2 bucket. The BullMQ queue is also stubbed (jest.fn()) â€”
  * account.service.spec.ts tests the real queue with Redis.
  *
  * When Docker is unavailable the suite passes with all tests skipped.
@@ -35,17 +35,17 @@ let onboardingService: OnboardingService;
 let moduleRef: TestingModule;
 let dockerUnavailable = false;
 
-// Stub StorageService — no live bucket required.
+// Stub StorageService â€” no live bucket required.
 const mockStorage = {
   presignPut: jest.fn(),
   headObject: jest.fn(),
   deleteObject: jest.fn(),
 };
 
-// Stub queue — no Redis required for document tests.
+// Stub queue â€” no Redis required for document tests.
 const mockR2Queue = { add: jest.fn() };
 
-// ─── Container lifecycle ──────────────────────────────────────────────────────
+// â”€â”€â”€ Container lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 beforeAll(async () => {
   try {
@@ -64,7 +64,7 @@ beforeAll(async () => {
       cwd: API_DIR,
       env: { ...process.env, DATABASE_URL: url },
       stdio: 'pipe',
-      shell: true,
+      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
     });
 
     prisma = new PrismaClient({ datasources: { db: { url } } });
@@ -103,7 +103,7 @@ beforeAll(async () => {
       msg.includes('prisma: command not found')
     ) {
       dockerUnavailable = true;
-      console.warn('[integration] Docker unavailable — document tests skipped:', msg);
+      console.warn('[integration] Docker unavailable â€” document tests skipped:', msg);
     } else {
       throw err;
     }
@@ -122,7 +122,7 @@ beforeEach(async () => {
   await prisma.user.deleteMany();
 });
 
-// ─── Factories ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Factories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function makeUser(role: UserRole = UserRole.CANDIDATE) {
   return prisma.user.create({
@@ -140,10 +140,10 @@ async function makeCandidate(userId: string) {
   });
 }
 
-// ─── presign ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ presign â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('DocumentService.presign', () => {
-  it('accepted type + valid mime + valid size → returns uploadUrl and scoped key', async () => {
+  it('accepted type + valid mime + valid size â†’ returns uploadUrl and scoped key', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -163,7 +163,7 @@ describe('DocumentService.presign', () => {
     expect(result.expiresInSeconds).toBe(300);
   });
 
-  it('WORKING_VIDEO → 422 VIDEO_NOT_SUPPORTED_AT_MVP', async () => {
+  it('WORKING_VIDEO â†’ 422 VIDEO_NOT_SUPPORTED_AT_MVP', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -176,7 +176,7 @@ describe('DocumentService.presign', () => {
     ).rejects.toThrow(UnprocessableEntityException);
   });
 
-  it('unknown type → 422 INVALID_DOC_TYPE', async () => {
+  it('unknown type â†’ 422 INVALID_DOC_TYPE', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -189,7 +189,7 @@ describe('DocumentService.presign', () => {
     ).rejects.toThrow(UnprocessableEntityException);
   });
 
-  it('invalid mimeType for type → 422 INVALID_FILE_TYPE', async () => {
+  it('invalid mimeType for type â†’ 422 INVALID_FILE_TYPE', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -207,7 +207,7 @@ describe('DocumentService.presign', () => {
     ).rejects.toThrow(UnprocessableEntityException);
   });
 
-  it('declared sizeBytes exceeds limit → 422 FILE_TOO_LARGE', async () => {
+  it('declared sizeBytes exceeds limit â†’ 422 FILE_TOO_LARGE', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -249,10 +249,10 @@ describe('DocumentService.presign', () => {
   });
 });
 
-// ─── confirm ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ confirm â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('DocumentService.confirm', () => {
-  it('HEAD missing → 422 UPLOAD_NOT_FOUND', async () => {
+  it('HEAD missing â†’ 422 UPLOAD_NOT_FOUND', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -267,7 +267,7 @@ describe('DocumentService.confirm', () => {
     ).rejects.toThrow(UnprocessableEntityException);
   });
 
-  it('HEAD real size exceeds limit → 422 FILE_TOO_LARGE (declared size can be falsified)', async () => {
+  it('HEAD real size exceeds limit â†’ 422 FILE_TOO_LARGE (declared size can be falsified)', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -286,7 +286,7 @@ describe('DocumentService.confirm', () => {
     ).rejects.toThrow(UnprocessableEntityException);
   });
 
-  it('key not under caller prefix → 403 KEY_NOT_OWNED', async () => {
+  it('key not under caller prefix â†’ 403 KEY_NOT_OWNED', async () => {
     if (dockerUnavailable) return;
     const { id: userAId } = await makeUser();
     const { id: userBId } = await makeUser();
@@ -302,7 +302,7 @@ describe('DocumentService.confirm', () => {
     ).rejects.toThrow(ForbiddenException);
   });
 
-  it('success → persists doc with HEAD-derived size/mime (not declared values)', async () => {
+  it('success â†’ persists doc with HEAD-derived size/mime (not declared values)', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -327,7 +327,7 @@ describe('DocumentService.confirm', () => {
     expect(row!.sizeBytes).toBe(200_000);
   });
 
-  it('re-confirm (upsert): no duplicate row — count stays at 1', async () => {
+  it('re-confirm (upsert): no duplicate row â€” count stays at 1', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -363,7 +363,7 @@ describe('DocumentService.confirm', () => {
     expect(doc.expiryDate!.toISOString().startsWith('2030-12-31')).toBe(true);
   });
 
-  it('passport confirm without expiryDate → 422 INVALID_PASSPORT_EXPIRY', async () => {
+  it('passport confirm without expiryDate â†’ 422 INVALID_PASSPORT_EXPIRY', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -381,7 +381,7 @@ describe('DocumentService.confirm', () => {
     ).rejects.toThrow(UnprocessableEntityException);
   });
 
-  it('passport with past expiryDate → 422 INVALID_PASSPORT_EXPIRY', async () => {
+  it('passport with past expiryDate â†’ 422 INVALID_PASSPORT_EXPIRY', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -402,7 +402,7 @@ describe('DocumentService.confirm', () => {
     ).rejects.toThrow(UnprocessableEntityException);
   });
 
-  it('emits candidate.document.changed → completion listener recomputes pct', async () => {
+  it('emits candidate.document.changed â†’ completion listener recomputes pct', async () => {
     if (dockerUnavailable) return;
     const emitter = moduleRef.get(EventEmitter2);
     const spy = jest.spyOn(emitter, 'emitAsync');
@@ -423,7 +423,7 @@ describe('DocumentService.confirm', () => {
     expect(spy).toHaveBeenCalledWith('candidate.document.changed', { candidateId });
   });
 
-  // ── Live recompute chain ──────────────────────────────────────────────────
+  // â”€â”€ Live recompute chain â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('live recompute chain: confirming a mandatory doc increases completionPct', async () => {
     if (dockerUnavailable) return;
@@ -444,12 +444,12 @@ describe('DocumentService.confirm', () => {
     );
 
     const after = await prisma.candidateProfile.findUnique({ where: { id: candidateId } });
-    // 1 of 3 mandatory docs → 30/3 = 10%
+    // 1 of 3 mandatory docs â†’ 30/3 = 10%
     expect(after!.completionPct).toBe(10);
   });
 });
 
-// ─── delete ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('DocumentService.deleteDocument', () => {
   it('removes the document row from the DB', async () => {
@@ -496,7 +496,7 @@ describe('DocumentService.deleteDocument', () => {
     expect(final!.completionPct).toBe(0);
   });
 
-  it('absent document → 404', async () => {
+  it('absent document â†’ 404', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -529,10 +529,10 @@ describe('DocumentService.deleteDocument', () => {
   });
 });
 
-// ─── complete-onboarding (soft-block) ─────────────────────────────────────────
+// â”€â”€â”€ complete-onboarding (soft-block) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('OnboardingService.complete (soft-block)', () => {
-  it('candidate with NO docs and 0% completion → returns 200 with completionPct=0', async () => {
+  it('candidate with NO docs and 0% completion â†’ returns 200 with completionPct=0', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -541,7 +541,7 @@ describe('OnboardingService.complete (soft-block)', () => {
     expect(result.completionPct).toBe(0);
   });
 
-  it('candidate below apply threshold → does NOT throw (soft-block confirmed)', async () => {
+  it('candidate below apply threshold â†’ does NOT throw (soft-block confirmed)', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -568,3 +568,4 @@ describe('OnboardingService.complete (soft-block)', () => {
     expect(result.completionPct).toBe(10); // 1/3 docs = 10%
   });
 });
+

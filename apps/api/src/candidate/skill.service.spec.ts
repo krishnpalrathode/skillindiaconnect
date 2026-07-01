@@ -1,8 +1,8 @@
-/**
+﻿/**
  * Integration tests for SkillService against a real Postgres container.
  *
  * Covers: create (including idempotent duplicate), delete, ownership enforcement
- * (IDOR → 404), and recompute propagation. When Docker is unavailable the suite
+ * (IDOR â†’ 404), and recompute propagation. When Docker is unavailable the suite
  * passes with skipped tests.
  */
 import { NotFoundException } from '@nestjs/common';
@@ -24,7 +24,7 @@ let prisma: PrismaClient;
 let skillService: SkillService;
 let dockerUnavailable = false;
 
-// ─── Container lifecycle ──────────────────────────────────────────────────────
+// â”€â”€â”€ Container lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 beforeAll(async () => {
   try {
@@ -43,7 +43,7 @@ beforeAll(async () => {
       cwd: API_DIR,
       env: { ...process.env, DATABASE_URL: url },
       stdio: 'pipe',
-      shell: true,
+      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
     });
 
     prisma = new PrismaClient({ datasources: { db: { url } } });
@@ -65,7 +65,7 @@ beforeAll(async () => {
       msg.includes('prisma: command not found')
     ) {
       dockerUnavailable = true;
-      console.warn('[integration] Docker or infra unavailable — skill tests skipped:', msg);
+      console.warn('[integration] Docker or infra unavailable â€” skill tests skipped:', msg);
     } else {
       throw err;
     }
@@ -82,7 +82,7 @@ beforeEach(async () => {
   await prisma.user.deleteMany();
 });
 
-// ─── Factories ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Factories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function makeUser() {
   return prisma.user.create({
@@ -100,10 +100,10 @@ async function makeCandidate(userId: string) {
   });
 }
 
-// ─── Tests ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('SkillService — integration (real DB)', () => {
-  // ── create ────────────────────────────────────────────────────────────────
+describe('SkillService â€” integration (real DB)', () => {
+  // â”€â”€ create â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('create: inserts a skill and returns it', async () => {
     if (dockerUnavailable) return;
@@ -120,7 +120,7 @@ describe('SkillService — integration (real DB)', () => {
     expect(row).not.toBeNull();
   });
 
-  it('create: completionPct reflects 1 skill (≈3% — more than 0)', async () => {
+  it('create: completionPct reflects 1 skill (â‰ˆ3% â€” more than 0)', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -128,11 +128,11 @@ describe('SkillService — integration (real DB)', () => {
     await skillService.create(candidateId, { name: 'Welding' });
 
     const profile = await prisma.candidateProfile.findUnique({ where: { id: candidateId } });
-    // 10 / 3 ≈ 3.33 → rounds to 3
+    // 10 / 3 â‰ˆ 3.33 â†’ rounds to 3
     expect(profile!.completionPct).toBe(3);
   });
 
-  // ── idempotent duplicate ──────────────────────────────────────────────────
+  // â”€â”€ idempotent duplicate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('create (duplicate): returns existing row when (candidateId, name) already exists', async () => {
     if (dockerUnavailable) return;
@@ -145,7 +145,7 @@ describe('SkillService — integration (real DB)', () => {
     expect(second.id).toBe(first.id);
   });
 
-  it('create (duplicate): does NOT create a second row — count stays at 1', async () => {
+  it('create (duplicate): does NOT create a second row â€” count stays at 1', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -157,7 +157,7 @@ describe('SkillService — integration (real DB)', () => {
     expect(count).toBe(1);
   });
 
-  // ── remove ────────────────────────────────────────────────────────────────
+  // â”€â”€ remove â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('remove: deletes the skill from the DB', async () => {
     if (dockerUnavailable) return;
@@ -186,9 +186,9 @@ describe('SkillService — integration (real DB)', () => {
     expect(final!.completionPct).toBe(0);
   });
 
-  // ── IDOR — remove ─────────────────────────────────────────────────────────
+  // â”€â”€ IDOR â€” remove â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  it("remove (IDOR): candidate A cannot delete candidate B's skill → 404", async () => {
+  it("remove (IDOR): candidate A cannot delete candidate B's skill â†’ 404", async () => {
     if (dockerUnavailable) return;
     const { id: userAId } = await makeUser();
     const { id: userBId } = await makeUser();
@@ -219,9 +219,9 @@ describe('SkillService — integration (real DB)', () => {
     expect(rowAfter).not.toBeNull();
   });
 
-  // ── Not-found ─────────────────────────────────────────────────────────────
+  // â”€â”€ Not-found â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  it('remove: non-existent skill id → 404', async () => {
+  it('remove: non-existent skill id â†’ 404', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -231,9 +231,9 @@ describe('SkillService — integration (real DB)', () => {
     );
   });
 
-  // ── Three-skill cap on completionPct ──────────────────────────────────────
+  // â”€â”€ Three-skill cap on completionPct â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  it('3 skills → completionPct gains 10 from skills section (cap enforced in compute)', async () => {
+  it('3 skills â†’ completionPct gains 10 from skills section (cap enforced in compute)', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -262,3 +262,4 @@ describe('SkillService — integration (real DB)', () => {
     expect(afterFour!.completionPct).toBe(atCap!.completionPct);
   });
 });
+

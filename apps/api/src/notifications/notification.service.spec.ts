@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Integration tests for NotificationService against real Postgres + Redis (Testcontainers).
- * Docker-unavailable → graceful skip (same pattern as settings + audit specs).
+ * Docker-unavailable â†’ graceful skip (same pattern as settings + audit specs).
  *
  * Tests the API-side of the fan-out:
  * - In-app row written synchronously.
@@ -17,7 +17,7 @@ import { PrismaService } from '../core/prisma/prisma.service';
 import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
 import { NotificationService } from './notification.service';
 
-const API_DIR = path.resolve(__dirname, '../../..');
+const API_DIR = path.resolve(__dirname, '../..');
 
 let pgContainer: StartedTestContainer;
 let redisContainer: StartedTestContainer;
@@ -26,7 +26,7 @@ let moduleRef: TestingModule;
 let service: NotificationService;
 let dockerUnavailable = false;
 
-/** Spy on queue.add() — captures enqueued jobs without real BullMQ. */
+/** Spy on queue.add() â€” captures enqueued jobs without real BullMQ. */
 const queueAddSpy = jest.fn().mockResolvedValue({ id: 'mock-job-id' });
 const mockQueue = { add: queueAddSpy };
 
@@ -54,7 +54,7 @@ beforeAll(async () => {
       cwd: API_DIR,
       env: { ...process.env, DATABASE_URL: pgUrl },
       stdio: 'pipe',
-      shell: true,  // Windows: ensures pnpm is resolved via PATH
+      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',  // Windows: ensures pnpm is resolved via PATH
     });
 
     prismaClient = new PrismaClient({ datasources: { db: { url: pgUrl } } });
@@ -93,7 +93,7 @@ beforeAll(async () => {
       msg.includes('prisma: command not found')  // Unix: prisma not in PATH
     ) {
       dockerUnavailable = true;
-      console.warn('[notification-svc-integration] Docker or infra unavailable — tests will be skipped:', msg);
+      console.warn('[notification-svc-integration] Docker or infra unavailable â€” tests will be skipped:', msg);
     } else {
       throw err;
     }
@@ -113,9 +113,9 @@ afterAll(async () => {
   await redisContainer?.stop();
 });
 
-// ── notify(APPLICATION_SELECTED) ─────────────────────────────────────────────
+// â”€â”€ notify(APPLICATION_SELECTED) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('notify(APPLICATION_SELECTED) — matrix: inApp ✓ · whatsapp ✓ · email ✓', () => {
+describe('notify(APPLICATION_SELECTED) â€” matrix: inApp âœ“ Â· whatsapp âœ“ Â· email âœ“', () => {
   it('writes an in-app notification row synchronously', async () => {
     if (dockerUnavailable) return;
     await service.notify(TEST_USER_ID, NotificationType.APPLICATION_SELECTED, {
@@ -173,9 +173,9 @@ describe('notify(APPLICATION_SELECTED) — matrix: inApp ✓ · whatsapp ✓ · 
   });
 });
 
-// ── notify(PROFILE_VIEWED) — inApp only ────────────────────────────────────────
+// â”€â”€ notify(PROFILE_VIEWED) â€” inApp only â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('notify(PROFILE_VIEWED) — matrix: inApp ✓ · whatsapp ✗ · email ✗', () => {
+describe('notify(PROFILE_VIEWED) â€” matrix: inApp âœ“ Â· whatsapp âœ— Â· email âœ—', () => {
   it('writes an in-app row and enqueues NO external jobs', async () => {
     if (dockerUnavailable) return;
     await service.notify(TEST_USER_ID, NotificationType.PROFILE_VIEWED, {
@@ -191,9 +191,9 @@ describe('notify(PROFILE_VIEWED) — matrix: inApp ✓ · whatsapp ✗ · email 
   });
 });
 
-// ── notify(JOB_CLOSING_SOON) — inApp only ─────────────────────────────────────
+// â”€â”€ notify(JOB_CLOSING_SOON) â€” inApp only â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('notify(JOB_CLOSING_SOON) — matrix: inApp ✓ · whatsapp ✗ · email ✗', () => {
+describe('notify(JOB_CLOSING_SOON) â€” matrix: inApp âœ“ Â· whatsapp âœ— Â· email âœ—', () => {
   it('writes an in-app row, no queue jobs', async () => {
     if (dockerUnavailable) return;
     await service.notify(TEST_USER_ID, NotificationType.JOB_CLOSING_SOON, {
@@ -207,7 +207,7 @@ describe('notify(JOB_CLOSING_SOON) — matrix: inApp ✓ · whatsapp ✗ · emai
   });
 });
 
-// ── listNotifications + markRead ──────────────────────────────────────────────
+// â”€â”€ listNotifications + markRead â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('listNotifications + markRead', () => {
   it('listNotifications returns notifications for the user, newest first', async () => {
@@ -300,3 +300,4 @@ describe('listNotifications + markRead', () => {
     expect(after.every((n) => n.readAt !== null)).toBe(true);
   });
 });
+

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Integration tests for AccountService against real Postgres + Redis containers.
  * Verifies PENDING_DELETION state transition, deletionDueAt, deterministic BullMQ
  * job enqueue, idempotency (409 on second call), and that no purge side-effects
@@ -26,7 +26,7 @@ let purgeQueue: Queue;
 let accountService: AccountService;
 let dockerUnavailable = false;
 
-// ─── Container lifecycle ──────────────────────────────────────────────────────
+// â”€â”€â”€ Container lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 beforeAll(async () => {
   try {
@@ -49,7 +49,7 @@ beforeAll(async () => {
       cwd: API_DIR,
       env: { ...process.env, DATABASE_URL: dbUrl },
       stdio: 'pipe',
-      shell: true,
+      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
     });
 
     prisma = new PrismaClient({ datasources: { db: { url: dbUrl } } });
@@ -69,7 +69,7 @@ beforeAll(async () => {
       msg.includes('prisma: command not found')
     ) {
       dockerUnavailable = true;
-      console.warn('[integration] Docker unavailable — account tests skipped:', msg);
+      console.warn('[integration] Docker unavailable â€” account tests skipped:', msg);
     } else {
       throw err;
     }
@@ -90,7 +90,7 @@ beforeEach(async () => {
   await purgeQueue?.drain();
 });
 
-// ─── Factories ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Factories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function makeUser(role: UserRole = UserRole.CANDIDATE) {
   return prisma.user.create({
@@ -102,7 +102,7 @@ async function makeUser(role: UserRole = UserRole.CANDIDATE) {
   });
 }
 
-// ─── Tests ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('AccountService.requestDeletion', () => {
   it('transitions user to PENDING_DELETION', async () => {
@@ -152,7 +152,7 @@ describe('AccountService.requestDeletion', () => {
     expect(purgeJob!.data).toEqual({ userId });
   });
 
-  it('second call → 409 DELETION_ALREADY_REQUESTED (idempotent-safe)', async () => {
+  it('second call â†’ 409 DELETION_ALREADY_REQUESTED (idempotent-safe)', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
 
@@ -177,7 +177,7 @@ describe('AccountService.requestDeletion', () => {
 
     const jobs = await purgeQueue.getJobs(['waiting', 'delayed']);
     const purgeJobs = jobs.filter((j) => j.opts.jobId === `purge-${userId}`);
-    // BullMQ dedupes by jobId — only one job should exist.
+    // BullMQ dedupes by jobId â€” only one job should exist.
     expect(purgeJobs.length).toBe(1);
   });
 
@@ -188,7 +188,7 @@ describe('AccountService.requestDeletion', () => {
 
     await accountService.requestDeletion(userId);
 
-    // User and profile still exist — only state changed, purge not executed.
+    // User and profile still exist â€” only state changed, purge not executed.
     const user = await prisma.user.findUnique({ where: { id: userId } });
     expect(user).not.toBeNull();
     const profile = await prisma.candidateProfile.findUnique({ where: { userId } });
@@ -196,3 +196,4 @@ describe('AccountService.requestDeletion', () => {
     expect(profile!.fullName).toBe('Test User');
   });
 });
+

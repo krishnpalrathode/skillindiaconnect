@@ -1,10 +1,10 @@
-// Integration tests (CompletionService class) need a real DB container.
+﻿// Integration tests (CompletionService class) need a real DB container.
 jest.setTimeout(180_000);
 
 import { compute, CompletionInput, CompletionProfileInput } from './completion.service';
 import { WEIGHTS } from './completion.constants';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const emptyProfile: CompletionProfileInput = {
   photoKey: null,
@@ -43,22 +43,22 @@ function baseInput(overrides: Partial<CompletionInput> = {}): CompletionInput {
   };
 }
 
-// ─── Tests ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('compute (pure scoring function)', () => {
-  // ── Empty / zero state ───────────────────────────────────────────────────
+  // â”€â”€ Empty / zero state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  it('empty profile → pct = 0', () => {
+  it('empty profile â†’ pct = 0', () => {
     expect(compute(baseInput()).pct).toBe(0);
   });
 
-  it('empty profile → all sections at 0', () => {
+  it('empty profile â†’ all sections at 0', () => {
     const { sections } = compute(baseInput());
     expect(sections.every((s) => s.pct === 0)).toBe(true);
     expect(sections.every((s) => s.complete === false)).toBe(true);
   });
 
-  // ── Personal info: each field adds exactly 4% ────────────────────────────
+  // â”€â”€ Personal info: each field adds exactly 4% â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const personalInfoCases: Array<[string, Partial<CompletionProfileInput>]> = [
     ['photo', { photoKey: 'photo.jpg' }],
@@ -67,7 +67,7 @@ describe('compute (pure scoring function)', () => {
     ['dob', { dob: new Date('1990-01-01') }],
     ['verifiedPhone (phoneVerifiedAt)', { phoneVerifiedAt: new Date() }],
     ['maritalStatus', { maritalStatus: 'SINGLE' }],
-    ['languages (≥1)', { languages: ['English'] }],
+    ['languages (â‰¥1)', { languages: ['English'] }],
     ['jobCategoryId', { jobCategoryId: 'cat-1' }],
     ['currentLocation', { currentLocation: 'Mumbai' }],
     ['nationality', { nationality: 'Indian' }],
@@ -80,14 +80,14 @@ describe('compute (pure scoring function)', () => {
     expect(piSection?.pct).toBe(WEIGHTS.personalInfoPerField);
   });
 
-  it('all 10 personal-info fields filled → piSection.pct = 40', () => {
+  it('all 10 personal-info fields filled â†’ piSection.pct = 40', () => {
     const result = compute(baseInput({ profile: fullProfile }));
     const piSection = result.sections.find((s) => s.key === 'personalInfo');
     expect(piSection?.pct).toBe(40);
     expect(piSection?.complete).toBe(true);
   });
 
-  // ── Religion / noticePeriod are UNSCORED ────────────────────────────────
+  // â”€â”€ Religion / noticePeriod are UNSCORED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('religion set does NOT change pct', () => {
     const without = compute(baseInput({ profile: { ...emptyProfile, religion: undefined } }));
@@ -103,7 +103,7 @@ describe('compute (pure scoring function)', () => {
     expect(withNotice.pct).toBe(without.pct);
   });
 
-  // ── Phone verification ────────────────────────────────────────────────────
+  // â”€â”€ Phone verification â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('unverified phone (phoneVerifiedAt = null) does NOT score', () => {
     const result = compute(baseInput({ profile: { ...emptyProfile, phoneVerifiedAt: null } }));
@@ -118,7 +118,7 @@ describe('compute (pure scoring function)', () => {
     expect(result.pct).toBe(4);
   });
 
-  // ── Languages edge case ───────────────────────────────────────────────────
+  // â”€â”€ Languages edge case â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('empty languages array does NOT score', () => {
     const result = compute(baseInput({ profile: { ...emptyProfile, languages: [] } }));
@@ -126,12 +126,12 @@ describe('compute (pure scoring function)', () => {
     expect(piSection?.pct).toBe(0);
   });
 
-  it('one language scores the field (≥1 required)', () => {
+  it('one language scores the field (â‰¥1 required)', () => {
     const result = compute(baseInput({ profile: { ...emptyProfile, languages: ['English'] } }));
     expect(result.pct).toBe(4);
   });
 
-  // ── Work experience ───────────────────────────────────────────────────────
+  // â”€â”€ Work experience â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const completeExp = {
     type: 'INDIA',
@@ -161,7 +161,7 @@ describe('compute (pure scoring function)', () => {
     expect(expSection?.pct).toBe(0);
   });
 
-  it('two entries, first incomplete, second complete → still 20%', () => {
+  it('two entries, first incomplete, second complete â†’ still 20%', () => {
     const result = compute(
       baseInput({
         experiences: [{ ...completeExp, role: '' }, completeExp],
@@ -171,22 +171,22 @@ describe('compute (pure scoring function)', () => {
     expect(expSection?.pct).toBe(20);
   });
 
-  it('no experiences → experience section complete = false', () => {
+  it('no experiences â†’ experience section complete = false', () => {
     const result = compute(baseInput({ experiences: [] }));
     const expSection = result.sections.find((s) => s.key === 'experience');
     expect(expSection?.complete).toBe(false);
   });
 
-  // ── Documents (settings-driven N) ────────────────────────────────────────
+  // â”€â”€ Documents (settings-driven N) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   describe('documents with N=3 (MVP default)', () => {
-    it('0 of 3 docs → 0%', () => {
+    it('0 of 3 docs â†’ 0%', () => {
       const result = compute(baseInput({ mandatoryDocTypesPresent: [], mandatoryDocCount: 3 }));
       const docSection = result.sections.find((s) => s.key === 'documents');
       expect(docSection?.pct).toBe(0);
     });
 
-    it('1 of 3 docs (PASSPORT) → 10%', () => {
+    it('1 of 3 docs (PASSPORT) â†’ 10%', () => {
       const result = compute(
         baseInput({ mandatoryDocTypesPresent: ['PASSPORT'], mandatoryDocCount: 3 }),
       );
@@ -194,7 +194,7 @@ describe('compute (pure scoring function)', () => {
       expect(docSection?.pct).toBe(10);
     });
 
-    it('2 of 3 docs → 20%', () => {
+    it('2 of 3 docs â†’ 20%', () => {
       const result = compute(
         baseInput({
           mandatoryDocTypesPresent: ['PASSPORT', 'EXPERIENCE_CERT'],
@@ -205,7 +205,7 @@ describe('compute (pure scoring function)', () => {
       expect(docSection?.pct).toBe(20);
     });
 
-    it('3 of 3 docs → 30% (complete)', () => {
+    it('3 of 3 docs â†’ 30% (complete)', () => {
       const result = compute(
         baseInput({
           mandatoryDocTypesPresent: ['PASSPORT', 'EXPERIENCE_CERT', 'EDUCATIONAL_CERT'],
@@ -218,8 +218,8 @@ describe('compute (pure scoring function)', () => {
     });
   });
 
-  describe('documents with N=4 (Phase-2 simulation — proves denominator is settings-driven)', () => {
-    it('1 of 4 docs → 7.5%', () => {
+  describe('documents with N=4 (Phase-2 simulation â€” proves denominator is settings-driven)', () => {
+    it('1 of 4 docs â†’ 7.5%', () => {
       const result = compute(
         baseInput({ mandatoryDocTypesPresent: ['PASSPORT'], mandatoryDocCount: 4 }),
       );
@@ -227,7 +227,7 @@ describe('compute (pure scoring function)', () => {
       expect(docSection?.pct).toBe(7.5);
     });
 
-    it('2 of 4 docs → 15%', () => {
+    it('2 of 4 docs â†’ 15%', () => {
       const result = compute(
         baseInput({
           mandatoryDocTypesPresent: ['PASSPORT', 'EXPERIENCE_CERT'],
@@ -238,7 +238,7 @@ describe('compute (pure scoring function)', () => {
       expect(docSection?.pct).toBe(15);
     });
 
-    it('4 of 4 docs → 30% (complete)', () => {
+    it('4 of 4 docs â†’ 30% (complete)', () => {
       const result = compute(
         baseInput({
           mandatoryDocTypesPresent: [
@@ -256,50 +256,50 @@ describe('compute (pure scoring function)', () => {
     });
   });
 
-  // ── Skills (capped at 3) ──────────────────────────────────────────────────
+  // â”€â”€ Skills (capped at 3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  it('0 skills → 0%', () => {
+  it('0 skills â†’ 0%', () => {
     const result = compute(baseInput({ skillCount: 0 }));
     const skillSection = result.sections.find((s) => s.key === 'skills');
     expect(skillSection?.pct).toBe(0);
   });
 
-  it('1 skill → ≈3.33% (10/3)', () => {
+  it('1 skill â†’ â‰ˆ3.33% (10/3)', () => {
     const result = compute(baseInput({ skillCount: 1 }));
     const skillSection = result.sections.find((s) => s.key === 'skills');
     expect(skillSection?.pct).toBeCloseTo(10 / 3, 5);
   });
 
-  it('2 skills → ≈6.67% (20/3)', () => {
+  it('2 skills â†’ â‰ˆ6.67% (20/3)', () => {
     const result = compute(baseInput({ skillCount: 2 }));
     const skillSection = result.sections.find((s) => s.key === 'skills');
     expect(skillSection?.pct).toBeCloseTo(20 / 3, 5);
   });
 
-  it('3 skills → 10% (complete)', () => {
+  it('3 skills â†’ 10% (complete)', () => {
     const result = compute(baseInput({ skillCount: 3 }));
     const skillSection = result.sections.find((s) => s.key === 'skills');
     expect(skillSection?.pct).toBe(10);
     expect(skillSection?.complete).toBe(true);
   });
 
-  it('4 skills → still 10% (cap enforced)', () => {
+  it('4 skills â†’ still 10% (cap enforced)', () => {
     const result = compute(baseInput({ skillCount: 4 }));
     const skillSection = result.sections.find((s) => s.key === 'skills');
     expect(skillSection?.pct).toBe(10);
     expect(skillSection?.complete).toBe(true);
   });
 
-  it('10 skills → still 10% (cap enforced at any count)', () => {
+  it('10 skills â†’ still 10% (cap enforced at any count)', () => {
     const result = compute(baseInput({ skillCount: 10 }));
     const skillSection = result.sections.find((s) => s.key === 'skills');
     expect(skillSection?.pct).toBe(10);
   });
 
-  // ── Total pct is rounded and capped at 100 ───────────────────────────────
+  // â”€â”€ Total pct is rounded and capped at 100 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('total pct is rounded to nearest integer', () => {
-    // 1 skill = 10/3 ≈ 3.333… → total rounds to 3
+    // 1 skill = 10/3 â‰ˆ 3.333â€¦ â†’ total rounds to 3
     const result = compute(baseInput({ skillCount: 1 }));
     expect(Number.isInteger(result.pct)).toBe(true);
     expect(result.pct).toBe(3);
@@ -326,7 +326,7 @@ describe('compute (pure scoring function)', () => {
     expect(result.pct).toBe(100);
   });
 
-  // ── Canonical worked example (spec §6) ───────────────────────────────────
+  // â”€â”€ Canonical worked example (spec Â§6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('canonical: full PI (40) + 1 complete experience (20) + PASSPORT only N=3 (10) = 70%', () => {
     const result = compute({
@@ -345,7 +345,7 @@ describe('compute (pure scoring function)', () => {
     expect(sections['skills']).toBe(0);
   });
 
-  // ── Section shape ─────────────────────────────────────────────────────────
+  // â”€â”€ Section shape â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('returns exactly 4 sections with the expected keys', () => {
     const { sections } = compute(baseInput());
@@ -364,8 +364,8 @@ describe('compute (pure scoring function)', () => {
   });
 });
 
-// ─── CompletionService integration (DB wrapper) ───────────────────────────────
-// Tests the orchestration layer: load from DB → compute → persist completionPct.
+// â”€â”€â”€ CompletionService integration (DB wrapper) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Tests the orchestration layer: load from DB â†’ compute â†’ persist completionPct.
 // Requires Docker; guarded by dockerUnavailable flag.
 
 import { PrismaClient, UserRole, UserStatus, DocumentType, ExperienceType } from '@prisma/client';
@@ -382,7 +382,7 @@ let csPrisma: PrismaClient;
 let csService: CompletionService;
 let csDockerUnavailable = false;
 
-describe('CompletionService — integration (real DB)', () => {
+describe('CompletionService â€” integration (real DB)', () => {
   beforeAll(async () => {
     try {
       csPg = await new GenericContainer('postgres:16-alpine')
@@ -400,7 +400,7 @@ describe('CompletionService — integration (real DB)', () => {
         cwd: CS_API_DIR,
         env: { ...process.env, DATABASE_URL: url },
         stdio: 'pipe',
-        shell: true,
+        shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
       });
 
       csPrisma = new PrismaClient({ datasources: { db: { url } } });
@@ -418,7 +418,7 @@ describe('CompletionService — integration (real DB)', () => {
       ) {
         csDockerUnavailable = true;
         console.warn(
-          '[integration] Docker or infra unavailable — CompletionService integration skipped:',
+          '[integration] Docker or infra unavailable â€” CompletionService integration skipped:',
           msg,
         );
       } else {
@@ -438,7 +438,7 @@ describe('CompletionService — integration (real DB)', () => {
     await csPrisma.setting.deleteMany();
   });
 
-  // ── Factories ──────────────────────────────────────────────────────────────
+  // â”€â”€ Factories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   async function csUser() {
     return csPrisma.user.create({
@@ -468,7 +468,7 @@ describe('CompletionService — integration (real DB)', () => {
     });
   }
 
-  // ── getMandatoryDocCount ──────────────────────────────────────────────────
+  // â”€â”€ getMandatoryDocCount â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('getMandatoryDocCount: returns MVP_MANDATORY_DOC_COUNT (3) when no setting row exists', async () => {
     if (csDockerUnavailable) return;
@@ -498,7 +498,7 @@ describe('CompletionService — integration (real DB)', () => {
     expect(count).toBe(4);
   });
 
-  // ── recomputeForCandidate ─────────────────────────────────────────────────
+  // â”€â”€ recomputeForCandidate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('recomputeForCandidate: persists completionPct = 0 for an empty profile', async () => {
     if (csDockerUnavailable) return;
@@ -544,7 +544,7 @@ describe('CompletionService — integration (real DB)', () => {
     const { id: userId } = await csUser();
     const { id: candidateId } = await csCandidate(userId);
 
-    // Seed 2 of 3 mandatory doc types → doc score = 30/3 * 2 = 20
+    // Seed 2 of 3 mandatory doc types â†’ doc score = 30/3 * 2 = 20
     await csDoc(candidateId, DocumentType.PASSPORT);
     await csDoc(candidateId, DocumentType.EXPERIENCE_CERT);
 
@@ -570,7 +570,7 @@ describe('CompletionService — integration (real DB)', () => {
     const { id: userId } = await csUser();
     const { id: candidateId } = await csCandidate(userId);
 
-    // 1 doc present, N=2 → doc score = 30/2 * 1 = 15
+    // 1 doc present, N=2 â†’ doc score = 30/2 * 1 = 15
     await csDoc(candidateId, DocumentType.PASSPORT);
 
     const result = await csService.recomputeForCandidate(candidateId);
@@ -581,7 +581,7 @@ describe('CompletionService — integration (real DB)', () => {
     expect(row!.completionPct).toBe(15);
   });
 
-  it('recomputeForCandidate: is idempotent — same inputs produce same stored value on repeated calls', async () => {
+  it('recomputeForCandidate: is idempotent â€” same inputs produce same stored value on repeated calls', async () => {
     if (csDockerUnavailable) return;
     const { id: userId } = await csUser();
     const { id: candidateId } = await csCandidate(userId, { fullName: 'Bob' });
@@ -607,3 +607,4 @@ describe('CompletionService — integration (real DB)', () => {
     expect(docSection?.pct).toBe(0);
   });
 });
+

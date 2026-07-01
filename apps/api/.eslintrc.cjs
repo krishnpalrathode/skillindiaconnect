@@ -128,6 +128,38 @@ module.exports = {
             from: './src/audit/audit.subscriber.ts',
             message: 'Use AuditService.log() — never import the audit subscriber directly.',
           },
+          // employer module: other modules must inject EmployerService (exported).
+          // Never import admin-employer.controller or employer-approval.service directly.
+          {
+            target: './src/auth',
+            from: './src/employer/employer-approval.service.ts',
+            message: 'Use EmployerService — never import the approval service directly.',
+          },
+          {
+            target: './src/candidate',
+            from: './src/employer/employer-approval.service.ts',
+            message: 'Use EmployerService — never import the approval service directly.',
+          },
+          {
+            target: './src/notifications',
+            from: './src/employer/employer-approval.service.ts',
+            message: 'Use EmployerService — never import the approval service directly.',
+          },
+          {
+            target: './src/settings',
+            from: './src/employer/employer-approval.service.ts',
+            message: 'Use EmployerService — never import the approval service directly.',
+          },
+          {
+            target: './src/audit',
+            from: './src/employer/employer-approval.service.ts',
+            message: 'Use EmployerService — never import the approval service directly.',
+          },
+          {
+            target: './src/queue',
+            from: './src/employer/employer-approval.service.ts',
+            message: 'Use EmployerService — never import the approval service directly.',
+          },
         ],
       },
     ],

@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
+import { NotificationType } from '@prisma/client';
 import { NotificationService } from './notification.service';
-
-// Stub imports — uncomment when the corresponding sprint lands:
-// import { OnEvent } from '@nestjs/event-emitter';
-// import { NotificationType } from '@prisma/client';
+import {
+  EMPLOYER_EVENTS,
+  EmployerApprovedPayload,
+  EmployerRejectedPayload,
+  EmployerSuspendedPayload,
+} from '../employer/employer.events';
 
 /**
  * Passive subscriber: turns domain events into notify() calls.
@@ -19,25 +23,36 @@ import { NotificationService } from './notification.service';
 export class NotificationSubscriber {
   constructor(private readonly notificationService: NotificationService) {}
 
+  // ── S2-B4 Employer events ───────────────────────────────────────────────────
+
+  @OnEvent(EMPLOYER_EVENTS.APPROVED)
+  async onEmployerApproved(payload: EmployerApprovedPayload): Promise<void> {
+    await this.notificationService.notify(payload.userId, NotificationType.EMPLOYER_APPROVED, {
+      title: 'Company Approved',
+      body: `Your company "${payload.companyName}" has been approved. You can now post jobs.`,
+      data: { companyId: payload.companyId },
+    });
+  }
+
+  @OnEvent(EMPLOYER_EVENTS.REJECTED)
+  async onEmployerRejected(payload: EmployerRejectedPayload): Promise<void> {
+    await this.notificationService.notify(payload.userId, NotificationType.EMPLOYER_REJECTED, {
+      title: 'Company Registration Rejected',
+      body: `Your company "${payload.companyName}" registration was rejected. Reason: ${payload.reason}`,
+      data: { companyId: payload.companyId, reason: payload.reason },
+    });
+  }
+
+  @OnEvent(EMPLOYER_EVENTS.SUSPENDED)
+  async onEmployerSuspended(payload: EmployerSuspendedPayload): Promise<void> {
+    await this.notificationService.notify(payload.userId, NotificationType.EMPLOYER_SUSPENDED, {
+      title: 'Company Suspended',
+      body: `Your company "${payload.companyName}" has been suspended. Please contact support.`,
+      data: { companyId: payload.companyId },
+    });
+  }
+
   // ── Stubs for future sprint events ─────────────────────────────────────────
-  // Uncomment + implement when the emitting module lands.
-  // Each stub names the sprint that will emit the event.
-
-  // S2-B4 EmployerService — emits when admin approves/rejects/suspends a company:
-  // @OnEvent('employer.approved')
-  // async onEmployerApproved(payload: { userId: string; companyName: string }): Promise<void> {
-  //   await this.notificationService.notify(payload.userId, NotificationType.EMPLOYER_APPROVED, {
-  //     title: 'Company Approved',
-  //     body: `${payload.companyName} has been approved.`,
-  //     data: payload,
-  //   });
-  // }
-
-  // @OnEvent('employer.rejected')
-  // async onEmployerRejected(payload: { userId: string; reason: string }): Promise<void> { }
-
-  // @OnEvent('employer.suspended')
-  // async onEmployerSuspended(payload: { userId: string }): Promise<void> { }
 
   // S3 CandidateReadService — emits when an employer views a candidate profile:
   // @OnEvent('profile.viewed')

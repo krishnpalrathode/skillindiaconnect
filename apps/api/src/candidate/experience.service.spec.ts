@@ -1,7 +1,7 @@
-/**
+﻿/**
  * Integration tests for ExperienceService against a real Postgres container.
  *
- * Covers: create, update, delete, ownership enforcement (IDOR → 404), and
+ * Covers: create, update, delete, ownership enforcement (IDOR â†’ 404), and
  * recompute propagation. Uses Testcontainers so no shared state leaks between
  * CI runs. When Docker is unavailable the suite passes with skipped tests.
  */
@@ -24,7 +24,7 @@ let prisma: PrismaClient;
 let experienceService: ExperienceService;
 let dockerUnavailable = false;
 
-// ─── Container lifecycle ──────────────────────────────────────────────────────
+// â”€â”€â”€ Container lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 beforeAll(async () => {
   try {
@@ -43,7 +43,7 @@ beforeAll(async () => {
       cwd: API_DIR,
       env: { ...process.env, DATABASE_URL: url },
       stdio: 'pipe',
-      shell: true,
+      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
     });
 
     prisma = new PrismaClient({ datasources: { db: { url } } });
@@ -66,7 +66,7 @@ beforeAll(async () => {
       msg.includes('prisma: command not found')
     ) {
       dockerUnavailable = true;
-      console.warn('[integration] Docker unavailable — experience tests skipped:', msg);
+      console.warn('[integration] Docker unavailable â€” experience tests skipped:', msg);
     } else {
       throw err;
     }
@@ -80,11 +80,11 @@ afterAll(async () => {
 
 beforeEach(async () => {
   if (dockerUnavailable) return;
-  // Cascade: deleting users drops candidate_profiles → work_experiences.
+  // Cascade: deleting users drops candidate_profiles â†’ work_experiences.
   await prisma.user.deleteMany();
 });
 
-// ─── Factories ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Factories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function makeUser() {
   return prisma.user.create({
@@ -110,10 +110,10 @@ const COMPLETE_EXP_DTO = {
   years: 2,
 };
 
-// ─── Tests ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('ExperienceService — integration (real DB)', () => {
-  // ── create ────────────────────────────────────────────────────────────────
+describe('ExperienceService â€” integration (real DB)', () => {
+  // â”€â”€ create â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('create: inserts a work experience and returns it', async () => {
     if (dockerUnavailable) return;
@@ -154,7 +154,7 @@ describe('ExperienceService — integration (real DB)', () => {
     expect(exp.months).toBe(0);
   });
 
-  // ── update ────────────────────────────────────────────────────────────────
+  // â”€â”€ update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('update: modifies a field and persists it', async () => {
     if (dockerUnavailable) return;
@@ -171,7 +171,7 @@ describe('ExperienceService — integration (real DB)', () => {
     expect(row!.role).toBe('Senior Engineer');
   });
 
-  it('update: clearing role makes the entry incomplete → recomputes completionPct to 0', async () => {
+  it('update: clearing role makes the entry incomplete â†’ recomputes completionPct to 0', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -188,7 +188,7 @@ describe('ExperienceService — integration (real DB)', () => {
     expect(recomputed!.completionPct).toBe(0);
   });
 
-  // ── remove ────────────────────────────────────────────────────────────────
+  // â”€â”€ remove â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('remove: deletes the experience from the DB', async () => {
     if (dockerUnavailable) return;
@@ -217,9 +217,9 @@ describe('ExperienceService — integration (real DB)', () => {
     expect(final!.completionPct).toBe(0);
   });
 
-  // ── IDOR — update ─────────────────────────────────────────────────────────
+  // â”€â”€ IDOR â€” update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  it("update (IDOR): candidate A cannot update candidate B's experience → 404", async () => {
+  it("update (IDOR): candidate A cannot update candidate B's experience â†’ 404", async () => {
     if (dockerUnavailable) return;
     const { id: userAId } = await makeUser();
     const { id: userBId } = await makeUser();
@@ -253,9 +253,9 @@ describe('ExperienceService — integration (real DB)', () => {
     expect(rowAfter!.role).toBe(roleBefore);
   });
 
-  // ── IDOR — remove ─────────────────────────────────────────────────────────
+  // â”€â”€ IDOR â€” remove â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  it("remove (IDOR): candidate A cannot delete candidate B's experience → 404", async () => {
+  it("remove (IDOR): candidate A cannot delete candidate B's experience â†’ 404", async () => {
     if (dockerUnavailable) return;
     const { id: userAId } = await makeUser();
     const { id: userBId } = await makeUser();
@@ -288,9 +288,9 @@ describe('ExperienceService — integration (real DB)', () => {
     expect(rowAfter).not.toBeNull();
   });
 
-  // ── Not-found ─────────────────────────────────────────────────────────────
+  // â”€â”€ Not-found â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  it('update: non-existent experience id → 404', async () => {
+  it('update: non-existent experience id â†’ 404', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -300,7 +300,7 @@ describe('ExperienceService — integration (real DB)', () => {
     ).rejects.toThrow(NotFoundException);
   });
 
-  it('remove: non-existent experience id → 404', async () => {
+  it('remove: non-existent experience id â†’ 404', async () => {
     if (dockerUnavailable) return;
     const { id: userId } = await makeUser();
     const { id: candidateId } = await makeCandidate(userId);
@@ -310,3 +310,4 @@ describe('ExperienceService — integration (real DB)', () => {
     );
   });
 });
+

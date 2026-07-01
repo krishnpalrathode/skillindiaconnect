@@ -12,13 +12,14 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
-import { OtpPurpose, UserRole, UserStatus } from '@prisma/client';
+import { OtpPurpose, UserStatus } from '@prisma/client';
 import { Request, Response } from 'express';
 import { Public } from '../decorators/public.decorator';
 import { CurrentUser, CurrentUserPayload } from '../decorators/current-user.decorator';
 import { TokenService } from '../token.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { OtpService } from './otp.service';
+import { CandidateReadService } from '../../candidate/candidate-read.service';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { PhoneLoginStartDto } from './dto/phone-login-start.dto';
@@ -26,15 +27,6 @@ import { PhoneLoginVerifyDto } from './dto/phone-login-verify.dto';
 
 const REFRESH_COOKIE = 'sic_refresh';
 
-/**
- * NOTE: Auth module reads candidate_profiles in this controller.
- * This is a deliberate, narrow exception to the module-ownership rule:
- * Auth needs to resolve "is there a CANDIDATE with this verified phone?" but
- * CandidateService does not exist yet (arrives in S1-2).
- *
- * TODO (S1-2): once CandidateService is available, replace the direct
- * prisma.candidateProfile queries here with CandidateService calls.
- */
 @Controller('auth')
 export class OtpController {
   constructor(
@@ -42,6 +34,7 @@ export class OtpController {
     private readonly prisma: PrismaService,
     private readonly tokenService: TokenService,
     private readonly configService: ConfigService,
+    private readonly candidateReadService: CandidateReadService,
   ) {}
 
   // ─── Verification (onboarding) ────────────────────────────────────────────
@@ -114,14 +107,7 @@ export class OtpController {
   async phoneLoginStart(@Body() dto: PhoneLoginStartDto, @Req() req: Request) {
     const ip = req.ip ?? '0.0.0.0';
 
-    const candidate = await this.prisma.candidateProfile.findFirst({
-      where: {
-        phone: dto.phone,
-        phoneVerifiedAt: { not: null },
-        user: { role: UserRole.CANDIDATE },
-      },
-      select: { userId: true },
-    });
+    const candidate = await this.candidateReadService.findCandidateUserByVerifiedPhone(dto.phone);
 
     if (candidate) {
       // Issue a LOGIN OTP; notOnWhatsapp result is swallowed per spec.
@@ -151,20 +137,13 @@ export class OtpController {
   ) {
     await this.otpService.verify(dto.phone, dto.otp, OtpPurpose.LOGIN);
 
-    // Resolve the candidate user. Must be a CANDIDATE with this verified phone.
-    const profile = await this.prisma.candidateProfile.findFirst({
-      where: {
-        phone: dto.phone,
-        phoneVerifiedAt: { not: null },
-      },
-      include: { user: true },
-    });
-
-    if (!profile || profile.user.role !== UserRole.CANDIDATE) {
+    // Resolve the candidate user. CandidateReadService already filters for verified CANDIDATE.
+    const resolved = await this.candidateReadService.findCandidateUserByVerifiedPhone(dto.phone);
+    if (!resolved) {
       throw new UnauthorizedException({ code: 'INVALID_OTP' });
     }
 
-    const user = profile.user;
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: resolved.userId } });
 
     if (user.status === UserStatus.SUSPENDED) {
       throw new ForbiddenException({ code: 'ACCOUNT_SUSPENDED' });

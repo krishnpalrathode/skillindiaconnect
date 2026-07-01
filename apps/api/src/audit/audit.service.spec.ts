@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Integration tests for AuditService against a real Postgres instance (Testcontainers).
  * When Docker is unavailable, the suite passes with all tests skipped.
  *
@@ -9,7 +9,7 @@
  */
 import { Logger } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuditStatus, PrismaClient } from '@prisma/client';
+import { AuditStatus, Prisma, PrismaClient } from '@prisma/client';
 import { execSync } from 'child_process';
 import * as path from 'path';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
@@ -17,7 +17,7 @@ import { PrismaService } from '../core/prisma/prisma.service';
 import { AuditService } from './audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES } from './audit.types';
 
-const API_DIR = path.resolve(__dirname, '../../..');
+const API_DIR = path.resolve(__dirname, '../..');
 
 let pgContainer: StartedTestContainer;
 let prismaClient: PrismaClient;
@@ -44,7 +44,7 @@ beforeAll(async () => {
       cwd: API_DIR,
       env: { ...process.env, DATABASE_URL: pgUrl },
       stdio: 'pipe',
-      shell: true,
+      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
     });
 
     prismaClient = new PrismaClient({ datasources: { db: { url: pgUrl } } });
@@ -70,7 +70,7 @@ beforeAll(async () => {
       msg.includes('prisma: command not found')
     ) {
       dockerUnavailable = true;
-      console.warn('[audit-integration] Docker or infra unavailable — tests will be skipped:', msg);
+      console.warn('[audit-integration] Docker or infra unavailable â€” tests will be skipped:', msg);
     } else {
       throw err;
     }
@@ -89,9 +89,9 @@ afterAll(async () => {
   await pgContainer?.stop();
 });
 
-// ── log(): basic insert ──────────────────────────────────────────────────────
+// â”€â”€ log(): basic insert â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('AuditService.log — basic insert', () => {
+describe('AuditService.log â€” basic insert', () => {
   it('inserts a row with the correct module/action/status', async () => {
     if (dockerUnavailable) return;
     await service.log({
@@ -111,7 +111,7 @@ describe('AuditService.log — basic insert', () => {
     expect(row.actorUserId).toBe('actor-uuid');
   });
 
-  it('persists redacted meta — PII keys are masked', async () => {
+  it('persists redacted meta â€” PII keys are masked', async () => {
     if (dockerUnavailable) return;
     await service.log({
       action: AUDIT_ACTIONS.SETTINGS_UPDATE,
@@ -127,9 +127,9 @@ describe('AuditService.log — basic insert', () => {
   });
 });
 
-// ── log(): fire-and-safe ─────────────────────────────────────────────────────
+// â”€â”€ log(): fire-and-safe â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('AuditService.log — fire-and-safe', () => {
+describe('AuditService.log â€” fire-and-safe', () => {
   it('does NOT throw when the insert fails; emits app-logger error', async () => {
     if (dockerUnavailable) return;
     jest
@@ -152,7 +152,7 @@ describe('AuditService.log — fire-and-safe', () => {
     );
   });
 
-  it('logger error message contains no PII — only module/action/status', async () => {
+  it('logger error message contains no PII â€” only module/action/status', async () => {
     if (dockerUnavailable) return;
     jest
       .spyOn(prismaClient.auditLog, 'create')
@@ -180,9 +180,9 @@ describe('AuditService.log — fire-and-safe', () => {
   });
 });
 
-// ── logInTransaction(): atomic audit ────────────────────────────────────────
+// â”€â”€ logInTransaction(): atomic audit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('AuditService.logInTransaction — atomic', () => {
+describe('AuditService.logInTransaction â€” atomic', () => {
   it('audit row commits when the surrounding transaction commits', async () => {
     if (dockerUnavailable) return;
     let insertedId: bigint | undefined;
@@ -230,30 +230,28 @@ describe('AuditService.logInTransaction — atomic', () => {
 
   it('propagates insert failure so the caller transaction rolls back', async () => {
     if (dockerUnavailable) return;
-    let txAttempted = false;
-
-    jest
-      .spyOn(prismaClient.auditLog, 'create')
-      .mockRejectedValueOnce(new Error('simulated insert failure'));
+    // Prisma transaction clients are distinct objects — a spy on prismaClient.auditLog
+    // does not intercept tx.auditLog inside $transaction. Pass a fake tx directly so
+    // the mock actually intercepts the call.
+    const fakeTx = {
+      auditLog: {
+        create: jest.fn().mockRejectedValueOnce(new Error('simulated insert failure')),
+      },
+    } as unknown as Prisma.TransactionClient;
 
     await expect(
-      prismaClient.$transaction(async (tx) => {
-        txAttempted = true;
-        await service.logInTransaction(tx, {
-          action: AUDIT_ACTIONS.APPLICATION_ADMIN_OVERRIDE,
-          module: AUDIT_MODULES.JOBS,
-          status: AuditStatus.SUCCESS,
-        });
+      service.logInTransaction(fakeTx, {
+        action: AUDIT_ACTIONS.APPLICATION_ADMIN_OVERRIDE,
+        module: AUDIT_MODULES.JOBS,
+        status: AuditStatus.SUCCESS,
       }),
     ).rejects.toThrow('simulated insert failure');
-
-    expect(txAttempted).toBe(true);
   });
 });
 
-// ── BigInt PK ────────────────────────────────────────────────────────────────
+// â”€â”€ BigInt PK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('AuditService — BigInt PK serialization', () => {
+describe('AuditService â€” BigInt PK serialization', () => {
   it('id is bigint type and round-trips through String() without crash', async () => {
     if (dockerUnavailable) return;
     await service.log({
@@ -282,16 +280,16 @@ describe('AuditService — BigInt PK serialization', () => {
     const rows = await service.query({ action: AUDIT_ACTIONS.SETTINGS_UPDATE, limit: 1 });
     const row = rows[0]!;
 
-    // The canonical safe pattern: BigInt → string in JSON output
+    // The canonical safe pattern: BigInt â†’ string in JSON output
     expect(() => {
       JSON.stringify(row, (_, v) => (typeof v === 'bigint' ? v.toString() : v));
     }).not.toThrow();
   });
 });
 
-// ── query(): basic filter ────────────────────────────────────────────────────
+// â”€â”€ query(): basic filter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('AuditService.query — internal filter', () => {
+describe('AuditService.query â€” internal filter', () => {
   it('filters by module', async () => {
     if (dockerUnavailable) return;
     await service.log({
@@ -329,3 +327,4 @@ describe('AuditService.query — internal filter', () => {
     expect(rows[0]!.actorUserId).toBe('actor-a');
   });
 });
+

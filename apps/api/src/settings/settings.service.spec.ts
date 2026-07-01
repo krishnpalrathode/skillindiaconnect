@@ -1,9 +1,9 @@
-/**
+﻿/**
  * Integration tests for SettingsService against real Postgres + Redis
  * (Testcontainers). When Docker is unavailable the suite passes with skipped tests.
  *
  * Safety-critical test: cache invalidation on set.
- * After a set(), the next get() must return the NEW value — not the stale cached one.
+ * After a set(), the next get() must return the NEW value â€” not the stale cached one.
  * A stale worker-protection rule would let a non-compliant job publish.
  */
 import {
@@ -23,7 +23,7 @@ import { REDIS_CLIENT } from '../core/redis/redis.provider';
 import { SETTING_KEYS, SettingType } from './settings.keys';
 import { SettingsService, SETTINGS_CACHE_TTL_SECONDS } from './settings.service';
 
-const API_DIR = path.resolve(__dirname, '../../..');
+const API_DIR = path.resolve(__dirname, '../..');
 
 let pgContainer: StartedTestContainer;
 let redisContainer: StartedTestContainer;
@@ -56,7 +56,7 @@ beforeAll(async () => {
       cwd: API_DIR,
       env: { ...process.env, DATABASE_URL: pgUrl },
       stdio: 'pipe',
-      shell: true,
+      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
     });
 
     prismaClient = new PrismaClient({ datasources: { db: { url: pgUrl } } });
@@ -110,7 +110,7 @@ beforeAll(async () => {
       msg.includes('prisma: command not found')
     ) {
       dockerUnavailable = true;
-      console.warn('[settings-integration] Docker or infra unavailable — tests will be skipped:', msg);
+      console.warn('[settings-integration] Docker or infra unavailable â€” tests will be skipped:', msg);
     } else {
       throw err;
     }
@@ -144,9 +144,9 @@ afterAll(async () => {
   await redisContainer?.stop();
 });
 
-// ─── get: read-through cache ──────────────────────────────────────────────────
+// â”€â”€â”€ get: read-through cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('SettingsService.get — cache read-through', () => {
+describe('SettingsService.get â€” cache read-through', () => {
   it('returns the correct typed number value from DB on first call', async () => {
     if (dockerUnavailable) return;
     const val = await service.get(SETTING_KEYS.MIN_COMPLETION_PCT);
@@ -208,10 +208,10 @@ describe('SettingsService.get — cache read-through', () => {
   });
 });
 
-// ─── set: core-rule gate ──────────────────────────────────────────────────────
+// â”€â”€â”€ set: core-rule gate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('SettingsService.set — core-rule gate', () => {
-  it('ADMIN cannot update a core-rule key → 403 CORE_RULE_FORBIDDEN', async () => {
+describe('SettingsService.set â€” core-rule gate', () => {
+  it('ADMIN cannot update a core-rule key â†’ 403 CORE_RULE_FORBIDDEN', async () => {
     if (dockerUnavailable) return;
     await expect(
       service.set(SETTING_KEYS.ACCOMMODATION_REQUIRED, false, ADMIN_ACTOR),
@@ -254,10 +254,10 @@ describe('SettingsService.set — core-rule gate', () => {
   });
 });
 
-// ─── set: type validation ─────────────────────────────────────────────────────
+// â”€â”€â”€ set: type validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('SettingsService.set — type validation', () => {
-  it('rejects a string value for a number key → 422 SETTING_INVALID_VALUE', async () => {
+describe('SettingsService.set â€” type validation', () => {
+  it('rejects a string value for a number key â†’ 422 SETTING_INVALID_VALUE', async () => {
     if (dockerUnavailable) return;
     await expect(
       service.set(
@@ -268,7 +268,7 @@ describe('SettingsService.set — type validation', () => {
     ).rejects.toThrow(UnprocessableEntityException);
   });
 
-  it('rejects a number value for a boolean key → 422', async () => {
+  it('rejects a number value for a boolean key â†’ 422', async () => {
     if (dockerUnavailable) return;
     await expect(
       service.set(
@@ -279,7 +279,7 @@ describe('SettingsService.set — type validation', () => {
     ).rejects.toThrow(UnprocessableEntityException);
   });
 
-  it('rejects a non-string-array for a string[] key → 422', async () => {
+  it('rejects a non-string-array for a string[] key â†’ 422', async () => {
     if (dockerUnavailable) return;
     await expect(
       service.set(
@@ -307,9 +307,9 @@ describe('SettingsService.set — type validation', () => {
   });
 });
 
-// ─── set: SAFETY-CRITICAL cache invalidation ─────────────────────────────────
+// â”€â”€â”€ set: SAFETY-CRITICAL cache invalidation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('SettingsService.set — cache invalidation (SAFETY-CRITICAL)', () => {
+describe('SettingsService.set â€” cache invalidation (SAFETY-CRITICAL)', () => {
   it('after set(), get() returns the NEW value immediately (stale cache is gone)', async () => {
     if (dockerUnavailable) return;
     // Warm the cache with the old value
@@ -343,9 +343,9 @@ describe('SettingsService.set — cache invalidation (SAFETY-CRITICAL)', () => {
   });
 });
 
-// ─── set: domain event ────────────────────────────────────────────────────────
+// â”€â”€â”€ set: domain event â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('SettingsService.set — settings.changed event', () => {
+describe('SettingsService.set â€” settings.changed event', () => {
   it('emits settings.changed with the key', async () => {
     if (dockerUnavailable) return;
     const received: Array<{ key: string }> = [];
@@ -361,7 +361,7 @@ describe('SettingsService.set — settings.changed event', () => {
   });
 });
 
-// ─── getMany / getAll ─────────────────────────────────────────────────────────
+// â”€â”€â”€ getMany / getAll â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('SettingsService.getMany / getAll', () => {
   it('getMany returns only the requested keys', async () => {
@@ -387,9 +387,9 @@ describe('SettingsService.getMany / getAll', () => {
   });
 });
 
-// ─── isValidValue type-check helper ──────────────────────────────────────────
+// â”€â”€â”€ isValidValue type-check helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('isValidValue (unit — no containers needed)', () => {
+describe('isValidValue (unit â€” no containers needed)', () => {
   const { isValidValue: iv } = jest.requireActual<typeof import('./settings.keys')>(
     './settings.keys',
   );
@@ -408,7 +408,8 @@ describe('isValidValue (unit — no containers needed)', () => {
     ['string[]', ['a', 'b'], true],
     ['string[]', [1, 2], false],
     ['string[]', 'foo', false],
-  ])('type=%s value=%p → %s', (type, value, expected) => {
+  ])('type=%s value=%p â†’ %s', (type, value, expected) => {
     expect(iv(type, value)).toBe(expected);
   });
 });
+

@@ -11,6 +11,7 @@ import { R2Module } from './core/storage/r2.module';
 import { SettingsModule } from './settings/settings.module';
 import { AuditModule } from './audit/audit.module';
 import { NotificationModule } from './notifications/notification.module';
+import { EmployerModule } from './employer/employer.module';
 import { JwtAuthGuard } from './auth/guards/auth.guard';
 import { PermissionsGuard } from './auth/rbac/permissions.guard';
 
@@ -30,6 +31,7 @@ import { PermissionsGuard } from './auth/rbac/permissions.guard';
     SettingsModule,
     AuditModule,
     NotificationModule,
+    EmployerModule,
     EventEmitterModule.forRoot(),
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
   ],
