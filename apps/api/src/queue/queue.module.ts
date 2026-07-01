@@ -16,7 +16,11 @@ import { QUEUE_NAMES } from './queue.constants';
         connection: { url: config.get<string>('REDIS_URL') },
       }),
     }),
-    BullModule.registerQueue({ name: QUEUE_NAMES.ACCOUNT_PURGE }, { name: QUEUE_NAMES.R2_DELETE }),
+    BullModule.registerQueue(
+      { name: QUEUE_NAMES.ACCOUNT_PURGE },
+      { name: QUEUE_NAMES.R2_DELETE },
+      { name: QUEUE_NAMES.NOTIFICATION },
+    ),
   ],
   exports: [BullModule],
 })

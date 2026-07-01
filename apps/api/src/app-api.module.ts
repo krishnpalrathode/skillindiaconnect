@@ -10,6 +10,7 @@ import { AccountModule } from './account/account.module';
 import { R2Module } from './core/storage/r2.module';
 import { SettingsModule } from './settings/settings.module';
 import { AuditModule } from './audit/audit.module';
+import { NotificationModule } from './notifications/notification.module';
 import { JwtAuthGuard } from './auth/guards/auth.guard';
 import { PermissionsGuard } from './auth/rbac/permissions.guard';
 
@@ -28,6 +29,7 @@ import { PermissionsGuard } from './auth/rbac/permissions.guard';
     AccountModule,
     SettingsModule,
     AuditModule,
+    NotificationModule,
     EventEmitterModule.forRoot(),
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
   ],

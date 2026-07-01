@@ -49,6 +49,7 @@ beforeAll(async () => {
       cwd: API_DIR,
       env: { ...process.env, DATABASE_URL: dbUrl },
       stdio: 'pipe',
+      shell: true,
     });
 
     prisma = new PrismaClient({ datasources: { db: { url: dbUrl } } });
@@ -63,7 +64,9 @@ beforeAll(async () => {
       msg.includes('container runtime') ||
       msg.includes('Docker') ||
       msg.includes('ENOENT') ||
-      msg.includes('connect ECONNREFUSED')
+      msg.includes('connect ECONNREFUSED') ||
+      msg.includes('not recognized') ||
+      msg.includes('prisma: command not found')
     ) {
       dockerUnavailable = true;
       console.warn('[integration] Docker unavailable — account tests skipped:', msg);

@@ -91,6 +91,38 @@ module.exports = {
             from: './src/audit/audit.subscriber.ts',
             message: 'Use AuditService.log() — never import the audit subscriber directly.',
           },
+          // notifications module: other modules must inject NotificationService, not import
+          // notification.processor.ts, notification.worker-module.ts, or the subscriber.
+          {
+            target: './src/auth',
+            from: './src/notifications/notification.processor.ts',
+            message: 'Use NotificationService.notify() — never import the processor directly.',
+          },
+          {
+            target: './src/candidate',
+            from: './src/notifications/notification.processor.ts',
+            message: 'Use NotificationService.notify() — never import the processor directly.',
+          },
+          {
+            target: './src/account',
+            from: './src/notifications/notification.processor.ts',
+            message: 'Use NotificationService.notify() — never import the processor directly.',
+          },
+          {
+            target: './src/settings',
+            from: './src/notifications/notification.processor.ts',
+            message: 'Use NotificationService.notify() — never import the processor directly.',
+          },
+          {
+            target: './src/audit',
+            from: './src/notifications/notification.processor.ts',
+            message: 'Use NotificationService.notify() — never import the processor directly.',
+          },
+          {
+            target: './src/queue',
+            from: './src/notifications/notification.processor.ts',
+            message: 'Use NotificationService.notify() — never import the processor directly.',
+          },
           {
             target: './src/queue',
             from: './src/audit/audit.subscriber.ts',

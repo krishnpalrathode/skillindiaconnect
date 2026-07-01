@@ -400,6 +400,7 @@ describe('CompletionService — integration (real DB)', () => {
         cwd: CS_API_DIR,
         env: { ...process.env, DATABASE_URL: url },
         stdio: 'pipe',
+        shell: true,
       });
 
       csPrisma = new PrismaClient({ datasources: { db: { url } } });
@@ -411,11 +412,13 @@ describe('CompletionService — integration (real DB)', () => {
         msg.includes('container runtime') ||
         msg.includes('Docker') ||
         msg.includes('ENOENT') ||
-        msg.includes('connect ECONNREFUSED')
+        msg.includes('connect ECONNREFUSED') ||
+        msg.includes('not recognized') ||
+        msg.includes('prisma: command not found')
       ) {
         csDockerUnavailable = true;
         console.warn(
-          '[integration] Docker unavailable — CompletionService integration skipped:',
+          '[integration] Docker or infra unavailable — CompletionService integration skipped:',
           msg,
         );
       } else {
