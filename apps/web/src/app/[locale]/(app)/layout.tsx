@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter, usePathname, useParams } from 'next/navigation';
-import { User, Briefcase, FileText, Bell, Settings, LogOut } from 'lucide-react';
+import { User, Briefcase, FileText, Bell, Settings, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
@@ -70,9 +70,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const isDashboard = pathname.endsWith('/dashboard');
   const isProfile = pathname.includes('/profile');
+  const isNotifications = pathname.includes('/notifications');
 
   const navItems = [
+    {
+      href: `/${locale}/dashboard`,
+      icon: <LayoutDashboard className="size-5" aria-hidden="true" />,
+      label: t('dashboard'),
+      active: isDashboard,
+    },
     {
       href: `/${locale}/profile`,
       icon: <User className="size-5" aria-hidden="true" />,
@@ -86,15 +94,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       active: pathname.includes('/jobs'),
     },
     {
-      href: `/${locale}/applications`,
-      icon: <FileText className="size-5" aria-hidden="true" />,
-      label: t('applications'),
-      disabled: true,
-    },
-    {
       href: `/${locale}/notifications`,
       icon: <Bell className="size-5" aria-hidden="true" />,
       label: t('notifications'),
+      active: isNotifications,
+    },
+    {
+      href: `/${locale}/applications`,
+      icon: <FileText className="size-5" aria-hidden="true" />,
+      label: t('applications'),
       disabled: true,
     },
     {

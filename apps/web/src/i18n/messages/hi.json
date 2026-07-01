@@ -31,6 +31,7 @@
   },
   "nav": {
     "home": "[hi] Home",
+    "dashboard": "डैशबोर्ड",
     "profile": "[hi] Profile",
     "jobs": "[hi] Jobs",
     "applications": "[hi] Applications",
@@ -510,6 +511,72 @@
       "notFoundTitle": "नौकरी नहीं मिली",
       "notFoundBody": "यह नौकरी भरी जा चुकी है या हटा दी गई है।",
       "backToJobs": "नौकरियों पर वापस जाएँ"
+    }
+  },
+  "dashboard": {
+    "metaTitle": "मेरा डैशबोर्ड — SkillIndiaConnect",
+    "pageTitle": "डैशबोर्ड",
+    "greeting": "नमस्ते, {name}",
+    "kpi": {
+      "applied": "आवेदन किए",
+      "views": "प्रोफ़ाइल व्यूज़",
+      "shortlisted": "शॉर्टलिस्ट",
+      "updates": "अपडेट"
+    },
+    "recommendedJobs": {
+      "title": "अनुशंसित नौकरियाँ",
+      "empty": "अभी कोई सुझाव नहीं। मिलान पाने के लिए प्रोफ़ाइल पूरी करें।",
+      "viewAll": "सभी नौकरियाँ देखें →"
+    },
+    "myApplications": {
+      "title": "मेरे आवेदन",
+      "coming": "आवेदन ट्रैकिंग जल्द आ रही है।"
+    },
+    "quickActions": {
+      "title": "त्वरित कार्य",
+      "completeProfile": "प्रोफ़ाइल पूरी करें",
+      "browseJobs": "नौकरियाँ देखें",
+      "viewNotifications": "सूचनाएँ देखें"
+    },
+    "profileSummary": {
+      "completion": "{pct}% पूर्ण",
+      "completeNow": "अभी पूरी करें →"
+    }
+  },
+  "notifications": {
+    "metaTitle": "सूचनाएँ — SkillIndiaConnect",
+    "pageTitle": "सूचनाएँ",
+    "empty": {
+      "all": "अभी कोई सूचना नहीं।",
+      "filter": "इस श्रेणी में कोई सूचना नहीं।",
+      "unread": "कोई अपठित सूचना नहीं।"
+    },
+    "markAllRead": "सभी पढ़ा गया चिह्नित करें",
+    "markRead": "पढ़ा गया चिह्नित करें",
+    "loadMore": "और लोड करें",
+    "loading": "सूचनाएँ लोड हो रही हैं…",
+    "errorLoad": "सूचनाएँ लोड करने में विफल।",
+    "retry": "पुनः प्रयास",
+    "filters": {
+      "all": "सभी",
+      "applications": "आवेदन",
+      "jobs": "नौकरियाँ",
+      "profile": "प्रोफ़ाइल",
+      "system": "सिस्टम",
+      "unreadOnly": "केवल अपठित"
+    },
+    "types": {
+      "APPLICATION_UPDATE": "आवेदन अपडेट",
+      "JOB_MATCH": "नौकरी मिलान",
+      "PROFILE_REMINDER": "प्रोफ़ाइल रिमाइंडर",
+      "DOCUMENT_STATUS": "दस्तावेज़ स्थिति",
+      "SYSTEM": "सिस्टम"
+    },
+    "dateGroups": {
+      "today": "आज",
+      "yesterday": "कल",
+      "thisWeek": "इस सप्ताह",
+      "older": "पुराने"
     }
   }
 }

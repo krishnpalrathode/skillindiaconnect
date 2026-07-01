@@ -31,6 +31,7 @@
   },
   "nav": {
     "home": "Home",
+    "dashboard": "Dashboard",
     "profile": "Profile",
     "jobs": "Jobs",
     "applications": "Applications",
@@ -510,6 +511,72 @@
       "notFoundTitle": "Job not found",
       "notFoundBody": "This job may have been filled or removed.",
       "backToJobs": "Back to jobs"
+    }
+  },
+  "dashboard": {
+    "metaTitle": "My Dashboard — SkillIndiaConnect",
+    "pageTitle": "Dashboard",
+    "greeting": "Hello, {name}",
+    "kpi": {
+      "applied": "Jobs Applied",
+      "views": "Profile Views",
+      "shortlisted": "Shortlisted",
+      "updates": "Updates"
+    },
+    "recommendedJobs": {
+      "title": "Recommended Jobs",
+      "empty": "No recommendations yet. Complete your profile to get matches.",
+      "viewAll": "Browse all jobs →"
+    },
+    "myApplications": {
+      "title": "My Applications",
+      "coming": "Application tracking coming soon."
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "completeProfile": "Complete Profile",
+      "browseJobs": "Browse Jobs",
+      "viewNotifications": "View Notifications"
+    },
+    "profileSummary": {
+      "completion": "{pct}% complete",
+      "completeNow": "Complete now →"
+    }
+  },
+  "notifications": {
+    "metaTitle": "Notifications — SkillIndiaConnect",
+    "pageTitle": "Notifications",
+    "empty": {
+      "all": "You have no notifications yet.",
+      "filter": "No notifications in this category.",
+      "unread": "No unread notifications."
+    },
+    "markAllRead": "Mark all as read",
+    "markRead": "Mark as read",
+    "loadMore": "Load more",
+    "loading": "Loading notifications…",
+    "errorLoad": "Failed to load notifications.",
+    "retry": "Retry",
+    "filters": {
+      "all": "All",
+      "applications": "Applications",
+      "jobs": "Jobs",
+      "profile": "Profile",
+      "system": "System",
+      "unreadOnly": "Unread only"
+    },
+    "types": {
+      "APPLICATION_UPDATE": "Application Update",
+      "JOB_MATCH": "Job Match",
+      "PROFILE_REMINDER": "Profile Reminder",
+      "DOCUMENT_STATUS": "Document Status",
+      "SYSTEM": "System"
+    },
+    "dateGroups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisWeek": "This Week",
+      "older": "Older"
     }
   }
 }

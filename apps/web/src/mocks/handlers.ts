@@ -621,6 +621,18 @@ const candidateCompleteOnboarding = http.post(
   },
 );
 
+// ─── S2: Candidate stats (dashboard KPIs) ────────────────────────────────────
+
+const candidateMeStats = http.get(`${BASE}/candidates/me/stats`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+  return HttpResponse.json({
+    data: { applied: 3, profileViews: 12, shortlisted: 1 },
+  });
+});
+
 // ─── S2: Candidate notifications ─────────────────────────────────────────────
 
 const candidateMeNotifications = http.get(`${BASE}/candidates/me/notifications`, ({ request }) => {
@@ -1614,7 +1626,8 @@ export const handlers = [
   candidateDocumentsPresign,
   candidateDocumentsConfirm,
   candidateCompleteOnboarding,
-  // S2: Notifications
+  // S2: Stats + Notifications
+  candidateMeStats,
   candidateMeNotifications,
   candidateMeNotificationsRead,
   // Account

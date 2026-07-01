@@ -31,6 +31,7 @@
   },
   "nav": {
     "home": "[ar] Home",
+    "dashboard": "لوحة التحكم",
     "profile": "[ar] Profile",
     "jobs": "[ar] Jobs",
     "applications": "[ar] Applications",
@@ -510,6 +511,72 @@
       "notFoundTitle": "الوظيفة غير موجودة",
       "notFoundBody": "ربما تم شغل هذه الوظيفة أو إزالتها.",
       "backToJobs": "العودة إلى الوظائف"
+    }
+  },
+  "dashboard": {
+    "metaTitle": "لوحتي — SkillIndiaConnect",
+    "pageTitle": "لوحة التحكم",
+    "greeting": "مرحباً، {name}",
+    "kpi": {
+      "applied": "الوظائف المُقدَّم عليها",
+      "views": "مشاهدات الملف",
+      "shortlisted": "في القائمة المختصرة",
+      "updates": "التحديثات"
+    },
+    "recommendedJobs": {
+      "title": "الوظائف الموصى بها",
+      "empty": "لا توصيات بعد. أكمل ملفك الشخصي للحصول على تطابقات.",
+      "viewAll": "تصفح جميع الوظائف ←"
+    },
+    "myApplications": {
+      "title": "طلباتي",
+      "coming": "تتبع الطلبات قريباً."
+    },
+    "quickActions": {
+      "title": "إجراءات سريعة",
+      "completeProfile": "أكمل الملف الشخصي",
+      "browseJobs": "تصفح الوظائف",
+      "viewNotifications": "عرض الإشعارات"
+    },
+    "profileSummary": {
+      "completion": "{pct}% مكتمل",
+      "completeNow": "أكمل الآن ←"
+    }
+  },
+  "notifications": {
+    "metaTitle": "الإشعارات — SkillIndiaConnect",
+    "pageTitle": "الإشعارات",
+    "empty": {
+      "all": "ليس لديك إشعارات بعد.",
+      "filter": "لا إشعارات في هذه الفئة.",
+      "unread": "لا إشعارات غير مقروءة."
+    },
+    "markAllRead": "وضع علامة مقروء على الكل",
+    "markRead": "وضع علامة مقروء",
+    "loadMore": "تحميل المزيد",
+    "loading": "جارٍ تحميل الإشعارات…",
+    "errorLoad": "فشل تحميل الإشعارات.",
+    "retry": "إعادة المحاولة",
+    "filters": {
+      "all": "الكل",
+      "applications": "الطلبات",
+      "jobs": "الوظائف",
+      "profile": "الملف",
+      "system": "النظام",
+      "unreadOnly": "غير المقروءة فقط"
+    },
+    "types": {
+      "APPLICATION_UPDATE": "تحديث الطلب",
+      "JOB_MATCH": "تطابق وظيفة",
+      "PROFILE_REMINDER": "تذكير الملف",
+      "DOCUMENT_STATUS": "حالة المستند",
+      "SYSTEM": "النظام"
+    },
+    "dateGroups": {
+      "today": "اليوم",
+      "yesterday": "أمس",
+      "thisWeek": "هذا الأسبوع",
+      "older": "أقدم"
     }
   }
 }
