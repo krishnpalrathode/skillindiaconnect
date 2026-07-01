@@ -421,5 +421,95 @@
       "errorBody": "يرجى التحقق من اتصالك والمحاولة مجدداً.",
       "retry": "إعادة المحاولة"
     }
+  },
+  "jobs": {
+    "metaTitle": "ابحث عن وظائف — SkillIndiaConnect",
+    "metaDescription": "تصفح آلاف الوظائف في الهند والخليج. فلتر حسب الموقع والراتب والتصنيف.",
+    "pageTitle": "ابحث عن وظائف",
+    "pageSubtitle": "استكشف الفرص في الهند ودول الخليج",
+    "filtersLabel": "تصفية الوظائف",
+    "searchLabel": "البحث عن وظائف",
+    "searchPlaceholder": "المسمى الوظيفي أو الكلمة المفتاحية…",
+    "searchButton": "بحث",
+    "marketTabsLabel": "سوق العمل",
+    "tabs": {
+      "all": "الكل",
+      "local": "الهند",
+      "foreign": "الخليج"
+    },
+    "filters": {
+      "sort": "ترتيب:",
+      "category": "التصنيف",
+      "currency": "العملة",
+      "allCurrencies": "جميع العملات",
+      "salaryRange": "نطاق الراتب",
+      "salaryMin": "الحد الأدنى للراتب",
+      "salaryMax": "الحد الأقصى للراتب",
+      "clear": "مسح الفلاتر"
+    },
+    "sort": {
+      "recent": "الأحدث",
+      "relevance": "الأكثر صلة",
+      "salary": "الراتب الأعلى"
+    },
+    "categories": {
+      "construction": "بناء",
+      "electrical": "كهرباء",
+      "plumbing": "سباكة",
+      "welding": "لحام",
+      "driving": "قيادة",
+      "housekeeping": "تدبير المنزل",
+      "hospitality": "ضيافة",
+      "security": "أمن",
+      "general": "عمالة عامة"
+    },
+    "resultCount": "{count, plural, one {وظيفة واحدة} other {# وظائف}}",
+    "resultsLabel": "نتائج البحث عن وظائف",
+    "empty": {
+      "title": "لا توجد وظائف",
+      "body": "حاول تعديل الفلاتر أو البحث بكلمات مختلفة."
+    },
+    "loadMore": "تحميل المزيد من الوظائف",
+    "loadMoreError": "فشل تحميل المزيد من الوظائف.",
+    "retry": "إعادة المحاولة",
+    "card": {
+      "viewDetails": "عرض التفاصيل",
+      "save": "حفظ الوظيفة",
+      "unsave": "محفوظة",
+      "newBadge": "جديدة",
+      "marketGulf": "خليج",
+      "marketLocal": "هند"
+    },
+    "benefits": {
+      "pf": "PF",
+      "bonus": "مكافأة",
+      "esi": "ESI",
+      "accommodation": "إقامة",
+      "transport": "نقل",
+      "food": "طعام",
+      "listLabel": "المزايا المشمولة"
+    },
+    "detail": {
+      "applyNow": "قدّم الآن",
+      "profileNudge": "أكمل ملفك الشخصي قبل التقديم لتحسين فرصك.",
+      "description": "وصف الوظيفة",
+      "jobDetails": "تفاصيل الوظيفة",
+      "experience": "الخبرة",
+      "experienceYears": "{count, plural, one {سنة واحدة} other {# سنوات}}",
+      "vacancies": "الشواغر",
+      "genderPreference": "تفضيل الجنس",
+      "gender": {
+        "MALE": "ذكر",
+        "FEMALE": "أنثى"
+      },
+      "workConditions": "ظروف العمل",
+      "requirements": "المتطلبات",
+      "aboutCompany": "عن الشركة",
+      "viewCompanyProfile": "وظائف الشركة ←",
+      "similarJobs": "وظائف مماثلة",
+      "notFoundTitle": "الوظيفة غير موجودة",
+      "notFoundBody": "ربما تم شغل هذه الوظيفة أو إزالتها.",
+      "backToJobs": "العودة إلى الوظائف"
+    }
   }
 }

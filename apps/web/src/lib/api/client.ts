@@ -101,3 +101,36 @@ export async function apiFetch<T>(
   const json = (await res.json()) as { data?: T };
   return (json.data ?? json) as T;
 }
+
+/**
+ * Like `apiFetch`, but returns the raw parsed JSON body without unwrapping
+ * `{ data }`. Needed for cursor-paginated endpoints whose envelope is
+ * `{ data, nextCursor }` — unwrapping would discard `nextCursor`.
+ */
+export async function apiFetchRaw<T>(
+  path: string,
+  init: RequestInit = {},
+  skipRefreshRetry = false,
+): Promise<T> {
+  let res = await rawFetch(path, init);
+
+  if (res.status === 401 && !skipRefreshRetry && _refreshFn) {
+    const newToken = await _refreshFn().catch(() => null);
+    if (newToken) {
+      _accessToken = newToken;
+      res = await rawFetch(path, init);
+    }
+  }
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({
+      code: 'UNKNOWN_ERROR',
+      title: 'Error',
+      status: res.status,
+      detail: 'An unexpected error occurred.',
+    }));
+    throw new ApiRequestError(body as ApiError);
+  }
+
+  return res.json() as Promise<T>;
+}

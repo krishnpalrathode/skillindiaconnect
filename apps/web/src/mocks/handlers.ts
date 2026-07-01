@@ -13,10 +13,16 @@ import {
   toJobCard,
   toJobDetail,
 } from './data';
+import { MOCK_SSR_ORIGIN } from './ssr-origin';
 
 type ErrorSchema = components['schemas']['Error'];
 
-const BASE = '/api/v1';
+// Browser and jsdom (vitest) both have a `location` global, so a relative
+// pattern resolves against the current page origin as usual. Node (SSR via
+// instrumentation.ts) has no `location` global — there a relative pattern
+// never matches an absolute fetch() URL, so handlers there must be absolute
+// against a fixed origin that server-fetch.ts dials. See ssr-origin.ts.
+const BASE = typeof location === 'undefined' ? `${MOCK_SSR_ORIGIN}/api/v1` : '/api/v1';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -66,23 +72,32 @@ function offsetPaginate<T>(
   };
 }
 
-function cursorPaginate<T extends { createdAt: string }>(
+function cursorPaginate<T extends { createdAt: string; id?: string }>(
   items: T[],
   cursor: string | null,
   limit: number,
+  options?: {
+    /** Defaults to createdAt descending (original behavior). */
+    compare?: (a: T, b: T) => number;
+    /** Defaults to createdAt. Must be unique per sorted position to dedupe correctly across pages. */
+    cursorKey?: (item: T) => string;
+  },
 ): { data: T[]; nextCursor: string | null } {
-  const sorted = [...items].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
+  const compare =
+    options?.compare ??
+    ((a: T, b: T) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const cursorKey = options?.cursorKey ?? ((item: T) => item.createdAt);
+
+  const sorted = [...items].sort(compare);
   let startIdx = 0;
   if (cursor) {
     const decoded = atob(cursor);
-    const idx = sorted.findIndex((item) => item.createdAt < decoded);
-    startIdx = idx === -1 ? sorted.length : idx;
+    const idx = sorted.findIndex((item) => cursorKey(item) === decoded);
+    startIdx = idx === -1 ? 0 : idx + 1;
   }
   const page = sorted.slice(startIdx, startIdx + limit);
   const nextCursor =
-    startIdx + limit < sorted.length ? btoa(page[page.length - 1]!.createdAt) : null;
+    startIdx + limit < sorted.length ? btoa(cursorKey(page[page.length - 1]!)) : null;
   return { data: page, nextCursor };
 }
 
@@ -1002,8 +1017,10 @@ const getJobs = http.get(`${BASE}/jobs`, ({ request }) => {
   const category = url.searchParams.get('category');
   const salaryMin = url.searchParams.get('salaryMin');
   const salaryMax = url.searchParams.get('salaryMax');
+  const currency = url.searchParams.get('currency');
   const badge = url.searchParams.get('badge');
   const q = url.searchParams.get('q')?.toLowerCase();
+  const sort = url.searchParams.get('sort') ?? 'recent';
   const cursor = url.searchParams.get('cursor');
   const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
 
@@ -1016,6 +1033,7 @@ const getJobs = http.get(`${BASE}/jobs`, ({ request }) => {
   if (category) jobs = jobs.filter((j) => j.categoryId === category);
   if (salaryMin) jobs = jobs.filter((j) => (j.salaryMin ?? 0) >= parseInt(salaryMin, 10));
   if (salaryMax) jobs = jobs.filter((j) => (j.salaryMax ?? Infinity) <= parseInt(salaryMax, 10));
+  if (currency) jobs = jobs.filter((j) => j.salaryCurrency === currency);
   if (badge === 'accommodation') jobs = jobs.filter((j) => j.accommodation);
   if (badge === 'healthInsurance') jobs = jobs.filter((j) => j.healthInsurance);
   if (badge === 'transportation') jobs = jobs.filter((j) => j.transportation);
@@ -1025,10 +1043,25 @@ const getJobs = http.get(`${BASE}/jobs`, ({ request }) => {
     );
 
   const cards = jobs.map((j) => toJobCard(j, savedJobIds));
+
+  // "relevance" has no scoring model yet (no search-rank field in the mock
+  // fixtures) — falls back to recency, same as the default. "salary" sorts
+  // by the top of the posted range, highest first.
+  const compare =
+    sort === 'salary'
+      ? (a: (typeof cards)[number], b: (typeof cards)[number]) =>
+          (b.salaryMax ?? b.salaryMin ?? 0) - (a.salaryMax ?? a.salaryMin ?? 0)
+      : undefined;
+  const cursorKey =
+    sort === 'salary'
+      ? (item: (typeof cards)[number]) => `${item.salaryMax ?? item.salaryMin ?? 0}|${item.id}`
+      : undefined;
+
   const { data, nextCursor } = cursorPaginate(
     cards as ((typeof cards)[0] & { createdAt: string })[],
     cursor,
     limit,
+    { compare, cursorKey },
   );
   return HttpResponse.json({ data, nextCursor });
 });

@@ -18,7 +18,7 @@ export function EmployerRouteGuard({ children }: EmployerRouteGuardProps) {
   useEffect(() => {
     if (isLoading) return;
     if (!user) {
-      router.replace(`/${locale}/login?next=/${locale}/dashboard`);
+      router.replace(`/${locale}/login?next=/${locale}/employer/dashboard`);
     } else if (user.role !== 'EMPLOYER') {
       // Candidate or admin → redirect to their home
       router.replace(`/${locale}/profile`);

@@ -421,5 +421,95 @@
       "errorBody": "Please check your connection and try again.",
       "retry": "Retry"
     }
+  },
+  "jobs": {
+    "metaTitle": "Find Jobs — SkillIndiaConnect",
+    "metaDescription": "Browse thousands of blue-collar jobs in India and the Gulf. Filter by location, salary, and category.",
+    "pageTitle": "Find Jobs",
+    "pageSubtitle": "Explore opportunities across India and the Gulf",
+    "filtersLabel": "Job filters",
+    "searchLabel": "Search jobs",
+    "searchPlaceholder": "Job title or keyword…",
+    "searchButton": "Search",
+    "marketTabsLabel": "Job market",
+    "tabs": {
+      "all": "All",
+      "local": "India",
+      "foreign": "Gulf"
+    },
+    "filters": {
+      "sort": "Sort:",
+      "category": "Category",
+      "currency": "Currency",
+      "allCurrencies": "All currencies",
+      "salaryRange": "Salary range",
+      "salaryMin": "Minimum salary",
+      "salaryMax": "Maximum salary",
+      "clear": "Clear filters"
+    },
+    "sort": {
+      "recent": "Most recent",
+      "relevance": "Most relevant",
+      "salary": "Highest salary"
+    },
+    "categories": {
+      "construction": "Construction",
+      "electrical": "Electrical",
+      "plumbing": "Plumbing",
+      "welding": "Welding",
+      "driving": "Driving",
+      "housekeeping": "Housekeeping",
+      "hospitality": "Hospitality",
+      "security": "Security",
+      "general": "General Labour"
+    },
+    "resultCount": "{count, plural, one {# job found} other {# jobs found}}",
+    "resultsLabel": "Job search results",
+    "empty": {
+      "title": "No jobs found",
+      "body": "Try adjusting your filters or search for something else."
+    },
+    "loadMore": "Load more jobs",
+    "loadMoreError": "Failed to load more jobs.",
+    "retry": "Retry",
+    "card": {
+      "viewDetails": "View details",
+      "save": "Save job",
+      "unsave": "Saved",
+      "newBadge": "New",
+      "marketGulf": "Gulf",
+      "marketLocal": "India"
+    },
+    "benefits": {
+      "pf": "PF",
+      "bonus": "Bonus",
+      "esi": "ESI",
+      "accommodation": "Accommodation",
+      "transport": "Transport",
+      "food": "Food",
+      "listLabel": "Included benefits"
+    },
+    "detail": {
+      "applyNow": "Apply Now",
+      "profileNudge": "Complete your profile to improve your application and match score before applying.",
+      "description": "Job Description",
+      "jobDetails": "Job Details",
+      "experience": "Experience",
+      "experienceYears": "{count, plural, one {# year} other {# years}}",
+      "vacancies": "Vacancies",
+      "genderPreference": "Gender preference",
+      "gender": {
+        "MALE": "Male",
+        "FEMALE": "Female"
+      },
+      "workConditions": "Working Conditions",
+      "requirements": "Requirements",
+      "aboutCompany": "About the Company",
+      "viewCompanyProfile": "View company jobs →",
+      "similarJobs": "Similar Jobs",
+      "notFoundTitle": "Job not found",
+      "notFoundBody": "This job may have been filled or removed.",
+      "backToJobs": "Back to jobs"
+    }
   }
 }

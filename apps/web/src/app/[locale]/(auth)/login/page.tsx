@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { GoogleButton } from '@/components/auth/GoogleButton';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { PhoneLoginFlow } from '@/components/auth/PhoneLoginFlow';
@@ -14,17 +14,22 @@ type Method = 'email' | 'phone';
 export default function LoginPage() {
   const t = useTranslations('auth');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [method, setMethod] = useState<Method>('email');
 
+  // `next` lets callers (e.g. SaveJobButton on a public job page) send the
+  // candidate back to where they were instead of always landing on /dashboard.
+  const next = searchParams.get('next');
+
   // Already authenticated — redirect to dashboard
   if (user) {
-    router.replace('/dashboard');
+    router.replace(next || '/dashboard');
     return null;
   }
 
   function handleSuccess() {
-    router.replace('/dashboard');
+    router.replace(next || '/dashboard');
   }
 
   return (

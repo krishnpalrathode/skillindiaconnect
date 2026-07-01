@@ -83,7 +83,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       href: `/${locale}/jobs`,
       icon: <Briefcase className="size-5" aria-hidden="true" />,
       label: t('jobs'),
-      disabled: true,
+      active: pathname.includes('/jobs'),
     },
     {
       href: `/${locale}/applications`,

@@ -421,5 +421,95 @@
       "errorBody": "कृपया अपना कनेक्शन जांचें और पुनः प्रयास करें।",
       "retry": "पुनः प्रयास करें"
     }
+  },
+  "jobs": {
+    "metaTitle": "नौकरियाँ खोजें — SkillIndiaConnect",
+    "metaDescription": "भारत और गल्फ में हजारों ब्लू-कॉलर नौकरियाँ खोजें।",
+    "pageTitle": "नौकरियाँ खोजें",
+    "pageSubtitle": "भारत और गल्फ में अवसर खोजें",
+    "filtersLabel": "नौकरी फ़िल्टर",
+    "searchLabel": "नौकरियाँ खोजें",
+    "searchPlaceholder": "पद या कीवर्ड…",
+    "searchButton": "खोजें",
+    "marketTabsLabel": "नौकरी बाज़ार",
+    "tabs": {
+      "all": "सभी",
+      "local": "भारत",
+      "foreign": "गल्फ"
+    },
+    "filters": {
+      "sort": "क्रम:",
+      "category": "श्रेणी",
+      "currency": "मुद्रा",
+      "allCurrencies": "सभी मुद्राएँ",
+      "salaryRange": "वेतन सीमा",
+      "salaryMin": "न्यूनतम वेतन",
+      "salaryMax": "अधिकतम वेतन",
+      "clear": "फ़िल्टर हटाएँ"
+    },
+    "sort": {
+      "recent": "सबसे नया",
+      "relevance": "सबसे प्रासंगिक",
+      "salary": "सर्वोच्च वेतन"
+    },
+    "categories": {
+      "construction": "निर्माण",
+      "electrical": "इलेक्ट्रिकल",
+      "plumbing": "प्लंबिंग",
+      "welding": "वेल्डिंग",
+      "driving": "ड्राइविंग",
+      "housekeeping": "हाउसकीपिंग",
+      "hospitality": "आतिथ्य",
+      "security": "सुरक्षा",
+      "general": "सामान्य श्रम"
+    },
+    "resultCount": "{count, plural, one {# नौकरी मिली} other {# नौकरियाँ मिलीं}}",
+    "resultsLabel": "नौकरी खोज परिणाम",
+    "empty": {
+      "title": "कोई नौकरी नहीं मिली",
+      "body": "अपने फ़िल्टर बदलें या कुछ और खोजें।"
+    },
+    "loadMore": "और नौकरियाँ लोड करें",
+    "loadMoreError": "और नौकरियाँ लोड नहीं हो सकीं।",
+    "retry": "पुनः प्रयास",
+    "card": {
+      "viewDetails": "विवरण देखें",
+      "save": "नौकरी सहेजें",
+      "unsave": "सहेजी गई",
+      "newBadge": "नई",
+      "marketGulf": "गल्फ",
+      "marketLocal": "भारत"
+    },
+    "benefits": {
+      "pf": "PF",
+      "bonus": "बोनस",
+      "esi": "ESI",
+      "accommodation": "आवास",
+      "transport": "यातायात",
+      "food": "भोजन",
+      "listLabel": "शामिल लाभ"
+    },
+    "detail": {
+      "applyNow": "अभी आवेदन करें",
+      "profileNudge": "आवेदन से पहले अपनी प्रोफ़ाइल पूरी करें।",
+      "description": "नौकरी विवरण",
+      "jobDetails": "नौकरी की जानकारी",
+      "experience": "अनुभव",
+      "experienceYears": "{count, plural, one {# वर्ष} other {# वर्ष}}",
+      "vacancies": "रिक्तियाँ",
+      "genderPreference": "लिंग प्राथमिकता",
+      "gender": {
+        "MALE": "पुरुष",
+        "FEMALE": "महिला"
+      },
+      "workConditions": "कार्य की स्थिति",
+      "requirements": "आवश्यकताएँ",
+      "aboutCompany": "कंपनी के बारे में",
+      "viewCompanyProfile": "कंपनी की नौकरियाँ देखें →",
+      "similarJobs": "समान नौकरियाँ",
+      "notFoundTitle": "नौकरी नहीं मिली",
+      "notFoundBody": "यह नौकरी भरी जा चुकी है या हटा दी गई है।",
+      "backToJobs": "नौकरियों पर वापस जाएँ"
+    }
   }
 }
