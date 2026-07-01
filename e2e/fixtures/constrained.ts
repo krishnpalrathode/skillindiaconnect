@@ -15,8 +15,8 @@ import { test as base, type Page } from '@playwright/test';
 const SLOW_3G_CONDITIONS = {
   offline: false,
   downloadThroughput: Math.floor((400 * 1024) / 8), // 51 200 bytes/s
-  uploadThroughput: Math.floor((400 * 1024) / 8),   // 51 200 bytes/s
-  latency: 400,                                       // 400 ms additional RTT
+  uploadThroughput: Math.floor((400 * 1024) / 8), // 51 200 bytes/s
+  latency: 400, // 400 ms additional RTT
 };
 
 const CPU_THROTTLE_RATE = 4; // 4× slowdown

@@ -5,6 +5,7 @@ SES) and never runs heavy or long work inline. It writes state and enqueues a
 BullMQ job. The WORKER process owns all external sends and async/retryable work.
 
 **The only synchronous external calls the API may make:**
+
 - R2 presigning (local signing, no network round-trip), and
 - payment order/checkout-session creation (the user is waiting at checkout).
 

@@ -21,12 +21,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup        # Prisma client present via postinstall
+      - uses: ./.github/actions/setup # Prisma client present via postinstall
       - run: pnpm typecheck
 
   test:
-    runs-on: ubuntu-latest                   # integration tests (added later) use Testcontainers;
-    steps:                                   # Docker is available on ubuntu-latest
+    runs-on: ubuntu-latest # integration tests (added later) use Testcontainers;
+    steps: # Docker is available on ubuntu-latest
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - run: pnpm test
@@ -137,7 +137,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0                     # gitleaks needs full history
+          fetch-depth: 0 # gitleaks needs full history
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

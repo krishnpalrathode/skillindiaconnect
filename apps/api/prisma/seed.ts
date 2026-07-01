@@ -141,7 +141,9 @@ async function main(): Promise<void> {
       update: { nameEn, isActive: true },
     });
   }
-  const electrician = await prisma.jobCategory.findUniqueOrThrow({ where: { slug: 'electrician' } });
+  const electrician = await prisma.jobCategory.findUniqueOrThrow({
+    where: { slug: 'electrician' },
+  });
   const mason = await prisma.jobCategory.findUniqueOrThrow({ where: { slug: 'mason' } });
 
   // ── 4. NOTIFICATION TEMPLATES (approvedAt: null = long-lead tracking) ────────
@@ -252,18 +254,19 @@ async function main(): Promise<void> {
       }
       await prisma.rolePermission.upsert({
         where: { role_permissionKey: { role: role as UserRole, permissionKey: key } },
-        create: { role: role as UserRole, permissionKey: key, enabled: v.enabled, isLocked: v.locked },
+        create: {
+          role: role as UserRole,
+          permissionKey: key,
+          enabled: v.enabled,
+          isLocked: v.locked,
+        },
         update: { enabled: v.enabled, isLocked: v.locked },
       });
     }
   }
 
   // ── 6. USERS (one per admin role) ────────────────────────────────────────────
-  const mkUser = async (
-    email: string,
-    role: UserRole,
-    status: UserStatus = UserStatus.ACTIVE,
-  ) =>
+  const mkUser = async (email: string, role: UserRole, status: UserStatus = UserStatus.ACTIVE) =>
     prisma.user.upsert({
       where: { email },
       create: { email, role, status, passwordHash, termsAcceptedAt: now },
@@ -376,8 +379,7 @@ async function main(): Promise<void> {
           planId: plan.id,
           status: SubscriptionStatus.ACTIVE,
           startsAt: now,
-          expiresAt:
-            c.plan === 'FREE' ? null : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+          expiresAt: c.plan === 'FREE' ? null : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
         },
         update: { planId: plan.id, status: SubscriptionStatus.ACTIVE },
       });
@@ -506,9 +508,7 @@ async function main(): Promise<void> {
           mimeType: 'application/pdf',
           sizeBytes: 102400,
           expiryDate:
-            t === 'PASSPORT'
-              ? new Date(now.getTime() + 5 * 365 * 24 * 60 * 60 * 1000)
-              : null,
+            t === 'PASSPORT' ? new Date(now.getTime() + 5 * 365 * 24 * 60 * 60 * 1000) : null,
         },
         update: {},
       });
@@ -758,9 +758,7 @@ async function main(): Promise<void> {
         docsRequiredCount: 3,
         passportValidAtApply: true,
         selectedNotifiedAt: a.selected ? now : null,
-        rejectionFeedback: a.rejected
-          ? 'Insufficient relevant experience for this role.'
-          : null,
+        rejectionFeedback: a.rejected ? 'Insufficient relevant experience for this role.' : null,
         archivedAt: a.archived ? now : null,
       },
       update: { status: a.status, archivedAt: a.archived ? now : null },

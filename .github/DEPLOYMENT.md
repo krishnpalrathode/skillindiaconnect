@@ -7,11 +7,11 @@ documents what to set so future team members can recreate the setup.
 
 Three Railway services, all built from this single repository:
 
-| Service  | Start command                          | Runs migrations? |
-|----------|----------------------------------------|------------------|
-| `web`    | `node apps/web/.next/standalone/server.js` | No           |
-| `api`    | `node apps/api/dist/main.api`          | **Yes** (release command — see below) |
-| `worker` | `node apps/api/dist/main.worker`       | **No**           |
+| Service  | Start command                              | Runs migrations?                      |
+| -------- | ------------------------------------------ | ------------------------------------- |
+| `web`    | `node apps/web/.next/standalone/server.js` | No                                    |
+| `api`    | `node apps/api/dist/main.api`              | **Yes** (release command — see below) |
+| `worker` | `node apps/api/dist/main.worker`           | **No**                                |
 
 `api` and `worker` build from the **same api image** (same Dockerfile, same dist);
 only the start command differs.
@@ -41,25 +41,25 @@ vars cause a fast boot failure, not silent misbehavior.
 
 Required vars for `api` and `worker`:
 
-| Variable       | Example (staging)                          |
-|----------------|--------------------------------------------|
-| `NODE_ENV`     | `staging` or `production`                  |
-| `DATABASE_URL` | Railway managed Postgres plugin URL        |
-| `REDIS_URL`    | Railway managed Redis plugin URL           |
-| `PORT`         | Set by Railway automatically               |
+| Variable       | Example (staging)                   |
+| -------------- | ----------------------------------- |
+| `NODE_ENV`     | `staging` or `production`           |
+| `DATABASE_URL` | Railway managed Postgres plugin URL |
+| `REDIS_URL`    | Railway managed Redis plugin URL    |
+| `PORT`         | Set by Railway automatically        |
 
 Required vars for `web`:
 
-| Variable              | Example                            |
-|-----------------------|------------------------------------|
-| `NEXT_PUBLIC_API_URL` | `https://api.staging.example.com`  |
+| Variable              | Example                           |
+| --------------------- | --------------------------------- |
+| `NEXT_PUBLIC_API_URL` | `https://api.staging.example.com` |
 
 ## Deployment triggers
 
-| Branch    | Environment | Trigger                       |
-|-----------|-------------|-------------------------------|
-| `develop` | Staging     | Railway GitHub integration    |
-| `main`    | Production  | Railway GitHub integration    |
+| Branch    | Environment | Trigger                    |
+| --------- | ----------- | -------------------------- |
+| `develop` | Staging     | Railway GitHub integration |
+| `main`    | Production  | Railway GitHub integration |
 
 Both branches are protected (PRs must pass all CI checks before merge), so the
 deployed commit is already CI-vetted. **CI does not run the deploy** — Railway

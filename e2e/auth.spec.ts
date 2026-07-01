@@ -22,7 +22,9 @@ const ALERT = 'p[role="alert"]';
 // ─── Login page ───────────────────────────────────────────────────────────────
 
 test.describe('Login page', () => {
-  test('renders login form with Google button, email tab, phone tab', async ({ page }, testInfo) => {
+  test('renders login form with Google button, email tab, phone tab', async ({
+    page,
+  }, testInfo) => {
     await page.goto(LOGIN_URL);
     await expect(page.getByRole('heading', { name: /log in/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /google/i })).toBeVisible();

@@ -148,7 +148,9 @@ export class CompletionService {
       },
     });
 
-    const mandatoryDocTypesPresent = profile.documents.map((d: { type: DocumentType }) => d.type as string);
+    const mandatoryDocTypesPresent = profile.documents.map(
+      (d: { type: DocumentType }) => d.type as string,
+    );
 
     const result = compute({
       profile: {

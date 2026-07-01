@@ -4,7 +4,10 @@
   "private": true,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "generate": "openapi-typescript ../contract/openapi.yaml -o src/generated/api.ts",
     "build": "tsc -p tsconfig.json",
