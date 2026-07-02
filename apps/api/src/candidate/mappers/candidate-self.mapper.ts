@@ -43,7 +43,7 @@ export interface CandidateSelfDto {
   photoKey: string | null;
   currentLocation: string | null;
   nationality: string | null;
-  noticePeriod: string | null;
+  noticePeriod: number | null;
   // Salary / availability settings
   salaryExpectationMin: number | null;
   salaryExpectationMax: number | null;

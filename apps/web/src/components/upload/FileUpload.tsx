@@ -87,17 +87,11 @@ export function FileUpload({
 
       {hint && <p className="text-xs text-neutral-500">{hint}</p>}
 
-      {/* Drop zone / trigger */}
-      <button
-        type="button"
-        disabled={isActive}
-        onClick={() => {
-          if (state.status === 'error') {
-            retry();
-          } else {
-            inputRef.current?.click();
-          }
-        }}
+      {/* Drop zone / trigger — div+role to avoid <button> nesting in done/error states */}
+      <div
+        role="button"
+        tabIndex={isActive ? -1 : 0}
+        aria-disabled={isActive}
         aria-label={
           state.status === 'error'
             ? t('retryUpload')
@@ -105,6 +99,22 @@ export function FileUpload({
               ? t('changeFile')
               : t('selectFile')
         }
+        onClick={() => {
+          if (isActive) return;
+          if (state.status === 'error') {
+            retry();
+          } else if (state.status !== 'done') {
+            inputRef.current?.click();
+          }
+        }}
+        onKeyDown={(e) => {
+          if (isActive) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (state.status === 'error') retry();
+            else if (state.status !== 'done') inputRef.current?.click();
+          }
+        }}
         className={cn(
           'relative flex flex-col items-center justify-center gap-2',
           'w-full min-h-[96px] rounded-lg border-2 border-dashed',
@@ -199,7 +209,7 @@ export function FileUpload({
             </div>
           </>
         )}
-      </button>
+      </div>
 
       <input
         ref={inputRef}

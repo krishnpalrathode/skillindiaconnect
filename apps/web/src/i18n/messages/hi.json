@@ -335,6 +335,8 @@
       "nationalityPlaceholder": "जैसे भारतीय",
       "noticePeriodLabel": "नोटिस अवधि (दिन)",
       "noticePeriodPlaceholder": "जैसे 30",
+      "passportExpiryLabel": "पासपोर्ट की समाप्ति तिथि",
+      "passportExpiryRequired": "अपलोड करने से पहले समाप्ति तिथि दर्ज करें",
       "softBlockDocs": "अपनी प्रोफ़ाइल सुधारने के लिए पासपोर्ट अपलोड करें",
       "softBlockSkills": "मैच स्कोर सुधारने के लिए कौशल जोड़ें",
       "documentStatus": {

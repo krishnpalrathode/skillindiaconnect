@@ -20,7 +20,7 @@ Tailwind v3 supports all logical utilities. This makes RTL work without per-comp
 
 ## MSW dev guard
 
-`NEXT_PUBLIC_API_MOCKING=enabled` activates MSW. Never bundle the service worker in production. The mock worker must NOT run in a production bundle.
+`NEXT_PUBLIC_API_MOCKING=disabled` activates MSW. Never bundle the service worker in production. The mock worker must NOT run in a production bundle.
 
 ## Tailwind v3
 

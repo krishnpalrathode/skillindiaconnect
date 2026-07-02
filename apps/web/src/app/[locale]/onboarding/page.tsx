@@ -17,11 +17,13 @@ import { useAuth } from '@/lib/auth/auth-context';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 
-const STEP_KEY = 'sic_onboarding_step';
+function stepKey(userId: string) {
+  return `sic_onboarding_step_${userId}`;
+}
 
-function readStoredStep(): StepIndex {
+function readStoredStep(userId: string): StepIndex {
   try {
-    const raw = sessionStorage.getItem(STEP_KEY);
+    const raw = sessionStorage.getItem(stepKey(userId));
     const n = Number(raw);
     if (n >= 1 && n <= 4) return n as StepIndex;
   } catch {
@@ -30,9 +32,9 @@ function readStoredStep(): StepIndex {
   return 1;
 }
 
-function writeStoredStep(step: StepIndex) {
+function writeStoredStep(userId: string, step: StepIndex) {
   try {
-    sessionStorage.setItem(STEP_KEY, String(step));
+    sessionStorage.setItem(stepKey(userId), String(step));
   } catch {
     // sessionStorage unavailable — step just won't persist
   }
@@ -68,7 +70,7 @@ export default function OnboardingPage() {
     getCandidateProfile()
       .then((p) => {
         setProfile(p);
-        setStep(readStoredStep());
+        setStep(readStoredStep(user.id));
       })
       .catch(() => setFetchError('Failed to load profile. Please refresh.'))
       .finally(() => setLoading(false));
@@ -76,7 +78,7 @@ export default function OnboardingPage() {
 
   const goTo = (next: StepIndex) => {
     setStep(next);
-    writeStoredStep(next);
+    if (user) writeStoredStep(user.id, next);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
