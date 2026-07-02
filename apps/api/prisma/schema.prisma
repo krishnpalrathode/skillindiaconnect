@@ -262,7 +262,7 @@ model CandidateProfile {
   photoKey        String?
   currentLocation String?
   nationality     String?
-  noticePeriod    String?
+  noticePeriod    Int?
   salaryExpectationMin      Int?
   salaryExpectationMax      Int?
   salaryExpectationCurrency Currency?

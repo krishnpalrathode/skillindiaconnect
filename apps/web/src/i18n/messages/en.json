@@ -316,6 +316,8 @@
       "nationalityPlaceholder": "e.g. Indian",
       "noticePeriodLabel": "Notice period (days)",
       "noticePeriodPlaceholder": "e.g. 30",
+      "passportExpiryLabel": "Passport expiry date",
+      "passportExpiryRequired": "Enter expiry date before uploading",
       "softBlockDocs": "Upload your passport to improve your profile",
       "softBlockSkills": "Add skills to improve your match score",
       "documentStatus": {

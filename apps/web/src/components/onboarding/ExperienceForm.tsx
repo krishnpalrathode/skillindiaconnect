@@ -41,7 +41,7 @@ export function ExperienceForm({ existing, onSaved, onCancel }: ExperienceFormPr
 
     const body: CreateExperienceBody = {
       type,
-      ...(country.trim() ? { country: country.trim() } : {}),
+      country: type === 'INDIA' ? 'India' : country.trim(),
       ...(company.trim() ? { companyName: company.trim() } : {}),
       ...(role.trim() ? { role: role.trim() } : {}),
       ...(years ? { years: Number(years) } : {}),

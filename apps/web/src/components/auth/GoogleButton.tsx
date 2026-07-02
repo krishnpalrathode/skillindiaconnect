@@ -13,7 +13,11 @@ interface GoogleButtonProps {
  */
 export function GoogleButton({ label, className }: GoogleButtonProps) {
   function handleClick() {
-    window.location.href = '/api/v1/auth/google';
+    const base =
+      process.env['NEXT_PUBLIC_API_MOCKING'] === 'enabled'
+        ? ''
+        : (process.env['NEXT_PUBLIC_API_URL'] ?? '');
+    window.location.href = `${base}/api/v1/auth/google`;
   }
 
   return (

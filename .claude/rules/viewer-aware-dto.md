@@ -6,6 +6,7 @@ that take a viewer context — `candidate-self` | `employer` | `admin` |
 LAYER. Never rely on the UI to hide data.
 
 Candidate, employer context:
+
 - `showPhone = false` → phone omitted.
 - `showReligion = false` (default) → religion omitted.
 - Admin context includes both. Internal application notes are NEVER serialized to

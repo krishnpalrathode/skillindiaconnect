@@ -316,6 +316,8 @@
       "nationalityPlaceholder": "مثال: هندي",
       "noticePeriodLabel": "فترة الإشعار (بالأيام)",
       "noticePeriodPlaceholder": "مثال: 30",
+      "passportExpiryLabel": "تاريخ انتهاء صلاحية جواز السفر",
+      "passportExpiryRequired": "أدخل تاريخ الانتهاء قبل الرفع",
       "softBlockDocs": "ارفع جواز سفرك لتحسين ملفك الشخصي",
       "softBlockSkills": "أضف مهارات لتحسين نقاط المطابقة",
       "documentStatus": {

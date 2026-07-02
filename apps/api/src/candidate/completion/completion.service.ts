@@ -24,7 +24,7 @@ export interface CompletionProfileInput {
   // Present on the profile but UNSCORED (DPDP / CR-001 B1) — included so tests
   // can assert they do not affect pct.
   religion?: string | null;
-  noticePeriod?: string | null;
+  noticePeriod?: number | null;
 }
 
 export interface CompletionWorkExpInput {
@@ -148,7 +148,9 @@ export class CompletionService {
       },
     });
 
-    const mandatoryDocTypesPresent = profile.documents.map((d: { type: DocumentType }) => d.type as string);
+    const mandatoryDocTypesPresent = profile.documents.map(
+      (d: { type: DocumentType }) => d.type as string,
+    );
 
     const result = compute({
       profile: {

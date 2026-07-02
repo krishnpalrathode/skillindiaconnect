@@ -51,6 +51,7 @@ export function DocumentsSkillsStep({
   const [noticePeriod, setNoticePeriod] = useState(
     profile.noticePeriod !== undefined ? String(profile.noticePeriod) : '',
   );
+  const [passportExpiry, setPassportExpiry] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -148,20 +149,30 @@ export function DocumentsSkillsStep({
               ))}
           </div>
         ) : (
-          <FileUpload
-            docType="PASSPORT"
-            accept=".pdf,image/jpeg,image/png"
-            maxMb={10}
-            label={t('passportLabel')}
-            hint={t('passportHint')}
-            onDone={() => {
-              // Document confirmation updates profile.documents; re-fetch completion on page
-              onProfileUpdate({
-                ...profile,
-                documents: [...(profile.documents ?? [])],
-              });
-            }}
-          />
+          <div className="flex flex-col gap-2">
+            <Field id="ds-passport-expiry" label={t('passportExpiryLabel')} required>
+              <Input
+                type="date"
+                value={passportExpiry}
+                min={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setPassportExpiry(e.target.value)}
+              />
+            </Field>
+            <FileUpload
+              docType="PASSPORT"
+              accept=".pdf,image/jpeg,image/png"
+              maxMb={10}
+              label={t('passportLabel')}
+              hint={passportExpiry ? t('passportHint') : t('passportExpiryRequired')}
+              expiryDate={passportExpiry || undefined}
+              onDone={() => {
+                onProfileUpdate({
+                  ...profile,
+                  documents: [...(profile.documents ?? [])],
+                });
+              }}
+            />
+          </div>
         )}
 
         {!hasPassport && (

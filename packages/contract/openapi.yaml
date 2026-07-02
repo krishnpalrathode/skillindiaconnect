@@ -114,7 +114,6 @@ components:
         pattern: '^[a-zA-Z]+:(asc|desc)$'
 
   schemas:
-
     # ── Error envelope (RFC 7807-style) ────────────────────────────────────────
     Error:
       type: object
@@ -358,10 +357,10 @@ components:
           description: Toggle-controlled in non-self contexts (showPhone). Always present in self-view.
           example: '+919876543210'
         phoneVerifiedAt:
-          type: [string, "null"]
+          type: [string, 'null']
           format: date-time
         whatsappCapable:
-          type: [boolean, "null"]
+          type: [boolean, 'null']
           description: Set to true when OTP verification succeeds via WhatsApp channel
         maritalStatus:
           $ref: '#/components/schemas/MaritalStatus'
@@ -373,7 +372,7 @@ components:
           items:
             type: string
         jobCategoryId:
-          type: [string, "null"]
+          type: [string, 'null']
           format: uuid
         currentLocation:
           type: string
@@ -394,9 +393,9 @@ components:
           type: boolean
           default: true
         salaryExpectationMin:
-          type: [integer, "null"]
+          type: [integer, 'null']
         salaryExpectationMax:
-          type: [integer, "null"]
+          type: [integer, 'null']
         salaryExpectationCurrency:
           type: string
           default: INR
@@ -519,16 +518,16 @@ components:
         description:
           type: string
         registrationCertKey:
-          type: [string, "null"]
+          type: [string, 'null']
           description: R2 key for the uploaded registration certificate document
         rejectionReason:
-          type: [string, "null"]
+          type: [string, 'null']
           description: Populated after admin rejection; visible to the employer
         createdAt:
           type: string
           format: date-time
         approvedAt:
-          type: [string, "null"]
+          type: [string, 'null']
           format: date-time
 
     EmployerDashboardKpi:
@@ -565,7 +564,21 @@ components:
     # ── Job schemas (S2) ────────────────────────────────────────────────────────
     Job:
       type: object
-      required: [id, title, status, market, location, salaryCurrency, accommodation, healthInsurance, transportation, companyId, companyName, createdAt]
+      required:
+        [
+          id,
+          title,
+          status,
+          market,
+          location,
+          salaryCurrency,
+          accommodation,
+          healthInsurance,
+          transportation,
+          companyId,
+          companyName,
+          createdAt,
+        ]
       description: |
         Full internal job schema — returned to the owning employer and admins only.
         **Never return this schema on public endpoints** — use `JobCard` or `JobDetail`.
@@ -590,13 +603,13 @@ components:
         description:
           type: string
         categoryId:
-          type: [string, "null"]
+          type: [string, 'null']
           format: uuid
         salaryMin:
-          type: [integer, "null"]
+          type: [integer, 'null']
           minimum: 0
         salaryMax:
-          type: [integer, "null"]
+          type: [integer, 'null']
           minimum: 0
         salaryCurrency:
           type: string
@@ -617,10 +630,10 @@ components:
           items:
             type: string
         experienceRequiredYears:
-          type: [integer, "null"]
+          type: [integer, 'null']
           minimum: 0
         vacancies:
-          type: [integer, "null"]
+          type: [integer, 'null']
           minimum: 1
         genderPreference:
           $ref: '#/components/schemas/GenderPreference'
@@ -635,15 +648,27 @@ components:
           type: string
           format: date-time
         publishedAt:
-          type: [string, "null"]
+          type: [string, 'null']
           format: date-time
         archivedAt:
-          type: [string, "null"]
+          type: [string, 'null']
           format: date-time
 
     JobCard:
       type: object
-      required: [id, title, market, location, salaryCurrency, accommodation, healthInsurance, transportation, companyName, createdAt]
+      required:
+        [
+          id,
+          title,
+          market,
+          location,
+          salaryCurrency,
+          accommodation,
+          healthInsurance,
+          transportation,
+          companyName,
+          createdAt,
+        ]
       description: |
         **Public search-result shape.** Deliberately excludes internal employer fields
         (`companyId`, employer PII, internal metadata). Only ACTIVE jobs appear in
@@ -662,13 +687,13 @@ components:
         location:
           type: string
         categoryId:
-          type: [string, "null"]
+          type: [string, 'null']
           format: uuid
         salaryMin:
-          type: [integer, "null"]
+          type: [integer, 'null']
           minimum: 0
         salaryMax:
-          type: [integer, "null"]
+          type: [integer, 'null']
           minimum: 0
         salaryCurrency:
           type: string
@@ -685,10 +710,10 @@ components:
           type: string
           format: date-time
         publishedAt:
-          type: [string, "null"]
+          type: [string, 'null']
           format: date-time
         isSaved:
-          type: [boolean, "null"]
+          type: [boolean, 'null']
           description: >
             Whether the authenticated candidate has saved this job.
             null for unauthenticated callers.
@@ -711,10 +736,10 @@ components:
             workConditions:
               type: string
             experienceRequiredYears:
-              type: [integer, "null"]
+              type: [integer, 'null']
               minimum: 0
             vacancies:
-              type: [integer, "null"]
+              type: [integer, 'null']
               minimum: 1
             genderPreference:
               $ref: '#/components/schemas/GenderPreference'
@@ -741,7 +766,7 @@ components:
         read:
           type: boolean
         readAt:
-          type: [string, "null"]
+          type: [string, 'null']
           format: date-time
         relatedEntityId:
           type: string
@@ -780,16 +805,15 @@ components:
           type: boolean
           description: If true, only SUPER_ADMIN may update this setting
         updatedAt:
-          type: [string, "null"]
+          type: [string, 'null']
           format: date-time
         updatedBy:
-          type: [string, "null"]
+          type: [string, 'null']
           description: User ID of the last updater
 
 # ─── Paths ───────────────────────────────────────────────────────────────────
 
 paths:
-
   # ── Health (unversioned — path is /health at root, NOT under /api/v1) ──────
   /health:
     servers:
@@ -1898,7 +1922,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/Notification'
                   nextCursor:
-                    type: [string, "null"]
+                    type: [string, 'null']
         '401':
           description: Unauthorized
           content:
@@ -2003,7 +2027,7 @@ paths:
                       settings:
                         $ref: '#/components/schemas/ResumeSettings'
                       lastRenderedAt:
-                        type: [string, "null"]
+                        type: [string, 'null']
                         format: date-time
 
   /candidates/me/resume/settings:
@@ -2599,7 +2623,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/JobCard'
                   nextCursor:
-                    type: [string, "null"]
+                    type: [string, 'null']
 
     post:
       operationId: postJobs
@@ -2622,7 +2646,16 @@ paths:
           application/json:
             schema:
               type: object
-              required: [title, market, location, salaryCurrency, accommodation, healthInsurance, transportation]
+              required:
+                [
+                  title,
+                  market,
+                  location,
+                  salaryCurrency,
+                  accommodation,
+                  healthInsurance,
+                  transportation,
+                ]
               properties:
                 title:
                   type: string

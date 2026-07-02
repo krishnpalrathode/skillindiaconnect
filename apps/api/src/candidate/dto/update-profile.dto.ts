@@ -2,10 +2,12 @@ import {
   IsArray,
   IsDateString,
   IsEnum,
+  IsInt,
   IsOptional,
   IsString,
   IsUUID,
   MaxLength,
+  Min,
   MinLength,
 } from 'class-validator';
 import { MaritalStatus } from '@prisma/client';
@@ -55,7 +57,7 @@ export class UpdateProfileDto {
   nationality?: string;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  noticePeriod?: string;
+  @IsInt()
+  @Min(0)
+  noticePeriod?: number;
 }

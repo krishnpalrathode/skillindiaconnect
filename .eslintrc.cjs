@@ -40,18 +40,21 @@ module.exports = {
       plugins: ['import'],
       rules: {
         // No relative escapes out of the packages directory; no importing entrypoints.
-        'no-restricted-imports': ['error', {
-          patterns: [
-            {
-              group: ['../../packages/*', '../../../packages/*'],
-              message: 'Import @skillindiaconnect/* packages by name, not relative paths.',
-            },
-            {
-              group: ['**/main.api', '**/main.worker'],
-              message: 'Entrypoints must not be imported.',
-            },
-          ],
-        }],
+        'no-restricted-imports': [
+          'error',
+          {
+            patterns: [
+              {
+                group: ['../../packages/*', '../../../packages/*'],
+                message: 'Import @skillindiaconnect/* packages by name, not relative paths.',
+              },
+              {
+                group: ['**/main.api', '**/main.worker'],
+                message: 'Entrypoints must not be imported.',
+              },
+            ],
+          },
+        ],
 
         // Cross-module zone enforcement.
         // Paths below are relative to the monorepo root (where ESLint runs).
@@ -59,18 +62,22 @@ module.exports = {
         //
         // When zone count reaches ~3+, migrate to eslint-plugin-boundaries for
         // auto-enforcement without per-module zone boilerplate.
-        'import/no-restricted-paths': ['error', {
-          zones: [
-            // candidate: other modules must not import candidate internals directly.
-            // They import CandidateReadService via the public export from CandidateModule.
-            {
-              target: './apps/api/src/auth',
-              from: './apps/api/src/candidate',
-              except: ['./candidate-read.service.ts'],
-              message: 'Auth must not reach into candidate internals. Import CandidateReadService via CandidateModule export.',
-            },
-          ],
-        }],
+        'import/no-restricted-paths': [
+          'error',
+          {
+            zones: [
+              // candidate: other modules must not import candidate internals directly.
+              // They import CandidateReadService via the public export from CandidateModule.
+              {
+                target: './apps/api/src/auth',
+                from: './apps/api/src/candidate',
+                except: ['./candidate-read.service.ts'],
+                message:
+                  'Auth must not reach into candidate internals. Import CandidateReadService via CandidateModule export.',
+              },
+            ],
+          },
+        ],
       },
     },
   ],

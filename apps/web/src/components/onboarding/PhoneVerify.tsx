@@ -12,6 +12,14 @@ import { ApiRequestError } from '@/lib/api/client';
 
 const RESEND_COOLDOWN_SEC = 60;
 
+// Normalizes an Indian 10-digit number to E.164. Already-prefixed numbers pass through.
+function toE164(raw: string): string {
+  const digits = raw.replace(/\D/g, '');
+  if (digits.length === 10) return `+91${digits}`;
+  if (!raw.startsWith('+')) return `+${digits}`;
+  return raw.trim();
+}
+
 interface PhoneVerifyProps {
   initialPhone?: string;
   alreadyVerified?: boolean;
@@ -57,7 +65,7 @@ export function PhoneVerify({
     setError(null);
     setLoading(true);
     try {
-      await postOtpSend(phone.trim());
+      await postOtpSend(toE164(phone));
       setStage('otp');
       setOtpKey((k) => k + 1);
       startCooldown();
@@ -77,9 +85,9 @@ export function PhoneVerify({
       setError(null);
       setLoading(true);
       try {
-        await postOtpVerify(phone.trim(), code);
+        await postOtpVerify(toE164(phone), code);
         setStage('verified');
-        onVerified(phone.trim());
+        onVerified(toE164(phone));
       } catch (err) {
         if (err instanceof ApiRequestError && err.error.code === 'INVALID_OTP') {
           setError(t('otpInvalid'));

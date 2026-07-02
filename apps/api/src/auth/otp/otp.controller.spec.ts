@@ -6,6 +6,7 @@ import { OtpController } from './otp.controller';
 import { OtpService } from './otp.service';
 import { TokenService } from '../token.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { CandidateReadService } from '../../candidate/candidate-read.service';
 
 const TOKENS = { accessToken: 'acc-token', refreshToken: 'ref-token', refreshExp: 9999999999 };
 
@@ -40,8 +41,9 @@ describe('OtpController', () => {
   let otpMock: jest.Mocked<Pick<OtpService, 'issue' | 'verify' | 'applyIpBudget'>>;
   let prismaMock: {
     candidateProfile: { findFirst: jest.Mock; update: jest.Mock };
-    user: { update: jest.Mock };
+    user: { update: jest.Mock; findUniqueOrThrow: jest.Mock };
   };
+  let candidateReadMock: jest.Mocked<Pick<CandidateReadService, 'findCandidateUserByVerifiedPhone'>>;
   let tokenMock: jest.Mocked<Pick<TokenService, 'issue'>>;
 
   const mockReq = { ip: '1.2.3.4', headers: {} } as unknown as import('express').Request;
@@ -60,7 +62,12 @@ describe('OtpController', () => {
       },
       user: {
         update: jest.fn().mockResolvedValue({}),
+        findUniqueOrThrow: jest.fn().mockResolvedValue(makeUser()),
       },
+    };
+
+    candidateReadMock = {
+      findCandidateUserByVerifiedPhone: jest.fn(),
     };
 
     tokenMock = { issue: jest.fn().mockResolvedValue(TOKENS) };
@@ -72,6 +79,7 @@ describe('OtpController', () => {
         { provide: PrismaService, useValue: prismaMock },
         { provide: TokenService, useValue: tokenMock },
         { provide: ConfigService, useValue: { get: () => 'development' } },
+        { provide: CandidateReadService, useValue: candidateReadMock },
       ],
     }).compile();
 
@@ -152,7 +160,10 @@ describe('OtpController', () => {
 
   describe('phoneLoginStart', () => {
     it('always returns 200 for a registered verified candidate', async () => {
-      prismaMock.candidateProfile.findFirst.mockResolvedValue(makeProfile());
+      candidateReadMock.findCandidateUserByVerifiedPhone.mockResolvedValue({
+        userId: 'user-1',
+        candidateId: 'profile-1',
+      });
       otpMock.issue.mockResolvedValue({ sent: true });
 
       const result = await controller.phoneLoginStart({ phone: '+911234567890' }, mockReq);
@@ -163,7 +174,7 @@ describe('OtpController', () => {
     });
 
     it('always returns 200 for an unknown phone — applies IP budget only', async () => {
-      prismaMock.candidateProfile.findFirst.mockResolvedValue(null);
+      candidateReadMock.findCandidateUserByVerifiedPhone.mockResolvedValue(null);
 
       const result = await controller.phoneLoginStart({ phone: '+910000000000' }, mockReq);
       expect(result).toEqual({
@@ -174,7 +185,10 @@ describe('OtpController', () => {
     });
 
     it('always returns 200 even when notOnWhatsapp (result swallowed)', async () => {
-      prismaMock.candidateProfile.findFirst.mockResolvedValue(makeProfile());
+      candidateReadMock.findCandidateUserByVerifiedPhone.mockResolvedValue({
+        userId: 'user-1',
+        candidateId: 'profile-1',
+      });
       otpMock.issue.mockResolvedValue({ sent: false, notOnWhatsapp: true });
 
       const result = await controller.phoneLoginStart({ phone: '+910000' }, mockReq);
@@ -188,7 +202,11 @@ describe('OtpController', () => {
 
   describe('phoneLoginVerify', () => {
     it('returns 200 with access token + sets refresh cookie on success', async () => {
-      prismaMock.candidateProfile.findFirst.mockResolvedValue(makeProfile());
+      candidateReadMock.findCandidateUserByVerifiedPhone.mockResolvedValue({
+        userId: 'user-1',
+        candidateId: 'profile-1',
+      });
+      prismaMock.user.findUniqueOrThrow.mockResolvedValue(makeUser());
       tokenMock.issue.mockResolvedValue(TOKENS);
       const res = makeRes();
 
@@ -215,23 +233,29 @@ describe('OtpController', () => {
     });
 
     it('throws 401 when no candidate profile is found for the phone after verify', async () => {
-      prismaMock.candidateProfile.findFirst.mockResolvedValue(null);
+      candidateReadMock.findCandidateUserByVerifiedPhone.mockResolvedValue(null);
       await expect(
         controller.phoneLoginVerify({ phone: '+911234567890', otp: '123456' }, mockReq, makeRes()),
       ).rejects.toThrow(UnauthorizedException);
     });
 
     it('throws 403 ACCOUNT_SUSPENDED for a suspended candidate', async () => {
-      prismaMock.candidateProfile.findFirst.mockResolvedValue(
-        makeProfile({ user: makeUser({ status: UserStatus.SUSPENDED }) }),
-      );
+      candidateReadMock.findCandidateUserByVerifiedPhone.mockResolvedValue({
+        userId: 'user-1',
+        candidateId: 'profile-1',
+      });
+      prismaMock.user.findUniqueOrThrow.mockResolvedValue(makeUser({ status: UserStatus.SUSPENDED }));
       await expect(
         controller.phoneLoginVerify({ phone: '+911234567890', otp: '123456' }, mockReq, makeRes()),
       ).rejects.toThrow(ForbiddenException);
     });
 
     it('issues tokens via TokenService with the same interface as email login', async () => {
-      prismaMock.candidateProfile.findFirst.mockResolvedValue(makeProfile());
+      candidateReadMock.findCandidateUserByVerifiedPhone.mockResolvedValue({
+        userId: 'user-1',
+        candidateId: 'profile-1',
+      });
+      prismaMock.user.findUniqueOrThrow.mockResolvedValue(makeUser());
 
       await controller.phoneLoginVerify(
         { phone: '+911234567890', otp: '123456' },
