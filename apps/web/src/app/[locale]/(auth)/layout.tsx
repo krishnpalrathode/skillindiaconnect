@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+﻿import type { ReactNode } from 'react';
 import { LanguageSwitcher } from '@/components/auth/LanguageSwitcher';
 
 // Split-panel auth layout: gradient hero on the left, form on the right.

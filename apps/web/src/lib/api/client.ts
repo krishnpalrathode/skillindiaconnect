@@ -1,4 +1,4 @@
-// Module-level token store. Set by AuthProvider; read by every authenticated request.
+﻿// Module-level token store. Set by AuthProvider; read by every authenticated request.
 // NEVER stored in localStorage/sessionStorage — in-memory only.
 let _accessToken: string | null = null;
 let _refreshFn: (() => Promise<string | null>) | null = null;

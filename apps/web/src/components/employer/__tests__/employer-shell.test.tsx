@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import enMessages from '../../../i18n/messages/en.json';
 import { server } from '../../../mocks/server';
@@ -10,8 +10,6 @@ import {
   makeAccessToken,
   EMPLOYER_APPROVED_USER_ID,
   EMPLOYER_PENDING_USER_ID,
-  EMPLOYER_REJECTED_USER_ID,
-  EMPLOYER_SUSPENDED_USER_ID,
 } from '../../../mocks/data';
 import { setAccessToken, resetClient } from '../../../lib/api/client';
 import { AuthProvider } from '../../../lib/auth/auth-context';

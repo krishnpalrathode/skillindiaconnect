@@ -1,4 +1,4 @@
-import * as React from 'react';
+﻿import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 /* Content-shaped loading placeholder. Use Skeleton for known-shape placeholders;

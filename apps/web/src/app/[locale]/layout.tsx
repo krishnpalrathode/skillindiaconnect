@@ -1,4 +1,4 @@
-import { NextIntlClientProvider } from 'next-intl';
+﻿import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { MockSetup } from '@/mocks/mock-setup';
 import { AuthProvider } from '@/lib/auth/auth-context';

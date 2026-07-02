@@ -1,4 +1,4 @@
-import type { components } from '@skillindiaconnect/shared-types';
+﻿import type { components } from '@skillindiaconnect/shared-types';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type WorkExperience = components['schemas']['WorkExperience'];

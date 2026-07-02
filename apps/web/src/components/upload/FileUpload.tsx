@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useId, useRef } from 'react';
 import { useTranslations } from 'next-intl';

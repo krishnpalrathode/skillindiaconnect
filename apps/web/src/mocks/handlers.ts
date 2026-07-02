@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+﻿import { http, HttpResponse } from 'msw';
 import type { components } from '@skillindiaconnect/shared-types';
 import {
   db,
@@ -835,6 +835,7 @@ const employersRegister = http.post(`${BASE}/employers/register`, async ({ reque
     website?: string;
     languagePref?: string;
     description?: string;
+    registrationCertKey?: string;
   };
 
   if (!body.name || !body.type || !body.phone || !body.location || !body.employeeRange) {
@@ -854,7 +855,7 @@ const employersRegister = http.post(`${BASE}/employers/register`, async ({ reque
     employeeRange: body.employeeRange as components['schemas']['EmployeeRange'],
     languagePref: (body.languagePref ?? 'en') as 'en' | 'hi' | 'ar',
     description: body.description,
-    registrationCertKey: null,
+    registrationCertKey: body.registrationCertKey ?? null,
     rejectionReason: null,
     createdAt: new Date().toISOString(),
     approvedAt: null,
@@ -894,6 +895,13 @@ const employersMeCompanyPatch = http.patch(`${BASE}/employers/me/company`, async
 
   const body = (await request.json()) as Partial<typeof company>;
   Object.assign(company, body);
+
+  // Resubmit path: auto-transition REJECTED → PENDING so the form
+  // can signal "submitted for review" without a manual admin step.
+  if (company.status === 'REJECTED') {
+    company.status = 'PENDING';
+    company.rejectionReason = null;
+  }
 
   return HttpResponse.json({ data: company });
 });

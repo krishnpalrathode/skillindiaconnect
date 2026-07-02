@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Canvas-based JPEG compression for profile photos.
  * Maintains aspect ratio; returns a new File with the compressed bytes.
  * Falls back to the original file if the Canvas API is unavailable (SSR/Node).

@@ -1,10 +1,10 @@
-{
+﻿{
   "common": {
     "continue": "Continue",
     "back": "Back",
     "save": "Save",
     "cancel": "Cancel",
-    "loading": "Loading…",
+    "loading": "Loadingâ€¦",
     "required": "Required",
     "optional": "Optional",
     "submit": "Submit",
@@ -53,44 +53,36 @@
   },
   "auth": {
     "loginTitle": "Log in to SkillIndiaConnect",
-    "loginSubtitle": "Welcome back — continue your journey",
+    "loginSubtitle": "Welcome back â€” continue your journey",
     "signupTitle": "Create your account",
     "signupSubtitle": "Join thousands of workers finding opportunities",
-
     "googleLogin": "Continue with Google",
     "googleSignup": "Sign up with Google",
     "googleCandidateOnly": "Google sign-up is for job seekers only",
-
     "orDivider": "or",
     "tabEmail": "Email",
     "tabPhone": "Phone",
-
     "emailLabel": "Email address",
     "emailPlaceholder": "you@example.com",
     "passwordLabel": "Password",
     "passwordPlaceholder": "Enter your password",
-
     "forgotPassword": "Forgot password?",
     "loginButton": "Log in",
     "signupButton": "Create account",
-
-    "noAccount": "Don't have an account?",
+    "noAccount": "Don\u0027t have an account?",
     "signupLink": "Sign up",
     "hasAccount": "Already have an account?",
     "loginLink": "Log in",
-
     "roleSwitcherLabel": "I am a",
     "roleCandidate": "Job Seeker",
     "roleEmployer": "Employer",
-
     "strength": {
       "weak": "Weak",
       "fair": "Fair",
       "good": "Good",
       "strong": "Strong"
     },
-
-    "termsText": "I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>",
+    "termsText": "I agree to the \u003cterms\u003eTerms of Service\u003c/terms\u003e and \u003cprivacy\u003ePrivacy Policy\u003c/privacy\u003e",
     "mustAcceptTerms": "Please accept the Terms of Service and Privacy Policy to continue",
     "emailTaken": "An account with this email already exists. Try logging in.",
     "invalidEmail": "Please enter a valid email address",
@@ -98,7 +90,6 @@
     "invalidCredentials": "Incorrect email or password",
     "accountSuspended": "Your account has been suspended. Contact support.",
     "genericError": "Something went wrong. Please try again.",
-
     "countryCode": "Code",
     "phoneLabel": "Phone number",
     "phonePlaceholder": "9876543210",
@@ -107,24 +98,20 @@
     "otpSentMessage": "Enter the 6-digit code we sent to your number",
     "invalidOtp": "Invalid or expired OTP. Please try again.",
     "otpRateLimited": "Too many attempts. Please wait before trying again.",
-    "otpDidntGet": "Didn't receive the code?",
+    "otpDidntGet": "Didn\u0027t receive the code?",
     "wrongNumber": "Wrong number",
     "resendCode": "Resend",
-
     "forgotTitle": "Reset your password",
-    "forgotSubtitle": "Enter your email and we'll send a reset link",
+    "forgotSubtitle": "Enter your email and we\u0027ll send a reset link",
     "sendResetEmail": "Send reset email",
     "forgotSentTitle": "Check your inbox",
-    "forgotSentBody": "If an account with that email exists, you'll receive a password reset link shortly.",
+    "forgotSentBody": "If an account with that email exists, you\u0027ll receive a password reset link shortly.",
     "backToLogin": "Back to log in",
     "rateLimited": "Too many requests. Please try again later.",
-
     "callbackError": "Sign-in failed. Please try again.",
-    "signingIn": "Signing you in…",
-
-    "onboardingComingSoon": "Candidate onboarding — coming soon",
-    "employerOnboardingComingSoon": "Employer onboarding — coming soon",
-
+    "signingIn": "Signing you inâ€¦",
+    "onboardingComingSoon": "Candidate onboarding â€” coming soon",
+    "employerOnboardingComingSoon": "Employer onboarding â€” coming soon",
     "phone": "Phone number",
     "phonePlaceholderLegacy": "Enter your phone number",
     "otp": "One-time password",
@@ -141,7 +128,7 @@
     "dateOfBirth": "Date of birth",
     "gender": "Gender",
     "religion": "Religion",
-    "fatherName": "Father's name",
+    "fatherName": "Father\u0027s name",
     "address": "Address",
     "city": "City",
     "state": "State",
@@ -151,11 +138,9 @@
     "skills": "Skills",
     "experience": "Experience",
     "education": "Education",
-
-    "loading": "Loading your profile…",
+    "loading": "Loading your profileâ€¦",
     "loadingError": "Failed to load your profile. Please refresh.",
     "retry": "Retry",
-
     "hero": {
       "changePhoto": "Change photo",
       "photoComingSoon": "Photo upload coming soon",
@@ -163,34 +148,31 @@
       "downloadResume": "Download resume",
       "shareProfile": "Share profile",
       "comingSoon": "Coming soon",
-      "availableForWork": "Active — Available for Work",
+      "availableForWork": "Active â€” Available for Work",
       "notAvailable": "Not currently available",
       "memberSince": "Member since {date}"
     },
-
     "sections": {
       "personalInfo": "Personal Info",
       "workExperience": "Work Experience",
-      "documents": "Documents & Certificates",
+      "documents": "Documents \u0026 Certificates",
       "skills": "Skills",
       "accountSettings": "Account Settings"
     },
-
     "stats": {
       "yearsExperience": "Yrs exp.",
       "skills": "Skills",
       "applications": "Applications",
       "shortlisted": "Shortlisted"
     },
-
     "personalInfo": {
       "phoneLabel": "Mobile number",
       "phoneVerifiedBadge": "Verified",
       "verifyPhoneLink": "Verify phone",
       "nameLabel": "Full name",
       "namePlaceholder": "Your full name",
-      "fatherNameLabel": "Father's name",
-      "fatherNamePlaceholder": "Father's full name",
+      "fatherNameLabel": "Father\u0027s name",
+      "fatherNamePlaceholder": "Father\u0027s full name",
       "dobLabel": "Date of birth",
       "maritalStatusLabel": "Marital status",
       "religionLabel": "Religion",
@@ -205,7 +187,6 @@
       "noticePeriodPlaceholder": "e.g. 30",
       "noticePeriodUnit": "{days} days"
     },
-
     "documents": {
       "count": "{count} / 3 documents uploaded",
       "passport": "Passport",
@@ -222,15 +203,14 @@
       "validUntil": "Valid until {date}",
       "expiredOn": "Expired {date}"
     },
-
     "settings": {
       "privacyHeading": "Privacy Controls",
       "notificationsHeading": "Notifications",
       "salaryHeading": "Salary Expectation",
       "showPhone": "Show phone to employers",
-      "showPhoneHint": "Controls what employers see — you always see your phone here",
+      "showPhoneHint": "Controls what employers see â€” you always see your phone here",
       "showReligion": "Show religion to employers",
-      "showReligionHint": "Controls what employers see — you always see your religion here",
+      "showReligionHint": "Controls what employers see â€” you always see your religion here",
       "waNotifications": "WhatsApp notifications",
       "emailNotifications": "Email notifications",
       "profileVisible": "Profile visible to employers",
@@ -241,7 +221,7 @@
       "salaryMinPlaceholder": "e.g. 25000",
       "salaryMaxPlaceholder": "e.g. 50000",
       "saveSalary": "Save salary",
-      "salaryNote": "Unscored — for matching guidance only"
+      "salaryNote": "Unscored â€” for matching guidance only"
     }
   },
   "document": {
@@ -262,16 +242,16 @@
     "network": "Network error. Please check your connection.",
     "notFound": "Page not found",
     "unauthorized": "Please log in to continue",
-    "forbidden": "You don't have permission to do this"
+    "forbidden": "You don\u0027t have permission to do this"
   },
   "onboarding": {
     "pageTitle": "Complete your profile",
-    "loading": "Loading your profile…",
+    "loading": "Loading your profileâ€¦",
     "stepOf": "Step {current} of {total}",
     "steps": {
       "personalInfo": "Personal Info",
       "workExperience": "Work Experience",
-      "documentsSkills": "Documents & Skills",
+      "documentsSkills": "Documents \u0026 Skills",
       "preview": "Preview"
     },
     "personalInfo": {
@@ -288,7 +268,7 @@
       "languagesPlaceholder": "Type languages separated by commas",
       "jobCategoryLabel": "Job category",
       "phoneVerifyTitle": "Verify your phone",
-      "phoneVerifySubtitle": "We'll send a WhatsApp OTP to confirm your number",
+      "phoneVerifySubtitle": "We\u0027ll send a WhatsApp OTP to confirm your number",
       "phoneLabel": "Mobile number",
       "phonePlaceholder": "9876543210",
       "phoneVerified": "Phone verified",
@@ -319,7 +299,7 @@
       "cancel": "Cancel"
     },
     "documentsSkills": {
-      "title": "Documents & Skills",
+      "title": "Documents \u0026 Skills",
       "subtitle": "Upload your documents and add your skills",
       "passportLabel": "Passport",
       "passportHint": "PDF or image, up to 10 MB",
@@ -345,7 +325,7 @@
       }
     },
     "preview": {
-      "title": "Preview & Export",
+      "title": "Preview \u0026 Export",
       "subtitle": "Review your profile completion and export your resume",
       "completionTitle": "Profile completion",
       "exportTitle": "Export resume",
@@ -353,25 +333,25 @@
       "sendWhatsapp": "Send via WhatsApp",
       "sendEmail": "Send to email",
       "exportComingSoon": "Resume export coming in Sprint 7",
-      "saveAndContinue": "Save & continue to profile",
+      "saveAndContinue": "Save \u0026 continue to profile",
       "videoTitle": "Video introduction",
       "videoComingSoon": "Coming soon"
     },
     "upload": {
       "selectFile": "Select file",
       "changeFile": "Change file",
-      "uploading": "Uploading… {pct}%",
+      "uploading": "Uploadingâ€¦ {pct}%",
       "retryUpload": "Retry upload",
       "uploadComplete": "Uploaded",
       "fileTooLarge": "File is too large",
       "uploadFailed": "Upload failed. Tap to retry.",
-      "dropzoneHint": "Drag & drop or click to select",
+      "dropzoneHint": "Drag \u0026 drop or click to select",
       "maxSize": "Max {size} MB"
     },
     "nav": {
       "back": "Back",
       "next": "Next",
-      "saveAndContinue": "Save & Continue",
+      "saveAndContinue": "Save \u0026 Continue",
       "skipForNow": "Skip for now"
     },
     "maritalStatus": {
@@ -401,10 +381,10 @@
     },
     "banner": {
       "pendingTitle": "Your company is under review.",
-      "pendingBody": "Verification usually takes up to 24 hours. You can set up your profile now — job posting unlocks after approval.",
+      "pendingBody": "Verification usually takes up to 24 hours. You can set up your profile now â€” job posting unlocks after approval.",
       "rejectedTitle": "Company registration rejected.",
       "rejectedBodyFallback": "Please review your submission and resubmit.",
-      "rejectedAction": "Resubmit registration →",
+      "rejectedAction": "Resubmit registration â†’",
       "suspendedTitle": "Account suspended.",
       "suspendedBody": "Please contact support for assistance."
     },
@@ -417,20 +397,137 @@
       "manage": "Manage Subscription"
     },
     "shell": {
-      "loadingCompany": "Loading company…",
+      "loadingCompany": "Loading companyâ€¦",
       "errorTitle": "Could not load company profile.",
       "errorBody": "Please check your connection and try again.",
+      "retry": "Retry"
+    },
+    "login": {
+      "metaTitle": "Employer Login — SkillIndiaConnect",
+      "pageTitle": "Hire Verified Blue-Collar Workers",
+      "pageSubtitle": "Connect with skilled, verified workers across India and the Gulf.",
+      "trustBadge1": "Verified Worker Profiles",
+      "trustBadge2": "Secure Hiring Process",
+      "trustBadge3": "Gulf and Local Markets",
+      "formTitle": "Sign in to your employer account",
+      "emailLabel": "Work email",
+      "emailPlaceholder": "you@company.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "loginButton": "Sign in",
+      "noAccount": "New to SkillIndiaConnect?",
+      "registerLink": "Register your company",
+      "candidateLink": "Looking for a job instead?",
+      "candidateLoginLink": "Candidate login",
+      "invalidCredentials": "Incorrect email or password.",
+      "accountSuspended": "Your account has been suspended. Contact support for assistance.",
+      "genericError": "Something went wrong. Please try again."
+    },
+    "onboarding": {
+      "metaTitle": "Company Setup — SkillIndiaConnect",
+      "pageTitle": "Set up your company profile",
+      "pageSubtitle": "Tell us about your company so we can verify and activate your account.",
+      "resubmitPageTitle": "Resubmit company registration",
+      "resubmitPageSubtitle": "Update your details and resubmit for admin review.",
+      "companyTypeLabel": "Company type",
+      "companyTypeRequired": "Please select a company type",
+      "localTitle": "Local Company",
+      "localDescription": "Registered in India and hiring domestically",
+      "foreignTitle": "Foreign / Gulf Company",
+      "foreignDescription": "Registered outside India and hiring internationally",
+      "nameLabel": "Company name",
+      "namePlaceholder": "Your company legal name",
+      "nameRequired": "Company name is required",
+      "registrationNumberLabel": "Registration number",
+      "registrationNumberPlaceholder": "e.g. U12345MH2020PTC000000",
+      "industryTypeLabel": "Industry type",
+      "industryTypePlaceholder": "Select industry",
+      "phoneLabel": "Company phone",
+      "phonePlaceholder": "+91 98765 43210",
+      "phoneRequired": "Company phone is required",
+      "locationLabel": "Company location",
+      "locationPlaceholder": "City, State or Country",
+      "locationRequired": "Company location is required",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://yourcompany.com",
+      "employeeRangeLabel": "Number of employees",
+      "employeeRangePlaceholder": "Select range",
+      "employeeRangeRequired": "Please select an employee range",
+      "descriptionLabel": "Company description",
+      "descriptionPlaceholder": "Brief description of your company and the types of roles you hire for",
+      "certLabel": "Registration certificate",
+      "certHint": "Upload your company registration certificate (PDF, JPG, or PNG, up to 10 MB). Required for verification.",
+      "certRequired": "Please upload your registration certificate",
+      "submitButton": "Submit for approval",
+      "resubmitButton": "Resubmit for approval",
+      "submitting": "Submitting…",
+      "submitSuccess": "Submitted — our team will verify within 24 hours.",
+      "companyExists": "A company profile already exists for this account.",
+      "validationError": "Please correct the highlighted fields.",
+      "genericError": "Something went wrong. Please try again.",
+      "industries": {
+        "construction": "Construction",
+        "manufacturing": "Manufacturing",
+        "hospitality": "Hospitality",
+        "healthcare": "Healthcare",
+        "retail": "Retail",
+        "logistics": "Logistics and Transport",
+        "agriculture": "Agriculture",
+        "it": "IT and Technology",
+        "security": "Security",
+        "cleaning": "Cleaning and Facility Management",
+        "other": "Other"
+      }
+    },
+    "dashboard": {
+      "metaTitle": "Employer Dashboard — SkillIndiaConnect",
+      "greeting": "Good morning, {name}",
+      "greetingFallback": "Welcome back",
+      "kpi": {
+        "activeJobs": "Active Jobs",
+        "totalApplications": "Total Applications",
+        "shortlisted": "Shortlisted",
+        "hired": "Hired This Month"
+      },
+      "recentJobs": {
+        "title": "Recent Job Postings",
+        "emptyTitle": "No jobs posted yet",
+        "emptyBody": "Post your first job to start receiving applications.",
+        "statusActive": "Active",
+        "statusDraft": "Draft",
+        "statusPaused": "Paused",
+        "statusArchived": "Archived",
+        "columnTitle": "Job Title",
+        "columnStatus": "Status",
+        "columnApplications": "Applications",
+        "columnPosted": "Posted"
+      },
+      "recentApplicants": {
+        "title": "Recent Applicants",
+        "emptyTitle": "No applicants yet",
+        "emptyBody": "Applications will appear here once candidates apply to your jobs."
+      },
+      "postJobCta": {
+        "title": "Post your first job",
+        "body": "Reach thousands of verified blue-collar workers across India and the Gulf.",
+        "button": "Post a Job",
+        "pendingTooltip": "Available after company approval"
+      },
+      "loading": "Loading dashboard…",
+      "errorLoad": "Failed to load dashboard data.",
       "retry": "Retry"
     }
   },
   "jobs": {
-    "metaTitle": "Find Jobs — SkillIndiaConnect",
+    "metaTitle": "Find Jobs â€” SkillIndiaConnect",
     "metaDescription": "Browse thousands of blue-collar jobs in India and the Gulf. Filter by location, salary, and category.",
     "pageTitle": "Find Jobs",
     "pageSubtitle": "Explore opportunities across India and the Gulf",
     "filtersLabel": "Job filters",
     "searchLabel": "Search jobs",
-    "searchPlaceholder": "Job title or keyword…",
+    "searchPlaceholder": "Job title or keywordâ€¦",
     "searchButton": "Search",
     "marketTabsLabel": "Job market",
     "tabs": {
@@ -506,7 +603,7 @@
       "workConditions": "Working Conditions",
       "requirements": "Requirements",
       "aboutCompany": "About the Company",
-      "viewCompanyProfile": "View company jobs →",
+      "viewCompanyProfile": "View company jobs â†’",
       "similarJobs": "Similar Jobs",
       "notFoundTitle": "Job not found",
       "notFoundBody": "This job may have been filled or removed.",
@@ -514,7 +611,7 @@
     }
   },
   "dashboard": {
-    "metaTitle": "My Dashboard — SkillIndiaConnect",
+    "metaTitle": "My Dashboard â€” SkillIndiaConnect",
     "pageTitle": "Dashboard",
     "greeting": "Hello, {name}",
     "kpi": {
@@ -526,7 +623,7 @@
     "recommendedJobs": {
       "title": "Recommended Jobs",
       "empty": "No recommendations yet. Complete your profile to get matches.",
-      "viewAll": "Browse all jobs →"
+      "viewAll": "Browse all jobs â†’"
     },
     "myApplications": {
       "title": "My Applications",
@@ -540,11 +637,11 @@
     },
     "profileSummary": {
       "completion": "{pct}% complete",
-      "completeNow": "Complete now →"
+      "completeNow": "Complete now â†’"
     }
   },
   "notifications": {
-    "metaTitle": "Notifications — SkillIndiaConnect",
+    "metaTitle": "Notifications â€” SkillIndiaConnect",
     "pageTitle": "Notifications",
     "empty": {
       "all": "You have no notifications yet.",
@@ -554,7 +651,7 @@
     "markAllRead": "Mark all as read",
     "markRead": "Mark as read",
     "loadMore": "Load more",
-    "loading": "Loading notifications…",
+    "loading": "Loading notificationsâ€¦",
     "errorLoad": "Failed to load notifications.",
     "retry": "Retry",
     "filters": {

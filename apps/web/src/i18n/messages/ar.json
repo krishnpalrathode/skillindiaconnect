@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "continue": "[ar] Continue",
     "back": "[ar] Back",
@@ -56,40 +56,32 @@
     "loginSubtitle": "مرحباً بعودتك — واصل رحلتك",
     "signupTitle": "إنشاء حسابك",
     "signupSubtitle": "انضم إلى آلاف العمال الذين يجدون فرصاً",
-
     "googleLogin": "المتابعة مع Google",
     "googleSignup": "التسجيل عبر Google",
     "googleCandidateOnly": "التسجيل عبر Google مخصص لطالبي العمل فقط",
-
     "orDivider": "أو",
     "tabEmail": "البريد الإلكتروني",
     "tabPhone": "الهاتف",
-
     "emailLabel": "البريد الإلكتروني",
     "emailPlaceholder": "you@example.com",
     "passwordLabel": "كلمة المرور",
     "passwordPlaceholder": "أدخل كلمة مرورك",
-
     "forgotPassword": "نسيت كلمة المرور؟",
     "loginButton": "تسجيل الدخول",
     "signupButton": "إنشاء حساب",
-
     "noAccount": "ليس لديك حساب؟",
     "signupLink": "سجّل الآن",
     "hasAccount": "لديك حساب بالفعل؟",
     "loginLink": "تسجيل الدخول",
-
     "roleSwitcherLabel": "أنا",
     "roleCandidate": "باحث عن عمل",
     "roleEmployer": "صاحب عمل",
-
     "strength": {
       "weak": "ضعيف",
       "fair": "مقبول",
       "good": "جيد",
       "strong": "قوي"
     },
-
     "termsText": "أوافق على <terms>شروط الخدمة</terms> و<privacy>سياسة الخصوصية</privacy>",
     "mustAcceptTerms": "يرجى قبول شروط الخدمة وسياسة الخصوصية للمتابعة",
     "emailTaken": "يوجد حساب بهذا البريد الإلكتروني. جرّب تسجيل الدخول.",
@@ -98,7 +90,6 @@
     "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
     "accountSuspended": "تم تعليق حسابك. تواصل مع الدعم الفني.",
     "genericError": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-
     "countryCode": "الرمز",
     "phoneLabel": "رقم الهاتف",
     "phonePlaceholder": "9876543210",
@@ -110,7 +101,6 @@
     "otpDidntGet": "لم تستلم الرمز؟",
     "wrongNumber": "رقم خاطئ",
     "resendCode": "إعادة الإرسال",
-
     "forgotTitle": "إعادة تعيين كلمة المرور",
     "forgotSubtitle": "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين",
     "sendResetEmail": "إرسال رابط إعادة التعيين",
@@ -118,13 +108,10 @@
     "forgotSentBody": "إذا كان هناك حساب مرتبط بهذا البريد، ستصلك رسالة إعادة تعيين كلمة المرور قريباً.",
     "backToLogin": "العودة لتسجيل الدخول",
     "rateLimited": "طلبات كثيرة جداً. يرجى المحاولة لاحقاً.",
-
     "callbackError": "فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.",
     "signingIn": "جارٍ تسجيل دخولك…",
-
     "onboardingComingSoon": "تأهيل المرشحين — قريباً",
     "employerOnboardingComingSoon": "تأهيل أصحاب العمل — قريباً",
-
     "phone": "رقم الهاتف",
     "phonePlaceholderLegacy": "أدخل رقم هاتفك",
     "otp": "كلمة مرور لمرة واحدة",
@@ -151,11 +138,9 @@
     "skills": "المهارات",
     "experience": "الخبرة",
     "education": "التعليم",
-
     "loading": "جارٍ تحميل ملفك الشخصي…",
     "loadingError": "فشل تحميل ملفك الشخصي. يرجى تحديث الصفحة.",
     "retry": "إعادة المحاولة",
-
     "hero": {
       "changePhoto": "تغيير الصورة",
       "photoComingSoon": "رفع الصورة قادم قريباً",
@@ -167,7 +152,6 @@
       "notAvailable": "غير متاح حالياً",
       "memberSince": "عضو منذ {date}"
     },
-
     "sections": {
       "personalInfo": "المعلومات الشخصية",
       "workExperience": "الخبرة العملية",
@@ -175,14 +159,12 @@
       "skills": "المهارات",
       "accountSettings": "إعدادات الحساب"
     },
-
     "stats": {
       "yearsExperience": "سنوات خبرة",
       "skills": "مهارات",
       "applications": "طلبات",
       "shortlisted": "مختار للقائمة"
     },
-
     "personalInfo": {
       "phoneLabel": "رقم الجوال",
       "phoneVerifiedBadge": "موثّق",
@@ -205,7 +187,6 @@
       "noticePeriodPlaceholder": "مثال: 30",
       "noticePeriodUnit": "{days} يوم"
     },
-
     "documents": {
       "count": "{count} / 3 وثائق مرفوعة",
       "passport": "جواز السفر",
@@ -222,7 +203,6 @@
       "validUntil": "صالح حتى {date}",
       "expiredOn": "انتهت الصلاحية في {date}"
     },
-
     "settings": {
       "privacyHeading": "ضوابط الخصوصية",
       "notificationsHeading": "الإشعارات",
@@ -420,6 +400,123 @@
       "loadingCompany": "جارٍ تحميل الشركة…",
       "errorTitle": "تعذّر تحميل ملف الشركة.",
       "errorBody": "يرجى التحقق من اتصالك والمحاولة مجدداً.",
+      "retry": "إعادة المحاولة"
+    },
+    "login": {
+      "metaTitle": "تسجيل دخول صاحب العمل — SkillIndiaConnect",
+      "pageTitle": "وظّف عمالاً ماهرة موثّقة",
+      "pageSubtitle": "تواصل مع عمال مهرة موثّقين في الهند ودول الخليج.",
+      "trustBadge1": "ملفات شخصية موثّقة",
+      "trustBadge2": "عملية توظيف آمنة",
+      "trustBadge3": "أسواق الخليج والمحلية",
+      "formTitle": "تسجيل الدخول إلى حساب صاحب العمل",
+      "emailLabel": "البريد الإلكتروني للعمل",
+      "emailPlaceholder": "you@company.com",
+      "passwordLabel": "كلمة المرور",
+      "passwordPlaceholder": "أدخل كلمة المرور",
+      "rememberMe": "تذكرني",
+      "forgotPassword": "نسيت كلمة المرور؟",
+      "loginButton": "تسجيل الدخول",
+      "noAccount": "جديد على SkillIndiaConnect؟",
+      "registerLink": "سجّل شركتك",
+      "candidateLink": "تبحث عن وظيفة بدلاً من ذلك؟",
+      "candidateLoginLink": "دخول المرشحين",
+      "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+      "accountSuspended": "تم تعليق حسابك. يرجى التواصل مع الدعم للمساعدة.",
+      "genericError": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+    },
+    "onboarding": {
+      "metaTitle": "إعداد الشركة — SkillIndiaConnect",
+      "pageTitle": "أعدّ ملف شركتك",
+      "pageSubtitle": "أخبرنا عن شركتك حتى نتمكن من التحقق منها وتفعيل حسابك.",
+      "resubmitPageTitle": "إعادة تقديم تسجيل الشركة",
+      "resubmitPageSubtitle": "حدّث بياناتك وأعد التقديم للمراجعة.",
+      "companyTypeLabel": "نوع الشركة",
+      "companyTypeRequired": "يرجى اختيار نوع الشركة",
+      "localTitle": "شركة محلية",
+      "localDescription": "مسجلة في الهند وتوظف محلياً",
+      "foreignTitle": "شركة خليجية / أجنبية",
+      "foreignDescription": "مسجلة خارج الهند وتوظف دولياً",
+      "nameLabel": "اسم الشركة",
+      "namePlaceholder": "الاسم القانوني لشركتك",
+      "nameRequired": "اسم الشركة مطلوب",
+      "registrationNumberLabel": "رقم التسجيل",
+      "registrationNumberPlaceholder": "مثال: U12345MH2020PTC000000",
+      "industryTypeLabel": "نوع الصناعة",
+      "industryTypePlaceholder": "اختر الصناعة",
+      "phoneLabel": "هاتف الشركة",
+      "phonePlaceholder": "+971 50 123 4567",
+      "phoneRequired": "هاتف الشركة مطلوب",
+      "locationLabel": "موقع الشركة",
+      "locationPlaceholder": "المدينة، الدولة",
+      "locationRequired": "موقع الشركة مطلوب",
+      "websiteLabel": "الموقع الإلكتروني",
+      "websitePlaceholder": "https://yourcompany.com",
+      "employeeRangeLabel": "عدد الموظفين",
+      "employeeRangePlaceholder": "اختر النطاق",
+      "employeeRangeRequired": "يرجى اختيار نطاق الموظفين",
+      "descriptionLabel": "وصف الشركة",
+      "descriptionPlaceholder": "وصف مختصر لشركتك وأنواع الوظائف التي توظف لها",
+      "certLabel": "شهادة التسجيل",
+      "certHint": "ارفع شهادة تسجيل شركتك (PDF أو JPG أو PNG، حتى 10 ميجابايت). مطلوبة للتحقق.",
+      "certRequired": "يرجى رفع شهادة التسجيل",
+      "submitButton": "تقديم للموافقة",
+      "resubmitButton": "إعادة التقديم للموافقة",
+      "submitting": "جارٍ التقديم…",
+      "submitSuccess": "تم التقديم — سيتحقق فريقنا خلال 24 ساعة.",
+      "companyExists": "يوجد ملف شركة مرتبط بهذا الحساب بالفعل.",
+      "validationError": "يرجى تصحيح الحقول المحددة.",
+      "genericError": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+      "industries": {
+        "construction": "البناء والإنشاء",
+        "manufacturing": "التصنيع",
+        "hospitality": "الضيافة",
+        "healthcare": "الرعاية الصحية",
+        "retail": "التجزئة",
+        "logistics": "اللوجستيات والنقل",
+        "agriculture": "الزراعة",
+        "it": "تقنية المعلومات",
+        "security": "الأمن",
+        "cleaning": "النظافة وإدارة المرافق",
+        "other": "أخرى"
+      }
+    },
+    "dashboard": {
+      "metaTitle": "لوحة تحكم صاحب العمل — SkillIndiaConnect",
+      "greeting": "صباح الخير، {name}",
+      "greetingFallback": "مرحباً بعودتك",
+      "kpi": {
+        "activeJobs": "الوظائف النشطة",
+        "totalApplications": "إجمالي الطلبات",
+        "shortlisted": "المرشحون في القائمة المختصرة",
+        "hired": "المُوظَّفون هذا الشهر"
+      },
+      "recentJobs": {
+        "title": "آخر الوظائف المنشورة",
+        "emptyTitle": "لا توجد وظائف منشورة بعد",
+        "emptyBody": "انشر وظيفتك الأولى لبدء استقبال الطلبات.",
+        "statusActive": "نشطة",
+        "statusDraft": "مسودة",
+        "statusPaused": "متوقفة",
+        "statusArchived": "مؤرشفة",
+        "columnTitle": "عنوان الوظيفة",
+        "columnStatus": "الحالة",
+        "columnApplications": "الطلبات",
+        "columnPosted": "تاريخ النشر"
+      },
+      "recentApplicants": {
+        "title": "آخر المتقدمين",
+        "emptyTitle": "لا يوجد متقدمون بعد",
+        "emptyBody": "ستظهر الطلبات هنا بمجرد تقديم المرشحين."
+      },
+      "postJobCta": {
+        "title": "انشر وظيفتك الأولى",
+        "body": "تواصل مع آلاف العمال الماهرين الموثّقين في الهند والخليج.",
+        "button": "نشر وظيفة",
+        "pendingTooltip": "متاح بعد الموافقة على الشركة"
+      },
+      "loading": "جارٍ تحميل لوحة التحكم…",
+      "errorLoad": "فشل تحميل بيانات لوحة التحكم.",
       "retry": "إعادة المحاولة"
     }
   },

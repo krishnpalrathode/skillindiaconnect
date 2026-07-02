@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "continue": "[hi] Continue",
     "back": "[hi] Back",
@@ -56,40 +56,32 @@
     "loginSubtitle": "वापस स्वागत है — अपना सफ़र जारी रखें",
     "signupTitle": "अपना खाता बनाएं",
     "signupSubtitle": "हज़ारों कामगारों के साथ जुड़ें जो नौकरियाँ ढूंढ रहे हैं",
-
     "googleLogin": "Google से जारी रखें",
     "googleSignup": "Google से साइन अप करें",
     "googleCandidateOnly": "Google साइन-अप केवल नौकरी खोजने वालों के लिए है",
-
     "orDivider": "या",
     "tabEmail": "ईमेल",
     "tabPhone": "फ़ोन",
-
     "emailLabel": "ईमेल पता",
     "emailPlaceholder": "aap@example.com",
     "passwordLabel": "पासवर्ड",
     "passwordPlaceholder": "अपना पासवर्ड दर्ज करें",
-
     "forgotPassword": "पासवर्ड भूल गए?",
     "loginButton": "लॉग इन करें",
     "signupButton": "खाता बनाएं",
-
     "noAccount": "खाता नहीं है?",
     "signupLink": "साइन अप करें",
     "hasAccount": "पहले से खाता है?",
     "loginLink": "लॉग इन करें",
-
     "roleSwitcherLabel": "मैं हूँ",
     "roleCandidate": "नौकरी खोजने वाला",
     "roleEmployer": "नियोक्ता",
-
     "strength": {
       "weak": "कमज़ोर",
       "fair": "ठीक-ठाक",
       "good": "अच्छा",
       "strong": "मज़बूत"
     },
-
     "termsText": "मैं <terms>सेवा की शर्तों</terms> और <privacy>गोपनीयता नीति</privacy> से सहमत हूँ",
     "mustAcceptTerms": "जारी रखने के लिए कृपया सेवा की शर्तें और गोपनीयता नीति स्वीकार करें",
     "emailTaken": "इस ईमेल से पहले से खाता है। लॉग इन करने का प्रयास करें।",
@@ -98,7 +90,6 @@
     "invalidCredentials": "ईमेल या पासवर्ड गलत है",
     "accountSuspended": "आपका खाता निलंबित कर दिया गया है। सहायता से संपर्क करें।",
     "genericError": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
-
     "countryCode": "कोड",
     "phoneLabel": "फ़ोन नंबर",
     "phonePlaceholder": "9876543210",
@@ -110,7 +101,6 @@
     "otpDidntGet": "कोड नहीं मिला?",
     "wrongNumber": "गलत नंबर",
     "resendCode": "फिर से भेजें",
-
     "forgotTitle": "पासवर्ड रीसेट करें",
     "forgotSubtitle": "अपना ईमेल दर्ज करें और हम एक रीसेट लिंक भेजेंगे",
     "sendResetEmail": "रीसेट ईमेल भेजें",
@@ -118,13 +108,10 @@
     "forgotSentBody": "यदि उस ईमेल से कोई खाता है, तो आपको जल्द ही पासवर्ड रीसेट लिंक मिलेगा।",
     "backToLogin": "लॉग इन पर वापस जाएं",
     "rateLimited": "बहुत अधिक अनुरोध। कृपया बाद में पुनः प्रयास करें।",
-
     "callbackError": "साइन-इन विफल। कृपया पुनः प्रयास करें।",
     "signingIn": "साइन इन हो रहा है…",
-
     "onboardingComingSoon": "उम्मीदवार ऑनबोर्डिंग — जल्द आ रहा है",
     "employerOnboardingComingSoon": "नियोक्ता ऑनबोर्डिंग — जल्द आ रहा है",
-
     "phone": "फ़ोन नंबर",
     "phonePlaceholderLegacy": "अपना फ़ोन नंबर दर्ज करें",
     "otp": "एकमुश्त पासवर्ड",
@@ -151,11 +138,9 @@
     "skills": "कौशल",
     "experience": "अनुभव",
     "education": "शिक्षा",
-
     "loading": "आपकी प्रोफ़ाइल लोड हो रही है…",
     "loadingError": "आपकी प्रोफ़ाइल लोड करने में विफल। कृपया पेज रीफ्रेश करें।",
     "retry": "पुनः प्रयास करें",
-
     "hero": {
       "changePhoto": "फ़ोटो बदलें",
       "photoComingSoon": "फ़ोटो अपलोड जल्द आ रहा है",
@@ -167,7 +152,6 @@
       "notAvailable": "अभी उपलब्ध नहीं",
       "memberSince": "{date} से सदस्य"
     },
-
     "sections": {
       "personalInfo": "व्यक्तिगत जानकारी",
       "workExperience": "कार्य अनुभव",
@@ -175,14 +159,12 @@
       "skills": "कौशल",
       "accountSettings": "खाता सेटिंग"
     },
-
     "stats": {
       "yearsExperience": "वर्ष अनुभव",
       "skills": "कौशल",
       "applications": "आवेदन",
       "shortlisted": "शॉर्टलिस्टेड"
     },
-
     "personalInfo": {
       "phoneLabel": "मोबाइल नंबर",
       "phoneVerifiedBadge": "सत्यापित",
@@ -205,7 +187,6 @@
       "noticePeriodPlaceholder": "जैसे 30",
       "noticePeriodUnit": "{days} दिन"
     },
-
     "documents": {
       "count": "{count} / 3 दस्तावेज़ अपलोड किए गए",
       "passport": "पासपोर्ट",
@@ -222,7 +203,6 @@
       "validUntil": "{date} तक वैध",
       "expiredOn": "{date} को समाप्त"
     },
-
     "settings": {
       "privacyHeading": "गोपनीयता नियंत्रण",
       "notificationsHeading": "सूचनाएँ",
@@ -420,6 +400,123 @@
       "loadingCompany": "कंपनी लोड हो रही है…",
       "errorTitle": "कंपनी प्रोफ़ाइल लोड नहीं हो सकी।",
       "errorBody": "कृपया अपना कनेक्शन जांचें और पुनः प्रयास करें।",
+      "retry": "पुनः प्रयास करें"
+    },
+    "login": {
+      "metaTitle": "नियोक्ता लॉगिन — SkillIndiaConnect",
+      "pageTitle": "सत्यापित ब्लू-कॉलर कर्मचारियों को नियुक्त करें",
+      "pageSubtitle": "भारत और खाड़ी देशों में कुशल, सत्यापित कर्मचारियों से जुड़ें।",
+      "trustBadge1": "सत्यापित कर्मचारी प्रोफ़ाइल",
+      "trustBadge2": "सुरक्षित भर्ती प्रक्रिया",
+      "trustBadge3": "खाड़ी और स्थानीय बाज़ार",
+      "formTitle": "अपने नियोक्ता खाते में साइन इन करें",
+      "emailLabel": "कार्य ईमेल",
+      "emailPlaceholder": "you@company.com",
+      "passwordLabel": "पासवर्ड",
+      "passwordPlaceholder": "अपना पासवर्ड दर्ज करें",
+      "rememberMe": "मुझे याद रखें",
+      "forgotPassword": "पासवर्ड भूल गए?",
+      "loginButton": "साइन इन करें",
+      "noAccount": "SkillIndiaConnect पर नए हैं?",
+      "registerLink": "अपनी कंपनी रजिस्टर करें",
+      "candidateLink": "बजाय नौकरी खोज रहे हैं?",
+      "candidateLoginLink": "उम्मीदवार लॉगिन",
+      "invalidCredentials": "ईमेल या पासवर्ड गलत है।",
+      "accountSuspended": "आपका खाता निलंबित कर दिया गया है। सहायता के लिए संपर्क करें।",
+      "genericError": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।"
+    },
+    "onboarding": {
+      "metaTitle": "कंपनी सेटअप — SkillIndiaConnect",
+      "pageTitle": "अपनी कंपनी प्रोफ़ाइल सेट करें",
+      "pageSubtitle": "अपनी कंपनी के बारे में बताएं ताकि हम आपका खाता सत्यापित और सक्रिय कर सकें।",
+      "resubmitPageTitle": "कंपनी पंजीकरण पुनः सबमिट करें",
+      "resubmitPageSubtitle": "अपनी जानकारी अपडेट करें और समीक्षा के लिए पुनः सबमिट करें।",
+      "companyTypeLabel": "कंपनी प्रकार",
+      "companyTypeRequired": "कृपया कंपनी प्रकार चुनें",
+      "localTitle": "स्थानीय कंपनी",
+      "localDescription": "भारत में पंजीकृत और घरेलू स्तर पर नियुक्ति",
+      "foreignTitle": "विदेशी / खाड़ी कंपनी",
+      "foreignDescription": "भारत के बाहर पंजीकृत और अंतरराष्ट्रीय स्तर पर नियुक्ति",
+      "nameLabel": "कंपनी का नाम",
+      "namePlaceholder": "आपकी कंपनी का कानूनी नाम",
+      "nameRequired": "कंपनी का नाम आवश्यक है",
+      "registrationNumberLabel": "पंजीकरण संख्या",
+      "registrationNumberPlaceholder": "जैसे U12345MH2020PTC000000",
+      "industryTypeLabel": "उद्योग प्रकार",
+      "industryTypePlaceholder": "उद्योग चुनें",
+      "phoneLabel": "कंपनी फ़ोन",
+      "phonePlaceholder": "+91 98765 43210",
+      "phoneRequired": "कंपनी फ़ोन आवश्यक है",
+      "locationLabel": "कंपनी स्थान",
+      "locationPlaceholder": "शहर, राज्य या देश",
+      "locationRequired": "कंपनी स्थान आवश्यक है",
+      "websiteLabel": "वेबसाइट",
+      "websitePlaceholder": "https://yourcompany.com",
+      "employeeRangeLabel": "कर्मचारियों की संख्या",
+      "employeeRangePlaceholder": "श्रेणी चुनें",
+      "employeeRangeRequired": "कृपया कर्मचारी श्रेणी चुनें",
+      "descriptionLabel": "कंपनी विवरण",
+      "descriptionPlaceholder": "आपकी कंपनी और भूमिकाओं का संक्षिप्त विवरण",
+      "certLabel": "पंजीकरण प्रमाणपत्र",
+      "certHint": "अपना कंपनी पंजीकरण प्रमाणपत्र अपलोड करें (PDF, JPG, या PNG, 10 MB तक)।",
+      "certRequired": "कृपया अपना पंजीकरण प्रमाणपत्र अपलोड करें",
+      "submitButton": "अनुमोदन के लिए सबमिट करें",
+      "resubmitButton": "पुनः अनुमोदन के लिए सबमिट करें",
+      "submitting": "सबमिट हो रहा है…",
+      "submitSuccess": "सबमिट किया गया — हमारी टीम 24 घंटों के भीतर सत्यापित करेगी।",
+      "companyExists": "इस खाते के लिए कंपनी प्रोफ़ाइल पहले से मौजूद है।",
+      "validationError": "कृपया हाइलाइट किए गए फ़ील्ड सुधारें।",
+      "genericError": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
+      "industries": {
+        "construction": "निर्माण",
+        "manufacturing": "विनिर्माण",
+        "hospitality": "आतिथ्य",
+        "healthcare": "स्वास्थ्य सेवा",
+        "retail": "खुदरा",
+        "logistics": "रसद और परिवहन",
+        "agriculture": "कृषि",
+        "it": "आईटी और प्रौद्योगिकी",
+        "security": "सुरक्षा",
+        "cleaning": "सफाई और सुविधा प्रबंधन",
+        "other": "अन्य"
+      }
+    },
+    "dashboard": {
+      "metaTitle": "नियोक्ता डैशबोर्ड — SkillIndiaConnect",
+      "greeting": "सुप्रभात, {name}",
+      "greetingFallback": "वापस स्वागत है",
+      "kpi": {
+        "activeJobs": "सक्रिय नौकरियां",
+        "totalApplications": "कुल आवेदन",
+        "shortlisted": "शॉर्टलिस्टेड",
+        "hired": "इस महीने नियुक्त"
+      },
+      "recentJobs": {
+        "title": "हाल की नौकरी पोस्टिंग",
+        "emptyTitle": "अभी तक कोई नौकरी पोस्ट नहीं",
+        "emptyBody": "आवेदन प्राप्त करने के लिए अपनी पहली नौकरी पोस्ट करें।",
+        "statusActive": "सक्रिय",
+        "statusDraft": "ड्राफ्ट",
+        "statusPaused": "रोका गया",
+        "statusArchived": "संग्रहीत",
+        "columnTitle": "नौकरी शीर्षक",
+        "columnStatus": "स्थिति",
+        "columnApplications": "आवेदन",
+        "columnPosted": "पोस्ट किया गया"
+      },
+      "recentApplicants": {
+        "title": "हाल के आवेदक",
+        "emptyTitle": "अभी तक कोई आवेदक नहीं",
+        "emptyBody": "जब उम्मीदवार आवेदन करेंगे तो वे यहां दिखाई देंगे।"
+      },
+      "postJobCta": {
+        "title": "अपनी पहली नौकरी पोस्ट करें",
+        "body": "भारत और खाड़ी देशों में हजारों सत्यापित कर्मचारियों तक पहुंचें।",
+        "button": "नौकरी पोस्ट करें",
+        "pendingTooltip": "कंपनी अनुमोदन के बाद उपलब्ध"
+      },
+      "loading": "डैशबोर्ड लोड हो रहा है…",
+      "errorLoad": "डैशबोर्ड डेटा लोड करने में विफल।",
       "retry": "पुनः प्रयास करें"
     }
   },
