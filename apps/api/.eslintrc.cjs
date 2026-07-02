@@ -160,6 +160,38 @@ module.exports = {
             from: './src/jobs/publish-guard.service.ts',
             message: 'Use JobsService — never import the publish guard directly.',
           },
+          // jobs-search module: other modules must not import internal search services.
+          // SearchCacheService and SavedJobsService are internal to this module.
+          {
+            target: './src/auth',
+            from: './src/jobs-search/search-cache.service.ts',
+            message: 'Use JobsSearchService — never import search-cache service directly.',
+          },
+          {
+            target: './src/candidate',
+            from: './src/jobs-search/search-cache.service.ts',
+            message: 'Use JobsSearchService — never import search-cache service directly.',
+          },
+          {
+            target: './src/jobs',
+            from: './src/jobs-search/search-cache.service.ts',
+            message: 'Use JobsSearchService — never import search-cache service directly.',
+          },
+          {
+            target: './src/employer',
+            from: './src/jobs-search/search-cache.service.ts',
+            message: 'Use JobsSearchService — never import search-cache service directly.',
+          },
+          {
+            target: './src/settings',
+            from: './src/jobs-search/search-cache.service.ts',
+            message: 'Use JobsSearchService — never import search-cache service directly.',
+          },
+          {
+            target: './src/notifications',
+            from: './src/jobs-search/search-cache.service.ts',
+            message: 'Use JobsSearchService — never import search-cache service directly.',
+          },
           // employer module: other modules must inject EmployerService (exported).
           // Never import admin-employer.controller or employer-approval.service directly.
           {

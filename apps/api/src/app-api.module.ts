@@ -13,6 +13,7 @@ import { AuditModule } from './audit/audit.module';
 import { NotificationModule } from './notifications/notification.module';
 import { EmployerModule } from './employer/employer.module';
 import { JobsModule } from './jobs/jobs.module';
+import { JobsSearchModule } from './jobs-search/jobs-search.module';
 import { JwtAuthGuard } from './auth/guards/auth.guard';
 import { PermissionsGuard } from './auth/rbac/permissions.guard';
 
@@ -34,6 +35,7 @@ import { PermissionsGuard } from './auth/rbac/permissions.guard';
     NotificationModule,
     EmployerModule,
     JobsModule,
+    JobsSearchModule,
     EventEmitterModule.forRoot(),
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
   ],
