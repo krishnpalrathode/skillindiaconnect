@@ -1,4 +1,4 @@
-import * as React from 'react';
+﻿import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 /* ≥44px height (h-11), logical padding (ps-/pe-), error state via aria-invalid */
