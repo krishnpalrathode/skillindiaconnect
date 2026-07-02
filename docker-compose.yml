@@ -29,5 +29,41 @@ services:
       retries: 5
     restart: unless-stopped
 
+  skillindiaconnect-minio:
+    image: minio/minio:latest
+    container_name: skillindiaconnect-minio
+    command: server /data --console-address ':9001'
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_API_CORS_ALLOW_ORIGIN: 'http://localhost:3000'
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - skillindiaconnect-minio-data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  skillindiaconnect-minio-init:
+    image: minio/mc:latest
+    container_name: skillindiaconnect-minio-init
+    depends_on:
+      skillindiaconnect-minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://skillindiaconnect-minio:9000 minioadmin minioadmin &&
+        mc mb --ignore-existing local/skillindiaconnect-dev &&
+        mc anonymous set download local/skillindiaconnect-dev &&
+        echo 'MinIO init done'
+      "
+    restart: 'no'
+
 volumes:
   skillindiaconnect-pgdata:
+  skillindiaconnect-minio-data:

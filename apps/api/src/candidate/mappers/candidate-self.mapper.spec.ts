@@ -28,7 +28,7 @@ function makeProfile(
     photoKey: 'photos/alice.jpg',
     currentLocation: 'Mumbai, India',
     nationality: 'Indian',
-    noticePeriod: '1 month',
+    noticePeriod: 30,
     salaryExpectationMin: 50_000,
     salaryExpectationMax: 80_000,
     salaryExpectationCurrency: Currency.INR,
@@ -115,7 +115,7 @@ describe('toSelf mapper (candidate-self viewer)', () => {
     expect(dto.completionPct).toBe(70);
     expect(dto.nationality).toBe('Indian');
     expect(dto.currentLocation).toBe('Mumbai, India');
-    expect(dto.noticePeriod).toBe('1 month');
+    expect(dto.noticePeriod).toBe(30);
   });
 
   it('maps salary fields', () => {

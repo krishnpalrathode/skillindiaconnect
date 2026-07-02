@@ -98,7 +98,7 @@ describe('compute (pure scoring function)', () => {
   it('noticePeriod set does NOT change pct', () => {
     const without = compute(baseInput({ profile: { ...emptyProfile, noticePeriod: undefined } }));
     const withNotice = compute(
-      baseInput({ profile: { ...emptyProfile, noticePeriod: '1 month' } }),
+      baseInput({ profile: { ...emptyProfile, noticePeriod: 30 } }),
     );
     expect(withNotice.pct).toBe(without.pct);
   });

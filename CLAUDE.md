@@ -6,6 +6,7 @@ before writing code. The enforced rules live in `.claude/rules/` — consult the
 relevant file before touching that area.
 
 ## Architecture invariants (never violate)
+
 - **Monorepo** (pnpm workspaces): `apps/web` (Next.js 14), `apps/api` (NestJS),
   `packages/*` (`@skillindiaconnect/*`).
 - **`apps/web` is HTTP-only.** It NEVER imports `@prisma/client`, `ioredis`, or
@@ -23,11 +24,13 @@ relevant file before touching that area.
   line-by-line; breaking changes use expand→backfill→contract. See `migrations.md`.
 
 ## API invariants
+
 - Routes under `/api/v1`; `/health` is unversioned. See `api-conventions.md` for
   the response/error envelopes, pagination modes, rate limits, idempotency, and
   webhook handling.
 
 ## Security & privacy invariants
+
 - **Viewer-aware DTO mappers enforce privacy at the API layer** — never rely on
   the UI to hide fields. See `viewer-aware-dto.md`.
 - No PII in logs or Sentry (passport numbers, phone, email, tokens, OTPs,
@@ -37,6 +40,7 @@ relevant file before touching that area.
   are never cascade-deleted.
 
 ## Business-rule invariants (enforced server-side, not just UI)
+
 - A job cannot publish with accommodation / health insurance / transportation =
   false (rules read from Settings, Super-Admin gated).
 - Application state machine: employers move status FORWARD only
@@ -53,6 +57,7 @@ relevant file before touching that area.
 - One email = one role. Google OAuth for candidates only.
 
 ## How we work
+
 - One reviewable unit per change; small PRs. Raw-SQL migrations reviewed line by
   line. Verify `prisma migrate diff` is clean after any migration.
 - Tests accompany code; the E2E suite (Playwright, `e2e/`) is a merge gate and
@@ -60,6 +65,7 @@ relevant file before touching that area.
   `android-constrained` profile.
 
 ## Commands
+
 `pnpm dev` (web + api + worker) · `pnpm build` · `pnpm lint` · `pnpm typecheck` ·
 `pnpm test` · `pnpm test:e2e` · `pnpm db:up` / `pnpm db:down`
 DB client generation: `pnpm --filter ./apps/api exec prisma generate`.

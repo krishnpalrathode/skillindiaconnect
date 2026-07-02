@@ -1,4 +1,4 @@
-﻿// Integration block at the bottom needs Docker â€” extend timeout for all tests.
+// Integration block at the bottom needs Docker â€” extend timeout for all tests.
 jest.setTimeout(180_000);
 
 import { Test, TestingModule } from '@nestjs/testing';
@@ -383,11 +383,11 @@ describe('CandidateService â€” integration (real DB)', () => {
     if (candDockerUnavailable) return;
     const { id: userId } = await candUser();
 
-    await candService.updateProfile(userId, { religion: 'Hindu', noticePeriod: '1 month' });
+    await candService.updateProfile(userId, { religion: 'Hindu', noticePeriod: 30 });
 
     const row = await candPrisma.candidateProfile.findUnique({ where: { userId } });
     expect(row!.religion).toBe('Hindu');
-    expect(row!.noticePeriod).toBe('1 month');
+    expect(row!.noticePeriod).toBe(30);
     // Neither religion nor noticePeriod scores â€” pct stays 0
     expect(row!.completionPct).toBe(0);
   });

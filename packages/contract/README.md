@@ -6,15 +6,15 @@ in parallel against it.
 
 ## Sprint history
 
-| Version | Sprint | Additions |
-|---------|--------|-----------|
-| 0.1.0   | S1-0   | Auth, candidate profile, onboarding, resume (settings/generate/download/send) |
+| Version | Sprint | Additions                                                                                                                                               |
+| ------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.1.0   | S1-0   | Auth, candidate profile, onboarding, resume (settings/generate/download/send)                                                                           |
 | 0.2.0   | S2-0   | Employer identity (company + docs), jobs CRUD + lifecycle, public job search, candidate notifications, admin employer approval, admin platform settings |
 
 ## Files
 
-| File | Purpose |
-|------|---------|
+| File           | Purpose                                            |
+| -------------- | -------------------------------------------------- |
 | `openapi.yaml` | The OpenAPI 3.1 spec — **edit here, nowhere else** |
 
 ## Regenerating types and mocks
@@ -26,6 +26,7 @@ pnpm contract:generate
 ```
 
 This runs two steps in sequence:
+
 1. **`pnpm --filter @skillindiaconnect/contract validate`** — lints `openapi.yaml`
    with Redocly CLI; fails fast on spec errors.
 2. **`pnpm --filter @skillindiaconnect/shared-types generate`** — runs
@@ -45,6 +46,7 @@ constant), matching the `API_BASE = '/api/v1'` the client uses. This was the
 root cause of the S1 MSW-in-browser 404 bug.
 
 When you add a new endpoint to the spec:
+
 1. Add its handler to `handlers.ts` using `${BASE}/your/path`.
 2. Export it in the `handlers` array (not conditionally).
 3. Remove it from `stubNotImplemented` if it was previously stubbed there.
@@ -53,6 +55,7 @@ When you add a new endpoint to the spec:
 
 > **After the initial freeze merge, the contract is frozen.**
 > Any change to `openapi.yaml` requires:
+>
 > 1. Edit the spec.
 > 2. Run `pnpm contract:generate` (linting + type generation must be clean).
 > 3. Update any MSW handlers in `apps/web/src/mocks/handlers.ts` that reference
