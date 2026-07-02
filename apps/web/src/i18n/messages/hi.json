@@ -675,5 +675,196 @@
       "thisWeek": "इस सप्ताह",
       "older": "पुराने"
     }
+  },
+  "jobform": {
+    "createFormLabel": "नौकरी पोस्टिंग फ़ॉर्म बनाएं",
+    "editFormLabel": "नौकरी पोस्टिंग फ़ॉर्म संपादित करें",
+    "createPage": {
+      "title": "नौकरी पोस्ट करें",
+      "subtitle": "नीचे विवरण भरें। टाइप करते समय आपका लाइव प्रीव्यू अपडेट होता है।"
+    },
+    "editPage": {
+      "title": "नौकरी संपादित करें",
+      "subtitle": "अपनी जॉब पोस्टिंग अपडेट करें।",
+      "loading": "नौकरी लोड हो रही है…",
+      "loadError": "नौकरी लोड करने में विफल। कृपया रिफ्रेश करें।",
+      "notFound": "नौकरी नहीं मिली।",
+      "archivedNotice": "संग्रहीत नौकरियां संपादित नहीं की जा सकतीं। नया ड्राफ्ट बनाने के लिए डुप्लीकेट करें।",
+      "back": "वापस जाएं",
+      "backToJobs": "मेरी नौकरियों पर वापस जाएं"
+    },
+    "approvalGate": {
+      "title": "कंपनी अनुमोदन आवश्यक है",
+      "body": "जॉब पोस्टिंग तब अनलॉक होती है जब आपकी कंपनी हमारी टीम द्वारा स्वीकृत हो जाती है। आप अपना ड्राफ्ट सहेज सकते हैं और अनुमोदन के बाद पोस्ट कर सकते हैं।",
+      "backToDashboard": "डैशबोर्ड पर वापस जाएं"
+    },
+    "basic": {
+      "heading": "बुनियादी जानकारी",
+      "subtitle": "उम्मीदवारों को भूमिका और स्थान के बारे में बताएं।",
+      "titleLabel": "नौकरी का शीर्षक",
+      "titlePlaceholder": "जैसे अनुभवी राजमिस्त्री, वरिष्ठ इलेक्ट्रीशियन",
+      "marketLabel": "बाज़ार",
+      "marketGulf": "खाड़ी (अंतर्राष्ट्रीय)",
+      "marketLocal": "स्थानीय (भारत)",
+      "locationLabel": "स्थान",
+      "locationPlaceholder": "जैसे दुबई, UAE या मुंबई, भारत"
+    },
+    "description": {
+      "heading": "नौकरी विवरण",
+      "subtitle": "भूमिका, जिम्मेदारियां और आदर्श उम्मीदवार का वर्णन करें।",
+      "placeholder": "पद, दैनिक जिम्मेदारियां और यह एक बेहतरीन अवसर क्यों है, इसका वर्णन करें…",
+      "charsLeft": "अक्षर शेष"
+    },
+    "compensation": {
+      "heading": "वेतन",
+      "subtitle": "इस भूमिका के लिए वेतन सीमा और मुद्रा निर्धारित करें।",
+      "currencyLabel": "मुद्रा",
+      "salaryMinLabel": "न्यूनतम वेतन",
+      "salaryMaxLabel": "अधिकतम वेतन",
+      "salaryMinPlaceholder": "जैसे 1200",
+      "salaryMaxPlaceholder": "जैसे 1800",
+      "salaryHint": "प्रति माह {currency} में। वेतन न बताने पर खाली छोड़ें।"
+    },
+    "benefits": {
+      "heading": "लाभ",
+      "subtitle": "अनिवार्य लाभ प्लेटफ़ॉर्म नीति द्वारा आवश्यक हैं।",
+      "policyTitle": "श्रमिक संरक्षण नीति",
+      "policyBody": "SkillIndiaConnect पर सभी नौकरियों में आवास, स्वास्थ्य बीमा और परिवहन शामिल होना चाहिए।",
+      "mandatoryLabel": "अनिवार्य (प्लेटफ़ॉर्म नीति द्वारा आवश्यक)",
+      "optionalLabel": "वैकल्पिक लाभ",
+      "accommodation": "आवास",
+      "accommodationHint": "नियोक्ता श्रमिक के लिए आवास प्रदान करता है।",
+      "healthInsurance": "स्वास्थ्य बीमा",
+      "healthInsuranceHint": "नियोक्ता स्वास्थ्य बीमा कवरेज प्रदान करता है।",
+      "transportation": "परिवहन",
+      "transportationHint": "नियोक्ता कार्यस्थल तक आने-जाने के लिए परिवहन प्रदान करता है।",
+      "foodAllowance": "भोजन भत्ता",
+      "airTickets": "हवाई टिकट (आगमन और प्रस्थान)",
+      "otherAllowance": "अन्य भत्ता",
+      "otherAllowancePlaceholder": "जैसे वर्दी प्रदान की गई, वार्षिक बोनस…",
+      "optional": "वैकल्पिक"
+    },
+    "requirements": {
+      "heading": "आवश्यकताएं",
+      "subtitle": "उम्मीदवारों के पास होने वाली योग्यताएं और कौशल सूचीबद्ध करें।",
+      "listLabel": "आवश्यकताओं की सूची",
+      "emptyHint": "अभी तक कोई आवश्यकता नहीं जोड़ी गई।",
+      "addPlaceholder": "जैसे 3+ वर्ष अनुभव, वैध पासपोर्ट",
+      "addAriaLabel": "नई आवश्यकता",
+      "addButton": "जोड़ें",
+      "removeAriaLabel": "हटाएं: {item}",
+      "countHint": "{max} में से {count} आवश्यकताएं जोड़ी गईं"
+    },
+    "conditions": {
+      "heading": "कार्य शर्तें",
+      "subtitle": "काम के घंटे, अनुबंध अवधि और अन्य शर्तें साझा करें।",
+      "workConditionsLabel": "कार्य शर्तें",
+      "workConditionsHint": "जैसे 8 घंटे/दिन, 6 दिन/सप्ताह।",
+      "workConditionsPlaceholder": "घंटे, अनुसूची, अनुबंध अवधि और अन्य शर्तें बताएं…",
+      "experienceLabel": "आवश्यक अनुभव (वर्षों में)",
+      "experienceHint": "कोई अनुभव आवश्यक नहीं होने पर 0 दर्ज करें",
+      "vacanciesLabel": "रिक्तियों की संख्या",
+      "vacanciesHint": "इस भूमिका के लिए आप कितने कर्मचारी नियुक्त कर रहे हैं?",
+      "genderPreferenceLabel": "लिंग प्राथमिकता",
+      "genderPreferenceHint": "सभी के लिए खुला होने पर \"कोई प्राथमिकता नहीं\" चुनें",
+      "genderAny": "कोई प्राथमिकता नहीं",
+      "genderMale": "पुरुष",
+      "genderFemale": "महिला"
+    },
+    "preview": {
+      "heading": "लाइव प्रीव्यू",
+      "subtitle": "उम्मीदवारों को आपकी नौकरी कैसी दिखेगी।",
+      "panelLabel": "लाइव जॉब प्रीव्यू",
+      "liveRegionLabel": "फ़ॉर्म भरते समय लाइव जॉब प्रीव्यू अपडेट होता है",
+      "justPosted": "अभी पोस्ट किया",
+      "viewDetails": "विवरण देखें",
+      "previewNote": "प्रीव्यू प्रकाशित लिस्टिंग से थोड़ा भिन्न हो सकता है।"
+    },
+    "publishErrors": {
+      "notApprovedTitle": "कंपनी अनुमोदन आवश्यक है",
+      "notApprovedBody": "आपकी कंपनी प्रोफ़ाइल व्यवस्थापक अनुमोदन की प्रतीक्षा में है।",
+      "protectionTitle": "श्रमिक संरक्षण उल्लंघन",
+      "protectionBody": "यह नौकरी प्रकाशित नहीं की जा सकती क्योंकि निम्नलिखित आवश्यक लाभ अनुपस्थित हैं:",
+      "violationAccommodation": "आवास",
+      "violationHealthInsurance": "स्वास्थ्य बीमा",
+      "violationTransportation": "परिवहन",
+      "quotaTitle": "सक्रिय नौकरी सीमा पहुंच गई ({limit} नौकरी)",
+      "quotaBody": "आपकी Free plan एक समय में 1 सक्रिय नौकरी की अनुमति देती है।",
+      "quotaUpgradeLink": "Pro में अपग्रेड करें",
+      "genericTitle": "प्रकाशित करने में विफल",
+      "dismiss": "खारिज करें"
+    },
+    "actions": {
+      "saveDraft": "ड्राफ्ट के रूप में सहेजें",
+      "saving": "सहेज रहे हैं…",
+      "saved": "सहेजा गया ✓",
+      "draftError": "ड्राफ्ट सहेजने में विफल। कृपया पुनः प्रयास करें।",
+      "publish": "नौकरी पोस्ट करें",
+      "publishing": "प्रकाशित हो रहा है…"
+    }
+  },
+  "myjobs": {
+    "pageTitle": "मेरी नौकरियां",
+    "pageSubtitle": "अपनी जॉब पोस्टिंग प्रबंधित करें।",
+    "postNewJob": "नई नौकरी पोस्ट करें",
+    "postFirstJob": "पहली नौकरी पोस्ट करें",
+    "publishSuccess": "नौकरी सफलतापूर्वक प्रकाशित हुई!",
+    "searchLabel": "नौकरियां खोजें",
+    "searchPlaceholder": "नौकरी के शीर्षक से खोजें…",
+    "statusFilterLabel": "स्थिति से फ़िल्टर करें",
+    "tableLabel": "मेरी जॉब पोस्टिंग",
+    "loading": "नौकरियां लोड हो रही हैं…",
+    "loadError": "नौकरियां लोड करने में विफल।",
+    "retry": "पुनः प्रयास करें",
+    "emptyTitle": "अभी तक कोई नौकरी नहीं",
+    "emptyBody": "आवेदन प्राप्त करने के लिए पहली नौकरी पोस्ट करें।",
+    "draftNotPosted": "ड्राफ्ट",
+    "marketGulf": "खाड़ी",
+    "marketLocal": "भारत",
+    "applicationsPlaceholder": "0 आवेदन",
+    "pageInfo": "पृष्ठ {page} का {totalPages}",
+    "previousPage": "पिछला पृष्ठ",
+    "nextPage": "अगला पृष्ठ",
+    "prev": "पिछला",
+    "next": "अगला",
+    "tabs": {
+      "all": "सभी",
+      "active": "सक्रिय",
+      "paused": "रोका गया",
+      "draft": "ड्राफ्ट",
+      "archived": "संग्रहीत"
+    },
+    "col": {
+      "title": "नौकरी का शीर्षक",
+      "market": "बाज़ार",
+      "status": "स्थिति",
+      "applications": "आवेदन",
+      "posted": "पोस्ट किया गया",
+      "actions": "कार्रवाई"
+    },
+    "status": {
+      "active": "सक्रिय",
+      "draft": "ड्राफ्ट",
+      "paused": "रोका गया",
+      "archived": "संग्रहीत"
+    },
+    "actions": {
+      "groupLabel": "{title} के लिए कार्रवाई",
+      "view": "देखें",
+      "viewLabel": "लिस्टिंग देखें: {title}",
+      "edit": "संपादित करें",
+      "editLabel": "नौकरी संपादित करें: {title}",
+      "publish": "प्रकाशित करें",
+      "publishLabel": "नौकरी प्रकाशित करें: {title}",
+      "pause": "रोकें",
+      "pauseLabel": "नौकरी रोकें: {title}",
+      "resume": "फिर शुरू करें",
+      "resumeLabel": "नौकरी फिर शुरू करें: {title}",
+      "duplicate": "डुप्लीकेट",
+      "duplicateLabel": "नौकरी डुप्लीकेट करें: {title}",
+      "archive": "संग्रहीत करें",
+      "archiveLabel": "नौकरी संग्रहीत करें: {title}",
+      "repostAsDraft": "ड्राफ्ट के रूप में पुनः पोस्ट करें"
+    }
   }
 }

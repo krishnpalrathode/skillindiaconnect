@@ -675,5 +675,196 @@
       "thisWeek": "هذا الأسبوع",
       "older": "أقدم"
     }
+  },
+  "jobform": {
+    "createFormLabel": "نموذج إنشاء وظيفة",
+    "editFormLabel": "نموذج تعديل وظيفة",
+    "createPage": {
+      "title": "نشر وظيفة",
+      "subtitle": "أكمل التفاصيل أدناه. تتحدث المعاينة المباشرة أثناء الكتابة."
+    },
+    "editPage": {
+      "title": "تعديل الوظيفة",
+      "subtitle": "قم بتحديث إعلان الوظيفة الخاص بك.",
+      "loading": "جارٍ تحميل الوظيفة…",
+      "loadError": "فشل تحميل الوظيفة. يرجى التحديث.",
+      "notFound": "الوظيفة غير موجودة.",
+      "archivedNotice": "لا يمكن تعديل الوظائف المؤرشفة. انسخها لإنشاء مسودة جديدة.",
+      "back": "العودة",
+      "backToJobs": "العودة إلى وظائفي"
+    },
+    "approvalGate": {
+      "title": "مطلوب موافقة الشركة",
+      "body": "يصبح نشر الوظائف متاحاً بعد موافقة فريقنا على شركتك. يمكنك حفظ المسودة ونشرها بعد الموافقة.",
+      "backToDashboard": "العودة إلى لوحة التحكم"
+    },
+    "basic": {
+      "heading": "المعلومات الأساسية",
+      "subtitle": "أخبر المرشحين عن الدور والموقع.",
+      "titleLabel": "المسمى الوظيفي",
+      "titlePlaceholder": "مثل: بنّاء متمرس، كهربائي أول",
+      "marketLabel": "السوق",
+      "marketGulf": "الخليج (دولي)",
+      "marketLocal": "محلي (الهند)",
+      "locationLabel": "الموقع",
+      "locationPlaceholder": "مثل: دبي، الإمارات أو مومباي، الهند"
+    },
+    "description": {
+      "heading": "وصف الوظيفة",
+      "subtitle": "صف الدور والمسؤوليات والمرشح المثالي.",
+      "placeholder": "صف المنصب والمسؤوليات اليومية وما يجعل هذه فرصة رائعة…",
+      "charsLeft": "حرف متبقٍ"
+    },
+    "compensation": {
+      "heading": "التعويض",
+      "subtitle": "حدد نطاق الراتب والعملة لهذا الدور.",
+      "currencyLabel": "العملة",
+      "salaryMinLabel": "الحد الأدنى للراتب",
+      "salaryMaxLabel": "الحد الأقصى للراتب",
+      "salaryMinPlaceholder": "مثل: 1200",
+      "salaryMaxPlaceholder": "مثل: 1800",
+      "salaryHint": "شهرياً بـ{currency}. اتركه فارغاً إذا كنت لا تريد الإفصاح عن الراتب."
+    },
+    "benefits": {
+      "heading": "المزايا",
+      "subtitle": "المزايا الإلزامية مطلوبة بموجب سياسة المنصة.",
+      "policyTitle": "سياسة حماية العمال",
+      "policyBody": "يجب أن تتضمن جميع الوظائف على SkillIndiaConnect السكن والتأمين الصحي والمواصلات.",
+      "mandatoryLabel": "إلزامي (مطلوب بموجب سياسة المنصة)",
+      "optionalLabel": "مزايا اختيارية",
+      "accommodation": "السكن",
+      "accommodationHint": "يوفر صاحب العمل السكن للعامل.",
+      "healthInsurance": "التأمين الصحي",
+      "healthInsuranceHint": "يوفر صاحب العمل تغطية التأمين الصحي.",
+      "transportation": "المواصلات",
+      "transportationHint": "يوفر صاحب العمل المواصلات من وإلى موقع العمل.",
+      "foodAllowance": "بدل الطعام",
+      "airTickets": "تذاكر الطيران (الوصول والمغادرة)",
+      "otherAllowance": "بدلات أخرى",
+      "otherAllowancePlaceholder": "مثل: زي موحد، مكافأة سنوية…",
+      "optional": "اختياري"
+    },
+    "requirements": {
+      "heading": "المتطلبات",
+      "subtitle": "اذكر المؤهلات والمهارات التي يجب أن يمتلكها المرشحون.",
+      "listLabel": "قائمة المتطلبات",
+      "emptyHint": "لم تُضف أي متطلبات بعد.",
+      "addPlaceholder": "مثل: خبرة 3+ سنوات، جواز سفر ساري",
+      "addAriaLabel": "متطلب جديد",
+      "addButton": "إضافة",
+      "removeAriaLabel": "إزالة: {item}",
+      "countHint": "تمت إضافة {count} من أصل {max} متطلباً"
+    },
+    "conditions": {
+      "heading": "ظروف العمل",
+      "subtitle": "شارك ساعات العمل وفترة العقد وشروط أخرى.",
+      "workConditionsLabel": "ظروف العمل",
+      "workConditionsHint": "مثل: 8 ساعات/يوم، 6 أيام/أسبوع.",
+      "workConditionsPlaceholder": "صف الساعات والجدول الزمني وفترة العقد وأي شروط أخرى…",
+      "experienceLabel": "الخبرة المطلوبة (بالسنوات)",
+      "experienceHint": "أدخل 0 إذا لم تكن هناك خبرة مطلوبة",
+      "vacanciesLabel": "عدد الشواغر",
+      "vacanciesHint": "كم عدد العمال الذين تقوم بتوظيفهم لهذا الدور؟",
+      "genderPreferenceLabel": "تفضيل الجنس",
+      "genderPreferenceHint": "حدد «لا تفضيل» إذا كان مفتوحاً للجميع",
+      "genderAny": "لا تفضيل",
+      "genderMale": "ذكر",
+      "genderFemale": "أنثى"
+    },
+    "preview": {
+      "heading": "معاينة مباشرة",
+      "subtitle": "كيف ستظهر وظيفتك للمرشحين.",
+      "panelLabel": "معاينة الوظيفة المباشرة",
+      "liveRegionLabel": "تتحدث معاينة الوظيفة المباشرة أثناء ملء النموذج",
+      "justPosted": "نُشر للتو",
+      "viewDetails": "عرض التفاصيل",
+      "previewNote": "قد تختلف المعاينة قليلاً عن الإعلان المنشور."
+    },
+    "publishErrors": {
+      "notApprovedTitle": "مطلوب موافقة الشركة",
+      "notApprovedBody": "ملف شركتك بانتظار موافقة المسؤول.",
+      "protectionTitle": "انتهاك سياسة حماية العمال",
+      "protectionBody": "لا يمكن نشر هذه الوظيفة لأن المزايا المطلوبة التالية مفقودة:",
+      "violationAccommodation": "السكن",
+      "violationHealthInsurance": "التأمين الصحي",
+      "violationTransportation": "المواصلات",
+      "quotaTitle": "تم الوصول إلى حد الوظائف النشطة ({limit} وظيفة)",
+      "quotaBody": "تتيح خطتك المجانية وظيفة نشطة واحدة في كل مرة.",
+      "quotaUpgradeLink": "الترقية إلى Pro",
+      "genericTitle": "فشل النشر",
+      "dismiss": "رفض"
+    },
+    "actions": {
+      "saveDraft": "حفظ كمسودة",
+      "saving": "جارٍ الحفظ…",
+      "saved": "تم الحفظ ✓",
+      "draftError": "فشل حفظ المسودة. يرجى المحاولة مرة أخرى.",
+      "publish": "نشر الوظيفة",
+      "publishing": "جارٍ النشر…"
+    }
+  },
+  "myjobs": {
+    "pageTitle": "وظائفي",
+    "pageSubtitle": "إدارة إعلانات الوظائف الخاصة بك.",
+    "postNewJob": "نشر وظيفة جديدة",
+    "postFirstJob": "انشر وظيفتك الأولى",
+    "publishSuccess": "تم نشر الوظيفة بنجاح!",
+    "searchLabel": "البحث في الوظائف",
+    "searchPlaceholder": "ابحث بعنوان الوظيفة…",
+    "statusFilterLabel": "تصفية حسب الحالة",
+    "tableLabel": "إعلانات وظائفي",
+    "loading": "جارٍ تحميل الوظائف…",
+    "loadError": "فشل تحميل الوظائف.",
+    "retry": "إعادة المحاولة",
+    "emptyTitle": "لا وظائف بعد",
+    "emptyBody": "انشر وظيفتك الأولى لبدء استقبال الطلبات.",
+    "draftNotPosted": "مسودة",
+    "marketGulf": "الخليج",
+    "marketLocal": "الهند",
+    "applicationsPlaceholder": "0 طلبات",
+    "pageInfo": "صفحة {page} من {totalPages}",
+    "previousPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية",
+    "prev": "السابق",
+    "next": "التالي",
+    "tabs": {
+      "all": "الكل",
+      "active": "نشطة",
+      "paused": "متوقفة",
+      "draft": "مسودات",
+      "archived": "مؤرشفة"
+    },
+    "col": {
+      "title": "المسمى الوظيفي",
+      "market": "السوق",
+      "status": "الحالة",
+      "applications": "الطلبات",
+      "posted": "تاريخ النشر",
+      "actions": "الإجراءات"
+    },
+    "status": {
+      "active": "نشطة",
+      "draft": "مسودة",
+      "paused": "متوقفة",
+      "archived": "مؤرشفة"
+    },
+    "actions": {
+      "groupLabel": "إجراءات لـ{title}",
+      "view": "عرض",
+      "viewLabel": "عرض الإعلان: {title}",
+      "edit": "تعديل",
+      "editLabel": "تعديل الوظيفة: {title}",
+      "publish": "نشر",
+      "publishLabel": "نشر الوظيفة: {title}",
+      "pause": "إيقاف",
+      "pauseLabel": "إيقاف الوظيفة: {title}",
+      "resume": "استئناف",
+      "resumeLabel": "استئناف الوظيفة: {title}",
+      "duplicate": "نسخ",
+      "duplicateLabel": "نسخ الوظيفة: {title}",
+      "archive": "أرشفة",
+      "archiveLabel": "أرشفة الوظيفة: {title}",
+      "repostAsDraft": "إعادة نشر كمسودة"
+    }
   }
 }

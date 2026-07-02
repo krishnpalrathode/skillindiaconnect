@@ -675,5 +675,196 @@
       "thisWeek": "This Week",
       "older": "Older"
     }
+  },
+  "jobform": {
+    "createFormLabel": "Create job posting form",
+    "editFormLabel": "Edit job posting form",
+    "createPage": {
+      "title": "Post a Job",
+      "subtitle": "Fill in the details below. Your live preview updates as you type."
+    },
+    "editPage": {
+      "title": "Edit Job",
+      "subtitle": "Update your job posting.",
+      "loading": "Loading job…",
+      "loadError": "Failed to load job. Please refresh.",
+      "notFound": "Job not found.",
+      "archivedNotice": "Archived jobs cannot be edited. Duplicate to create a new draft.",
+      "back": "Go back",
+      "backToJobs": "Back to My Jobs"
+    },
+    "approvalGate": {
+      "title": "Company approval required",
+      "body": "Job posting is unlocked once your company is approved by our team. You can save your draft and post it after approval.",
+      "backToDashboard": "Back to Dashboard"
+    },
+    "basic": {
+      "heading": "Basic Information",
+      "subtitle": "Tell candidates about the role and where it is.",
+      "titleLabel": "Job title",
+      "titlePlaceholder": "e.g. Experienced Mason, Senior Electrician",
+      "marketLabel": "Market",
+      "marketGulf": "Gulf (International)",
+      "marketLocal": "Local (India)",
+      "locationLabel": "Location",
+      "locationPlaceholder": "e.g. Dubai, UAE or Mumbai, India"
+    },
+    "description": {
+      "heading": "Job Description",
+      "subtitle": "Describe the role, responsibilities, and ideal candidate.",
+      "placeholder": "Describe the position, day-to-day responsibilities, and what makes this a great opportunity…",
+      "charsLeft": "characters remaining"
+    },
+    "compensation": {
+      "heading": "Compensation",
+      "subtitle": "Set the salary range and currency for this role.",
+      "currencyLabel": "Currency",
+      "salaryMinLabel": "Minimum salary",
+      "salaryMaxLabel": "Maximum salary",
+      "salaryMinPlaceholder": "e.g. 1200",
+      "salaryMaxPlaceholder": "e.g. 1800",
+      "salaryHint": "Per month in {currency}. Leave blank if not disclosing salary."
+    },
+    "benefits": {
+      "heading": "Benefits",
+      "subtitle": "Mandatory benefits are required by platform policy. Optional benefits attract more candidates.",
+      "policyTitle": "Worker Protection Policy",
+      "policyBody": "All jobs on SkillIndiaConnect must include Accommodation, Health Insurance, and Transportation. These are required by platform policy and government labour law.",
+      "mandatoryLabel": "Mandatory (required by platform policy)",
+      "optionalLabel": "Optional benefits",
+      "accommodation": "Accommodation",
+      "accommodationHint": "Employer provides or arranges housing for the worker.",
+      "healthInsurance": "Health Insurance",
+      "healthInsuranceHint": "Employer provides health insurance coverage.",
+      "transportation": "Transportation",
+      "transportationHint": "Employer provides transport to and from the worksite.",
+      "foodAllowance": "Food Allowance",
+      "airTickets": "Air Tickets (Arrival & Departure)",
+      "otherAllowance": "Other Allowance",
+      "otherAllowancePlaceholder": "e.g. Uniform provided, annual bonus…",
+      "optional": "Optional"
+    },
+    "requirements": {
+      "heading": "Requirements",
+      "subtitle": "List the qualifications and skills candidates must have.",
+      "listLabel": "Requirements list",
+      "emptyHint": "No requirements added yet. Add at least one to help candidates self-qualify.",
+      "addPlaceholder": "e.g. 3+ years experience, Valid passport",
+      "addAriaLabel": "New requirement",
+      "addButton": "Add",
+      "removeAriaLabel": "Remove: {item}",
+      "countHint": "{count} of {max} requirements added"
+    },
+    "conditions": {
+      "heading": "Work Conditions",
+      "subtitle": "Share working hours, contract period, and other conditions.",
+      "workConditionsLabel": "Working conditions",
+      "workConditionsHint": "e.g. 8 hours/day, 6 days/week. All PPE provided.",
+      "workConditionsPlaceholder": "Describe hours, schedule, contract period, and any other conditions…",
+      "experienceLabel": "Experience required (years)",
+      "experienceHint": "Enter 0 for no experience required",
+      "vacanciesLabel": "Number of vacancies",
+      "vacanciesHint": "How many workers are you hiring for this role?",
+      "genderPreferenceLabel": "Gender preference",
+      "genderPreferenceHint": "Select “No preference” if open to all",
+      "genderAny": "No preference",
+      "genderMale": "Male",
+      "genderFemale": "Female"
+    },
+    "preview": {
+      "heading": "Live Preview",
+      "subtitle": "How your job will appear to candidates.",
+      "panelLabel": "Live job preview",
+      "liveRegionLabel": "Live job preview updates as you fill in the form",
+      "justPosted": "Just posted",
+      "viewDetails": "View details",
+      "previewNote": "Preview may differ slightly from the published listing."
+    },
+    "publishErrors": {
+      "notApprovedTitle": "Company approval required",
+      "notApprovedBody": "Your company profile is awaiting admin approval. You can save a draft and publish once approved.",
+      "protectionTitle": "Worker protection violation",
+      "protectionBody": "This job cannot be published because the following required benefits are missing:",
+      "violationAccommodation": "Accommodation",
+      "violationHealthInsurance": "Health Insurance",
+      "violationTransportation": "Transportation",
+      "quotaTitle": "Active job limit reached ({limit} job)",
+      "quotaBody": "Your Free plan allows 1 active job at a time. Archive or pause your existing active job to publish another, or upgrade to Pro for unlimited active jobs.",
+      "quotaUpgradeLink": "Upgrade to Pro",
+      "genericTitle": "Failed to publish",
+      "dismiss": "Dismiss"
+    },
+    "actions": {
+      "saveDraft": "Save as Draft",
+      "saving": "Saving…",
+      "saved": "Saved ✓",
+      "draftError": "Failed to save draft. Please try again.",
+      "publish": "Post Job",
+      "publishing": "Publishing…"
+    }
+  },
+  "myjobs": {
+    "pageTitle": "My Jobs",
+    "pageSubtitle": "Manage your job postings.",
+    "postNewJob": "Post a New Job",
+    "postFirstJob": "Post Your First Job",
+    "publishSuccess": "Job published successfully! It is now live for candidates.",
+    "searchLabel": "Search jobs",
+    "searchPlaceholder": "Search by job title…",
+    "statusFilterLabel": "Filter by status",
+    "tableLabel": "My job postings",
+    "loading": "Loading jobs…",
+    "loadError": "Failed to load jobs. Please try again.",
+    "retry": "Retry",
+    "emptyTitle": "No jobs yet",
+    "emptyBody": "Post your first job to start receiving applications.",
+    "draftNotPosted": "Draft",
+    "marketGulf": "Gulf",
+    "marketLocal": "India",
+    "applicationsPlaceholder": "0 applications (S4)",
+    "pageInfo": "Page {page} of {totalPages}",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "prev": "Previous",
+    "next": "Next",
+    "tabs": {
+      "all": "All",
+      "active": "Active",
+      "paused": "Paused",
+      "draft": "Drafts",
+      "archived": "Archived"
+    },
+    "col": {
+      "title": "Job Title",
+      "market": "Market",
+      "status": "Status",
+      "applications": "Applications",
+      "posted": "Posted",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "draft": "Draft",
+      "paused": "Paused",
+      "archived": "Archived"
+    },
+    "actions": {
+      "groupLabel": "Actions for {title}",
+      "view": "View",
+      "viewLabel": "View listing: {title}",
+      "edit": "Edit",
+      "editLabel": "Edit job: {title}",
+      "publish": "Publish",
+      "publishLabel": "Publish job: {title}",
+      "pause": "Pause",
+      "pauseLabel": "Pause job: {title}",
+      "resume": "Resume",
+      "resumeLabel": "Resume job: {title}",
+      "duplicate": "Duplicate",
+      "duplicateLabel": "Duplicate job: {title}",
+      "archive": "Archive",
+      "archiveLabel": "Archive job: {title}",
+      "repostAsDraft": "Repost as Draft"
+    }
   }
 }
