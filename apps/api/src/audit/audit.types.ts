@@ -34,8 +34,15 @@ export const AUDIT_ACTIONS = {
   EMPLOYER_REJECTED: 'employer.rejected',
   EMPLOYER_SUSPENDED: 'employer.suspended',
   // Jobs (S2-B5)
+  JOB_CREATED: 'job.created',
+  JOB_UPDATED: 'job.updated',
   JOB_PUBLISHED: 'job.published',
   JOB_PUBLISH_BLOCKED: 'job.publish.blocked',
+  JOB_PAUSED: 'job.paused',
+  JOB_RESUMED: 'job.resumed',
+  JOB_ARCHIVED: 'job.archived',
+  JOB_AUTO_ARCHIVED: 'job.auto_archived',
+  JOB_DUPLICATED: 'job.duplicated',
   // Applications (S4)
   APPLICATION_STATUS_CHANGED: 'application.status.changed',
   APPLICATION_ADMIN_OVERRIDE: 'application.admin_override',

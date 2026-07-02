@@ -20,6 +20,7 @@ import { QUEUE_NAMES } from './queue.constants';
       { name: QUEUE_NAMES.ACCOUNT_PURGE },
       { name: QUEUE_NAMES.R2_DELETE },
       { name: QUEUE_NAMES.NOTIFICATION },
+      { name: QUEUE_NAMES.AUTO_ARCHIVE },
     ),
   ],
   exports: [BullModule],

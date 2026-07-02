@@ -128,6 +128,38 @@ module.exports = {
             from: './src/audit/audit.subscriber.ts',
             message: 'Use AuditService.log() — never import the audit subscriber directly.',
           },
+          // jobs module: other modules must inject JobsService (exported).
+          // Never import jobs.controller, publish-guard.service, or job-lifecycle.service directly.
+          {
+            target: './src/auth',
+            from: './src/jobs/publish-guard.service.ts',
+            message: 'Use JobsService — never import the publish guard directly.',
+          },
+          {
+            target: './src/candidate',
+            from: './src/jobs/publish-guard.service.ts',
+            message: 'Use JobsService — never import the publish guard directly.',
+          },
+          {
+            target: './src/notifications',
+            from: './src/jobs/publish-guard.service.ts',
+            message: 'Use JobsService — never import the publish guard directly.',
+          },
+          {
+            target: './src/settings',
+            from: './src/jobs/publish-guard.service.ts',
+            message: 'Use JobsService — never import the publish guard directly.',
+          },
+          {
+            target: './src/employer',
+            from: './src/jobs/publish-guard.service.ts',
+            message: 'Use JobsService — never import the publish guard directly.',
+          },
+          {
+            target: './src/audit',
+            from: './src/jobs/publish-guard.service.ts',
+            message: 'Use JobsService — never import the publish guard directly.',
+          },
           // employer module: other modules must inject EmployerService (exported).
           // Never import admin-employer.controller or employer-approval.service directly.
           {
