@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Integration test: PermissionsGuard + PermissionService against real Postgres + Redis.
  *
  * Uses Testcontainers to spin up throwaway containers so no shared state leaks
@@ -35,7 +35,7 @@ import { PermissionService } from './permission.service';
 import { PermissionsGuard } from './permissions.guard';
 import { RequirePermissions } from './require-permissions.decorator';
 
-// ─── Test-only fixtures (never imported by production code) ───────────────────
+// â”€â”€â”€ Test-only fixtures (never imported by production code) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Injectable()
 class TestAuthGuard implements CanActivate {
@@ -60,7 +60,7 @@ class PermTestController {
   }
 }
 
-// ─── Container lifecycle ──────────────────────────────────────────────────────
+// â”€â”€â”€ Container lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const API_DIR = path.resolve(__dirname, '../../..');
 
@@ -73,7 +73,7 @@ let permService: PermissionService;
 // Set to true when Docker is not running; each test returns early in that case.
 let dockerUnavailable = false;
 
-// Container startup + migration can take 60-90 s — set a generous timeout.
+// Container startup + migration can take 60-90 s â€” set a generous timeout.
 jest.setTimeout(180_000);
 
 beforeAll(async () => {
@@ -99,6 +99,7 @@ beforeAll(async () => {
       cwd: API_DIR,
       env: { ...process.env, DATABASE_URL: pgUrl },
       stdio: 'pipe',
+      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
     });
 
     prismaClient = new PrismaClient({ datasources: { db: { url: pgUrl } } });
@@ -116,7 +117,7 @@ beforeAll(async () => {
           enabled: true,
           isLocked: false,
         },
-        // SUPER_ADMIN has candidates.edit (LOCKED — cannot be toggled).
+        // SUPER_ADMIN has candidates.edit (LOCKED â€” cannot be toggled).
         {
           role: UserRole.SUPER_ADMIN,
           permissionKey: Permission.CANDIDATES_EDIT,
@@ -139,7 +140,7 @@ beforeAll(async () => {
         PermissionService,
         { provide: PrismaService, useValue: prismaClient as unknown as PrismaService },
         { provide: REDIS_CLIENT, useValue: redisClient },
-        // Guard order: TestAuthGuard (sets req.user) → PermissionsGuard (checks perms).
+        // Guard order: TestAuthGuard (sets req.user) â†’ PermissionsGuard (checks perms).
         { provide: APP_GUARD, useClass: TestAuthGuard },
         {
           provide: APP_GUARD,
@@ -160,10 +161,12 @@ beforeAll(async () => {
       msg.includes('container runtime') ||
       msg.includes('Docker') ||
       msg.includes('ENOENT') ||
-      msg.includes('connect ECONNREFUSED')
+      msg.includes('connect ECONNREFUSED') ||
+      msg.includes('not recognized') ||
+      msg.includes('prisma: command not found')
     ) {
       dockerUnavailable = true;
-      console.warn('[integration] Docker unavailable — container tests will be skipped:', msg);
+      console.warn('[integration] Docker unavailable â€” container tests will be skipped:', msg);
     } else {
       throw err;
     }
@@ -178,9 +181,9 @@ afterAll(async () => {
   await redisContainer?.stop();
 });
 
-// ─── Tests ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describe('PermissionsGuard — integration (real Postgres + Redis)', () => {
+describe('PermissionsGuard â€” integration (real Postgres + Redis)', () => {
   it('allows SUPER_ADMIN who has candidates.view', async () => {
     if (dockerUnavailable) return;
     await supertest(app.getHttpServer())
@@ -198,7 +201,7 @@ describe('PermissionsGuard — integration (real Postgres + Redis)', () => {
       .expect(403);
   });
 
-  it('flips to allowed after enabling candidates.view for SUPPORT — same role, no relogin', async () => {
+  it('flips to allowed after enabling candidates.view for SUPPORT â€” same role, no relogin', async () => {
     if (dockerUnavailable) return;
     await permService.setPermission(
       UserRole.SUPPORT,
@@ -207,7 +210,7 @@ describe('PermissionsGuard — integration (real Postgres + Redis)', () => {
       'test-actor',
     );
 
-    // Same role (same "token") must now succeed — proves cache invalidation.
+    // Same role (same "token") must now succeed â€” proves cache invalidation.
     await supertest(app.getHttpServer())
       .get('/__test__/resource')
       .set('x-test-role', UserRole.SUPPORT)
@@ -238,3 +241,4 @@ describe('PermissionsGuard — integration (real Postgres + Redis)', () => {
     await supertest(app.getHttpServer()).get('/__test__/resource').expect(403);
   });
 });
+
