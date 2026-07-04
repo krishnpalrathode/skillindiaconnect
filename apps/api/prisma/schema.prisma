@@ -413,14 +413,15 @@ model EmployerUser {
 }
 
 model ContactPerson {
-  id          String  @id @default(uuid())
+  id          String   @id @default(uuid())
   companyId   String
   name        String
   designation String?
   phone       String?
   email       String?
-  hasWhatsapp Boolean @default(false)
-  isPrimary   Boolean @default(false)
+  hasWhatsapp Boolean  @default(false)
+  isPrimary   Boolean  @default(false)
+  createdAt   DateTime @default(now())
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   @@map("contact_persons")
 }

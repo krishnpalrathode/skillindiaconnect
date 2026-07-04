@@ -323,18 +323,5 @@ describe('EmployerService â€” integration (real DB)', () => {
     expect(resubmitted.rejectionReason).toBeNull();
   });
 
-  // â”€â”€ getDashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-  it('getDashboard: returns company with zero KPIs (S2 placeholder)', async () => {
-    if (dockerUnavailable) return;
-    const user = await makeEmployerUser();
-    await employerService.register(user.id, BASE_DTO);
-
-    const dashboard = await employerService.getDashboard(user.id);
-    expect(dashboard.company).toBeTruthy();
-    expect(dashboard.kpis.activeJobs).toBe(0);
-    expect(dashboard.recentJobs).toHaveLength(0);
-    expect(dashboard.recentApplicants).toHaveLength(0);
-  });
 });
 

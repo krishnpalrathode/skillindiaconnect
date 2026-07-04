@@ -9,6 +9,7 @@ import {
 import { UserRole } from '@prisma/client';
 import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user.decorator';
 import { EmployerService } from './employer.service';
+import { EmployerDashboardService } from './employer-dashboard.service';
 import { RegisterCompanyDto } from './dto/register-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { PresignCertDto } from './dto/presign-cert.dto';
@@ -20,6 +21,7 @@ import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types'
 export class EmployerController {
   constructor(
     private readonly employerService: EmployerService,
+    private readonly dashboardService: EmployerDashboardService,
     private readonly audit: AuditService,
   ) {}
 
@@ -85,8 +87,7 @@ export class EmployerController {
   @Get('me/dashboard')
   async getDashboard(@CurrentUser() user: CurrentUserPayload) {
     this.assertEmployerRole(user.role);
-    const dashboard = await this.employerService.getDashboard(user.userId);
-    return { data: dashboard };
+    return { data: await this.dashboardService.getDashboard(user.userId) };
   }
 
   private assertEmployerRole(role: UserRole): void {

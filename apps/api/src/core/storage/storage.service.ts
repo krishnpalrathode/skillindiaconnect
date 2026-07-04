@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   S3Client,
   PutObjectCommand,
+  GetObjectCommand,
   HeadObjectCommand,
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
@@ -47,6 +48,12 @@ export class StorageService {
       expiresIn: PRESIGN_EXPIRY_SECONDS,
     });
     return { url, expiresInSeconds: PRESIGN_EXPIRY_SECONDS };
+  }
+
+  /** Generate a presigned GET URL for reading an object (e.g. logo download). */
+  async presignGet(key: string, expiresIn = 3600): Promise<string> {
+    const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
+    return getSignedUrl(this.client, command, { expiresIn });
   }
 
   async headObject(key: string): Promise<{ sizeBytes: number; contentType: string } | null> {

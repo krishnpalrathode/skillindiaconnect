@@ -381,6 +381,67 @@ export class JobsService {
     await this.assertOwnership(job.companyId, userId);
   }
 
+  // ── Cross-module seam: EmployerDashboardService (S3-B1) ───────────────────
+
+  /**
+   * Narrow read for employer dashboard aggregates.
+   * Called by EmployerDashboardService — the Employer module must NOT query
+   * the jobs table directly (module-boundaries.md Rule 4).
+   * Returns at most 5 recent jobs in the JobCard shape.
+   */
+  async getCompanyJobStats(companyId: string): Promise<{
+    activeJobs: number;
+    totalJobViews: number;
+    recentJobs: Array<{
+      id: string;
+      title: string;
+      market: string;
+      location: string;
+      salaryCurrency: string;
+      salaryMin: number | null;
+      salaryMax: number | null;
+      accommodation: boolean;
+      healthInsurance: boolean;
+      transportation: boolean;
+      companyName: string;
+      createdAt: string;
+      publishedAt: string | null;
+      isSaved: null;
+    }>;
+  }> {
+    const [activeJobs, viewsAgg, recentRows] = await Promise.all([
+      this.prisma.job.count({ where: { companyId, status: JobStatus.ACTIVE } }),
+      this.prisma.job.aggregate({ where: { companyId }, _sum: { viewsCount: true } }),
+      this.prisma.job.findMany({
+        where: { companyId },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: { company: { select: { name: true } } },
+      }),
+    ]);
+
+    return {
+      activeJobs,
+      totalJobViews: viewsAgg._sum.viewsCount ?? 0,
+      recentJobs: recentRows.map((j) => ({
+        id: j.id,
+        title: j.title,
+        market: j.market,
+        location: j.location,
+        salaryCurrency: j.currency,
+        salaryMin: j.salaryMin,
+        salaryMax: j.salaryMax,
+        accommodation: j.accommodation,
+        healthInsurance: j.healthInsurance,
+        transportation: j.transportation,
+        companyName: j.company.name,
+        createdAt: j.createdAt.toISOString(),
+        publishedAt: j.publishedAt?.toISOString() ?? null,
+        isSaved: null, // employer dashboard context — not a candidate save action
+      })),
+    };
+  }
+
   /**
    * Pause all ACTIVE jobs for a company (used by the employer.suspended event handler).
    * Reactivation does NOT auto-resume — the employer must manually resume each job.

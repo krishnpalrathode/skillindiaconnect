@@ -161,25 +161,6 @@ export class EmployerService {
     return { id: doc.id, r2Key: doc.r2Key };
   }
 
-  // ── Dashboard (S2 minimal placeholder) ────────────────────────────────────
-
-  async getDashboard(userId: string): Promise<{
-    company: Company;
-    kpis: { activeJobs: number; totalApplications: number; shortlisted: number };
-    recentJobs: unknown[];
-    recentApplicants: unknown[];
-  }> {
-    const company = await this.getCompanyForEmployerUser(userId);
-    // S2: jobs + applications modules don't exist yet.
-    // Returns real company + empty/zero placeholders; S3 fills real KPIs.
-    return {
-      company,
-      kpis: { activeJobs: 0, totalApplications: 0, shortlisted: 0 },
-      recentJobs: [],
-      recentApplicants: [],
-    };
-  }
-
   // ── Cross-module seam (for S2-B5 Jobs) ────────────────────────────────────
 
   /**
