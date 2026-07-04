@@ -1,4 +1,4 @@
-import { Briefcase, Eye, FileText, Info, ShieldAlert, UserCheck } from 'lucide-react';
+import { Briefcase, Eye, FileText, FileWarning, Info, UserCheck } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 
@@ -39,17 +39,22 @@ export const notificationMeta: Record<NotificationType, NotificationMeta> = {
     bgClass: 'bg-warning-bg',
     routeFn: () => '/profile',
   },
+  // Info-tier. Action → the recent-viewers surface on the dashboard (S3-F3).
+  // In-app only by the notification matrix, so no delivery-receipt ever attaches.
   PROFILE_VIEWED: {
     Icon: Eye,
-    colorClass: 'text-primary-600',
-    bgClass: 'bg-primary-50',
-    routeFn: () => '/profile/views',
+    colorClass: 'text-info-fg',
+    bgClass: 'bg-info-bg',
+    routeFn: () => '/dashboard#recent-views',
   },
+  // Warning-tier. Action → the profile Documents section (the re-upload remedy).
+  // Copy (expiring vs expired) comes from the server-rendered title/body — the
+  // frozen Notification contract carries no structured data payload to template.
   PASSPORT_EXPIRY: {
-    Icon: ShieldAlert,
-    colorClass: 'text-error-fg',
-    bgClass: 'bg-error-bg',
-    routeFn: () => '/profile',
+    Icon: FileWarning,
+    colorClass: 'text-warning-fg',
+    bgClass: 'bg-warning-bg',
+    routeFn: () => '/profile#documents',
   },
   SYSTEM: {
     Icon: Info,

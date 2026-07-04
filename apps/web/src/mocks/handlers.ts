@@ -652,7 +652,8 @@ const candidateMeNotifications = http.get(`${BASE}/candidates/me/notifications`,
   const filterMap: Record<string, string[]> = {
     applications: ['APPLICATION_UPDATE'],
     jobs: ['JOB_MATCH'],
-    profile: ['PROFILE_REMINDER', 'DOCUMENT_STATUS'],
+    // S3-F3: PROFILE_VIEWED + PASSPORT_EXPIRY are profile-visibility events.
+    profile: ['PROFILE_REMINDER', 'DOCUMENT_STATUS', 'PROFILE_VIEWED', 'PASSPORT_EXPIRY'],
     system: ['SYSTEM'],
   };
 

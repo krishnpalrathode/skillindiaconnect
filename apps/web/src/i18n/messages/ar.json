@@ -802,8 +802,16 @@
     "kpi": {
       "applied": "الوظائف المُقدَّم عليها",
       "views": "مشاهدات الملف",
+      "viewsCaption": "آخر 30 يوماً",
+      "viewsSrLabel": "{count} مشاهدة للملف، آخر 30 يوماً",
       "shortlisted": "في القائمة المختصرة",
       "updates": "التحديثات"
+    },
+    "recentViews": {
+      "title": "مشاهدات الملف الأخيرة",
+      "emptyTitle": "لا توجد مشاهدات للملف بعد",
+      "emptyBody": "أكمل ملفك ليلاحظك أصحاب العمل.",
+      "emptyCta": "إكمال الملف"
     },
     "recommendedJobs": {
       "title": "الوظائف الموصى بها",

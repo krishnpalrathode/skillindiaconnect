@@ -802,8 +802,16 @@
     "kpi": {
       "applied": "Jobs Applied",
       "views": "Profile Views",
+      "viewsCaption": "last 30 days",
+      "viewsSrLabel": "{count} profile views, last 30 days",
       "shortlisted": "Shortlisted",
       "updates": "Updates"
+    },
+    "recentViews": {
+      "title": "Recent profile views",
+      "emptyTitle": "No profile views yet",
+      "emptyBody": "Complete your profile to get noticed by employers.",
+      "emptyCta": "Complete profile"
     },
     "recommendedJobs": {
       "title": "Recommended Jobs",

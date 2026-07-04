@@ -858,6 +858,25 @@ export const db = {
     [
       'mock-user-candidate-1',
       [
+        // S3-F3: profile-visibility events (server-rendered title/body).
+        {
+          id: 'notif-profile-viewed',
+          type: 'PROFILE_VIEWED',
+          title: 'Your profile was viewed',
+          body: 'Gulf Builders Arabia viewed your profile.',
+          read: false,
+          readAt: null,
+          createdAt: NOW,
+        } satisfies MockNotification,
+        {
+          id: 'notif-passport-expiry',
+          type: 'PASSPORT_EXPIRY',
+          title: 'Passport expiring soon',
+          body: 'Your passport expires in 7 days (11 Jul 2026). Update it to keep applying.',
+          read: false,
+          readAt: null,
+          createdAt: NOW,
+        } satisfies MockNotification,
         {
           id: 'notif-1',
           type: 'APPLICATION_UPDATE',

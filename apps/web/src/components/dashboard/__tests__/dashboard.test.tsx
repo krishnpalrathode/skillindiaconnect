@@ -80,16 +80,31 @@ afterEach(() => {
 // ─── KpiCards ─────────────────────────────────────────────────────────────────
 
 describe('KpiCards', () => {
+  const views = (last30Days: number) => ({ total: last30Days, last30Days, recentViews: [] });
+
   it('renders all four KPI values', () => {
-    render(<KpiCards stats={{ applied: 3, profileViews: 12, shortlisted: 1 }} unreadCount={2} />);
+    render(
+      <KpiCards
+        stats={{ applied: 3, profileViews: 12, shortlisted: 1 }}
+        unreadCount={2}
+        profileViews={views(12)}
+      />,
+    );
     expect(screen.getByText('3')).toBeInTheDocument();
+    // Profile Views now comes from the live last30Days value
     expect(screen.getByText('12')).toBeInTheDocument();
     expect(screen.getByText('1')).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 
   it('renders all four KPI labels', () => {
-    render(<KpiCards stats={{ applied: 0, profileViews: 0, shortlisted: 0 }} unreadCount={0} />);
+    render(
+      <KpiCards
+        stats={{ applied: 0, profileViews: 0, shortlisted: 0 }}
+        unreadCount={0}
+        profileViews={views(0)}
+      />,
+    );
     expect(screen.getByText('Jobs Applied')).toBeInTheDocument();
     expect(screen.getByText('Profile Views')).toBeInTheDocument();
     expect(screen.getByText('Shortlisted')).toBeInTheDocument();
@@ -97,8 +112,14 @@ describe('KpiCards', () => {
   });
 
   it('Updates card links to /en/notifications', () => {
-    render(<KpiCards stats={{ applied: 0, profileViews: 0, shortlisted: 0 }} unreadCount={5} />);
-    const link = screen.getByRole('link');
+    render(
+      <KpiCards
+        stats={{ applied: 0, profileViews: 0, shortlisted: 0 }}
+        unreadCount={5}
+        profileViews={views(0)}
+      />,
+    );
+    const link = screen.getByRole('link', { name: /updates/i });
     expect(link).toHaveAttribute('href', '/en/notifications');
   });
 });
