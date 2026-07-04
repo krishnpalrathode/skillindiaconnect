@@ -58,6 +58,8 @@ export const AUDIT_ACTIONS = {
   EMPLOYER_CONTACT_CREATED: 'employer.contact.created',
   EMPLOYER_CONTACT_UPDATED: 'employer.contact.updated',
   EMPLOYER_CONTACT_DELETED: 'employer.contact.deleted',
+  // Passport expiry cron (S3-B3)
+  PASSPORT_EXPIRY_RUN: 'passport_expiry.run',
 } as const;
 
 export type AuditActionName = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
