@@ -13,6 +13,7 @@ import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user
 import { CandidateService } from './candidate.service';
 import { ExperienceService } from './experience.service';
 import { SkillService } from './skill.service';
+import { ProfileViewsReadService } from './profile-views-read.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { CreateExperienceDto } from './dto/create-experience.dto';
@@ -25,6 +26,7 @@ export class CandidateController {
     private readonly candidateService: CandidateService,
     private readonly experienceService: ExperienceService,
     private readonly skillService: SkillService,
+    private readonly profileViewsReadService: ProfileViewsReadService,
   ) {}
 
   // ─── Profile ──────────────────────────────────────────────────────────────
@@ -47,6 +49,15 @@ export class CandidateController {
   async getCompletion(@CurrentUser() user: CurrentUserPayload) {
     this.candidateService.assertCandidateRole(user.role);
     return { data: await this.candidateService.getCompletion(user.userId) };
+  }
+
+  // ─── Profile views (self — who viewed my profile) ────────────────────────
+
+  @Get('me/profile-views')
+  async getProfileViews(@CurrentUser() user: CurrentUserPayload) {
+    this.candidateService.assertCandidateRole(user.role);
+    const candidateId = await this.candidateService.getCandidateIdByUserId(user.userId);
+    return { data: await this.profileViewsReadService.getSummary(candidateId) };
   }
 
   // ─── Settings ─────────────────────────────────────────────────────────────

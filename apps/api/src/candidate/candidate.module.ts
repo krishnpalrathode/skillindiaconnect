@@ -9,6 +9,7 @@ import { DocumentController } from './document.controller';
 import { DocumentService } from './document.service';
 import { OnboardingController } from './onboarding.controller';
 import { OnboardingService } from './onboarding.service';
+import { ProfileViewsReadService } from './profile-views-read.service';
 import { QueueModule } from '../queue/queue.module';
 
 @Module({
@@ -22,6 +23,8 @@ import { QueueModule } from '../queue/queue.module';
     CompletionService,
     DocumentService,
     OnboardingService,
+    // Split ownership: Employer module writes profile_views; Candidate module reads own rows.
+    ProfileViewsReadService,
   ],
   exports: [
     // CandidateReadService is the seam for cross-module reads.

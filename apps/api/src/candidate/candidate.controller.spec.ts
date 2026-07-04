@@ -5,6 +5,7 @@ import { CandidateController } from './candidate.controller';
 import { CandidateService } from './candidate.service';
 import { ExperienceService } from './experience.service';
 import { SkillService } from './skill.service';
+import { ProfileViewsReadService } from './profile-views-read.service';
 
 const MOCK_CANDIDATE_USER = {
   userId: 'user-1',
@@ -42,6 +43,7 @@ describe('CandidateController', () => {
   >;
   let experienceMock: jest.Mocked<Pick<ExperienceService, 'create' | 'update' | 'remove'>>;
   let skillMock: jest.Mocked<Pick<SkillService, 'create' | 'remove'>>;
+  let profileViewsReadMock: jest.Mocked<Pick<ProfileViewsReadService, 'getSummary'>>;
 
   beforeEach(async () => {
     candidateMock = {
@@ -66,12 +68,17 @@ describe('CandidateController', () => {
       remove: jest.fn().mockResolvedValue(undefined),
     };
 
+    profileViewsReadMock = {
+      getSummary: jest.fn().mockResolvedValue({ total: 0, last30Days: 0, recent: [] }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CandidateController],
       providers: [
         { provide: CandidateService, useValue: candidateMock },
         { provide: ExperienceService, useValue: experienceMock },
         { provide: SkillService, useValue: skillMock },
+        { provide: ProfileViewsReadService, useValue: profileViewsReadMock },
       ],
     }).compile();
 
