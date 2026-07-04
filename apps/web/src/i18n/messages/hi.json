@@ -492,7 +492,13 @@
         "totalApplications": "कुल आवेदन",
         "shortlisted": "शॉर्टलिस्टेड",
         "hired": "इस महीने नियुक्त",
-        "totalJobViews": "कुल नौकरी व्यूज़"
+        "totalJobViews": "कुल नौकरी व्यूज़",
+        "pendingHint": "आवेदन शुरू होने पर उपलब्ध"
+      },
+      "checklist": {
+        "title": "अपनी कंपनी प्रोफ़ाइल पूरी करें",
+        "cta": "प्रोफ़ाइल पर जाएं",
+        "dismiss": "बंद करें"
       },
       "recentJobs": {
         "title": "हाल की नौकरी पोस्टिंग",
@@ -618,6 +624,84 @@
         "langAr": "अरबी",
         "moreSettingsNote": "[hi] Additional notification preferences will be available in a future update.",
         "saveError": "[hi] Failed to save. Please try again."
+      }
+    },
+    "candidates": {
+      "title": "उम्मीदवार",
+      "subtitle": "सत्यापित ब्लू-कॉलर श्रमिकों को ब्राउज़ करें और पूरा विवरण देखने के लिए प्रोफ़ाइल खोलें।",
+      "available": "उपलब्ध",
+      "notAvailable": "अनुपलब्ध",
+      "loadError": "उम्मीदवार लोड नहीं हो सके। कृपया पुनः प्रयास करें।",
+      "loadMoreError": "और उम्मीदवार लोड नहीं हो सके। कृपया पुनः प्रयास करें।",
+      "retry": "पुनः प्रयास करें",
+      "loadMore": "और लोड करें",
+      "approvalGate": {
+        "title": "अनुमोदन प्रतीक्षारत",
+        "body": "आपकी कंपनी प्रोफ़ाइल अनुमोदित होने के बाद आप उम्मीदवार ब्राउज़ कर सकते हैं।",
+        "backToDashboard": "डैशबोर्ड पर वापस"
+      },
+      "empty": {
+        "title": "आपके फ़िल्टर से कोई उम्मीदवार मेल नहीं खाता",
+        "body": "अपने फ़िल्टर को व्यापक करें या खोज साफ़ करें।"
+      },
+      "card": {
+        "srLabel": "{name}, {category}",
+        "experienceYears": "{years, plural, =0 {कोई अनुभव नहीं} one {# वर्ष अनुभव} other {# वर्ष अनुभव}}",
+        "gulfExperience": "गल्फ अनुभव",
+        "skillsLabel": "प्रमुख कौशल"
+      },
+      "filters": {
+        "panelLabel": "उम्मीदवार फ़िल्टर",
+        "search": "खोजें",
+        "searchPlaceholder": "नाम, स्थान या कौशल",
+        "category": "श्रेणी",
+        "allCategories": "सभी श्रेणियाँ",
+        "minExperience": "न्यूनतम अनुभव",
+        "anyExperience": "कोई भी अनुभव",
+        "yearsPlus": "{years}+ वर्ष",
+        "foreignExperience": "गल्फ अनुभव है",
+        "availableNow": "अभी उपलब्ध",
+        "clear": "फ़िल्टर साफ़ करें"
+      },
+      "view": {
+        "back": "वापस",
+        "backToBrowse": "उम्मीदवारों पर वापस",
+        "loading": "प्रोफ़ाइल लोड हो रही है…",
+        "loadError": "यह प्रोफ़ाइल लोड नहीं हो सकी। कृपया पुनः प्रयास करें।",
+        "notFoundTitle": "यह उम्मीदवार प्रोफ़ाइल उपलब्ध नहीं है",
+        "notFoundBody": "इसे हटा दिया गया हो सकता है या अब दृश्यमान नहीं है।",
+        "ageYears": "{age} वर्ष",
+        "memberSince": "{date} से सदस्य",
+        "skillsTitle": "कौशल",
+        "facts": {
+          "title": "विवरण",
+          "nationality": "राष्ट्रीयता",
+          "languages": "भाषाएँ",
+          "noticePeriod": "नोटिस अवधि",
+          "noticeDays": "{days, plural, one {# दिन} other {# दिन}}",
+          "phone": "फ़ोन",
+          "religion": "धर्म"
+        },
+        "timeline": {
+          "title": "कार्य अनुभव",
+          "india": "भारत",
+          "foreign": "गल्फ / विदेश",
+          "years": "{count, plural, one {# वर्ष} other {# वर्ष}}",
+          "months": "{count, plural, one {# माह} other {# माह}}"
+        },
+        "documents": {
+          "title": "दस्तावेज़",
+          "type": {
+            "PASSPORT": "पासपोर्ट",
+            "EXPERIENCE_CERT": "अनुभव प्रमाणपत्र",
+            "EDUCATIONAL_CERT": "शैक्षिक प्रमाणपत्र"
+          },
+          "uploaded": "अपलोड किया गया",
+          "notUploaded": "अपलोड नहीं किया गया",
+          "passportValid": "वैध",
+          "passportExpired": "समाप्त",
+          "proHint": "दस्तावेज़ पहुँच Pro पर उपलब्ध है।"
+        }
       }
     }
   },

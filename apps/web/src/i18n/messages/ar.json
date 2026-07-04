@@ -492,7 +492,13 @@
         "totalApplications": "إجمالي الطلبات",
         "shortlisted": "المرشحون في القائمة المختصرة",
         "hired": "المُوظَّفون هذا الشهر",
-        "totalJobViews": "إجمالي مشاهدات الوظائف"
+        "totalJobViews": "إجمالي مشاهدات الوظائف",
+        "pendingHint": "متاح عند فتح الطلبات"
+      },
+      "checklist": {
+        "title": "أكمل ملف شركتك",
+        "cta": "الذهاب إلى الملف",
+        "dismiss": "إغلاق"
       },
       "recentJobs": {
         "title": "آخر الوظائف المنشورة",
@@ -618,6 +624,84 @@
         "langAr": "العربية",
         "moreSettingsNote": "تفضيلات الإشعارات الإضافية ستكون متاحة في تحديث قادم.",
         "saveError": "فشل الحفظ. يرجى المحاولة مجدداً."
+      }
+    },
+    "candidates": {
+      "title": "المرشحون",
+      "subtitle": "تصفح العمال المهرة الموثّقين وافتح ملفاً لعرض التفاصيل الكاملة.",
+      "available": "متاح",
+      "notAvailable": "غير متاح",
+      "loadError": "تعذّر تحميل المرشحين. يرجى المحاولة مجدداً.",
+      "loadMoreError": "تعذّر تحميل المزيد من المرشحين. يرجى المحاولة مجدداً.",
+      "retry": "إعادة المحاولة",
+      "loadMore": "تحميل المزيد",
+      "approvalGate": {
+        "title": "بانتظار الموافقة",
+        "body": "يمكنك تصفح المرشحين بعد الموافقة على ملف شركتك.",
+        "backToDashboard": "العودة إلى لوحة التحكم"
+      },
+      "empty": {
+        "title": "لا يوجد مرشحون يطابقون عوامل التصفية",
+        "body": "جرّب توسيع عوامل التصفية أو مسح البحث."
+      },
+      "card": {
+        "srLabel": "{name}، {category}",
+        "experienceYears": "{years, plural, =0 {لا خبرة} one {سنة خبرة} two {سنتان خبرة} few {# سنوات خبرة} many {# سنة خبرة} other {# سنوات خبرة}}",
+        "gulfExperience": "خبرة خليجية",
+        "skillsLabel": "أبرز المهارات"
+      },
+      "filters": {
+        "panelLabel": "عوامل تصفية المرشحين",
+        "search": "بحث",
+        "searchPlaceholder": "الاسم أو الموقع أو المهارة",
+        "category": "التصنيف",
+        "allCategories": "جميع التصنيفات",
+        "minExperience": "الحد الأدنى للخبرة",
+        "anyExperience": "أي خبرة",
+        "yearsPlus": "{years}+ سنوات",
+        "foreignExperience": "لديه خبرة خليجية",
+        "availableNow": "متاح الآن",
+        "clear": "مسح عوامل التصفية"
+      },
+      "view": {
+        "back": "رجوع",
+        "backToBrowse": "العودة إلى المرشحين",
+        "loading": "جارٍ تحميل الملف…",
+        "loadError": "تعذّر تحميل هذا الملف. يرجى المحاولة مجدداً.",
+        "notFoundTitle": "ملف هذا المرشح غير متاح",
+        "notFoundBody": "ربما تمت إزالته أو لم يعد ظاهراً.",
+        "ageYears": "{age} سنة",
+        "memberSince": "عضو منذ {date}",
+        "skillsTitle": "المهارات",
+        "facts": {
+          "title": "التفاصيل",
+          "nationality": "الجنسية",
+          "languages": "اللغات",
+          "noticePeriod": "فترة الإشعار",
+          "noticeDays": "{days, plural, zero {# يوم} one {يوم واحد} two {يومان} few {# أيام} many {# يوماً} other {# يوم}}",
+          "phone": "الهاتف",
+          "religion": "الديانة"
+        },
+        "timeline": {
+          "title": "الخبرة العملية",
+          "india": "الهند",
+          "foreign": "الخليج / الخارج",
+          "years": "{count, plural, zero {# سنة} one {سنة} two {سنتان} few {# سنوات} many {# سنة} other {# سنوات}}",
+          "months": "{count, plural, zero {# شهر} one {شهر} two {شهران} few {# أشهر} many {# شهراً} other {# شهر}}"
+        },
+        "documents": {
+          "title": "المستندات",
+          "type": {
+            "PASSPORT": "جواز السفر",
+            "EXPERIENCE_CERT": "شهادة الخبرة",
+            "EDUCATIONAL_CERT": "الشهادة التعليمية"
+          },
+          "uploaded": "تم الرفع",
+          "notUploaded": "لم يتم الرفع",
+          "passportValid": "ساري",
+          "passportExpired": "منتهي",
+          "proHint": "الوصول إلى المستندات متاح في خطة Pro."
+        }
       }
     }
   },

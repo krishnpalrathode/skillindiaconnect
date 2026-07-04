@@ -492,7 +492,13 @@
         "totalApplications": "Total Applications",
         "shortlisted": "Shortlisted",
         "hired": "Hired This Month",
-        "totalJobViews": "Total Job Views"
+        "totalJobViews": "Total Job Views",
+        "pendingHint": "Available once applications open"
+      },
+      "checklist": {
+        "title": "Complete your company profile",
+        "cta": "Go to profile",
+        "dismiss": "Dismiss"
       },
       "recentJobs": {
         "title": "Recent Job Postings",
@@ -618,6 +624,84 @@
         "langAr": "Arabic",
         "moreSettingsNote": "Additional notification preferences will be available in a future update.",
         "saveError": "Failed to save. Please try again."
+      }
+    },
+    "candidates": {
+      "title": "Candidates",
+      "subtitle": "Browse verified blue-collar workers and open a profile to see the full picture.",
+      "available": "Available",
+      "notAvailable": "Unavailable",
+      "loadError": "Couldn't load candidates. Please try again.",
+      "loadMoreError": "Couldn't load more candidates. Please try again.",
+      "retry": "Retry",
+      "loadMore": "Load more",
+      "approvalGate": {
+        "title": "Awaiting approval",
+        "body": "You can browse candidates once your company profile is approved.",
+        "backToDashboard": "Back to dashboard"
+      },
+      "empty": {
+        "title": "No candidates match your filters",
+        "body": "Try widening your filters or clearing the search."
+      },
+      "card": {
+        "srLabel": "{name}, {category}",
+        "experienceYears": "{years, plural, =0 {No experience} one {# yr experience} other {# yrs experience}}",
+        "gulfExperience": "Gulf experience",
+        "skillsLabel": "Top skills"
+      },
+      "filters": {
+        "panelLabel": "Candidate filters",
+        "search": "Search",
+        "searchPlaceholder": "Name, location, or skill",
+        "category": "Category",
+        "allCategories": "All categories",
+        "minExperience": "Minimum experience",
+        "anyExperience": "Any experience",
+        "yearsPlus": "{years}+ years",
+        "foreignExperience": "Has Gulf experience",
+        "availableNow": "Available now",
+        "clear": "Clear filters"
+      },
+      "view": {
+        "back": "Back",
+        "backToBrowse": "Back to candidates",
+        "loading": "Loading profile…",
+        "loadError": "Couldn't load this profile. Please try again.",
+        "notFoundTitle": "This candidate profile isn't available",
+        "notFoundBody": "It may have been removed or is no longer visible.",
+        "ageYears": "{age} years old",
+        "memberSince": "Member since {date}",
+        "skillsTitle": "Skills",
+        "facts": {
+          "title": "Details",
+          "nationality": "Nationality",
+          "languages": "Languages",
+          "noticePeriod": "Notice period",
+          "noticeDays": "{days, plural, one {# day} other {# days}}",
+          "phone": "Phone",
+          "religion": "Religion"
+        },
+        "timeline": {
+          "title": "Work experience",
+          "india": "India",
+          "foreign": "Gulf / Foreign",
+          "years": "{count, plural, one {# yr} other {# yrs}}",
+          "months": "{count, plural, one {# mo} other {# mos}}"
+        },
+        "documents": {
+          "title": "Documents",
+          "type": {
+            "PASSPORT": "Passport",
+            "EXPERIENCE_CERT": "Experience certificate",
+            "EDUCATIONAL_CERT": "Educational certificate"
+          },
+          "uploaded": "Uploaded",
+          "notUploaded": "Not uploaded",
+          "passportValid": "Valid",
+          "passportExpired": "Expired",
+          "proHint": "Document access is available on Pro."
+        }
       }
     }
   },

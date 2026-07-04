@@ -18,3 +18,9 @@ export const JOB_CATEGORIES: JobCategory[] = [
   { id: 'cat-security', labelKey: 'security' },
   { id: 'cat-general', labelKey: 'general' },
 ];
+
+/** Resolve a categoryId to its `jobs.categories.*` label key, or null if unknown. */
+export function jobCategoryLabelKey(id: string | null | undefined): string | null {
+  if (!id) return null;
+  return JOB_CATEGORIES.find((c) => c.id === id)?.labelKey ?? null;
+}

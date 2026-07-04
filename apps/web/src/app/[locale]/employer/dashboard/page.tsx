@@ -13,6 +13,7 @@ import { EmployerKpis } from '@/components/employer/dashboard/EmployerKpis';
 import { RecentJobsTable } from '@/components/employer/dashboard/RecentJobsTable';
 import { RecentApplicants } from '@/components/employer/dashboard/RecentApplicants';
 import { PostFirstJobCta } from '@/components/employer/dashboard/PostFirstJobCta';
+import { ChecklistCard } from '@/components/employer/dashboard/ChecklistCard';
 import type { components } from '@skillindiaconnect/shared-types';
 
 type EmployerDashboard = components['schemas']['EmployerDashboard'];
@@ -140,6 +141,8 @@ export default function EmployerDashboardPage() {
       </div>
 
       <EmployerKpis kpis={dashboard.kpis} />
+
+      <ChecklistCard hint={dashboard.profileChecklist.hint} />
 
       {hasNoJobs && <PostFirstJobCta companyStatus={company.status} />}
 
