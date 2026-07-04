@@ -5,16 +5,12 @@ import { useTranslations } from 'next-intl';
 import { Users } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 
-type CandidateProfile = components['schemas']['CandidateProfile'];
+type CandidateEmployerView = components['schemas']['CandidateEmployerView'];
 
 interface RecentApplicantsProps {
-  applicants: CandidateProfile[];
+  applicants: CandidateEmployerView[];
 }
 
-/**
- * Recent applicants panel. At S2, applications (S4) don't exist so this
- * always renders the empty state — honest placeholder, no fabricated data.
- */
 export function RecentApplicants({ applicants }: RecentApplicantsProps) {
   const t = useTranslations('employer.dashboard.recentApplicants');
 
@@ -55,7 +51,7 @@ export function RecentApplicants({ applicants }: RecentApplicantsProps) {
               </span>
               <div className="min-w-0">
                 <p className="text-sm font-medium text-neutral-900 truncate">
-                  {applicant.fullName ?? applicant.email}
+                  {applicant.fullName}
                 </p>
               </div>
             </li>

@@ -505,10 +505,18 @@ describe('CompanyOnboardingForm — resubmit', () => {
 // ─── EmployerKpis ─────────────────────────────────────────────────────────────
 
 describe('EmployerKpis', () => {
-  it('renders four KPI cards with all-zero values (honest S2 state)', () => {
+  it('renders four KPI cards with all-zero values (honest S3 state)', () => {
     render(
       <WithIntl>
-        <EmployerKpis kpis={{ activeJobs: 0, totalApplications: 0, shortlisted: 0, selected: 0 }} />
+        <EmployerKpis
+          kpis={{
+            activeJobs: 0,
+            totalApplications: 0,
+            shortlisted: 0,
+            totalJobViews: 0,
+            hiredThisMonth: 0,
+          }}
+        />
       </WithIntl>,
     );
     // Four KPI values — all 0
@@ -518,21 +526,27 @@ describe('EmployerKpis', () => {
     expect(screen.getByText(/active jobs/i)).toBeInTheDocument();
     expect(screen.getByText(/total applications/i)).toBeInTheDocument();
     expect(screen.getByText(/shortlisted/i)).toBeInTheDocument();
-    expect(screen.getByText(/hired/i)).toBeInTheDocument();
+    expect(screen.getByText(/total job views/i)).toBeInTheDocument();
   });
 
   it('renders non-zero values from the API response', () => {
     render(
       <WithIntl>
         <EmployerKpis
-          kpis={{ activeJobs: 3, totalApplications: 12, shortlisted: 4, selected: 1 }}
+          kpis={{
+            activeJobs: 3,
+            totalApplications: 12,
+            shortlisted: 4,
+            totalJobViews: 87,
+            hiredThisMonth: 1,
+          }}
         />
       </WithIntl>,
     );
     expect(screen.getByText('3')).toBeInTheDocument();
     expect(screen.getByText('12')).toBeInTheDocument();
     expect(screen.getByText('4')).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument();
+    expect(screen.getByText('87')).toBeInTheDocument();
   });
 });
 

@@ -58,6 +58,32 @@ export interface MockNotification extends Notification {}
 
 export interface MockSetting extends Setting {}
 
+// ─── S3: New mock interfaces ──────────────────────────────────────────────────
+
+export interface MockHiringPreferences {
+  preferredCategories: string[];
+  preferredNationalities: string[];
+  minExperience: number;
+  notes: string;
+}
+
+export interface MockContactPerson {
+  id: string;
+  name: string;
+  role: string;
+  phone?: string;
+  email?: string;
+  isPrimary: boolean;
+  createdAt: string;
+}
+
+export interface MockProfileViewRecord {
+  companyId: string;
+  companyName: string;
+  candidateId: string;
+  viewedAt: string;
+}
+
 // ─── Seeded data ─────────────────────────────────────────────────────────────
 
 const NOW = new Date().toISOString();
@@ -136,7 +162,34 @@ export const db = {
         status: 'SUSPENDED',
       },
     ],
+    // S3: Additional browsable candidate users
+    [
+      'mock-user-candidate-2',
+      {
+        id: 'mock-user-candidate-2',
+        email: 'rajan@example.com',
+        passwordHash: 'hashed-password',
+        role: 'CANDIDATE',
+        status: 'ACTIVE',
+      },
+    ],
+    [
+      'mock-user-candidate-hidden',
+      {
+        id: 'mock-user-candidate-hidden',
+        email: 'hidden@example.com',
+        passwordHash: 'hashed-password',
+        role: 'CANDIDATE',
+        status: 'ACTIVE',
+      },
+    ],
   ]),
+
+  // S3 browsable candidate user IDs
+  // mock-user-candidate-1 = Amir Khan (profileVisible=true, showPhone=true)
+  // NOT_WHATSAPP_CAPABLE_USER_ID = Priya Sharma (profileVisible=true, showPhone=false)
+  // mock-user-candidate-2 = Rajan Patel (profileVisible=true, showReligion=false default)
+  // mock-user-candidate-hidden = Hidden User (profileVisible=false — NEVER in browse)
 
   candidates: new Map<string, MockCandidate>([
     [
@@ -193,6 +246,8 @@ export const db = {
           fullName: 'Priya Sharma',
           whatsappCapable: false,
           completionPct: 30,
+          profileVisible: true,
+          // showPhone toggle is in resumeSettings.showPhone = false (below)
         }),
         resumeSettings: {
           language: 'en',
@@ -204,7 +259,85 @@ export const db = {
         lastRenderedAt: null,
       },
     ],
+    // S3: Rajan Patel — fully visible, showPhone=true, showReligion=false (default)
+    [
+      'mock-user-candidate-2',
+      {
+        userId: 'mock-user-candidate-2',
+        profile: buildProfile('mock-user-candidate-2', 'rajan@example.com', {
+          fullName: 'Rajan Patel',
+          phone: '+919988112233',
+          phoneVerifiedAt: daysAgo(30),
+          whatsappCapable: true,
+          completionPct: 80,
+          nationality: 'Indian',
+          currentLocation: 'Surat, Gujarat',
+          jobCategoryId: 'cat-construction',
+          isAvailable: true,
+          noticePeriod: 30,
+          languages: ['Hindi', 'Gujarati', 'English'],
+          experiences: [
+            {
+              id: 'exp-rajan-1',
+              type: 'INDIA',
+              country: 'India',
+              companyName: 'Patel Construction',
+              role: 'Carpenter',
+              years: 5,
+              months: 0,
+            } satisfies WorkExperience,
+          ],
+          skills: [
+            { id: 'skill-rajan-1', name: 'Carpentry' } satisfies CandidateSkill,
+            { id: 'skill-rajan-2', name: 'Woodwork' } satisfies CandidateSkill,
+          ],
+          documents: [
+            {
+              id: 'doc-rajan-1',
+              type: 'PASSPORT',
+              key: 'uploads/doc-rajan-1/passport.pdf',
+              status: 'VERIFIED',
+              uploadedAt: daysAgo(60),
+              expiryDate: '2029-03-15',
+            } satisfies CandidateDocument,
+          ],
+          profileVisible: true,
+        }),
+        resumeSettings: {
+          language: 'en',
+          showPhone: true,
+          showReligion: false,
+          showFatherName: false,
+          showPassportNumber: false,
+        },
+        lastRenderedAt: null,
+      },
+    ],
+    // S3: Hidden candidate — profileVisible=false, NEVER appears in browse or employer view
+    [
+      'mock-user-candidate-hidden',
+      {
+        userId: 'mock-user-candidate-hidden',
+        profile: buildProfile('mock-user-candidate-hidden', 'hidden@example.com', {
+          fullName: 'Hidden User',
+          completionPct: 50,
+          profileVisible: false,
+        }),
+        resumeSettings: {
+          language: 'en',
+          showPhone: true,
+          showReligion: false,
+          showFatherName: false,
+          showPassportNumber: false,
+        },
+        lastRenderedAt: null,
+      },
+    ],
   ]),
+
+  // S3: Additional candidate users (also add to db.users below)
+  // These are seeded inline — no separate db.users entries needed here;
+  // they're referenced from the candidates map above via userId.
 
   sessions: new Map<string, MockSession>(),
 
@@ -655,6 +788,68 @@ export const db = {
     ],
   ]),
 
+  // ── S3: Hiring preferences (userId → preferences) ─────────────────────────
+  hiringPreferences: new Map<string, MockHiringPreferences>([
+    [
+      'mock-user-employer-1',
+      {
+        preferredCategories: ['cat-construction', 'cat-electrical'],
+        preferredNationalities: ['Indian', 'Nepali'],
+        minExperience: 2,
+        notes: 'Prefer candidates with Gulf experience and valid passport.',
+      },
+    ],
+  ]),
+
+  // ── S3: Contact persons (userId → contacts array) ─────────────────────────
+  contactPersons: new Map<string, MockContactPerson[]>([
+    [
+      'mock-user-employer-1',
+      [
+        {
+          id: 'contact-1',
+          name: 'Rajesh Mehta',
+          role: 'HR Manager',
+          phone: '+971501234567',
+          email: 'rajesh@gulfbuilders.example.com',
+          isPrimary: true,
+          createdAt: PAST_DATE,
+        },
+        {
+          id: 'contact-2',
+          name: 'Fatima Al-Zahra',
+          role: 'Recruitment Lead',
+          phone: '+971509876543',
+          email: 'fatima@gulfbuilders.example.com',
+          isPrimary: false,
+          createdAt: PAST_DATE,
+        },
+      ],
+    ],
+  ]),
+
+  // ── S3: Company logos (userId → R2 logoKey) ────────────────────────────────
+  companyLogos: new Map<string, string>([
+    ['mock-user-employer-1', 'employer-logos/mock-company-1/logo.jpg'],
+  ]),
+
+  // ── S3: Profile views (array of view records for dedup + analytics) ────────
+  // Dedup key: companyId + ':' + candidateId → last viewed ISO string
+  profileViewDedup: new Map<string, string>([
+    // Pre-seeded view: Gulf Builders Arabia viewed Amir Khan 2 days ago
+    [`mock-company-1:mock-user-candidate-1`, daysAgo(2)],
+  ]),
+
+  // Full view records for analytics (newest first)
+  profileViews: [
+    {
+      companyId: 'mock-company-1',
+      companyName: 'Gulf Builders Arabia',
+      candidateId: 'mock-user-candidate-1',
+      viewedAt: daysAgo(2),
+    },
+  ] as MockProfileViewRecord[],
+
   // ── S2: Saved jobs (candidateId → Set of jobIds) ──────────────────────────
   savedJobs: new Map<string, Set<string>>([['mock-user-candidate-1', new Set(['job-1'])]]),
 
@@ -893,6 +1088,104 @@ export function computeCompletion(profile: CandidateProfile) {
   if (!hasPassport) missingForApply.push('Verified passport document required');
 
   return { pct, sections, canApply, missingForApply };
+}
+
+// ─── S3 helpers ───────────────────────────────────────────────────────────────
+
+export function computeProfileChecklist(userId: string): components['schemas']['ProfileChecklist'] {
+  const company = db.employers.get(userId);
+  const contacts = db.contactPersons.get(userId) ?? [];
+  const logo = db.companyLogos.get(userId);
+  const prefs = db.hiringPreferences.get(userId);
+
+  const hasLogo = !!logo;
+  const hasHiringPreferences = !!prefs;
+  const hasSecondContact = contacts.length >= 2;
+  const hasDescription = !!(company?.description && company.description.trim().length > 0);
+
+  let hint: string | null = null;
+  if (!hasLogo) hint = 'Add a company logo to build candidate trust';
+  else if (!hasDescription) hint = 'Add a company description to attract more candidates';
+  else if (!hasHiringPreferences) hint = 'Set your hiring preferences to improve candidate matches';
+  else if (!hasSecondContact) hint = 'Add a second contact person for your profile';
+
+  return { hasLogo, hasHiringPreferences, hasSecondContact, hasDescription, hint };
+}
+
+function getAgeFromDob(dob: string | undefined): number | undefined {
+  if (!dob) return undefined;
+  const birth = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+export function toCandidateEmployerView(
+  mc: MockCandidate,
+): components['schemas']['CandidateEmployerView'] {
+  const p = mc.profile;
+  const showPhone = mc.resumeSettings.showPhone;
+  const showReligion = mc.resumeSettings.showReligion;
+
+  const documentsStatus: components['schemas']['CandidateDocumentStatus'][] = (
+    p.documents ?? []
+  ).map((doc) => {
+    const entry: components['schemas']['CandidateDocumentStatus'] = {
+      type: doc.type,
+      uploaded: true,
+    };
+    if (doc.type === 'PASSPORT') {
+      const expired = doc.expiryDate ? new Date(doc.expiryDate) < new Date() : false;
+      entry.passportValid = !expired;
+    }
+    return entry;
+  });
+
+  const view: components['schemas']['CandidateEmployerView'] = {
+    id: p.id,
+    fullName: p.fullName ?? '',
+    isAvailable: p.isAvailable ?? true,
+    documentsStatus,
+    createdAt: p.createdAt ?? new Date().toISOString(),
+  };
+
+  const age = getAgeFromDob(p.dob);
+  if (age !== undefined) view.age = age;
+  if (showPhone && p.phone) view.phone = p.phone;
+  if (showReligion && p.religion) view.religion = p.religion;
+  if (p.nationality) view.nationality = p.nationality;
+  if (p.currentLocation) view.currentLocation = p.currentLocation;
+  view.jobCategoryId = p.jobCategoryId ?? null;
+  view.noticePeriod = p.noticePeriod;
+  view.languages = p.languages ?? [];
+  view.experiences = p.experiences ?? [];
+  view.skills = p.skills ?? [];
+
+  return view;
+}
+
+export function toCandidateBrowseCard(
+  mc: MockCandidate,
+): components['schemas']['CandidateBrowseCard'] {
+  const p = mc.profile;
+  const experienceYears = (p.experiences ?? []).reduce((sum, e) => sum + (e.years ?? 0), 0);
+  const hasForeignExperience = (p.experiences ?? []).some((e) => e.type === 'FOREIGN');
+  const skills = (p.skills ?? []).slice(0, 3).map((s) => s.name);
+
+  return {
+    id: p.id,
+    fullName: p.fullName ?? '',
+    nationality: p.nationality,
+    currentLocation: p.currentLocation,
+    jobCategoryId: p.jobCategoryId ?? null,
+    experienceYears,
+    skills,
+    hasForeignExperience,
+    isAvailable: p.isAvailable ?? true,
+    createdAt: p.createdAt ?? new Date().toISOString(),
+  };
 }
 
 // ─── S2 Job helpers ───────────────────────────────────────────────────────────

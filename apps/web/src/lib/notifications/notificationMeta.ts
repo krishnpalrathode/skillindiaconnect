@@ -1,4 +1,4 @@
-import { Briefcase, FileText, Info, UserCheck } from 'lucide-react';
+import { Briefcase, Eye, FileText, Info, ShieldAlert, UserCheck } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 
@@ -37,6 +37,18 @@ export const notificationMeta: Record<NotificationType, NotificationMeta> = {
     Icon: FileText,
     colorClass: 'text-warning-fg',
     bgClass: 'bg-warning-bg',
+    routeFn: () => '/profile',
+  },
+  PROFILE_VIEWED: {
+    Icon: Eye,
+    colorClass: 'text-primary-600',
+    bgClass: 'bg-primary-50',
+    routeFn: () => '/profile/views',
+  },
+  PASSPORT_EXPIRY: {
+    Icon: ShieldAlert,
+    colorClass: 'text-error-fg',
+    bgClass: 'bg-error-bg',
     routeFn: () => '/profile',
   },
   SYSTEM: {

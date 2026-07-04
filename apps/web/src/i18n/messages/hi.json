@@ -491,7 +491,8 @@
         "activeJobs": "सक्रिय नौकरियां",
         "totalApplications": "कुल आवेदन",
         "shortlisted": "शॉर्टलिस्टेड",
-        "hired": "इस महीने नियुक्त"
+        "hired": "इस महीने नियुक्त",
+        "totalJobViews": "कुल नौकरी व्यूज़"
       },
       "recentJobs": {
         "title": "हाल की नौकरी पोस्टिंग",

@@ -12,6 +12,9 @@ import {
   computeCompletion,
   toJobCard,
   toJobDetail,
+  computeProfileChecklist,
+  toCandidateEmployerView,
+  toCandidateBrowseCard,
 } from './data';
 import { MOCK_SSR_ORIGIN } from './ssr-origin';
 
@@ -989,12 +992,19 @@ const employersMeDashboard = http.get(`${BASE}/employers/me/dashboard`, ({ reque
   const activeJobs = ownJobs.filter((j) => j.status === 'ACTIVE').length;
 
   const dashboard: components['schemas']['EmployerDashboard'] = {
-    kpis: { activeJobs, totalApplications: 0, shortlisted: 0, selected: 0 },
+    kpis: {
+      activeJobs,
+      totalApplications: 0,
+      shortlisted: 0,
+      totalJobViews: 0,
+      hiredThisMonth: 0,
+    },
     recentJobs: ownJobs
       .filter((j) => j.status === 'ACTIVE')
       .slice(0, 5)
       .map((j) => toJobCard(j, null)),
     recentApplicants: [],
+    profileChecklist: computeProfileChecklist(user.id),
   };
 
   return HttpResponse.json({ data: dashboard });
@@ -1563,6 +1573,374 @@ const adminPatchSettings = http.patch(`${BASE}/admin/settings`, async ({ request
   return HttpResponse.json({ data: db.settings });
 });
 
+// ─── S3: Employer profile handlers ───────────────────────────────────────────
+
+const employersMeProfile = http.get(`${BASE}/employers/me/profile`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+  const company = db.employers.get(user.id);
+  if (!company) return errorResponse(404, 'NOT_FOUND', 'Not found', 'No company profile found.');
+  if (company.status !== 'APPROVED') {
+    return errorResponse(
+      403,
+      'EMPLOYER_NOT_APPROVED',
+      'Employer not approved',
+      'Your company profile is pending admin approval.',
+    );
+  }
+
+  const logoKey = db.companyLogos.get(user.id);
+  const profile: components['schemas']['EmployerProfile'] = {
+    company,
+    hiringPreferences: db.hiringPreferences.get(user.id) ?? undefined,
+    contacts: db.contactPersons.get(user.id) ?? [],
+    logoUrl: logoKey ? `https://mock-r2.example.com/${logoKey}?expires=300` : null,
+    profileChecklist: computeProfileChecklist(user.id),
+  };
+  return HttpResponse.json({ data: profile });
+});
+
+const employersMeProfileHiringPreferencesPatch = http.patch(
+  `${BASE}/employers/me/profile/hiring-preferences`,
+  async ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const company = db.employers.get(user.id);
+    if (!company) return errorResponse(404, 'NOT_FOUND', 'Not found', 'No company profile found.');
+
+    const body = (await request.json()) as components['schemas']['HiringPreferences'];
+    db.hiringPreferences.set(user.id, {
+      preferredCategories: body.preferredCategories ?? [],
+      preferredNationalities: body.preferredNationalities ?? [],
+      minExperience: body.minExperience ?? 0,
+      notes: body.notes ?? '',
+    });
+    return HttpResponse.json({ data: db.hiringPreferences.get(user.id) });
+  },
+);
+
+const employersMeProfileContactsPost = http.post(
+  `${BASE}/employers/me/profile/contacts`,
+  async ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const company = db.employers.get(user.id);
+    if (!company) return errorResponse(404, 'NOT_FOUND', 'Not found', 'No company profile found.');
+
+    const body = (await request.json()) as {
+      name: string;
+      role: string;
+      phone?: string;
+      email?: string;
+      isPrimary: boolean;
+    };
+    if (!body.name || !body.role) {
+      return errorResponse(
+        422,
+        'VALIDATION_ERROR',
+        'Validation failed',
+        'name and role are required.',
+      );
+    }
+
+    const contacts = db.contactPersons.get(user.id) ?? [];
+
+    // Single-primary demotion
+    if (body.isPrimary) {
+      contacts.forEach((c) => {
+        c.isPrimary = false;
+      });
+    }
+
+    const newContact = {
+      id: `contact-${Date.now()}`,
+      name: body.name,
+      role: body.role,
+      phone: body.phone,
+      email: body.email,
+      isPrimary: body.isPrimary ?? false,
+      createdAt: new Date().toISOString(),
+    };
+    contacts.push(newContact);
+    db.contactPersons.set(user.id, contacts);
+
+    return HttpResponse.json({ data: newContact }, { status: 201 });
+  },
+);
+
+const employersMeProfileContactPatch = http.patch(
+  `${BASE}/employers/me/profile/contacts/:id`,
+  async ({ request, params }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const contacts = db.contactPersons.get(user.id) ?? [];
+    const contact = contacts.find((c) => c.id === params.id);
+    if (!contact) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Contact not found.');
+
+    const body = (await request.json()) as Partial<{
+      name: string;
+      role: string;
+      phone: string;
+      email: string;
+      isPrimary: boolean;
+    }>;
+
+    if (body.isPrimary) {
+      contacts.forEach((c) => {
+        c.isPrimary = false;
+      });
+    }
+
+    Object.assign(contact, body);
+    return HttpResponse.json({ data: contact });
+  },
+);
+
+const employersMeProfileContactDelete = http.delete(
+  `${BASE}/employers/me/profile/contacts/:id`,
+  ({ request, params }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const contacts = db.contactPersons.get(user.id) ?? [];
+    const idx = contacts.findIndex((c) => c.id === params.id);
+    if (idx === -1) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Contact not found.');
+
+    contacts.splice(idx, 1);
+    db.contactPersons.set(user.id, contacts);
+    return new HttpResponse(null, { status: 204 });
+  },
+);
+
+const employersMeProfileLogoPresign = http.post(
+  `${BASE}/employers/me/profile/logo/presign`,
+  async ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const body = (await request.json()) as {
+      fileName: string;
+      mimeType: string;
+      sizeBytes: number;
+    };
+    const allowed = ['image/jpeg', 'image/png'];
+    if (!allowed.includes(body.mimeType)) {
+      return errorResponse(
+        422,
+        'INVALID_FILE_TYPE',
+        'Invalid file type',
+        'Only JPEG and PNG logos are accepted.',
+      );
+    }
+    if (body.sizeBytes > 2 * 1024 * 1024) {
+      return errorResponse(
+        422,
+        'FILE_TOO_LARGE',
+        'File too large',
+        'Logo must be 2 MB or smaller.',
+      );
+    }
+
+    const key = `employer-logos/${db.employers.get(user.id)?.id ?? user.id}/${Date.now()}-${body.fileName}`;
+    return HttpResponse.json({
+      data: {
+        uploadUrl: `https://mock-r2.example.com/upload/${key}?presigned=true`,
+        key,
+        expiresInSeconds: 300,
+      },
+    });
+  },
+);
+
+const employersMeProfileLogoConfirm = http.post(
+  `${BASE}/employers/me/profile/logo/confirm`,
+  async ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const company = db.employers.get(user.id);
+    if (!company) return errorResponse(404, 'NOT_FOUND', 'Not found', 'No company profile found.');
+
+    const body = (await request.json()) as { key: string };
+    if (!body.key || body.key === 'invalid-key') {
+      return errorResponse(
+        422,
+        'UPLOAD_NOT_FOUND',
+        'Upload not found',
+        'The uploaded file was not found in storage.',
+      );
+    }
+
+    db.companyLogos.set(user.id, body.key);
+
+    const profile: components['schemas']['EmployerProfile'] = {
+      company,
+      hiringPreferences: db.hiringPreferences.get(user.id) ?? undefined,
+      contacts: db.contactPersons.get(user.id) ?? [],
+      logoUrl: `https://mock-r2.example.com/${body.key}?expires=300`,
+      profileChecklist: computeProfileChecklist(user.id),
+    };
+    return HttpResponse.json({ data: profile });
+  },
+);
+
+// ─── S3: Candidate browse handlers ───────────────────────────────────────────
+
+const employersCandidatesBrowse = http.get(`${BASE}/employers/candidates`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+  const company = db.employers.get(user.id);
+  if (!company) return errorResponse(404, 'NOT_FOUND', 'Not found', 'No company profile found.');
+  if (company.status !== 'APPROVED') {
+    return errorResponse(
+      403,
+      'EMPLOYER_NOT_APPROVED',
+      'Employer not approved',
+      'Your company profile is pending admin approval.',
+    );
+  }
+
+  const url = new URL(request.url);
+  const category = url.searchParams.get('category');
+  const minExp = url.searchParams.get('minExperienceYears');
+  const hasForeign = url.searchParams.get('hasForeignExperience');
+  const availability = url.searchParams.get('availability');
+  const q = url.searchParams.get('q')?.toLowerCase();
+  const cursor = url.searchParams.get('cursor');
+  const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '20', 10), 100);
+
+  let results = [...db.candidates.values()].filter((mc) => mc.profile.profileVisible !== false);
+
+  if (category) results = results.filter((mc) => mc.profile.jobCategoryId === category);
+  if (minExp !== null) {
+    const min = parseInt(minExp, 10);
+    results = results.filter((mc) => {
+      const yrs = (mc.profile.experiences ?? []).reduce((s, e) => s + (e.years ?? 0), 0);
+      return yrs >= min;
+    });
+  }
+  if (hasForeign !== null) {
+    const wantForeign = hasForeign === 'true';
+    results = results.filter((mc) => {
+      const has = (mc.profile.experiences ?? []).some((e) => e.type === 'FOREIGN');
+      return has === wantForeign;
+    });
+  }
+  if (availability !== null) {
+    const wantAvail = availability === 'true';
+    results = results.filter((mc) => (mc.profile.isAvailable ?? true) === wantAvail);
+  }
+  if (q) {
+    results = results.filter((mc) => {
+      const name = (mc.profile.fullName ?? '').toLowerCase();
+      const loc = (mc.profile.currentLocation ?? '').toLowerCase();
+      const skills = (mc.profile.skills ?? []).map((s) => s.name.toLowerCase()).join(' ');
+      return name.includes(q) || loc.includes(q) || skills.includes(q);
+    });
+  }
+
+  const cards = results.map((mc) => toCandidateBrowseCard(mc));
+  return HttpResponse.json(cursorPaginate(cards, cursor, limit));
+});
+
+const employersCandidateView = http.get(
+  `${BASE}/employers/candidates/:id`,
+  ({ request, params }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const company = db.employers.get(user.id);
+    if (!company) return errorResponse(404, 'NOT_FOUND', 'Not found', 'No company profile found.');
+    if (company.status !== 'APPROVED') {
+      return errorResponse(
+        403,
+        'EMPLOYER_NOT_APPROVED',
+        'Employer not approved',
+        'Your company profile is pending admin approval.',
+      );
+    }
+
+    const candidateId = params.id as string;
+    const mc = db.candidates.get(candidateId);
+
+    // profileVisible=false and nonexistent both return identical 404
+    if (!mc || mc.profile.profileVisible === false) {
+      return errorResponse(404, 'NOT_FOUND', 'Not found', 'Candidate not found.');
+    }
+
+    // Record profile view with 24h dedup per (company, candidate)
+    const dedupKey = `${company.id}:${candidateId}`;
+    const lastViewed = db.profileViewDedup.get(dedupKey);
+    const now = new Date();
+    const isNewView =
+      !lastViewed || now.getTime() - new Date(lastViewed).getTime() > 24 * 60 * 60 * 1000;
+
+    if (isNewView) {
+      db.profileViewDedup.set(dedupKey, now.toISOString());
+      const viewRecord = {
+        companyId: company.id,
+        companyName: company.name,
+        candidateId,
+        viewedAt: now.toISOString(),
+      };
+      db.profileViews.unshift(viewRecord);
+
+      // Fire-and-forget PROFILE_VIEWED notification to candidate
+      const notifications = db.notifications.get(candidateId) ?? [];
+      notifications.unshift({
+        id: `notif-pv-${Date.now()}`,
+        type: 'PROFILE_VIEWED',
+        title: 'Your profile was viewed',
+        body: `${company.name} viewed your profile.`,
+        read: false,
+        readAt: null,
+        createdAt: now.toISOString(),
+      } as import('./data').MockNotification);
+      db.notifications.set(candidateId, notifications);
+    }
+
+    return HttpResponse.json({ data: toCandidateEmployerView(mc) });
+  },
+);
+
+// ─── S3: Candidate profile-views handler ─────────────────────────────────────
+
+const candidateMeProfileViews = http.get(`${BASE}/candidates/me/profile-views`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+  const candidateViews = db.profileViews.filter((v) => v.candidateId === user.id);
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const last30Days = candidateViews.filter((v) => new Date(v.viewedAt) >= thirtyDaysAgo).length;
+  const recentViews = candidateViews
+    .slice(0, 20)
+    .map((v) => ({ companyName: v.companyName, viewedAt: v.viewedAt }));
+
+  const summary: components['schemas']['ProfileViewsSummary'] = {
+    total: candidateViews.length,
+    last30Days,
+    recentViews,
+  };
+  return HttpResponse.json({ data: summary });
+});
+
 // ─── Health ───────────────────────────────────────────────────────────────────
 
 const health = http.get('/health', () => {
@@ -1586,7 +1964,6 @@ function notImplemented(sprint: string) {
 }
 
 const stubNotImplemented = [
-  http.get(`${BASE}/employers/candidates/:id`, notImplemented('Sprint 3')),
   http.post(`${BASE}/jobs/:id/apply`, notImplemented('Sprint 4')),
   http.get(`${BASE}/jobs/:id/applicants`, notImplemented('Sprint 4')),
   http.patch(`${BASE}/applications/:id/status`, notImplemented('Sprint 4')),
@@ -1655,6 +2032,19 @@ export const handlers = [
   employersMeCompanyDocumentsConfirm,
   employersMeDashboard,
   employersMeJobs,
+  // S3: Employer profile
+  employersMeProfile,
+  employersMeProfileHiringPreferencesPatch,
+  employersMeProfileContactsPost,
+  employersMeProfileContactPatch,
+  employersMeProfileContactDelete,
+  employersMeProfileLogoPresign,
+  employersMeProfileLogoConfirm,
+  // S3: Candidate browse + view
+  employersCandidatesBrowse,
+  employersCandidateView,
+  // S3: Candidate profile views
+  candidateMeProfileViews,
   // S2: Jobs — public
   getJobs,
   getJobById,

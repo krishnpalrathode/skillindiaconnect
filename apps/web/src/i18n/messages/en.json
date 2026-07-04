@@ -491,7 +491,8 @@
         "activeJobs": "Active Jobs",
         "totalApplications": "Total Applications",
         "shortlisted": "Shortlisted",
-        "hired": "Hired This Month"
+        "hired": "Hired This Month",
+        "totalJobViews": "Total Job Views"
       },
       "recentJobs": {
         "title": "Recent Job Postings",

@@ -53,9 +53,22 @@ export default function EmployerDashboardPage() {
     if (company.status !== 'APPROVED') {
       // Company exists but not approved — dashboard API returns 403; show zeros
       setDashboard({
-        kpis: { activeJobs: 0, totalApplications: 0, shortlisted: 0, selected: 0 },
+        kpis: {
+          activeJobs: 0,
+          totalApplications: 0,
+          shortlisted: 0,
+          totalJobViews: 0,
+          hiredThisMonth: 0,
+        },
         recentJobs: [],
         recentApplicants: [],
+        profileChecklist: {
+          hasLogo: false,
+          hasHiringPreferences: false,
+          hasSecondContact: false,
+          hasDescription: false,
+          hint: null,
+        },
       });
       setLoading(false);
       return;
@@ -69,9 +82,22 @@ export default function EmployerDashboardPage() {
       .catch((err) => {
         if (err instanceof ApiRequestError && err.error.status === 403) {
           setDashboard({
-            kpis: { activeJobs: 0, totalApplications: 0, shortlisted: 0, selected: 0 },
+            kpis: {
+              activeJobs: 0,
+              totalApplications: 0,
+              shortlisted: 0,
+              totalJobViews: 0,
+              hiredThisMonth: 0,
+            },
             recentJobs: [],
             recentApplicants: [],
+            profileChecklist: {
+              hasLogo: false,
+              hasHiringPreferences: false,
+              hasSecondContact: false,
+              hasDescription: false,
+              hint: null,
+            },
           });
         } else {
           setError(t('errorLoad'));
