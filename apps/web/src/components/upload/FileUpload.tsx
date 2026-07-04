@@ -46,6 +46,13 @@ export function FileUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const { state, run, retry, reset } = useUpload(docType, expiryDate);
 
+  // Read the latest onDone from a ref so the transition effect below doesn't
+  // re-fire just because the parent passed a new callback identity on re-render.
+  const onDoneRef = useRef(onDone);
+  React.useEffect(() => {
+    onDoneRef.current = onDone;
+  });
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -58,17 +65,14 @@ export function FileUpload({
     }
 
     await run(file);
-    if (state.status === 'done' && state.document) {
-      onDone?.(state.document.key);
-    }
   };
 
   // Call onDone when status transitions to done
   React.useEffect(() => {
     if (state.status === 'done' && state.document) {
-      onDone?.(state.document.key);
+      onDoneRef.current?.(state.document.key);
     }
-  }, [state.status, state.document, onDone]);
+  }, [state.status, state.document]);
 
   const isActive =
     state.status === 'presigning' || state.status === 'uploading' || state.status === 'confirming';

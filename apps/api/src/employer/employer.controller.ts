@@ -16,7 +16,7 @@ import { ConfirmCertDto } from './dto/confirm-cert.dto';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
 
-@Controller('api/v1/employers')
+@Controller('employers')
 export class EmployerController {
   constructor(
     private readonly employerService: EmployerService,

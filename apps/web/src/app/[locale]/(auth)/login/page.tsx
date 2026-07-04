@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -22,9 +22,17 @@ export default function LoginPage() {
   // candidate back to where they were instead of always landing on /dashboard.
   const next = searchParams.get('next');
 
-  // Already authenticated — redirect to dashboard
+  // Already authenticated — redirect to dashboard.
+  // Must run in an effect, not during render: calling router.replace() while
+  // LoginPage is rendering updates the Router component mid-render, which
+  // React flags as "Cannot update a component while rendering a different component".
+  useEffect(() => {
+    if (user) {
+      router.replace(next || '/dashboard');
+    }
+  }, [user, next, router]);
+
   if (user) {
-    router.replace(next || '/dashboard');
     return null;
   }
 

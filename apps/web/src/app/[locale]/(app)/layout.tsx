@@ -56,11 +56,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const params = useParams<{ locale: string }>();
   const locale = params.locale ?? 'en';
 
+  // /jobs (search + detail) is public — browsable unauthenticated for SEO/guests.
+  // Every other route in this group is candidate-only.
+  const isPublicPath = pathname.includes('/jobs');
+
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!isLoading && !user && !isPublicPath) {
       router.replace(`/${locale}/login`);
     }
-  }, [user, isLoading, router, locale]);
+  }, [user, isLoading, router, locale, isPublicPath]);
+
+  // Guest (or auth still resolving) on a public path: render the page as-is,
+  // no sidebar chrome and no blocking spinner — SSR content must never be
+  // hidden behind a client-only auth gate (see mock-setup.tsx for the same rule).
+  if (isPublicPath && !user) {
+    return <>{children}</>;
+  }
 
   if (isLoading || !user) {
     return (

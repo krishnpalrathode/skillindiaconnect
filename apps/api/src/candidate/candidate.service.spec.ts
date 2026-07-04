@@ -67,6 +67,7 @@ describe('CandidateService', () => {
     candidateProfile: {
       findUnique: jest.Mock;
       create: jest.Mock;
+      upsert: jest.Mock;
       update: jest.Mock;
     };
     jobCategory: { findUnique: jest.Mock };
@@ -82,6 +83,7 @@ describe('CandidateService', () => {
       candidateProfile: {
         findUnique: jest.fn(),
         create: jest.fn(),
+        upsert: jest.fn(),
         update: jest.fn().mockResolvedValue({}),
       },
       jobCategory: { findUnique: jest.fn() },
@@ -120,20 +122,25 @@ describe('CandidateService', () => {
   // â”€â”€ getProfileByUserId â€” lazy creation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('returns existing profile via toSelf mapper', async () => {
-    prismaMock.candidateProfile.findUnique.mockResolvedValue(makeProfile());
+    prismaMock.candidateProfile.upsert.mockResolvedValue(makeProfile());
     const result = await service.getProfileByUserId('user-1');
     expect(result.id).toBe('cand-1');
     expect(result.userId).toBe('user-1');
   });
 
   it('creates an empty profile on first access when none exists', async () => {
-    prismaMock.candidateProfile.findUnique.mockResolvedValue(null);
-    prismaMock.candidateProfile.create.mockResolvedValue(makeProfile({ fullName: '' }));
+    // upsert (not findUnique + create) avoids a create-race between concurrent
+    // first-load requests for the same brand-new user.
+    prismaMock.candidateProfile.upsert.mockResolvedValue(makeProfile({ fullName: '' }));
 
     await service.getProfileByUserId('user-1');
 
-    expect(prismaMock.candidateProfile.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { userId: 'user-1', fullName: '' } }),
+    expect(prismaMock.candidateProfile.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: 'user-1' },
+        create: { userId: 'user-1', fullName: '' },
+        update: {},
+      }),
     );
   });
 
@@ -141,7 +148,7 @@ describe('CandidateService', () => {
 
   it('updates personal-info fields and recomputes completion', async () => {
     const profile = makeProfile();
-    prismaMock.candidateProfile.findUnique
+    prismaMock.candidateProfile.upsert
       .mockResolvedValueOnce(profile) // first call (find or create)
       .mockResolvedValueOnce(makeProfile({ fullName: 'Jane', completionPct: 4 })); // after update
 
@@ -154,7 +161,7 @@ describe('CandidateService', () => {
   });
 
   it('emits PROFILE_UPDATED event after update', async () => {
-    prismaMock.candidateProfile.findUnique.mockResolvedValue(makeProfile());
+    prismaMock.candidateProfile.upsert.mockResolvedValue(makeProfile());
     await service.updateProfile('user-1', { fullName: 'Jane' });
 
     expect(eventEmitterMock.emit).toHaveBeenCalledWith(CANDIDATE_EVENTS.PROFILE_UPDATED, {
@@ -163,7 +170,7 @@ describe('CandidateService', () => {
   });
 
   it('throws 422 INVALID_JOB_CATEGORY for an unknown or inactive jobCategoryId', async () => {
-    prismaMock.candidateProfile.findUnique.mockResolvedValue(makeProfile());
+    prismaMock.candidateProfile.upsert.mockResolvedValue(makeProfile());
     prismaMock.jobCategory.findUnique.mockResolvedValue(null);
 
     await expect(service.updateProfile('user-1', { jobCategoryId: 'bad-id' })).rejects.toThrow(
@@ -172,7 +179,7 @@ describe('CandidateService', () => {
   });
 
   it('throws 422 for an inactive job category', async () => {
-    prismaMock.candidateProfile.findUnique.mockResolvedValue(makeProfile());
+    prismaMock.candidateProfile.upsert.mockResolvedValue(makeProfile());
     prismaMock.jobCategory.findUnique.mockResolvedValue({ isActive: false });
 
     await expect(service.updateProfile('user-1', { jobCategoryId: 'inactive-id' })).rejects.toThrow(
@@ -181,7 +188,7 @@ describe('CandidateService', () => {
   });
 
   it('does not throw when jobCategoryId is undefined (no category check)', async () => {
-    prismaMock.candidateProfile.findUnique.mockResolvedValue(makeProfile());
+    prismaMock.candidateProfile.upsert.mockResolvedValue(makeProfile());
     await expect(service.updateProfile('user-1', { fullName: 'Test' })).resolves.not.toThrow();
     expect(prismaMock.jobCategory.findUnique).not.toHaveBeenCalled();
   });
@@ -209,7 +216,7 @@ describe('CandidateService', () => {
   // â”€â”€ toSelf mapper includes phone/religion regardless of privacy toggles â”€â”€
 
   it('GET me returns phone and religion in self view regardless of show* flags', async () => {
-    prismaMock.candidateProfile.findUnique.mockResolvedValue(
+    prismaMock.candidateProfile.upsert.mockResolvedValue(
       makeProfile({
         phone: '+911234567890',
         religion: 'Hindu',

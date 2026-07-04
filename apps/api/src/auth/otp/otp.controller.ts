@@ -156,6 +156,7 @@ export class OtpController {
 
     const tokens = await this.tokenService.issue(
       user.id,
+      user.email,
       user.role,
       req.ip,
       req.headers['user-agent'],

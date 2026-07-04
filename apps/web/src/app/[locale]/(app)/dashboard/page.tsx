@@ -31,6 +31,8 @@ interface DashboardData {
   recommendedJobs: JobCard[];
 }
 
+const EMPTY_STATS: CandidateStats = { applied: 0, profileViews: 0, shortlisted: 0 };
+
 export default function DashboardPage() {
   const t = useTranslations('dashboard');
   const { user, isLoading: authLoading } = useAuth();
@@ -51,30 +53,52 @@ export default function DashboardPage() {
       return;
     }
 
-    Promise.all([
-      getCandidateProfile(),
-      getCandidateCompletion(),
-      getCandidateStats(),
-      listNotifications({ unread: true, limit: 50 }),
-      searchJobsClient(EMPTY_FILTERS, { limit: 4 }),
-    ])
-      .then(([profile, completion, stats, unreadResult, jobsResult]) => {
+    let redirected = false;
+
+    // /me and /me/completion auto-create an empty profile on first access, so
+    // they never 404 for a brand-new user — the onboarding-vs-dashboard call
+    // has to come from the completion percentage itself (the same
+    // server-computed single-source-of-truth value shown everywhere else),
+    // not from catching a 404.
+    Promise.all([getCandidateProfile(), getCandidateCompletion()])
+      .then(async ([profile, completion]) => {
+        if (completion.pct === 0) {
+          redirected = true;
+          router.replace(`/${locale}/onboarding`);
+          return;
+        }
+
+        // stats/notifications/jobs are independent of the profile-exists
+        // check above and shouldn't take the whole dashboard down if one
+        // fails — notably /me/stats 404s until the Applications module ships.
+        const [statsResult, unreadResult, jobsResult] = await Promise.allSettled([
+          getCandidateStats(),
+          listNotifications({ unread: true, limit: 50 }),
+          searchJobsClient(EMPTY_FILTERS, { limit: 4 }),
+        ]);
+
         setData({
           profile,
           completion,
-          stats,
-          unreadCount: unreadResult.data.length,
-          recommendedJobs: jobsResult.data,
+          stats: statsResult.status === 'fulfilled' ? statsResult.value : EMPTY_STATS,
+          unreadCount: unreadResult.status === 'fulfilled' ? unreadResult.value.data.length : 0,
+          recommendedJobs: jobsResult.status === 'fulfilled' ? jobsResult.value.data : [],
         });
       })
       .catch((err) => {
         if (err instanceof ApiRequestError && err.error.status === 404) {
+          redirected = true;
           router.replace(`/${locale}/onboarding`);
         } else {
           setError('Failed to load dashboard.');
         }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        // Keep the spinner (not the error/empty state) showing while the
+        // onboarding redirect is in flight instead of flashing "Failed to
+        // load dashboard" for a frame.
+        if (!redirected) setLoading(false);
+      });
   }, [user, authLoading, locale, router]);
 
   if (authLoading || loading) {

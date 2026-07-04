@@ -1,35 +1,32 @@
 ﻿'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { postRefresh } from '@/lib/auth/api';
-import { setAccessToken } from '@/lib/api/client';
+import { useAuth } from '@/lib/auth/auth-context';
 
 // OAuth callback page: mounted by the browser after the provider redirects.
 // The backend has already set the httpOnly refresh cookie.
-// We hit /auth/refresh to get an access token, then redirect to dashboard.
+//
+// This page does NOT call postRefresh() itself. AuthProvider's own bootstrap
+// doRefresh() (mounted once at the root layout) already redeems the refresh
+// cookie on mount. Calling postRefresh() a second time here would race it —
+// the refresh-token flow is single-use with reuse-attack detection
+// (token.service.ts), so whichever concurrent call loses the race trips
+// reuse detection and revokes the whole session that the winner just
+// established. We simply wait for that one bootstrap call to resolve.
 export default function OAuthCallbackPage() {
   const t = useTranslations('auth');
   const router = useRouter();
-  const called = useRef(false);
-  const [error, setError] = useState(false);
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    if (called.current) return;
-    called.current = true;
+    if (!isLoading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, isLoading, router]);
 
-    postRefresh()
-      .then((result) => {
-        setAccessToken(result.accessToken);
-        router.replace('/dashboard');
-      })
-      .catch(() => {
-        setError(true);
-      });
-  }, [router]);
-
-  if (error) {
+  if (!isLoading && !user) {
     return (
       <div className="flex flex-col items-center gap-4 text-center">
         <p className="text-neutral-700 font-medium">{t('callbackError')}</p>

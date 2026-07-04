@@ -265,6 +265,7 @@ describe('OtpController', () => {
 
       expect(tokenMock.issue).toHaveBeenCalledWith(
         'user-1',
+        'candidate@example.com',
         UserRole.CANDIDATE,
         '1.2.3.4',
         undefined,

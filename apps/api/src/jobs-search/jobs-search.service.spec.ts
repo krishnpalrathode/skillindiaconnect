@@ -185,7 +185,7 @@ async function createJob(opts: {
       title: opts.title,
       description: opts.description ?? 'Test description',
       status: opts.status ?? JobStatus.ACTIVE,
-      market: opts.market ?? JobMarket.FOREIGN,
+      market: opts.market ?? JobMarket.GULF,
       location: 'Dubai',
       categoryId: opts.categoryId ?? CATEGORY_ID,
       employmentType: EmploymentType.FULL_TIME,
@@ -276,11 +276,11 @@ describe('JobsSearchService (integration)', () => {
   it('market filter narrows results correctly', async () => {
     if (dockerUnavailable) return;
 
-    await createJob({ title: 'Foreign Job', market: JobMarket.FOREIGN });
+    await createJob({ title: 'Foreign Job', market: JobMarket.GULF });
     await createJob({ title: 'Local Job', market: JobMarket.LOCAL });
 
-    const foreignResult = await searchService.search({ market: JobMarket.FOREIGN });
-    expect(foreignResult.data.every((j) => j.market === JobMarket.FOREIGN)).toBe(true);
+    const foreignResult = await searchService.search({ market: JobMarket.GULF });
+    expect(foreignResult.data.every((j) => j.market === JobMarket.GULF)).toBe(true);
     expect(foreignResult.data.every((j) => j.title !== 'Local Job')).toBe(true);
   });
 
@@ -388,7 +388,6 @@ describe('JobsSearchService (integration)', () => {
     expect(keys).not.toContain('archivedAt');
     expect(keys).not.toContain('status');
     expect(keys).not.toContain('searchVector');
-    expect(keys).not.toContain('createdAt');
     expect(keys).not.toContain('updatedAt');
 
     // Company PII must be absent
@@ -412,7 +411,7 @@ describe('JobsSearchService (integration)', () => {
   it('similar jobs: returns ACTIVE jobs in same category or market, excludes the viewed job', async () => {
     if (dockerUnavailable) return;
 
-    const main = await createJob({ title: 'Main Electrician', market: JobMarket.FOREIGN });
+    const main = await createJob({ title: 'Main Electrician', market: JobMarket.GULF });
     const simCat = await createJob({ title: 'Similar by Category', market: JobMarket.LOCAL });
     const simMkt = await createJob({ title: 'Similar by Market', categoryId: CATEGORY_ID });
     await createJob({ title: 'Unrelated', status: JobStatus.ACTIVE, market: JobMarket.LOCAL,

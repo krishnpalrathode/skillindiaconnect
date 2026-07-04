@@ -59,7 +59,7 @@ export class AuthService {
       throw err;
     }
 
-    const tokens = await this.tokenService.issue(user.id, user.role, ip, userAgent);
+    const tokens = await this.tokenService.issue(user.id, user.email, user.role, ip, userAgent);
     return { user, ...tokens };
   }
 
@@ -92,7 +92,7 @@ export class AuthService {
       data: { lastLoginAt: new Date() },
     });
 
-    const tokens = await this.tokenService.issue(user.id, user.role, ip, userAgent);
+    const tokens = await this.tokenService.issue(user.id, user.email, user.role, ip, userAgent);
     return { user: { id: user.id, email: user.email, role: user.role }, ...tokens };
   }
 
@@ -143,7 +143,7 @@ export class AuthService {
       throw new ForbiddenException({ code: 'GOOGLE_NOT_ALLOWED' });
     }
 
-    const tokens = await this.tokenService.issue(user.id, user.role, ip, userAgent);
+    const tokens = await this.tokenService.issue(user.id, user.email, user.role, ip, userAgent);
     return { ...tokens, webAppUrl: this.configService.get<string>('WEB_APP_URL')! };
   }
 }

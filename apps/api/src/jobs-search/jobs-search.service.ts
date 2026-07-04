@@ -163,7 +163,7 @@ export class JobsSearchService {
       // websearch_to_tsquery parses user input without syntax errors (safer than to_tsquery).
       // q is a bound parameter ($N) — never interpolated.
       filters.push(
-        Prisma.sql`(j.search_vector @@ websearch_to_tsquery('english', ${q}) OR similarity(j.title, ${q}) > 0.3)`,
+        Prisma.sql`(j."searchVector" @@ websearch_to_tsquery('english', ${q}) OR similarity(j.title, ${q}) > 0.3)`,
       );
     }
     if (dto.market) {
@@ -174,58 +174,58 @@ export class JobsSearchService {
     }
     if (dto.salaryMin !== undefined) {
       // Salary range overlap: job's max must be >= requested min
-      filters.push(Prisma.sql`j.salary_max >= ${dto.salaryMin}`);
+      filters.push(Prisma.sql`j."salaryMax" >= ${dto.salaryMin}`);
     }
     if (dto.salaryMax !== undefined) {
       // Salary range overlap: job's min must be <= requested max
-      filters.push(Prisma.sql`j.salary_min <= ${dto.salaryMax}`);
+      filters.push(Prisma.sql`j."salaryMin" <= ${dto.salaryMax}`);
     }
     if (dto.currency) {
       filters.push(Prisma.sql`j.currency::text = ${dto.currency}`);
     }
     if (dto.badge === 'featured') {
-      filters.push(Prisma.sql`j.is_featured = true`);
+      filters.push(Prisma.sql`j."isFeatured" = true`);
     } else if (dto.badge === 'urgent') {
-      filters.push(Prisma.sql`j.is_urgent = true`);
+      filters.push(Prisma.sql`j."isUrgent" = true`);
     } else if (dto.badge === 'new') {
-      filters.push(Prisma.sql`j.published_at >= NOW() - INTERVAL '7 days'`);
+      filters.push(Prisma.sql`j."publishedAt" >= NOW() - INTERVAL '7 days'`);
     }
 
     // Keyset cursor WHERE — must match the sort order exactly for stable pagination
     const cursor = dto.cursor ? decodeCursor(dto.cursor) : null;
     if (cursor) {
       if (sortBy === 'relevance' && q && isRelevanceCursor(cursor)) {
-        // ORDER BY ts_rank DESC, published_at DESC, id DESC
+        // ORDER BY ts_rank DESC, publishedAt DESC, id DESC
         // Cursor comparison: next page has smaller (rank, publishedAt, id) tuple
         filters.push(
-          Prisma.sql`(ts_rank(j.search_vector, websearch_to_tsquery('english', ${q})), j.published_at, j.id) < (${cursor.rank}::float4, ${cursor.publishedAt ? new Date(cursor.publishedAt) : null}::timestamptz, ${cursor.id}::uuid)`,
+          Prisma.sql`(ts_rank(j."searchVector", websearch_to_tsquery('english', ${q})), j."publishedAt", j.id) < (${cursor.rank}::float4, ${cursor.publishedAt ? new Date(cursor.publishedAt) : null}::timestamptz, ${cursor.id}::text)`,
         );
       } else if (sortBy === 'salary' && isSalaryCursor(cursor)) {
-        // ORDER BY salary_max DESC, id DESC
+        // ORDER BY salaryMax DESC, id DESC
         filters.push(
-          Prisma.sql`(j.salary_max, j.id) < (${cursor.salaryMax}::int, ${cursor.id}::uuid)`,
+          Prisma.sql`(j."salaryMax", j.id) < (${cursor.salaryMax}::int, ${cursor.id}::text)`,
         );
       } else if ('publishedAt' in cursor && 'id' in cursor) {
-        // ORDER BY published_at DESC, id DESC (recent sort)
+        // ORDER BY publishedAt DESC, id DESC (recent sort)
         filters.push(
-          Prisma.sql`(j.published_at, j.id) < (${(cursor as RecentCursor).publishedAt ? new Date((cursor as RecentCursor).publishedAt!) : null}::timestamptz, ${(cursor as RecentCursor).id}::uuid)`,
+          Prisma.sql`(j."publishedAt", j.id) < (${(cursor as RecentCursor).publishedAt ? new Date((cursor as RecentCursor).publishedAt!) : null}::timestamptz, ${(cursor as RecentCursor).id}::text)`,
         );
       }
     }
 
     // Rank expression — computed in SELECT and ORDER BY (q value bound each time)
     const rankExpr: Prisma.Sql = q
-      ? Prisma.sql`ts_rank(j.search_vector, websearch_to_tsquery('english', ${q}))`
+      ? Prisma.sql`ts_rank(j."searchVector", websearch_to_tsquery('english', ${q}))`
       : Prisma.sql`0::float4`;
 
     // ORDER BY must be TOTAL (unique) to guarantee stable keyset pagination.
     // Adding `id DESC` as the final tiebreaker makes it injective.
     const orderByClause: Prisma.Sql =
       sortBy === 'relevance' && q
-        ? Prisma.sql`${rankExpr} DESC, j.published_at DESC, j.id DESC`
+        ? Prisma.sql`${rankExpr} DESC, j."publishedAt" DESC, j.id DESC`
         : sortBy === 'salary'
-        ? Prisma.raw('j.salary_max DESC, j.id DESC')
-        : Prisma.raw('j.published_at DESC, j.id DESC');
+        ? Prisma.raw('j."salaryMax" DESC, j.id DESC')
+        : Prisma.raw('j."publishedAt" DESC, j.id DESC');
 
     const whereClause = Prisma.join(filters, ' AND ');
 
@@ -233,11 +233,11 @@ export class JobsSearchService {
     const rows = await this.prisma.$queryRaw<RawSearchRow[]>(Prisma.sql`
       SELECT
         j.id,
-        j.published_at AS "publishedAt",
-        j.salary_max   AS "salaryMax",
+        j."publishedAt" AS "publishedAt",
+        j."salaryMax"   AS "salaryMax",
         ${rankExpr}    AS rank
       FROM jobs j
-      LEFT JOIN job_categories jc ON jc.id = j.category_id
+      LEFT JOIN job_categories jc ON jc.id = j."categoryId"
       WHERE ${whereClause}
       ORDER BY ${orderByClause}
       LIMIT ${limit + 1}

@@ -201,7 +201,7 @@ const authGoogleInit = http.get(`${BASE}/auth/google`, () => {
 const authGoogleCallback = http.get(`${BASE}/auth/google/callback`, () => {
   return new HttpResponse(null, {
     status: 302,
-    headers: { Location: '/auth/callback?mock=true' },
+    headers: { Location: '/callback?mock=true' },
   });
 });
 

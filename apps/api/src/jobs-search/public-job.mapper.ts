@@ -31,6 +31,7 @@ export const JOB_CARD_SELECT = {
   isFeatured: true,
   isUrgent: true,
   publishedAt: true,
+  createdAt: true,
   viewsCount: true,
   companyId: true,
   category: {
@@ -73,6 +74,7 @@ export const JOB_DETAIL_SELECT = {
   isFeatured: true,
   isUrgent: true,
   publishedAt: true,
+  createdAt: true,
   viewsCount: true,
   companyId: true,
   description: true,
@@ -141,7 +143,7 @@ export interface JobCard {
   category: PublicCategory;
   salaryMin: number;
   salaryMax: number;
-  currency: Currency;
+  salaryCurrency: Currency;
   accommodation: boolean;
   healthInsurance: boolean;
   transportation: boolean;
@@ -151,7 +153,9 @@ export interface JobCard {
   isFeatured: boolean;
   isUrgent: boolean;
   publishedAt: Date | null;
+  createdAt: Date;
   viewsCount: number;
+  companyName: string;
   company: PublicCompany;
 }
 
@@ -189,7 +193,7 @@ export function toJobCard(job: JobCardData): JobCard {
     },
     salaryMin: job.salaryMin,
     salaryMax: job.salaryMax,
-    currency: job.currency,
+    salaryCurrency: job.currency,
     accommodation: job.accommodation,
     healthInsurance: job.healthInsurance,
     transportation: job.transportation,
@@ -199,7 +203,9 @@ export function toJobCard(job: JobCardData): JobCard {
     isFeatured: job.isFeatured,
     isUrgent: job.isUrgent,
     publishedAt: job.publishedAt,
+    createdAt: job.createdAt,
     viewsCount: job.viewsCount,
+    companyName: job.company.name,
     company: {
       id: job.company.id,
       name: job.company.name,
@@ -226,7 +232,7 @@ export function toJobDetail(job: JobDetailData, similar: JobCard[]): JobDetail {
     },
     salaryMin: job.salaryMin,
     salaryMax: job.salaryMax,
-    currency: job.currency,
+    salaryCurrency: job.currency,
     accommodation: job.accommodation,
     healthInsurance: job.healthInsurance,
     transportation: job.transportation,
@@ -236,7 +242,9 @@ export function toJobDetail(job: JobDetailData, similar: JobCard[]): JobDetail {
     isFeatured: job.isFeatured,
     isUrgent: job.isUrgent,
     publishedAt: job.publishedAt,
+    createdAt: job.createdAt,
     viewsCount: job.viewsCount,
+    companyName: job.company.name,
     description: job.description,
     requirements: job.requirements as string[],
     experienceRequiredYears: job.experienceRequiredYears ?? null,

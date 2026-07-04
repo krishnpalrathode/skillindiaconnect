@@ -23,7 +23,7 @@ function makeCardData(overrides: Partial<JobCardData> = {}): JobCardData {
     id: 'job-1',
     humanId: 'JB-2026-1',
     title: 'Electrician',
-    market: JobMarket.FOREIGN,
+    market: JobMarket.GULF,
     location: 'Dubai',
     employmentType: EmploymentType.FULL_TIME,
     categoryId: 'cat-1',
@@ -93,12 +93,12 @@ describe('toJobCard', () => {
     expect(card.id).toBe('job-1');
     expect(card.humanId).toBe('JB-2026-1');
     expect(card.title).toBe('Electrician');
-    expect(card.market).toBe(JobMarket.FOREIGN);
+    expect(card.market).toBe(JobMarket.GULF);
     expect(card.location).toBe('Dubai');
     expect(card.employmentType).toBe(EmploymentType.FULL_TIME);
     expect(card.salaryMin).toBe(80000);
     expect(card.salaryMax).toBe(120000);
-    expect(card.currency).toBe(Currency.AED);
+    expect(card.salaryCurrency).toBe(Currency.AED);
     expect(card.isFeatured).toBe(false);
     expect(card.isUrgent).toBe(true);
     expect(card.viewsCount).toBe(42);
@@ -142,7 +142,6 @@ describe('toJobCard', () => {
     expect(keys).not.toContain('pausedAt');
     expect(keys).not.toContain('archivedAt');
     expect(keys).not.toContain('status');
-    expect(keys).not.toContain('createdAt');
     expect(keys).not.toContain('updatedAt');
     expect(keys).not.toContain('searchVector');
   });

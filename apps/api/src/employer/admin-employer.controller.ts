@@ -14,7 +14,7 @@ import { EmployerApprovalService } from './employer-approval.service';
 import { RejectCompanyDto } from './dto/reject-company.dto';
 import { ListEmployersDto } from './dto/list-employers.dto';
 
-@Controller('api/v1/admin/employers')
+@Controller('admin/employers')
 export class AdminEmployerController {
   constructor(
     private readonly employerService: EmployerService,
