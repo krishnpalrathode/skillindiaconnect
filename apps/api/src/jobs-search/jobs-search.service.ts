@@ -260,9 +260,13 @@ export class JobsSearchService {
     if (cursor) {
       if (sortBy === 'relevance' && q && isRelevanceCursor(cursor)) {
         // ORDER BY ts_rank DESC, publishedAt DESC, id DESC
-        // Cursor comparison: next page has smaller (rank, publishedAt, id) tuple
+        // Cursor comparison: next page has smaller (rank, publishedAt, id) tuple.
+        // publishedAt is a `timestamp without time zone` column — cast the ISO
+        // cursor string to ::timestamp (naive, TZ-independent), NOT ::timestamptz,
+        // which would force a session-TZ conversion of the column and break
+        // pagination whenever the DB session TZ isn't UTC.
         filters.push(
-          Prisma.sql`(ts_rank(j."searchVector", websearch_to_tsquery('english', ${q})), j."publishedAt", j.id) < (${cursor.rank}::float4, ${cursor.publishedAt ? new Date(cursor.publishedAt) : null}::timestamptz, ${cursor.id}::text)`,
+          Prisma.sql`(ts_rank(j."searchVector", websearch_to_tsquery('english', ${q})), j."publishedAt", j.id) < (${cursor.rank}::float4, ${cursor.publishedAt}::timestamp, ${cursor.id}::text)`,
         );
       } else if (sortBy === 'salary' && isSalaryCursor(cursor)) {
         // ORDER BY salaryMax DESC, id DESC
@@ -270,9 +274,11 @@ export class JobsSearchService {
           Prisma.sql`(j."salaryMax", j.id) < (${cursor.salaryMax}::int, ${cursor.id}::text)`,
         );
       } else if ('publishedAt' in cursor && 'id' in cursor) {
-        // ORDER BY publishedAt DESC, id DESC (recent sort)
+        // ORDER BY publishedAt DESC, id DESC (recent sort). ::timestamp (not
+        // ::timestamptz) to match the naive `timestamp without time zone` column
+        // — avoids TZ-dependent comparison. See relevance branch above.
         filters.push(
-          Prisma.sql`(j."publishedAt", j.id) < (${(cursor as RecentCursor).publishedAt ? new Date((cursor as RecentCursor).publishedAt!) : null}::timestamptz, ${(cursor as RecentCursor).id}::text)`,
+          Prisma.sql`(j."publishedAt", j.id) < (${(cursor as RecentCursor).publishedAt}::timestamp, ${(cursor as RecentCursor).id}::text)`,
         );
       }
     }

@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
-import { DeliveryStatus, Notification, NotificationType, Prisma, UserRole } from '@prisma/client';
+import { DeliveryStatus, NotificationType, Prisma, UserRole } from '@prisma/client';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';

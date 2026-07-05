@@ -228,9 +228,10 @@ describe('JobsService', () => {
 
       const job = await service.create(baseDto(), EMPLOYER_USER_ID, UserRole.EMPLOYER);
 
-      // Raw query because omit excludes searchVector from the ORM return type
+      // Raw query because omit excludes searchVector from the ORM return type.
+      // Column is camelCase (no @map in the schema) — must be quoted in raw SQL.
       const rows = await prismaClient.$queryRaw<Array<{ sv_null: boolean }>>`
-        SELECT (search_vector IS NULL) AS sv_null
+        SELECT ("searchVector" IS NULL) AS sv_null
         FROM jobs
         WHERE id = ${job.id}
       `;
