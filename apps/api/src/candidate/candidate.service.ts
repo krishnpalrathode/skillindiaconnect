@@ -5,7 +5,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { DocumentType, UserRole, WorkExperience } from '@prisma/client';
+import { DocumentType, Prisma, UserRole, WorkExperience } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { CompletionService } from './completion/completion.service';
 import {
@@ -194,50 +194,51 @@ export class CandidateService {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
+  // Concurrent first-load requests for the same brand-new user (e.g.
+  // dashboard's Promise.all across /me and /me/completion) both see "no
+  // profile" and race to create it. Prisma's upsert() is NOT atomic against
+  // this — it still throws P2002 under true concurrency (verified directly:
+  // no native ON CONFLICT here) — so the loser must catch that and re-fetch
+  // the row the winner just created, instead of surfacing a 500.
   private async findOrCreateProfile(userId: string): Promise<CandidateProfileWithRelations> {
-    let profile = await this.prisma.candidateProfile.findUnique({
-      where: { userId },
-      include: {
-        experiences: { orderBy: { createdAt: 'desc' } },
-        skills: { orderBy: { name: 'asc' } },
-      },
-    });
-
-    if (!profile) {
-      profile = await this.prisma.candidateProfile.create({
-        data: { userId, fullName: '' },
-        include: {
-          experiences: { orderBy: { createdAt: 'desc' } },
-          skills: { orderBy: { name: 'asc' } },
-        },
+    const include = {
+      experiences: { orderBy: { createdAt: 'desc' as const } },
+      skills: { orderBy: { name: 'asc' as const } },
+    };
+    try {
+      return await this.prisma.candidateProfile.upsert({
+        where: { userId },
+        create: { userId, fullName: '' },
+        update: {},
+        include,
       });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        return this.prisma.candidateProfile.findUniqueOrThrow({ where: { userId }, include });
+      }
+      throw err;
     }
-
-    return profile;
   }
 
   private async findOrCreateProfileWithDocs(userId: string) {
-    let profile = await this.prisma.candidateProfile.findUnique({
-      where: { userId },
-      include: {
-        experiences: { orderBy: { createdAt: 'desc' } },
-        skills: { orderBy: { name: 'asc' } },
-        documents: { select: { type: true, expiryDate: true } },
-      },
-    });
-
-    if (!profile) {
-      profile = await this.prisma.candidateProfile.create({
-        data: { userId, fullName: '' },
-        include: {
-          experiences: { orderBy: { createdAt: 'desc' } },
-          skills: { orderBy: { name: 'asc' } },
-          documents: { select: { type: true, expiryDate: true } },
-        },
+    const include = {
+      experiences: { orderBy: { createdAt: 'desc' as const } },
+      skills: { orderBy: { name: 'asc' as const } },
+      documents: { select: { type: true, expiryDate: true } },
+    };
+    try {
+      return await this.prisma.candidateProfile.upsert({
+        where: { userId },
+        create: { userId, fullName: '' },
+        update: {},
+        include,
       });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        return this.prisma.candidateProfile.findUniqueOrThrow({ where: { userId }, include });
+      }
+      throw err;
     }
-
-    return profile;
   }
 
   private async getMinCompletionPct(): Promise<number> {

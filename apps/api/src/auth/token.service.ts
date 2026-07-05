@@ -15,6 +15,7 @@ export interface IssuedTokens {
 
 interface AccessTokenPayload {
   sub: string;
+  email: string;
   role: UserRole;
   jti: string;
   type: 'access';
@@ -44,6 +45,7 @@ export class TokenService {
 
   async issue(
     userId: string,
+    email: string,
     role: UserRole,
     ip?: string,
     userAgent?: string,
@@ -56,8 +58,11 @@ export class TokenService {
     const accessJti = randomUUID();
     const sessionId = randomUUID(); // becomes refresh token jti
 
+    // email is included so the frontend can reconstruct UserSummary from the
+    // access token alone on silent refresh (no user object in the refresh
+    // response) — see apps/web/src/lib/auth/auth-context.tsx's decodeToken().
     const accessToken = this.jwtService.sign(
-      { sub: userId, role, jti: accessJti, type: 'access' },
+      { sub: userId, email, role, jti: accessJti, type: 'access' },
       { secret: accessSecret, expiresIn: accessTtl },
     );
 
@@ -131,7 +136,7 @@ export class TokenService {
     });
 
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: session.userId } });
-    return this.issue(user.id, user.role, ip, userAgent);
+    return this.issue(user.id, user.email, user.role, ip, userAgent);
   }
 
   async revokeByToken(refreshToken: string): Promise<void> {

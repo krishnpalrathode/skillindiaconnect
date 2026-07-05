@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+﻿import { http, HttpResponse } from 'msw';
 import type { components } from '@skillindiaconnect/shared-types';
 import {
   db,
@@ -13,10 +13,16 @@ import {
   toJobCard,
   toJobDetail,
 } from './data';
+import { MOCK_SSR_ORIGIN } from './ssr-origin';
 
 type ErrorSchema = components['schemas']['Error'];
 
-const BASE = '/api/v1';
+// Browser and jsdom (vitest) both have a `location` global, so a relative
+// pattern resolves against the current page origin as usual. Node (SSR via
+// instrumentation.ts) has no `location` global — there a relative pattern
+// never matches an absolute fetch() URL, so handlers there must be absolute
+// against a fixed origin that server-fetch.ts dials. See ssr-origin.ts.
+const BASE = typeof location === 'undefined' ? `${MOCK_SSR_ORIGIN}/api/v1` : '/api/v1';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -66,23 +72,32 @@ function offsetPaginate<T>(
   };
 }
 
-function cursorPaginate<T extends { createdAt: string }>(
+function cursorPaginate<T extends { createdAt: string; id?: string }>(
   items: T[],
   cursor: string | null,
   limit: number,
+  options?: {
+    /** Defaults to createdAt descending (original behavior). */
+    compare?: (a: T, b: T) => number;
+    /** Defaults to createdAt. Must be unique per sorted position to dedupe correctly across pages. */
+    cursorKey?: (item: T) => string;
+  },
 ): { data: T[]; nextCursor: string | null } {
-  const sorted = [...items].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
+  const compare =
+    options?.compare ??
+    ((a: T, b: T) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const cursorKey = options?.cursorKey ?? ((item: T) => item.createdAt);
+
+  const sorted = [...items].sort(compare);
   let startIdx = 0;
   if (cursor) {
     const decoded = atob(cursor);
-    const idx = sorted.findIndex((item) => item.createdAt < decoded);
-    startIdx = idx === -1 ? sorted.length : idx;
+    const idx = sorted.findIndex((item) => cursorKey(item) === decoded);
+    startIdx = idx === -1 ? 0 : idx + 1;
   }
   const page = sorted.slice(startIdx, startIdx + limit);
   const nextCursor =
-    startIdx + limit < sorted.length ? btoa(page[page.length - 1]!.createdAt) : null;
+    startIdx + limit < sorted.length ? btoa(cursorKey(page[page.length - 1]!)) : null;
   return { data: page, nextCursor };
 }
 
@@ -186,7 +201,7 @@ const authGoogleInit = http.get(`${BASE}/auth/google`, () => {
 const authGoogleCallback = http.get(`${BASE}/auth/google/callback`, () => {
   return new HttpResponse(null, {
     status: 302,
-    headers: { Location: '/auth/callback?mock=true' },
+    headers: { Location: '/callback?mock=true' },
   });
 });
 
@@ -606,6 +621,18 @@ const candidateCompleteOnboarding = http.post(
   },
 );
 
+// ─── S2: Candidate stats (dashboard KPIs) ────────────────────────────────────
+
+const candidateMeStats = http.get(`${BASE}/candidates/me/stats`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+  return HttpResponse.json({
+    data: { applied: 3, profileViews: 12, shortlisted: 1 },
+  });
+});
+
 // ─── S2: Candidate notifications ─────────────────────────────────────────────
 
 const candidateMeNotifications = http.get(`${BASE}/candidates/me/notifications`, ({ request }) => {
@@ -619,11 +646,19 @@ const candidateMeNotifications = http.get(`${BASE}/candidates/me/notifications`,
   const cursor = url.searchParams.get('cursor');
   const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
 
+  // Mirror the backend FILTER_BUCKETS (apps/api/.../list-notifications.dto.ts).
   const filterMap: Record<string, string[]> = {
-    applications: ['APPLICATION_UPDATE'],
-    jobs: ['JOB_MATCH'],
-    profile: ['PROFILE_REMINDER', 'DOCUMENT_STATUS'],
-    system: ['SYSTEM'],
+    applications: ['APPLICATION_SELECTED', 'APPLICATION_SHORTLISTED', 'APPLICATION_REJECTED'],
+    jobs: ['NEW_JOB_MATCH', 'JOB_CLOSING_SOON', 'CANDIDATE_MATCHES', 'RESUME_SENT'],
+    profile: ['PROFILE_REMINDER', 'PASSPORT_EXPIRY', 'PROFILE_VIEWED'],
+    system: [
+      'EMPLOYER_APPROVED',
+      'EMPLOYER_REJECTED',
+      'EMPLOYER_SUSPENDED',
+      'SUBSCRIPTION_PURCHASED',
+      'SUBSCRIPTION_EXPIRING',
+      'SUBSCRIPTION_EXPIRED',
+    ],
   };
 
   let notifs = db.notifications.get(user.id) ?? [];
@@ -808,6 +843,7 @@ const employersRegister = http.post(`${BASE}/employers/register`, async ({ reque
     website?: string;
     languagePref?: string;
     description?: string;
+    registrationCertKey?: string;
   };
 
   if (!body.name || !body.type || !body.phone || !body.location || !body.employeeRange) {
@@ -827,7 +863,7 @@ const employersRegister = http.post(`${BASE}/employers/register`, async ({ reque
     employeeRange: body.employeeRange as components['schemas']['EmployeeRange'],
     languagePref: (body.languagePref ?? 'en') as 'en' | 'hi' | 'ar',
     description: body.description,
-    registrationCertKey: null,
+    registrationCertKey: body.registrationCertKey ?? null,
     rejectionReason: null,
     createdAt: new Date().toISOString(),
     approvedAt: null,
@@ -867,6 +903,13 @@ const employersMeCompanyPatch = http.patch(`${BASE}/employers/me/company`, async
 
   const body = (await request.json()) as Partial<typeof company>;
   Object.assign(company, body);
+
+  // Resubmit path: auto-transition REJECTED → PENDING so the form
+  // can signal "submitted for review" without a manual admin step.
+  if (company.status === 'REJECTED') {
+    company.status = 'PENDING';
+    company.rejectionReason = null;
+  }
 
   return HttpResponse.json({ data: company });
 });
@@ -1002,8 +1045,10 @@ const getJobs = http.get(`${BASE}/jobs`, ({ request }) => {
   const category = url.searchParams.get('category');
   const salaryMin = url.searchParams.get('salaryMin');
   const salaryMax = url.searchParams.get('salaryMax');
+  const currency = url.searchParams.get('currency');
   const badge = url.searchParams.get('badge');
   const q = url.searchParams.get('q')?.toLowerCase();
+  const sort = url.searchParams.get('sort') ?? 'recent';
   const cursor = url.searchParams.get('cursor');
   const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
 
@@ -1016,6 +1061,7 @@ const getJobs = http.get(`${BASE}/jobs`, ({ request }) => {
   if (category) jobs = jobs.filter((j) => j.categoryId === category);
   if (salaryMin) jobs = jobs.filter((j) => (j.salaryMin ?? 0) >= parseInt(salaryMin, 10));
   if (salaryMax) jobs = jobs.filter((j) => (j.salaryMax ?? Infinity) <= parseInt(salaryMax, 10));
+  if (currency) jobs = jobs.filter((j) => j.salaryCurrency === currency);
   if (badge === 'accommodation') jobs = jobs.filter((j) => j.accommodation);
   if (badge === 'healthInsurance') jobs = jobs.filter((j) => j.healthInsurance);
   if (badge === 'transportation') jobs = jobs.filter((j) => j.transportation);
@@ -1025,10 +1071,25 @@ const getJobs = http.get(`${BASE}/jobs`, ({ request }) => {
     );
 
   const cards = jobs.map((j) => toJobCard(j, savedJobIds));
+
+  // "relevance" has no scoring model yet (no search-rank field in the mock
+  // fixtures) — falls back to recency, same as the default. "salary" sorts
+  // by the top of the posted range, highest first.
+  const compare =
+    sort === 'salary'
+      ? (a: (typeof cards)[number], b: (typeof cards)[number]) =>
+          (b.salaryMax ?? b.salaryMin ?? 0) - (a.salaryMax ?? a.salaryMin ?? 0)
+      : undefined;
+  const cursorKey =
+    sort === 'salary'
+      ? (item: (typeof cards)[number]) => `${item.salaryMax ?? item.salaryMin ?? 0}|${item.id}`
+      : undefined;
+
   const { data, nextCursor } = cursorPaginate(
     cards as ((typeof cards)[0] & { createdAt: string })[],
     cursor,
     limit,
+    { compare, cursorKey },
   );
   return HttpResponse.json({ data, nextCursor });
 });
@@ -1053,9 +1114,24 @@ const getJobById = http.get(`${BASE}/jobs/:id`, ({ request, params }) => {
   return HttpResponse.json({ data: detail });
 });
 
+// ─── S2: Job categories — public enumeration ─────────────────────────────────
+
+const MOCK_JOB_CATEGORIES = [
+  { id: 'cat-carpenter', slug: 'carpenter', nameEn: 'Carpenter', nameHi: null, nameAr: null },
+  { id: 'cat-driver', slug: 'driver', nameEn: 'Driver', nameHi: null, nameAr: null },
+  { id: 'cat-electrician', slug: 'electrician', nameEn: 'Electrician', nameHi: null, nameAr: null },
+  { id: 'cat-mason', slug: 'mason', nameEn: 'Mason', nameHi: null, nameAr: null },
+  { id: 'cat-plumber', slug: 'plumber', nameEn: 'Plumber', nameHi: null, nameAr: null },
+  { id: 'cat-welder', slug: 'welder', nameEn: 'Welder', nameHi: null, nameAr: null },
+];
+
+const getJobCategories = http.get(`${BASE}/job-categories`, () =>
+  HttpResponse.json({ data: MOCK_JOB_CATEGORIES }),
+);
+
 // ─── S2: Jobs — employer CRUD + lifecycle ────────────────────────────────────
 
-const postJobs = http.post(`${BASE}/jobs`, async ({ request }) => {
+const postJobs = http.post(`${BASE}/employers/me/jobs`, async ({ request }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
@@ -1074,7 +1150,8 @@ const postJobs = http.post(`${BASE}/jobs`, async ({ request }) => {
     title: string;
     market: 'GULF' | 'LOCAL';
     location: string;
-    salaryCurrency: string;
+    currency?: string;
+    salaryCurrency?: string;
     accommodation: boolean;
     healthInsurance: boolean;
     transportation: boolean;
@@ -1084,8 +1161,10 @@ const postJobs = http.post(`${BASE}/jobs`, async ({ request }) => {
     return errorResponse(422, 'VALIDATION_ERROR', 'Validation failed', 'Required fields missing.');
   }
 
+  const currency = body.currency ?? body.salaryCurrency ?? 'AED';
   const job = {
     id: `job-${Date.now()}`,
+    humanId: `JB-2026-${db.jobs.size + 1}`,
     title: body.title,
     status: 'DRAFT' as const,
     market: body.market,
@@ -1094,11 +1173,12 @@ const postJobs = http.post(`${BASE}/jobs`, async ({ request }) => {
     categoryId: body.categoryId ?? null,
     salaryMin: body.salaryMin ?? null,
     salaryMax: body.salaryMax ?? null,
-    salaryCurrency: body.salaryCurrency ?? 'AED',
-    accommodation: body.accommodation ?? false,
-    healthInsurance: body.healthInsurance ?? false,
-    transportation: body.transportation ?? false,
-    workConditions: body.workConditions,
+    // Store both keys so public (salaryCurrency) and employer (currency) reads agree.
+    currency,
+    salaryCurrency: currency,
+    accommodation: body.accommodation ?? true,
+    healthInsurance: body.healthInsurance ?? true,
+    transportation: body.transportation ?? true,
     requirements: body.requirements ?? [],
     experienceRequiredYears: body.experienceRequiredYears ?? null,
     vacancies: body.vacancies ?? null,
@@ -1114,7 +1194,7 @@ const postJobs = http.post(`${BASE}/jobs`, async ({ request }) => {
   return HttpResponse.json({ data: job }, { status: 201 });
 });
 
-const patchJobById = http.patch(`${BASE}/jobs/:id`, async ({ request, params }) => {
+const patchJobById = http.patch(`${BASE}/employers/me/jobs/:id`, async ({ request, params }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
@@ -1143,7 +1223,7 @@ const patchJobById = http.patch(`${BASE}/jobs/:id`, async ({ request, params }) 
   return HttpResponse.json({ data: job });
 });
 
-const publishJob = http.post(`${BASE}/jobs/:id/publish`, ({ request, params }) => {
+const publishJob = http.post(`${BASE}/employers/me/jobs/:id/publish`, ({ request, params }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
@@ -1198,7 +1278,7 @@ const publishJob = http.post(`${BASE}/jobs/:id/publish`, ({ request, params }) =
   return HttpResponse.json({ data: job });
 });
 
-const pauseJob = http.post(`${BASE}/jobs/:id/pause`, ({ request, params }) => {
+const pauseJob = http.post(`${BASE}/employers/me/jobs/:id/pause`, ({ request, params }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
@@ -1220,7 +1300,7 @@ const pauseJob = http.post(`${BASE}/jobs/:id/pause`, ({ request, params }) => {
   return HttpResponse.json({ data: job });
 });
 
-const resumeJob = http.post(`${BASE}/jobs/:id/resume`, ({ request, params }) => {
+const resumeJob = http.post(`${BASE}/employers/me/jobs/:id/resume`, ({ request, params }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
@@ -1267,7 +1347,7 @@ const resumeJob = http.post(`${BASE}/jobs/:id/resume`, ({ request, params }) => 
   return HttpResponse.json({ data: job });
 });
 
-const archiveJob = http.post(`${BASE}/jobs/:id/archive`, ({ request, params }) => {
+const archiveJob = http.post(`${BASE}/employers/me/jobs/:id/archive`, ({ request, params }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
@@ -1290,7 +1370,7 @@ const archiveJob = http.post(`${BASE}/jobs/:id/archive`, ({ request, params }) =
   return HttpResponse.json({ data: job });
 });
 
-const duplicateJob = http.post(`${BASE}/jobs/:id/duplicate`, ({ request, params }) => {
+const duplicateJob = http.post(`${BASE}/employers/me/jobs/:id/duplicate`, ({ request, params }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
@@ -1581,7 +1661,8 @@ export const handlers = [
   candidateDocumentsPresign,
   candidateDocumentsConfirm,
   candidateCompleteOnboarding,
-  // S2: Notifications
+  // S2: Stats + Notifications
+  candidateMeStats,
   candidateMeNotifications,
   candidateMeNotificationsRead,
   // Account
@@ -1604,6 +1685,7 @@ export const handlers = [
   // S2: Jobs — public
   getJobs,
   getJobById,
+  getJobCategories,
   // S2: Jobs — employer CRUD + lifecycle
   postJobs,
   patchJobById,

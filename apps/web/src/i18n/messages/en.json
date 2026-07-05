@@ -1,10 +1,10 @@
-{
+﻿{
   "common": {
     "continue": "Continue",
     "back": "Back",
     "save": "Save",
     "cancel": "Cancel",
-    "loading": "Loading…",
+    "loading": "Loadingâ€¦",
     "required": "Required",
     "optional": "Optional",
     "submit": "Submit",
@@ -31,6 +31,7 @@
   },
   "nav": {
     "home": "Home",
+    "dashboard": "Dashboard",
     "profile": "Profile",
     "jobs": "Jobs",
     "applications": "Applications",
@@ -52,44 +53,36 @@
   },
   "auth": {
     "loginTitle": "Log in to SkillIndiaConnect",
-    "loginSubtitle": "Welcome back — continue your journey",
+    "loginSubtitle": "Welcome back â€” continue your journey",
     "signupTitle": "Create your account",
     "signupSubtitle": "Join thousands of workers finding opportunities",
-
     "googleLogin": "Continue with Google",
     "googleSignup": "Sign up with Google",
     "googleCandidateOnly": "Google sign-up is for job seekers only",
-
     "orDivider": "or",
     "tabEmail": "Email",
     "tabPhone": "Phone",
-
     "emailLabel": "Email address",
     "emailPlaceholder": "you@example.com",
     "passwordLabel": "Password",
     "passwordPlaceholder": "Enter your password",
-
     "forgotPassword": "Forgot password?",
     "loginButton": "Log in",
     "signupButton": "Create account",
-
-    "noAccount": "Don't have an account?",
+    "noAccount": "Don\u0027t have an account?",
     "signupLink": "Sign up",
     "hasAccount": "Already have an account?",
     "loginLink": "Log in",
-
     "roleSwitcherLabel": "I am a",
     "roleCandidate": "Job Seeker",
     "roleEmployer": "Employer",
-
     "strength": {
       "weak": "Weak",
       "fair": "Fair",
       "good": "Good",
       "strong": "Strong"
     },
-
-    "termsText": "I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>",
+    "termsText": "I agree to the \u003cterms\u003eTerms of Service\u003c/terms\u003e and \u003cprivacy\u003ePrivacy Policy\u003c/privacy\u003e",
     "mustAcceptTerms": "Please accept the Terms of Service and Privacy Policy to continue",
     "emailTaken": "An account with this email already exists. Try logging in.",
     "invalidEmail": "Please enter a valid email address",
@@ -97,7 +90,6 @@
     "invalidCredentials": "Incorrect email or password",
     "accountSuspended": "Your account has been suspended. Contact support.",
     "genericError": "Something went wrong. Please try again.",
-
     "countryCode": "Code",
     "phoneLabel": "Phone number",
     "phonePlaceholder": "9876543210",
@@ -106,24 +98,20 @@
     "otpSentMessage": "Enter the 6-digit code we sent to your number",
     "invalidOtp": "Invalid or expired OTP. Please try again.",
     "otpRateLimited": "Too many attempts. Please wait before trying again.",
-    "otpDidntGet": "Didn't receive the code?",
+    "otpDidntGet": "Didn\u0027t receive the code?",
     "wrongNumber": "Wrong number",
     "resendCode": "Resend",
-
     "forgotTitle": "Reset your password",
-    "forgotSubtitle": "Enter your email and we'll send a reset link",
+    "forgotSubtitle": "Enter your email and we\u0027ll send a reset link",
     "sendResetEmail": "Send reset email",
     "forgotSentTitle": "Check your inbox",
-    "forgotSentBody": "If an account with that email exists, you'll receive a password reset link shortly.",
+    "forgotSentBody": "If an account with that email exists, you\u0027ll receive a password reset link shortly.",
     "backToLogin": "Back to log in",
     "rateLimited": "Too many requests. Please try again later.",
-
     "callbackError": "Sign-in failed. Please try again.",
-    "signingIn": "Signing you in…",
-
-    "onboardingComingSoon": "Candidate onboarding — coming soon",
-    "employerOnboardingComingSoon": "Employer onboarding — coming soon",
-
+    "signingIn": "Signing you inâ€¦",
+    "onboardingComingSoon": "Candidate onboarding â€” coming soon",
+    "employerOnboardingComingSoon": "Employer onboarding â€” coming soon",
     "phone": "Phone number",
     "phonePlaceholderLegacy": "Enter your phone number",
     "otp": "One-time password",
@@ -140,7 +128,7 @@
     "dateOfBirth": "Date of birth",
     "gender": "Gender",
     "religion": "Religion",
-    "fatherName": "Father's name",
+    "fatherName": "Father\u0027s name",
     "address": "Address",
     "city": "City",
     "state": "State",
@@ -150,11 +138,9 @@
     "skills": "Skills",
     "experience": "Experience",
     "education": "Education",
-
-    "loading": "Loading your profile…",
+    "loading": "Loading your profileâ€¦",
     "loadingError": "Failed to load your profile. Please refresh.",
     "retry": "Retry",
-
     "hero": {
       "changePhoto": "Change photo",
       "photoComingSoon": "Photo upload coming soon",
@@ -162,34 +148,31 @@
       "downloadResume": "Download resume",
       "shareProfile": "Share profile",
       "comingSoon": "Coming soon",
-      "availableForWork": "Active — Available for Work",
+      "availableForWork": "Active â€” Available for Work",
       "notAvailable": "Not currently available",
       "memberSince": "Member since {date}"
     },
-
     "sections": {
       "personalInfo": "Personal Info",
       "workExperience": "Work Experience",
-      "documents": "Documents & Certificates",
+      "documents": "Documents \u0026 Certificates",
       "skills": "Skills",
       "accountSettings": "Account Settings"
     },
-
     "stats": {
       "yearsExperience": "Yrs exp.",
       "skills": "Skills",
       "applications": "Applications",
       "shortlisted": "Shortlisted"
     },
-
     "personalInfo": {
       "phoneLabel": "Mobile number",
       "phoneVerifiedBadge": "Verified",
       "verifyPhoneLink": "Verify phone",
       "nameLabel": "Full name",
       "namePlaceholder": "Your full name",
-      "fatherNameLabel": "Father's name",
-      "fatherNamePlaceholder": "Father's full name",
+      "fatherNameLabel": "Father\u0027s name",
+      "fatherNamePlaceholder": "Father\u0027s full name",
       "dobLabel": "Date of birth",
       "maritalStatusLabel": "Marital status",
       "religionLabel": "Religion",
@@ -204,7 +187,6 @@
       "noticePeriodPlaceholder": "e.g. 30",
       "noticePeriodUnit": "{days} days"
     },
-
     "documents": {
       "count": "{count} / 3 documents uploaded",
       "passport": "Passport",
@@ -221,15 +203,14 @@
       "validUntil": "Valid until {date}",
       "expiredOn": "Expired {date}"
     },
-
     "settings": {
       "privacyHeading": "Privacy Controls",
       "notificationsHeading": "Notifications",
       "salaryHeading": "Salary Expectation",
       "showPhone": "Show phone to employers",
-      "showPhoneHint": "Controls what employers see — you always see your phone here",
+      "showPhoneHint": "Controls what employers see â€” you always see your phone here",
       "showReligion": "Show religion to employers",
-      "showReligionHint": "Controls what employers see — you always see your religion here",
+      "showReligionHint": "Controls what employers see â€” you always see your religion here",
       "waNotifications": "WhatsApp notifications",
       "emailNotifications": "Email notifications",
       "profileVisible": "Profile visible to employers",
@@ -240,7 +221,7 @@
       "salaryMinPlaceholder": "e.g. 25000",
       "salaryMaxPlaceholder": "e.g. 50000",
       "saveSalary": "Save salary",
-      "salaryNote": "Unscored — for matching guidance only"
+      "salaryNote": "Unscored â€” for matching guidance only"
     }
   },
   "document": {
@@ -261,16 +242,16 @@
     "network": "Network error. Please check your connection.",
     "notFound": "Page not found",
     "unauthorized": "Please log in to continue",
-    "forbidden": "You don't have permission to do this"
+    "forbidden": "You don\u0027t have permission to do this"
   },
   "onboarding": {
     "pageTitle": "Complete your profile",
-    "loading": "Loading your profile…",
+    "loading": "Loading your profileâ€¦",
     "stepOf": "Step {current} of {total}",
     "steps": {
       "personalInfo": "Personal Info",
       "workExperience": "Work Experience",
-      "documentsSkills": "Documents & Skills",
+      "documentsSkills": "Documents \u0026 Skills",
       "preview": "Preview"
     },
     "personalInfo": {
@@ -287,7 +268,7 @@
       "languagesPlaceholder": "Type languages separated by commas",
       "jobCategoryLabel": "Job category",
       "phoneVerifyTitle": "Verify your phone",
-      "phoneVerifySubtitle": "We'll send a WhatsApp OTP to confirm your number",
+      "phoneVerifySubtitle": "We\u0027ll send a WhatsApp OTP to confirm your number",
       "phoneLabel": "Mobile number",
       "phonePlaceholder": "9876543210",
       "phoneVerified": "Phone verified",
@@ -318,7 +299,7 @@
       "cancel": "Cancel"
     },
     "documentsSkills": {
-      "title": "Documents & Skills",
+      "title": "Documents \u0026 Skills",
       "subtitle": "Upload your documents and add your skills",
       "passportLabel": "Passport",
       "passportHint": "PDF or image, up to 10 MB",
@@ -346,7 +327,7 @@
       }
     },
     "preview": {
-      "title": "Preview & Export",
+      "title": "Preview \u0026 Export",
       "subtitle": "Review your profile completion and export your resume",
       "completionTitle": "Profile completion",
       "exportTitle": "Export resume",
@@ -354,25 +335,25 @@
       "sendWhatsapp": "Send via WhatsApp",
       "sendEmail": "Send to email",
       "exportComingSoon": "Resume export coming in Sprint 7",
-      "saveAndContinue": "Save & continue to profile",
+      "saveAndContinue": "Save \u0026 continue to profile",
       "videoTitle": "Video introduction",
       "videoComingSoon": "Coming soon"
     },
     "upload": {
       "selectFile": "Select file",
       "changeFile": "Change file",
-      "uploading": "Uploading… {pct}%",
+      "uploading": "Uploadingâ€¦ {pct}%",
       "retryUpload": "Retry upload",
       "uploadComplete": "Uploaded",
       "fileTooLarge": "File is too large",
       "uploadFailed": "Upload failed. Tap to retry.",
-      "dropzoneHint": "Drag & drop or click to select",
+      "dropzoneHint": "Drag \u0026 drop or click to select",
       "maxSize": "Max {size} MB"
     },
     "nav": {
       "back": "Back",
       "next": "Next",
-      "saveAndContinue": "Save & Continue",
+      "saveAndContinue": "Save \u0026 Continue",
       "skipForNow": "Skip for now"
     },
     "maritalStatus": {
@@ -380,6 +361,512 @@
       "MARRIED": "Married",
       "DIVORCED": "Divorced",
       "WIDOWED": "Widowed"
+    }
+  },
+  "employer": {
+    "nav": {
+      "ariaLabel": "Employer navigation",
+      "openSidebar": "Open navigation menu",
+      "closeSidebar": "Close navigation menu",
+      "dashboard": "Dashboard",
+      "postJob": "Post a Job",
+      "postJobPendingHint": "Available after approval",
+      "myJobs": "My Jobs",
+      "candidates": "Candidates",
+      "subscription": "Subscription",
+      "profile": "Company Profile"
+    },
+    "header": {
+      "notifications": "Notifications",
+      "accountMenu": "Account menu",
+      "logout": "Log out"
+    },
+    "banner": {
+      "pendingTitle": "Your company is under review.",
+      "pendingBody": "Verification usually takes up to 24 hours. You can set up your profile now â€” job posting unlocks after approval.",
+      "rejectedTitle": "Company registration rejected.",
+      "rejectedBodyFallback": "Please review your submission and resubmit.",
+      "rejectedAction": "Resubmit registration â†’",
+      "suspendedTitle": "Account suspended.",
+      "suspendedBody": "Please contact support for assistance."
+    },
+    "plan": {
+      "freePlan": "Free Plan",
+      "proPlan": "Pro Plan",
+      "freeHint": "Upgrade for more active jobs",
+      "daysLeft": "{count, plural, one {# day left} other {# days left}}",
+      "upgrade": "Upgrade plan",
+      "manage": "Manage Subscription"
+    },
+    "shell": {
+      "loadingCompany": "Loading companyâ€¦",
+      "errorTitle": "Could not load company profile.",
+      "errorBody": "Please check your connection and try again.",
+      "retry": "Retry"
+    },
+    "login": {
+      "metaTitle": "Employer Login — SkillIndiaConnect",
+      "pageTitle": "Hire Verified Blue-Collar Workers",
+      "pageSubtitle": "Connect with skilled, verified workers across India and the Gulf.",
+      "trustBadge1": "Verified Worker Profiles",
+      "trustBadge2": "Secure Hiring Process",
+      "trustBadge3": "Gulf and Local Markets",
+      "formTitle": "Sign in to your employer account",
+      "emailLabel": "Work email",
+      "emailPlaceholder": "you@company.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "loginButton": "Sign in",
+      "noAccount": "New to SkillIndiaConnect?",
+      "registerLink": "Register your company",
+      "candidateLink": "Looking for a job instead?",
+      "candidateLoginLink": "Candidate login",
+      "invalidCredentials": "Incorrect email or password.",
+      "accountSuspended": "Your account has been suspended. Contact support for assistance.",
+      "genericError": "Something went wrong. Please try again."
+    },
+    "onboarding": {
+      "metaTitle": "Company Setup — SkillIndiaConnect",
+      "pageTitle": "Set up your company profile",
+      "pageSubtitle": "Tell us about your company so we can verify and activate your account.",
+      "resubmitPageTitle": "Resubmit company registration",
+      "resubmitPageSubtitle": "Update your details and resubmit for admin review.",
+      "companyTypeLabel": "Company type",
+      "companyTypeRequired": "Please select a company type",
+      "localTitle": "Local Company",
+      "localDescription": "Registered in India and hiring domestically",
+      "foreignTitle": "Foreign / Gulf Company",
+      "foreignDescription": "Registered outside India and hiring internationally",
+      "nameLabel": "Company name",
+      "namePlaceholder": "Your company legal name",
+      "nameRequired": "Company name is required",
+      "registrationNumberLabel": "Registration number",
+      "registrationNumberPlaceholder": "e.g. U12345MH2020PTC000000",
+      "industryTypeLabel": "Industry type",
+      "industryTypePlaceholder": "Select industry",
+      "phoneLabel": "Company phone",
+      "phonePlaceholder": "+91 98765 43210",
+      "phoneRequired": "Company phone is required",
+      "locationLabel": "Company location",
+      "locationPlaceholder": "City, State or Country",
+      "locationRequired": "Company location is required",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://yourcompany.com",
+      "employeeRangeLabel": "Number of employees",
+      "employeeRangePlaceholder": "Select range",
+      "employeeRangeRequired": "Please select an employee range",
+      "descriptionLabel": "Company description",
+      "descriptionPlaceholder": "Brief description of your company and the types of roles you hire for",
+      "certLabel": "Registration certificate",
+      "certHint": "Upload your company registration certificate (PDF, JPG, or PNG, up to 10 MB). Required for verification.",
+      "certRequired": "Please upload your registration certificate",
+      "submitButton": "Submit for approval",
+      "resubmitButton": "Resubmit for approval",
+      "submitting": "Submitting…",
+      "submitSuccess": "Submitted — our team will verify within 24 hours.",
+      "companyExists": "A company profile already exists for this account.",
+      "validationError": "Please correct the highlighted fields.",
+      "genericError": "Something went wrong. Please try again.",
+      "industries": {
+        "construction": "Construction",
+        "manufacturing": "Manufacturing",
+        "hospitality": "Hospitality",
+        "healthcare": "Healthcare",
+        "retail": "Retail",
+        "logistics": "Logistics and Transport",
+        "agriculture": "Agriculture",
+        "it": "IT and Technology",
+        "security": "Security",
+        "cleaning": "Cleaning and Facility Management",
+        "other": "Other"
+      }
+    },
+    "dashboard": {
+      "metaTitle": "Employer Dashboard — SkillIndiaConnect",
+      "greeting": "Good morning, {name}",
+      "greetingFallback": "Welcome back",
+      "kpi": {
+        "activeJobs": "Active Jobs",
+        "totalApplications": "Total Applications",
+        "shortlisted": "Shortlisted",
+        "hired": "Hired This Month"
+      },
+      "recentJobs": {
+        "title": "Recent Job Postings",
+        "emptyTitle": "No jobs posted yet",
+        "emptyBody": "Post your first job to start receiving applications.",
+        "statusActive": "Active",
+        "statusDraft": "Draft",
+        "statusPaused": "Paused",
+        "statusArchived": "Archived",
+        "columnTitle": "Job Title",
+        "columnStatus": "Status",
+        "columnApplications": "Applications",
+        "columnPosted": "Posted"
+      },
+      "recentApplicants": {
+        "title": "Recent Applicants",
+        "emptyTitle": "No applicants yet",
+        "emptyBody": "Applications will appear here once candidates apply to your jobs."
+      },
+      "postJobCta": {
+        "title": "Post your first job",
+        "body": "Reach thousands of verified blue-collar workers across India and the Gulf.",
+        "button": "Post a Job",
+        "pendingTooltip": "Available after company approval"
+      },
+      "loading": "Loading dashboard…",
+      "errorLoad": "Failed to load dashboard data.",
+      "retry": "Retry"
+    }
+  },
+  "jobs": {
+    "metaTitle": "Find Jobs â€” SkillIndiaConnect",
+    "metaDescription": "Browse thousands of blue-collar jobs in India and the Gulf. Filter by location, salary, and category.",
+    "pageTitle": "Find Jobs",
+    "pageSubtitle": "Explore opportunities across India and the Gulf",
+    "filtersLabel": "Job filters",
+    "searchLabel": "Search jobs",
+    "searchPlaceholder": "Job title or keywordâ€¦",
+    "searchButton": "Search",
+    "marketTabsLabel": "Job market",
+    "tabs": {
+      "all": "All",
+      "local": "India",
+      "foreign": "Gulf"
+    },
+    "filters": {
+      "sort": "Sort:",
+      "category": "Category",
+      "currency": "Currency",
+      "allCurrencies": "All currencies",
+      "salaryRange": "Salary range",
+      "salaryMin": "Minimum salary",
+      "salaryMax": "Maximum salary",
+      "clear": "Clear filters"
+    },
+    "sort": {
+      "recent": "Most recent",
+      "relevance": "Most relevant",
+      "salary": "Highest salary"
+    },
+    "categories": {
+      "construction": "Construction",
+      "electrical": "Electrical",
+      "plumbing": "Plumbing",
+      "welding": "Welding",
+      "driving": "Driving",
+      "housekeeping": "Housekeeping",
+      "hospitality": "Hospitality",
+      "security": "Security",
+      "general": "General Labour"
+    },
+    "resultCount": "{count, plural, one {# job found} other {# jobs found}}",
+    "resultsLabel": "Job search results",
+    "empty": {
+      "title": "No jobs found",
+      "body": "Try adjusting your filters or search for something else."
+    },
+    "loadMore": "Load more jobs",
+    "loadMoreError": "Failed to load more jobs.",
+    "retry": "Retry",
+    "card": {
+      "viewDetails": "View details",
+      "save": "Save job",
+      "unsave": "Saved",
+      "newBadge": "New",
+      "marketGulf": "Gulf",
+      "marketLocal": "India"
+    },
+    "benefits": {
+      "pf": "PF",
+      "bonus": "Bonus",
+      "esi": "ESI",
+      "accommodation": "Accommodation",
+      "transport": "Transport",
+      "food": "Food",
+      "listLabel": "Included benefits"
+    },
+    "detail": {
+      "applyNow": "Apply Now",
+      "profileNudge": "Complete your profile to improve your application and match score before applying.",
+      "description": "Job Description",
+      "jobDetails": "Job Details",
+      "experience": "Experience",
+      "experienceYears": "{count, plural, one {# year} other {# years}}",
+      "vacancies": "Vacancies",
+      "genderPreference": "Gender preference",
+      "gender": {
+        "MALE": "Male",
+        "FEMALE": "Female"
+      },
+      "workConditions": "Working Conditions",
+      "requirements": "Requirements",
+      "aboutCompany": "About the Company",
+      "viewCompanyProfile": "View company jobs â†’",
+      "similarJobs": "Similar Jobs",
+      "notFoundTitle": "Job not found",
+      "notFoundBody": "This job may have been filled or removed.",
+      "backToJobs": "Back to jobs"
+    }
+  },
+  "dashboard": {
+    "metaTitle": "My Dashboard â€” SkillIndiaConnect",
+    "pageTitle": "Dashboard",
+    "greeting": "Hello, {name}",
+    "kpi": {
+      "applied": "Jobs Applied",
+      "views": "Profile Views",
+      "shortlisted": "Shortlisted",
+      "updates": "Updates"
+    },
+    "recommendedJobs": {
+      "title": "Recommended Jobs",
+      "empty": "No recommendations yet. Complete your profile to get matches.",
+      "viewAll": "Browse all jobs â†’"
+    },
+    "myApplications": {
+      "title": "My Applications",
+      "coming": "Application tracking coming soon."
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "completeProfile": "Complete Profile",
+      "browseJobs": "Browse Jobs",
+      "viewNotifications": "View Notifications"
+    },
+    "profileSummary": {
+      "completion": "{pct}% complete",
+      "completeNow": "Complete now â†’"
+    }
+  },
+  "notifications": {
+    "metaTitle": "Notifications â€” SkillIndiaConnect",
+    "pageTitle": "Notifications",
+    "empty": {
+      "all": "You have no notifications yet.",
+      "filter": "No notifications in this category.",
+      "unread": "No unread notifications."
+    },
+    "markAllRead": "Mark all as read",
+    "markRead": "Mark as read",
+    "loadMore": "Load more",
+    "loading": "Loading notificationsâ€¦",
+    "errorLoad": "Failed to load notifications.",
+    "retry": "Retry",
+    "filters": {
+      "all": "All",
+      "applications": "Applications",
+      "jobs": "Jobs",
+      "profile": "Profile",
+      "system": "System",
+      "unreadOnly": "Unread only"
+    },
+    "types": {
+      "APPLICATION_UPDATE": "Application Update",
+      "JOB_MATCH": "Job Match",
+      "PROFILE_REMINDER": "Profile Reminder",
+      "DOCUMENT_STATUS": "Document Status",
+      "SYSTEM": "System"
+    },
+    "dateGroups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisWeek": "This Week",
+      "older": "Older"
+    }
+  },
+  "jobform": {
+    "createFormLabel": "Create job posting form",
+    "editFormLabel": "Edit job posting form",
+    "createPage": {
+      "title": "Post a Job",
+      "subtitle": "Fill in the details below. Your live preview updates as you type."
+    },
+    "editPage": {
+      "title": "Edit Job",
+      "subtitle": "Update your job posting.",
+      "loading": "Loading job…",
+      "loadError": "Failed to load job. Please refresh.",
+      "notFound": "Job not found.",
+      "archivedNotice": "Archived jobs cannot be edited. Duplicate to create a new draft.",
+      "back": "Go back",
+      "backToJobs": "Back to My Jobs"
+    },
+    "approvalGate": {
+      "title": "Company approval required",
+      "body": "Job posting is unlocked once your company is approved by our team. You can save your draft and post it after approval.",
+      "backToDashboard": "Back to Dashboard"
+    },
+    "basic": {
+      "heading": "Basic Information",
+      "subtitle": "Tell candidates about the role and where it is.",
+      "titleLabel": "Job title",
+      "titlePlaceholder": "e.g. Experienced Mason, Senior Electrician",
+      "marketLabel": "Market",
+      "marketGulf": "Gulf (International)",
+      "marketLocal": "Local (India)",
+      "locationLabel": "Location",
+      "locationPlaceholder": "e.g. Dubai, UAE or Mumbai, India"
+    },
+    "description": {
+      "heading": "Job Description",
+      "subtitle": "Describe the role, responsibilities, and ideal candidate.",
+      "placeholder": "Describe the position, day-to-day responsibilities, and what makes this a great opportunity…",
+      "charsLeft": "characters remaining"
+    },
+    "compensation": {
+      "heading": "Compensation",
+      "subtitle": "Set the salary range and currency for this role.",
+      "currencyLabel": "Currency",
+      "salaryMinLabel": "Minimum salary",
+      "salaryMaxLabel": "Maximum salary",
+      "salaryMinPlaceholder": "e.g. 1200",
+      "salaryMaxPlaceholder": "e.g. 1800",
+      "salaryHint": "Per month in {currency}. Leave blank if not disclosing salary."
+    },
+    "benefits": {
+      "heading": "Benefits",
+      "subtitle": "Mandatory benefits are required by platform policy. Optional benefits attract more candidates.",
+      "policyTitle": "Worker Protection Policy",
+      "policyBody": "All jobs on SkillIndiaConnect must include Accommodation, Health Insurance, and Transportation. These are required by platform policy and government labour law.",
+      "mandatoryLabel": "Mandatory (required by platform policy)",
+      "optionalLabel": "Optional benefits",
+      "accommodation": "Accommodation",
+      "accommodationHint": "Employer provides or arranges housing for the worker.",
+      "healthInsurance": "Health Insurance",
+      "healthInsuranceHint": "Employer provides health insurance coverage.",
+      "transportation": "Transportation",
+      "transportationHint": "Employer provides transport to and from the worksite.",
+      "foodAllowance": "Food Allowance",
+      "airTickets": "Air Tickets (Arrival & Departure)",
+      "otherAllowance": "Other Allowance",
+      "otherAllowancePlaceholder": "e.g. Uniform provided, annual bonus…",
+      "optional": "Optional"
+    },
+    "requirements": {
+      "heading": "Requirements",
+      "subtitle": "List the qualifications and skills candidates must have.",
+      "listLabel": "Requirements list",
+      "emptyHint": "No requirements added yet. Add at least one to help candidates self-qualify.",
+      "addPlaceholder": "e.g. 3+ years experience, Valid passport",
+      "addAriaLabel": "New requirement",
+      "addButton": "Add",
+      "removeAriaLabel": "Remove: {item}",
+      "countHint": "{count} of {max} requirements added"
+    },
+    "conditions": {
+      "heading": "Work Conditions",
+      "subtitle": "Share working hours, contract period, and other conditions.",
+      "workConditionsLabel": "Working conditions",
+      "workConditionsHint": "e.g. 8 hours/day, 6 days/week. All PPE provided.",
+      "workConditionsPlaceholder": "Describe hours, schedule, contract period, and any other conditions…",
+      "experienceLabel": "Experience required (years)",
+      "experienceHint": "Enter 0 for no experience required",
+      "vacanciesLabel": "Number of vacancies",
+      "vacanciesHint": "How many workers are you hiring for this role?",
+      "genderPreferenceLabel": "Gender preference",
+      "genderPreferenceHint": "Select “No preference” if open to all",
+      "genderAny": "No preference",
+      "genderMale": "Male",
+      "genderFemale": "Female"
+    },
+    "preview": {
+      "heading": "Live Preview",
+      "subtitle": "How your job will appear to candidates.",
+      "panelLabel": "Live job preview",
+      "liveRegionLabel": "Live job preview updates as you fill in the form",
+      "justPosted": "Just posted",
+      "viewDetails": "View details",
+      "previewNote": "Preview may differ slightly from the published listing."
+    },
+    "publishErrors": {
+      "notApprovedTitle": "Company approval required",
+      "notApprovedBody": "Your company profile is awaiting admin approval. You can save a draft and publish once approved.",
+      "protectionTitle": "Worker protection violation",
+      "protectionBody": "This job cannot be published because the following required benefits are missing:",
+      "violationAccommodation": "Accommodation",
+      "violationHealthInsurance": "Health Insurance",
+      "violationTransportation": "Transportation",
+      "quotaTitle": "Active job limit reached ({limit} job)",
+      "quotaBody": "Your Free plan allows 1 active job at a time. Archive or pause your existing active job to publish another, or upgrade to Pro for unlimited active jobs.",
+      "quotaUpgradeLink": "Upgrade to Pro",
+      "genericTitle": "Failed to publish",
+      "dismiss": "Dismiss"
+    },
+    "actions": {
+      "saveDraft": "Save as Draft",
+      "saving": "Saving…",
+      "saved": "Saved ✓",
+      "draftError": "Failed to save draft. Please try again.",
+      "publish": "Post Job",
+      "publishing": "Publishing…"
+    }
+  },
+  "myjobs": {
+    "pageTitle": "My Jobs",
+    "pageSubtitle": "Manage your job postings.",
+    "postNewJob": "Post a New Job",
+    "postFirstJob": "Post Your First Job",
+    "publishSuccess": "Job published successfully! It is now live for candidates.",
+    "searchLabel": "Search jobs",
+    "searchPlaceholder": "Search by job title…",
+    "statusFilterLabel": "Filter by status",
+    "tableLabel": "My job postings",
+    "loading": "Loading jobs…",
+    "loadError": "Failed to load jobs. Please try again.",
+    "retry": "Retry",
+    "emptyTitle": "No jobs yet",
+    "emptyBody": "Post your first job to start receiving applications.",
+    "draftNotPosted": "Draft",
+    "marketGulf": "Gulf",
+    "marketLocal": "India",
+    "applicationsPlaceholder": "0 applications (S4)",
+    "pageInfo": "Page {page} of {totalPages}",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "prev": "Previous",
+    "next": "Next",
+    "tabs": {
+      "all": "All",
+      "active": "Active",
+      "paused": "Paused",
+      "draft": "Drafts",
+      "archived": "Archived"
+    },
+    "col": {
+      "title": "Job Title",
+      "market": "Market",
+      "status": "Status",
+      "applications": "Applications",
+      "posted": "Posted",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "draft": "Draft",
+      "paused": "Paused",
+      "archived": "Archived"
+    },
+    "actions": {
+      "groupLabel": "Actions for {title}",
+      "view": "View",
+      "viewLabel": "View listing: {title}",
+      "edit": "Edit",
+      "editLabel": "Edit job: {title}",
+      "publish": "Publish",
+      "publishLabel": "Publish job: {title}",
+      "pause": "Pause",
+      "pauseLabel": "Pause job: {title}",
+      "resume": "Resume",
+      "resumeLabel": "Resume job: {title}",
+      "duplicate": "Duplicate",
+      "duplicateLabel": "Duplicate job: {title}",
+      "archive": "Archive",
+      "archiveLabel": "Archive job: {title}",
+      "repostAsDraft": "Repost as Draft"
     }
   }
 }

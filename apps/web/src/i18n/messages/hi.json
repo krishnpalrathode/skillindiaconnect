@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "continue": "[hi] Continue",
     "back": "[hi] Back",
@@ -31,6 +31,7 @@
   },
   "nav": {
     "home": "[hi] Home",
+    "dashboard": "डैशबोर्ड",
     "profile": "[hi] Profile",
     "jobs": "[hi] Jobs",
     "applications": "[hi] Applications",
@@ -55,40 +56,32 @@
     "loginSubtitle": "वापस स्वागत है — अपना सफ़र जारी रखें",
     "signupTitle": "अपना खाता बनाएं",
     "signupSubtitle": "हज़ारों कामगारों के साथ जुड़ें जो नौकरियाँ ढूंढ रहे हैं",
-
     "googleLogin": "Google से जारी रखें",
     "googleSignup": "Google से साइन अप करें",
     "googleCandidateOnly": "Google साइन-अप केवल नौकरी खोजने वालों के लिए है",
-
     "orDivider": "या",
     "tabEmail": "ईमेल",
     "tabPhone": "फ़ोन",
-
     "emailLabel": "ईमेल पता",
     "emailPlaceholder": "aap@example.com",
     "passwordLabel": "पासवर्ड",
     "passwordPlaceholder": "अपना पासवर्ड दर्ज करें",
-
     "forgotPassword": "पासवर्ड भूल गए?",
     "loginButton": "लॉग इन करें",
     "signupButton": "खाता बनाएं",
-
     "noAccount": "खाता नहीं है?",
     "signupLink": "साइन अप करें",
     "hasAccount": "पहले से खाता है?",
     "loginLink": "लॉग इन करें",
-
     "roleSwitcherLabel": "मैं हूँ",
     "roleCandidate": "नौकरी खोजने वाला",
     "roleEmployer": "नियोक्ता",
-
     "strength": {
       "weak": "कमज़ोर",
       "fair": "ठीक-ठाक",
       "good": "अच्छा",
       "strong": "मज़बूत"
     },
-
     "termsText": "मैं <terms>सेवा की शर्तों</terms> और <privacy>गोपनीयता नीति</privacy> से सहमत हूँ",
     "mustAcceptTerms": "जारी रखने के लिए कृपया सेवा की शर्तें और गोपनीयता नीति स्वीकार करें",
     "emailTaken": "इस ईमेल से पहले से खाता है। लॉग इन करने का प्रयास करें।",
@@ -97,7 +90,6 @@
     "invalidCredentials": "ईमेल या पासवर्ड गलत है",
     "accountSuspended": "आपका खाता निलंबित कर दिया गया है। सहायता से संपर्क करें।",
     "genericError": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
-
     "countryCode": "कोड",
     "phoneLabel": "फ़ोन नंबर",
     "phonePlaceholder": "9876543210",
@@ -109,7 +101,6 @@
     "otpDidntGet": "कोड नहीं मिला?",
     "wrongNumber": "गलत नंबर",
     "resendCode": "फिर से भेजें",
-
     "forgotTitle": "पासवर्ड रीसेट करें",
     "forgotSubtitle": "अपना ईमेल दर्ज करें और हम एक रीसेट लिंक भेजेंगे",
     "sendResetEmail": "रीसेट ईमेल भेजें",
@@ -117,13 +108,10 @@
     "forgotSentBody": "यदि उस ईमेल से कोई खाता है, तो आपको जल्द ही पासवर्ड रीसेट लिंक मिलेगा।",
     "backToLogin": "लॉग इन पर वापस जाएं",
     "rateLimited": "बहुत अधिक अनुरोध। कृपया बाद में पुनः प्रयास करें।",
-
     "callbackError": "साइन-इन विफल। कृपया पुनः प्रयास करें।",
     "signingIn": "साइन इन हो रहा है…",
-
     "onboardingComingSoon": "उम्मीदवार ऑनबोर्डिंग — जल्द आ रहा है",
     "employerOnboardingComingSoon": "नियोक्ता ऑनबोर्डिंग — जल्द आ रहा है",
-
     "phone": "फ़ोन नंबर",
     "phonePlaceholderLegacy": "अपना फ़ोन नंबर दर्ज करें",
     "otp": "एकमुश्त पासवर्ड",
@@ -150,11 +138,9 @@
     "skills": "कौशल",
     "experience": "अनुभव",
     "education": "शिक्षा",
-
     "loading": "आपकी प्रोफ़ाइल लोड हो रही है…",
     "loadingError": "आपकी प्रोफ़ाइल लोड करने में विफल। कृपया पेज रीफ्रेश करें।",
     "retry": "पुनः प्रयास करें",
-
     "hero": {
       "changePhoto": "फ़ोटो बदलें",
       "photoComingSoon": "फ़ोटो अपलोड जल्द आ रहा है",
@@ -166,7 +152,6 @@
       "notAvailable": "अभी उपलब्ध नहीं",
       "memberSince": "{date} से सदस्य"
     },
-
     "sections": {
       "personalInfo": "व्यक्तिगत जानकारी",
       "workExperience": "कार्य अनुभव",
@@ -174,14 +159,12 @@
       "skills": "कौशल",
       "accountSettings": "खाता सेटिंग"
     },
-
     "stats": {
       "yearsExperience": "वर्ष अनुभव",
       "skills": "कौशल",
       "applications": "आवेदन",
       "shortlisted": "शॉर्टलिस्टेड"
     },
-
     "personalInfo": {
       "phoneLabel": "मोबाइल नंबर",
       "phoneVerifiedBadge": "सत्यापित",
@@ -204,7 +187,6 @@
       "noticePeriodPlaceholder": "जैसे 30",
       "noticePeriodUnit": "{days} दिन"
     },
-
     "documents": {
       "count": "{count} / 3 दस्तावेज़ अपलोड किए गए",
       "passport": "पासपोर्ट",
@@ -221,7 +203,6 @@
       "validUntil": "{date} तक वैध",
       "expiredOn": "{date} को समाप्त"
     },
-
     "settings": {
       "privacyHeading": "गोपनीयता नियंत्रण",
       "notificationsHeading": "सूचनाएँ",
@@ -380,6 +361,512 @@
       "MARRIED": "विवाहित",
       "DIVORCED": "तलाकशुदा",
       "WIDOWED": "विधवा/विधुर"
+    }
+  },
+  "employer": {
+    "nav": {
+      "ariaLabel": "नियोक्ता नेविगेशन",
+      "openSidebar": "नेविगेशन मेनू खोलें",
+      "closeSidebar": "नेविगेशन मेनू बंद करें",
+      "dashboard": "डैशबोर्ड",
+      "postJob": "नौकरी पोस्ट करें",
+      "postJobPendingHint": "अनुमोदन के बाद उपलब्ध",
+      "myJobs": "मेरी नौकरियां",
+      "candidates": "उम्मीदवार",
+      "subscription": "सदस्यता",
+      "profile": "कंपनी प्रोफ़ाइल"
+    },
+    "header": {
+      "notifications": "सूचनाएं",
+      "accountMenu": "खाता मेनू",
+      "logout": "लॉग आउट"
+    },
+    "banner": {
+      "pendingTitle": "आपकी कंपनी समीक्षाधीन है।",
+      "pendingBody": "सत्यापन में आमतौर पर 24 घंटे तक का समय लगता है। आप अभी अपनी प्रोफ़ाइल सेट कर सकते हैं — अनुमोदन के बाद नौकरी पोस्टिंग उपलब्ध होगी।",
+      "rejectedTitle": "कंपनी पंजीकरण अस्वीकृत।",
+      "rejectedBodyFallback": "कृपया अपना आवेदन समीक्षा करें और पुनः सबमिट करें।",
+      "rejectedAction": "पुनः सबमिट करें →",
+      "suspendedTitle": "खाता निलंबित।",
+      "suspendedBody": "कृपया सहायता के लिए सपोर्ट से संपर्क करें।"
+    },
+    "plan": {
+      "freePlan": "निःशुल्क योजना",
+      "proPlan": "प्रो योजना",
+      "freeHint": "अधिक सक्रिय नौकरियों के लिए अपग्रेड करें",
+      "daysLeft": "{count} दिन शेष",
+      "upgrade": "योजना अपग्रेड करें",
+      "manage": "सदस्यता प्रबंधित करें"
+    },
+    "shell": {
+      "loadingCompany": "कंपनी लोड हो रही है…",
+      "errorTitle": "कंपनी प्रोफ़ाइल लोड नहीं हो सकी।",
+      "errorBody": "कृपया अपना कनेक्शन जांचें और पुनः प्रयास करें।",
+      "retry": "पुनः प्रयास करें"
+    },
+    "login": {
+      "metaTitle": "नियोक्ता लॉगिन — SkillIndiaConnect",
+      "pageTitle": "सत्यापित ब्लू-कॉलर कर्मचारियों को नियुक्त करें",
+      "pageSubtitle": "भारत और खाड़ी देशों में कुशल, सत्यापित कर्मचारियों से जुड़ें।",
+      "trustBadge1": "सत्यापित कर्मचारी प्रोफ़ाइल",
+      "trustBadge2": "सुरक्षित भर्ती प्रक्रिया",
+      "trustBadge3": "खाड़ी और स्थानीय बाज़ार",
+      "formTitle": "अपने नियोक्ता खाते में साइन इन करें",
+      "emailLabel": "कार्य ईमेल",
+      "emailPlaceholder": "you@company.com",
+      "passwordLabel": "पासवर्ड",
+      "passwordPlaceholder": "अपना पासवर्ड दर्ज करें",
+      "rememberMe": "मुझे याद रखें",
+      "forgotPassword": "पासवर्ड भूल गए?",
+      "loginButton": "साइन इन करें",
+      "noAccount": "SkillIndiaConnect पर नए हैं?",
+      "registerLink": "अपनी कंपनी रजिस्टर करें",
+      "candidateLink": "बजाय नौकरी खोज रहे हैं?",
+      "candidateLoginLink": "उम्मीदवार लॉगिन",
+      "invalidCredentials": "ईमेल या पासवर्ड गलत है।",
+      "accountSuspended": "आपका खाता निलंबित कर दिया गया है। सहायता के लिए संपर्क करें।",
+      "genericError": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।"
+    },
+    "onboarding": {
+      "metaTitle": "कंपनी सेटअप — SkillIndiaConnect",
+      "pageTitle": "अपनी कंपनी प्रोफ़ाइल सेट करें",
+      "pageSubtitle": "अपनी कंपनी के बारे में बताएं ताकि हम आपका खाता सत्यापित और सक्रिय कर सकें।",
+      "resubmitPageTitle": "कंपनी पंजीकरण पुनः सबमिट करें",
+      "resubmitPageSubtitle": "अपनी जानकारी अपडेट करें और समीक्षा के लिए पुनः सबमिट करें।",
+      "companyTypeLabel": "कंपनी प्रकार",
+      "companyTypeRequired": "कृपया कंपनी प्रकार चुनें",
+      "localTitle": "स्थानीय कंपनी",
+      "localDescription": "भारत में पंजीकृत और घरेलू स्तर पर नियुक्ति",
+      "foreignTitle": "विदेशी / खाड़ी कंपनी",
+      "foreignDescription": "भारत के बाहर पंजीकृत और अंतरराष्ट्रीय स्तर पर नियुक्ति",
+      "nameLabel": "कंपनी का नाम",
+      "namePlaceholder": "आपकी कंपनी का कानूनी नाम",
+      "nameRequired": "कंपनी का नाम आवश्यक है",
+      "registrationNumberLabel": "पंजीकरण संख्या",
+      "registrationNumberPlaceholder": "जैसे U12345MH2020PTC000000",
+      "industryTypeLabel": "उद्योग प्रकार",
+      "industryTypePlaceholder": "उद्योग चुनें",
+      "phoneLabel": "कंपनी फ़ोन",
+      "phonePlaceholder": "+91 98765 43210",
+      "phoneRequired": "कंपनी फ़ोन आवश्यक है",
+      "locationLabel": "कंपनी स्थान",
+      "locationPlaceholder": "शहर, राज्य या देश",
+      "locationRequired": "कंपनी स्थान आवश्यक है",
+      "websiteLabel": "वेबसाइट",
+      "websitePlaceholder": "https://yourcompany.com",
+      "employeeRangeLabel": "कर्मचारियों की संख्या",
+      "employeeRangePlaceholder": "श्रेणी चुनें",
+      "employeeRangeRequired": "कृपया कर्मचारी श्रेणी चुनें",
+      "descriptionLabel": "कंपनी विवरण",
+      "descriptionPlaceholder": "आपकी कंपनी और भूमिकाओं का संक्षिप्त विवरण",
+      "certLabel": "पंजीकरण प्रमाणपत्र",
+      "certHint": "अपना कंपनी पंजीकरण प्रमाणपत्र अपलोड करें (PDF, JPG, या PNG, 10 MB तक)।",
+      "certRequired": "कृपया अपना पंजीकरण प्रमाणपत्र अपलोड करें",
+      "submitButton": "अनुमोदन के लिए सबमिट करें",
+      "resubmitButton": "पुनः अनुमोदन के लिए सबमिट करें",
+      "submitting": "सबमिट हो रहा है…",
+      "submitSuccess": "सबमिट किया गया — हमारी टीम 24 घंटों के भीतर सत्यापित करेगी।",
+      "companyExists": "इस खाते के लिए कंपनी प्रोफ़ाइल पहले से मौजूद है।",
+      "validationError": "कृपया हाइलाइट किए गए फ़ील्ड सुधारें।",
+      "genericError": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
+      "industries": {
+        "construction": "निर्माण",
+        "manufacturing": "विनिर्माण",
+        "hospitality": "आतिथ्य",
+        "healthcare": "स्वास्थ्य सेवा",
+        "retail": "खुदरा",
+        "logistics": "रसद और परिवहन",
+        "agriculture": "कृषि",
+        "it": "आईटी और प्रौद्योगिकी",
+        "security": "सुरक्षा",
+        "cleaning": "सफाई और सुविधा प्रबंधन",
+        "other": "अन्य"
+      }
+    },
+    "dashboard": {
+      "metaTitle": "नियोक्ता डैशबोर्ड — SkillIndiaConnect",
+      "greeting": "सुप्रभात, {name}",
+      "greetingFallback": "वापस स्वागत है",
+      "kpi": {
+        "activeJobs": "सक्रिय नौकरियां",
+        "totalApplications": "कुल आवेदन",
+        "shortlisted": "शॉर्टलिस्टेड",
+        "hired": "इस महीने नियुक्त"
+      },
+      "recentJobs": {
+        "title": "हाल की नौकरी पोस्टिंग",
+        "emptyTitle": "अभी तक कोई नौकरी पोस्ट नहीं",
+        "emptyBody": "आवेदन प्राप्त करने के लिए अपनी पहली नौकरी पोस्ट करें।",
+        "statusActive": "सक्रिय",
+        "statusDraft": "ड्राफ्ट",
+        "statusPaused": "रोका गया",
+        "statusArchived": "संग्रहीत",
+        "columnTitle": "नौकरी शीर्षक",
+        "columnStatus": "स्थिति",
+        "columnApplications": "आवेदन",
+        "columnPosted": "पोस्ट किया गया"
+      },
+      "recentApplicants": {
+        "title": "हाल के आवेदक",
+        "emptyTitle": "अभी तक कोई आवेदक नहीं",
+        "emptyBody": "जब उम्मीदवार आवेदन करेंगे तो वे यहां दिखाई देंगे।"
+      },
+      "postJobCta": {
+        "title": "अपनी पहली नौकरी पोस्ट करें",
+        "body": "भारत और खाड़ी देशों में हजारों सत्यापित कर्मचारियों तक पहुंचें।",
+        "button": "नौकरी पोस्ट करें",
+        "pendingTooltip": "कंपनी अनुमोदन के बाद उपलब्ध"
+      },
+      "loading": "डैशबोर्ड लोड हो रहा है…",
+      "errorLoad": "डैशबोर्ड डेटा लोड करने में विफल।",
+      "retry": "पुनः प्रयास करें"
+    }
+  },
+  "jobs": {
+    "metaTitle": "नौकरियाँ खोजें — SkillIndiaConnect",
+    "metaDescription": "भारत और गल्फ में हजारों ब्लू-कॉलर नौकरियाँ खोजें।",
+    "pageTitle": "नौकरियाँ खोजें",
+    "pageSubtitle": "भारत और गल्फ में अवसर खोजें",
+    "filtersLabel": "नौकरी फ़िल्टर",
+    "searchLabel": "नौकरियाँ खोजें",
+    "searchPlaceholder": "पद या कीवर्ड…",
+    "searchButton": "खोजें",
+    "marketTabsLabel": "नौकरी बाज़ार",
+    "tabs": {
+      "all": "सभी",
+      "local": "भारत",
+      "foreign": "गल्फ"
+    },
+    "filters": {
+      "sort": "क्रम:",
+      "category": "श्रेणी",
+      "currency": "मुद्रा",
+      "allCurrencies": "सभी मुद्राएँ",
+      "salaryRange": "वेतन सीमा",
+      "salaryMin": "न्यूनतम वेतन",
+      "salaryMax": "अधिकतम वेतन",
+      "clear": "फ़िल्टर हटाएँ"
+    },
+    "sort": {
+      "recent": "सबसे नया",
+      "relevance": "सबसे प्रासंगिक",
+      "salary": "सर्वोच्च वेतन"
+    },
+    "categories": {
+      "construction": "निर्माण",
+      "electrical": "इलेक्ट्रिकल",
+      "plumbing": "प्लंबिंग",
+      "welding": "वेल्डिंग",
+      "driving": "ड्राइविंग",
+      "housekeeping": "हाउसकीपिंग",
+      "hospitality": "आतिथ्य",
+      "security": "सुरक्षा",
+      "general": "सामान्य श्रम"
+    },
+    "resultCount": "{count, plural, one {# नौकरी मिली} other {# नौकरियाँ मिलीं}}",
+    "resultsLabel": "नौकरी खोज परिणाम",
+    "empty": {
+      "title": "कोई नौकरी नहीं मिली",
+      "body": "अपने फ़िल्टर बदलें या कुछ और खोजें।"
+    },
+    "loadMore": "और नौकरियाँ लोड करें",
+    "loadMoreError": "और नौकरियाँ लोड नहीं हो सकीं।",
+    "retry": "पुनः प्रयास",
+    "card": {
+      "viewDetails": "विवरण देखें",
+      "save": "नौकरी सहेजें",
+      "unsave": "सहेजी गई",
+      "newBadge": "नई",
+      "marketGulf": "गल्फ",
+      "marketLocal": "भारत"
+    },
+    "benefits": {
+      "pf": "PF",
+      "bonus": "बोनस",
+      "esi": "ESI",
+      "accommodation": "आवास",
+      "transport": "यातायात",
+      "food": "भोजन",
+      "listLabel": "शामिल लाभ"
+    },
+    "detail": {
+      "applyNow": "अभी आवेदन करें",
+      "profileNudge": "आवेदन से पहले अपनी प्रोफ़ाइल पूरी करें।",
+      "description": "नौकरी विवरण",
+      "jobDetails": "नौकरी की जानकारी",
+      "experience": "अनुभव",
+      "experienceYears": "{count, plural, one {# वर्ष} other {# वर्ष}}",
+      "vacancies": "रिक्तियाँ",
+      "genderPreference": "लिंग प्राथमिकता",
+      "gender": {
+        "MALE": "पुरुष",
+        "FEMALE": "महिला"
+      },
+      "workConditions": "कार्य की स्थिति",
+      "requirements": "आवश्यकताएँ",
+      "aboutCompany": "कंपनी के बारे में",
+      "viewCompanyProfile": "कंपनी की नौकरियाँ देखें →",
+      "similarJobs": "समान नौकरियाँ",
+      "notFoundTitle": "नौकरी नहीं मिली",
+      "notFoundBody": "यह नौकरी भरी जा चुकी है या हटा दी गई है।",
+      "backToJobs": "नौकरियों पर वापस जाएँ"
+    }
+  },
+  "dashboard": {
+    "metaTitle": "मेरा डैशबोर्ड — SkillIndiaConnect",
+    "pageTitle": "डैशबोर्ड",
+    "greeting": "नमस्ते, {name}",
+    "kpi": {
+      "applied": "आवेदन किए",
+      "views": "प्रोफ़ाइल व्यूज़",
+      "shortlisted": "शॉर्टलिस्ट",
+      "updates": "अपडेट"
+    },
+    "recommendedJobs": {
+      "title": "अनुशंसित नौकरियाँ",
+      "empty": "अभी कोई सुझाव नहीं। मिलान पाने के लिए प्रोफ़ाइल पूरी करें।",
+      "viewAll": "सभी नौकरियाँ देखें →"
+    },
+    "myApplications": {
+      "title": "मेरे आवेदन",
+      "coming": "आवेदन ट्रैकिंग जल्द आ रही है।"
+    },
+    "quickActions": {
+      "title": "त्वरित कार्य",
+      "completeProfile": "प्रोफ़ाइल पूरी करें",
+      "browseJobs": "नौकरियाँ देखें",
+      "viewNotifications": "सूचनाएँ देखें"
+    },
+    "profileSummary": {
+      "completion": "{pct}% पूर्ण",
+      "completeNow": "अभी पूरी करें →"
+    }
+  },
+  "notifications": {
+    "metaTitle": "सूचनाएँ — SkillIndiaConnect",
+    "pageTitle": "सूचनाएँ",
+    "empty": {
+      "all": "अभी कोई सूचना नहीं।",
+      "filter": "इस श्रेणी में कोई सूचना नहीं।",
+      "unread": "कोई अपठित सूचना नहीं।"
+    },
+    "markAllRead": "सभी पढ़ा गया चिह्नित करें",
+    "markRead": "पढ़ा गया चिह्नित करें",
+    "loadMore": "और लोड करें",
+    "loading": "सूचनाएँ लोड हो रही हैं…",
+    "errorLoad": "सूचनाएँ लोड करने में विफल।",
+    "retry": "पुनः प्रयास",
+    "filters": {
+      "all": "सभी",
+      "applications": "आवेदन",
+      "jobs": "नौकरियाँ",
+      "profile": "प्रोफ़ाइल",
+      "system": "सिस्टम",
+      "unreadOnly": "केवल अपठित"
+    },
+    "types": {
+      "APPLICATION_UPDATE": "आवेदन अपडेट",
+      "JOB_MATCH": "नौकरी मिलान",
+      "PROFILE_REMINDER": "प्रोफ़ाइल रिमाइंडर",
+      "DOCUMENT_STATUS": "दस्तावेज़ स्थिति",
+      "SYSTEM": "सिस्टम"
+    },
+    "dateGroups": {
+      "today": "आज",
+      "yesterday": "कल",
+      "thisWeek": "इस सप्ताह",
+      "older": "पुराने"
+    }
+  },
+  "jobform": {
+    "createFormLabel": "नौकरी पोस्टिंग फ़ॉर्म बनाएं",
+    "editFormLabel": "नौकरी पोस्टिंग फ़ॉर्म संपादित करें",
+    "createPage": {
+      "title": "नौकरी पोस्ट करें",
+      "subtitle": "नीचे विवरण भरें। टाइप करते समय आपका लाइव प्रीव्यू अपडेट होता है।"
+    },
+    "editPage": {
+      "title": "नौकरी संपादित करें",
+      "subtitle": "अपनी जॉब पोस्टिंग अपडेट करें।",
+      "loading": "नौकरी लोड हो रही है…",
+      "loadError": "नौकरी लोड करने में विफल। कृपया रिफ्रेश करें।",
+      "notFound": "नौकरी नहीं मिली।",
+      "archivedNotice": "संग्रहीत नौकरियां संपादित नहीं की जा सकतीं। नया ड्राफ्ट बनाने के लिए डुप्लीकेट करें।",
+      "back": "वापस जाएं",
+      "backToJobs": "मेरी नौकरियों पर वापस जाएं"
+    },
+    "approvalGate": {
+      "title": "कंपनी अनुमोदन आवश्यक है",
+      "body": "जॉब पोस्टिंग तब अनलॉक होती है जब आपकी कंपनी हमारी टीम द्वारा स्वीकृत हो जाती है। आप अपना ड्राफ्ट सहेज सकते हैं और अनुमोदन के बाद पोस्ट कर सकते हैं।",
+      "backToDashboard": "डैशबोर्ड पर वापस जाएं"
+    },
+    "basic": {
+      "heading": "बुनियादी जानकारी",
+      "subtitle": "उम्मीदवारों को भूमिका और स्थान के बारे में बताएं।",
+      "titleLabel": "नौकरी का शीर्षक",
+      "titlePlaceholder": "जैसे अनुभवी राजमिस्त्री, वरिष्ठ इलेक्ट्रीशियन",
+      "marketLabel": "बाज़ार",
+      "marketGulf": "खाड़ी (अंतर्राष्ट्रीय)",
+      "marketLocal": "स्थानीय (भारत)",
+      "locationLabel": "स्थान",
+      "locationPlaceholder": "जैसे दुबई, UAE या मुंबई, भारत"
+    },
+    "description": {
+      "heading": "नौकरी विवरण",
+      "subtitle": "भूमिका, जिम्मेदारियां और आदर्श उम्मीदवार का वर्णन करें।",
+      "placeholder": "पद, दैनिक जिम्मेदारियां और यह एक बेहतरीन अवसर क्यों है, इसका वर्णन करें…",
+      "charsLeft": "अक्षर शेष"
+    },
+    "compensation": {
+      "heading": "वेतन",
+      "subtitle": "इस भूमिका के लिए वेतन सीमा और मुद्रा निर्धारित करें।",
+      "currencyLabel": "मुद्रा",
+      "salaryMinLabel": "न्यूनतम वेतन",
+      "salaryMaxLabel": "अधिकतम वेतन",
+      "salaryMinPlaceholder": "जैसे 1200",
+      "salaryMaxPlaceholder": "जैसे 1800",
+      "salaryHint": "प्रति माह {currency} में। वेतन न बताने पर खाली छोड़ें।"
+    },
+    "benefits": {
+      "heading": "लाभ",
+      "subtitle": "अनिवार्य लाभ प्लेटफ़ॉर्म नीति द्वारा आवश्यक हैं।",
+      "policyTitle": "श्रमिक संरक्षण नीति",
+      "policyBody": "SkillIndiaConnect पर सभी नौकरियों में आवास, स्वास्थ्य बीमा और परिवहन शामिल होना चाहिए।",
+      "mandatoryLabel": "अनिवार्य (प्लेटफ़ॉर्म नीति द्वारा आवश्यक)",
+      "optionalLabel": "वैकल्पिक लाभ",
+      "accommodation": "आवास",
+      "accommodationHint": "नियोक्ता श्रमिक के लिए आवास प्रदान करता है।",
+      "healthInsurance": "स्वास्थ्य बीमा",
+      "healthInsuranceHint": "नियोक्ता स्वास्थ्य बीमा कवरेज प्रदान करता है।",
+      "transportation": "परिवहन",
+      "transportationHint": "नियोक्ता कार्यस्थल तक आने-जाने के लिए परिवहन प्रदान करता है।",
+      "foodAllowance": "भोजन भत्ता",
+      "airTickets": "हवाई टिकट (आगमन और प्रस्थान)",
+      "otherAllowance": "अन्य भत्ता",
+      "otherAllowancePlaceholder": "जैसे वर्दी प्रदान की गई, वार्षिक बोनस…",
+      "optional": "वैकल्पिक"
+    },
+    "requirements": {
+      "heading": "आवश्यकताएं",
+      "subtitle": "उम्मीदवारों के पास होने वाली योग्यताएं और कौशल सूचीबद्ध करें।",
+      "listLabel": "आवश्यकताओं की सूची",
+      "emptyHint": "अभी तक कोई आवश्यकता नहीं जोड़ी गई।",
+      "addPlaceholder": "जैसे 3+ वर्ष अनुभव, वैध पासपोर्ट",
+      "addAriaLabel": "नई आवश्यकता",
+      "addButton": "जोड़ें",
+      "removeAriaLabel": "हटाएं: {item}",
+      "countHint": "{max} में से {count} आवश्यकताएं जोड़ी गईं"
+    },
+    "conditions": {
+      "heading": "कार्य शर्तें",
+      "subtitle": "काम के घंटे, अनुबंध अवधि और अन्य शर्तें साझा करें।",
+      "workConditionsLabel": "कार्य शर्तें",
+      "workConditionsHint": "जैसे 8 घंटे/दिन, 6 दिन/सप्ताह।",
+      "workConditionsPlaceholder": "घंटे, अनुसूची, अनुबंध अवधि और अन्य शर्तें बताएं…",
+      "experienceLabel": "आवश्यक अनुभव (वर्षों में)",
+      "experienceHint": "कोई अनुभव आवश्यक नहीं होने पर 0 दर्ज करें",
+      "vacanciesLabel": "रिक्तियों की संख्या",
+      "vacanciesHint": "इस भूमिका के लिए आप कितने कर्मचारी नियुक्त कर रहे हैं?",
+      "genderPreferenceLabel": "लिंग प्राथमिकता",
+      "genderPreferenceHint": "सभी के लिए खुला होने पर \"कोई प्राथमिकता नहीं\" चुनें",
+      "genderAny": "कोई प्राथमिकता नहीं",
+      "genderMale": "पुरुष",
+      "genderFemale": "महिला"
+    },
+    "preview": {
+      "heading": "लाइव प्रीव्यू",
+      "subtitle": "उम्मीदवारों को आपकी नौकरी कैसी दिखेगी।",
+      "panelLabel": "लाइव जॉब प्रीव्यू",
+      "liveRegionLabel": "फ़ॉर्म भरते समय लाइव जॉब प्रीव्यू अपडेट होता है",
+      "justPosted": "अभी पोस्ट किया",
+      "viewDetails": "विवरण देखें",
+      "previewNote": "प्रीव्यू प्रकाशित लिस्टिंग से थोड़ा भिन्न हो सकता है।"
+    },
+    "publishErrors": {
+      "notApprovedTitle": "कंपनी अनुमोदन आवश्यक है",
+      "notApprovedBody": "आपकी कंपनी प्रोफ़ाइल व्यवस्थापक अनुमोदन की प्रतीक्षा में है।",
+      "protectionTitle": "श्रमिक संरक्षण उल्लंघन",
+      "protectionBody": "यह नौकरी प्रकाशित नहीं की जा सकती क्योंकि निम्नलिखित आवश्यक लाभ अनुपस्थित हैं:",
+      "violationAccommodation": "आवास",
+      "violationHealthInsurance": "स्वास्थ्य बीमा",
+      "violationTransportation": "परिवहन",
+      "quotaTitle": "सक्रिय नौकरी सीमा पहुंच गई ({limit} नौकरी)",
+      "quotaBody": "आपकी Free plan एक समय में 1 सक्रिय नौकरी की अनुमति देती है।",
+      "quotaUpgradeLink": "Pro में अपग्रेड करें",
+      "genericTitle": "प्रकाशित करने में विफल",
+      "dismiss": "खारिज करें"
+    },
+    "actions": {
+      "saveDraft": "ड्राफ्ट के रूप में सहेजें",
+      "saving": "सहेज रहे हैं…",
+      "saved": "सहेजा गया ✓",
+      "draftError": "ड्राफ्ट सहेजने में विफल। कृपया पुनः प्रयास करें।",
+      "publish": "नौकरी पोस्ट करें",
+      "publishing": "प्रकाशित हो रहा है…"
+    }
+  },
+  "myjobs": {
+    "pageTitle": "मेरी नौकरियां",
+    "pageSubtitle": "अपनी जॉब पोस्टिंग प्रबंधित करें।",
+    "postNewJob": "नई नौकरी पोस्ट करें",
+    "postFirstJob": "पहली नौकरी पोस्ट करें",
+    "publishSuccess": "नौकरी सफलतापूर्वक प्रकाशित हुई!",
+    "searchLabel": "नौकरियां खोजें",
+    "searchPlaceholder": "नौकरी के शीर्षक से खोजें…",
+    "statusFilterLabel": "स्थिति से फ़िल्टर करें",
+    "tableLabel": "मेरी जॉब पोस्टिंग",
+    "loading": "नौकरियां लोड हो रही हैं…",
+    "loadError": "नौकरियां लोड करने में विफल।",
+    "retry": "पुनः प्रयास करें",
+    "emptyTitle": "अभी तक कोई नौकरी नहीं",
+    "emptyBody": "आवेदन प्राप्त करने के लिए पहली नौकरी पोस्ट करें।",
+    "draftNotPosted": "ड्राफ्ट",
+    "marketGulf": "खाड़ी",
+    "marketLocal": "भारत",
+    "applicationsPlaceholder": "0 आवेदन",
+    "pageInfo": "पृष्ठ {page} का {totalPages}",
+    "previousPage": "पिछला पृष्ठ",
+    "nextPage": "अगला पृष्ठ",
+    "prev": "पिछला",
+    "next": "अगला",
+    "tabs": {
+      "all": "सभी",
+      "active": "सक्रिय",
+      "paused": "रोका गया",
+      "draft": "ड्राफ्ट",
+      "archived": "संग्रहीत"
+    },
+    "col": {
+      "title": "नौकरी का शीर्षक",
+      "market": "बाज़ार",
+      "status": "स्थिति",
+      "applications": "आवेदन",
+      "posted": "पोस्ट किया गया",
+      "actions": "कार्रवाई"
+    },
+    "status": {
+      "active": "सक्रिय",
+      "draft": "ड्राफ्ट",
+      "paused": "रोका गया",
+      "archived": "संग्रहीत"
+    },
+    "actions": {
+      "groupLabel": "{title} के लिए कार्रवाई",
+      "view": "देखें",
+      "viewLabel": "लिस्टिंग देखें: {title}",
+      "edit": "संपादित करें",
+      "editLabel": "नौकरी संपादित करें: {title}",
+      "publish": "प्रकाशित करें",
+      "publishLabel": "नौकरी प्रकाशित करें: {title}",
+      "pause": "रोकें",
+      "pauseLabel": "नौकरी रोकें: {title}",
+      "resume": "फिर शुरू करें",
+      "resumeLabel": "नौकरी फिर शुरू करें: {title}",
+      "duplicate": "डुप्लीकेट",
+      "duplicateLabel": "नौकरी डुप्लीकेट करें: {title}",
+      "archive": "संग्रहीत करें",
+      "archiveLabel": "नौकरी संग्रहीत करें: {title}",
+      "repostAsDraft": "ड्राफ्ट के रूप में पुनः पोस्ट करें"
     }
   }
 }

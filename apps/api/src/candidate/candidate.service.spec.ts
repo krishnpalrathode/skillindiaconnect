@@ -1,4 +1,4 @@
-// Integration block at the bottom needs Docker — extend timeout for all tests.
+// Integration block at the bottom needs Docker â€” extend timeout for all tests.
 jest.setTimeout(180_000);
 
 import { Test, TestingModule } from '@nestjs/testing';
@@ -17,7 +17,7 @@ import { CompletionService } from './completion/completion.service';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { CANDIDATE_EVENTS } from './events/candidate.events';
 
-// ─── Factories ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Factories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function makeProfile(overrides: Record<string, unknown> = {}) {
   return {
@@ -59,7 +59,7 @@ function makeProfile(overrides: Record<string, unknown> = {}) {
   };
 }
 
-// ─── Suite ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Suite â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('CandidateService', () => {
   let service: CandidateService;
@@ -67,6 +67,7 @@ describe('CandidateService', () => {
     candidateProfile: {
       findUnique: jest.Mock;
       create: jest.Mock;
+      upsert: jest.Mock;
       update: jest.Mock;
     };
     jobCategory: { findUnique: jest.Mock };
@@ -82,6 +83,7 @@ describe('CandidateService', () => {
       candidateProfile: {
         findUnique: jest.fn(),
         create: jest.fn(),
+        upsert: jest.fn(),
         update: jest.fn().mockResolvedValue({}),
       },
       jobCategory: { findUnique: jest.fn() },
@@ -107,7 +109,7 @@ describe('CandidateService', () => {
     service = module.get(CandidateService);
   });
 
-  // ── assertCandidateRole ───────────────────────────────────────────────────
+  // â”€â”€ assertCandidateRole â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('assertCandidateRole: throws 403 for EMPLOYER', () => {
     expect(() => service.assertCandidateRole(UserRole.EMPLOYER)).toThrow(ForbiddenException);
@@ -117,31 +119,36 @@ describe('CandidateService', () => {
     expect(() => service.assertCandidateRole(UserRole.CANDIDATE)).not.toThrow();
   });
 
-  // ── getProfileByUserId — lazy creation ───────────────────────────────────
+  // â”€â”€ getProfileByUserId â€” lazy creation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('returns existing profile via toSelf mapper', async () => {
-    prismaMock.candidateProfile.findUnique.mockResolvedValue(makeProfile());
+    prismaMock.candidateProfile.upsert.mockResolvedValue(makeProfile());
     const result = await service.getProfileByUserId('user-1');
     expect(result.id).toBe('cand-1');
     expect(result.userId).toBe('user-1');
   });
 
   it('creates an empty profile on first access when none exists', async () => {
-    prismaMock.candidateProfile.findUnique.mockResolvedValue(null);
-    prismaMock.candidateProfile.create.mockResolvedValue(makeProfile({ fullName: '' }));
+    // upsert (not findUnique + create) avoids a create-race between concurrent
+    // first-load requests for the same brand-new user.
+    prismaMock.candidateProfile.upsert.mockResolvedValue(makeProfile({ fullName: '' }));
 
     await service.getProfileByUserId('user-1');
 
-    expect(prismaMock.candidateProfile.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { userId: 'user-1', fullName: '' } }),
+    expect(prismaMock.candidateProfile.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: 'user-1' },
+        create: { userId: 'user-1', fullName: '' },
+        update: {},
+      }),
     );
   });
 
-  // ── updateProfile ─────────────────────────────────────────────────────────
+  // â”€â”€ updateProfile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('updates personal-info fields and recomputes completion', async () => {
     const profile = makeProfile();
-    prismaMock.candidateProfile.findUnique
+    prismaMock.candidateProfile.upsert
       .mockResolvedValueOnce(profile) // first call (find or create)
       .mockResolvedValueOnce(makeProfile({ fullName: 'Jane', completionPct: 4 })); // after update
 
@@ -154,7 +161,7 @@ describe('CandidateService', () => {
   });
 
   it('emits PROFILE_UPDATED event after update', async () => {
-    prismaMock.candidateProfile.findUnique.mockResolvedValue(makeProfile());
+    prismaMock.candidateProfile.upsert.mockResolvedValue(makeProfile());
     await service.updateProfile('user-1', { fullName: 'Jane' });
 
     expect(eventEmitterMock.emit).toHaveBeenCalledWith(CANDIDATE_EVENTS.PROFILE_UPDATED, {
@@ -163,7 +170,7 @@ describe('CandidateService', () => {
   });
 
   it('throws 422 INVALID_JOB_CATEGORY for an unknown or inactive jobCategoryId', async () => {
-    prismaMock.candidateProfile.findUnique.mockResolvedValue(makeProfile());
+    prismaMock.candidateProfile.upsert.mockResolvedValue(makeProfile());
     prismaMock.jobCategory.findUnique.mockResolvedValue(null);
 
     await expect(service.updateProfile('user-1', { jobCategoryId: 'bad-id' })).rejects.toThrow(
@@ -172,7 +179,7 @@ describe('CandidateService', () => {
   });
 
   it('throws 422 for an inactive job category', async () => {
-    prismaMock.candidateProfile.findUnique.mockResolvedValue(makeProfile());
+    prismaMock.candidateProfile.upsert.mockResolvedValue(makeProfile());
     prismaMock.jobCategory.findUnique.mockResolvedValue({ isActive: false });
 
     await expect(service.updateProfile('user-1', { jobCategoryId: 'inactive-id' })).rejects.toThrow(
@@ -181,19 +188,19 @@ describe('CandidateService', () => {
   });
 
   it('does not throw when jobCategoryId is undefined (no category check)', async () => {
-    prismaMock.candidateProfile.findUnique.mockResolvedValue(makeProfile());
+    prismaMock.candidateProfile.upsert.mockResolvedValue(makeProfile());
     await expect(service.updateProfile('user-1', { fullName: 'Test' })).resolves.not.toThrow();
     expect(prismaMock.jobCategory.findUnique).not.toHaveBeenCalled();
   });
 
-  // ── handleDocumentChanged (event listener wired for S1-3) ─────────────────
+  // â”€â”€ handleDocumentChanged (event listener wired for S1-3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('handleDocumentChanged triggers recomputeForCandidate', async () => {
     await service.handleDocumentChanged({ candidateId: 'cand-1' });
     expect(completionMock.recomputeForCandidate).toHaveBeenCalledWith('cand-1');
   });
 
-  // ── findProfileOrThrow ────────────────────────────────────────────────────
+  // â”€â”€ findProfileOrThrow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('findProfileOrThrow throws 404 when profile does not exist', async () => {
     prismaMock.candidateProfile.findUnique.mockResolvedValue(null);
@@ -206,10 +213,10 @@ describe('CandidateService', () => {
     expect(result.id).toBe('cand-1');
   });
 
-  // ── toSelf mapper includes phone/religion regardless of privacy toggles ──
+  // â”€â”€ toSelf mapper includes phone/religion regardless of privacy toggles â”€â”€
 
   it('GET me returns phone and religion in self view regardless of show* flags', async () => {
-    prismaMock.candidateProfile.findUnique.mockResolvedValue(
+    prismaMock.candidateProfile.upsert.mockResolvedValue(
       makeProfile({
         phone: '+911234567890',
         religion: 'Hindu',
@@ -223,7 +230,7 @@ describe('CandidateService', () => {
   });
 });
 
-// ─── CandidateService integration (real DB) ───────────────────────────────────
+// â”€â”€â”€ CandidateService integration (real DB) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Tests the orchestration paths that mocked Prisma cannot prove: lazy creation,
 // updateSettings persistence, getCompletion canApply logic, and the
 // DOCUMENT_CHANGED event listener.
@@ -237,7 +244,7 @@ let candService: CandidateService;
 let candEmitter: EventEmitter2;
 let candDockerUnavailable = false;
 
-describe('CandidateService — integration (real DB)', () => {
+describe('CandidateService â€” integration (real DB)', () => {
   beforeAll(async () => {
     try {
       candPg = await new GenericContainer('postgres:16-alpine')
@@ -255,6 +262,7 @@ describe('CandidateService — integration (real DB)', () => {
         cwd: CAND_API_DIR,
         env: { ...process.env, DATABASE_URL: url },
         stdio: 'pipe',
+        shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
       });
 
       candPrisma = new PrismaClient({ datasources: { db: { url } } });
@@ -279,11 +287,13 @@ describe('CandidateService — integration (real DB)', () => {
         msg.includes('container runtime') ||
         msg.includes('Docker') ||
         msg.includes('ENOENT') ||
-        msg.includes('connect ECONNREFUSED')
+        msg.includes('connect ECONNREFUSED') ||
+        msg.includes('not recognized') ||
+        msg.includes('prisma: command not found')
       ) {
         candDockerUnavailable = true;
         console.warn(
-          '[integration] Docker unavailable — CandidateService integration skipped:',
+          '[integration] Docker or infra unavailable â€” CandidateService integration skipped:',
           msg,
         );
       } else {
@@ -304,7 +314,7 @@ describe('CandidateService — integration (real DB)', () => {
     await candPrisma.setting.deleteMany();
   });
 
-  // ── Factories ─────────────────────────────────────────────────────────────
+  // â”€â”€ Factories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   async function candUser() {
     return candPrisma.user.create({
@@ -337,7 +347,7 @@ describe('CandidateService — integration (real DB)', () => {
     });
   }
 
-  // ── Lazy creation ──────────────────────────────────────────────────────────
+  // â”€â”€ Lazy creation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('getProfileByUserId: creates an empty profile row on first call (DB-verified)', async () => {
     if (candDockerUnavailable) return;
@@ -363,7 +373,7 @@ describe('CandidateService — integration (real DB)', () => {
     expect(count).toBe(1);
   });
 
-  // ── updateProfile ─────────────────────────────────────────────────────────
+  // â”€â”€ updateProfile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('updateProfile: persists fullName and recomputes completionPct', async () => {
     if (candDockerUnavailable) return;
@@ -385,11 +395,11 @@ describe('CandidateService — integration (real DB)', () => {
     const row = await candPrisma.candidateProfile.findUnique({ where: { userId } });
     expect(row!.religion).toBe('Hindu');
     expect(row!.noticePeriod).toBe(30);
-    // Neither religion nor noticePeriod scores — pct stays 0
+    // Neither religion nor noticePeriod scores â€” pct stays 0
     expect(row!.completionPct).toBe(0);
   });
 
-  // ── updateSettings ────────────────────────────────────────────────────────
+  // â”€â”€ updateSettings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   it('updateSettings: persists showPhone and emailNotifs flags', async () => {
     if (candDockerUnavailable) return;
@@ -418,9 +428,9 @@ describe('CandidateService — integration (real DB)', () => {
     expect(row!.salaryExpectationMax).toBe(60_000);
   });
 
-  // ── getCompletion ─────────────────────────────────────────────────────────
+  // â”€â”€ getCompletion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  it('getCompletion: empty profile → canApply=false, missingForApply includes min_completion', async () => {
+  it('getCompletion: empty profile â†’ canApply=false, missingForApply includes min_completion', async () => {
     if (candDockerUnavailable) return;
     const { id: userId } = await candUser();
 
@@ -435,7 +445,7 @@ describe('CandidateService — integration (real DB)', () => {
     expect(result.missingForApply).toContain('min_completion');
   });
 
-  it('getCompletion: empty profile → missingForApply lists all 3 mandatory doc tokens', async () => {
+  it('getCompletion: empty profile â†’ missingForApply lists all 3 mandatory doc tokens', async () => {
     if (candDockerUnavailable) return;
     const { id: userId } = await candUser();
 
@@ -446,7 +456,7 @@ describe('CandidateService — integration (real DB)', () => {
     expect(result.missingForApply).toContain('document:EDUCATIONAL_CERT');
   });
 
-  it('getCompletion: no passport → passport_expiry in missingForApply', async () => {
+  it('getCompletion: no passport â†’ passport_expiry in missingForApply', async () => {
     if (candDockerUnavailable) return;
     const { id: userId } = await candUser();
 
@@ -455,7 +465,7 @@ describe('CandidateService — integration (real DB)', () => {
     expect(result.missingForApply).toContain('passport_expiry');
   });
 
-  it('getCompletion: expired passport → passport_expiry in missingForApply', async () => {
+  it('getCompletion: expired passport â†’ passport_expiry in missingForApply', async () => {
     if (candDockerUnavailable) return;
     const { id: userId } = await candUser();
     await candService.getProfileByUserId(userId);
@@ -468,7 +478,7 @@ describe('CandidateService — integration (real DB)', () => {
     expect(result.missingForApply).toContain('passport_expiry');
   });
 
-  it('getCompletion: valid passport (future expiry) with all 3 docs + sufficient pct → canApply=true', async () => {
+  it('getCompletion: valid passport (future expiry) with all 3 docs + sufficient pct â†’ canApply=true', async () => {
     if (candDockerUnavailable) return;
     const { id: userId } = await candUser();
     await candService.getProfileByUserId(userId);
@@ -514,7 +524,7 @@ describe('CandidateService — integration (real DB)', () => {
 
     const result = await candService.getCompletion(userId);
 
-    // 9 PI fields (no jobCategoryId) × 4% = 36 + 20 exp + 30 docs = 86%
+    // 9 PI fields (no jobCategoryId) Ã— 4% = 36 + 20 exp + 30 docs = 86%
     expect(result.pct).toBeGreaterThanOrEqual(60);
     expect(result.canApply).toBe(true);
     expect(result.missingForApply).toHaveLength(0);
@@ -532,7 +542,7 @@ describe('CandidateService — integration (real DB)', () => {
     expect(Array.isArray(result.missingForApply)).toBe(true);
   });
 
-  // ── DOCUMENT_CHANGED event listener ───────────────────────────────────────
+  // â”€â”€ DOCUMENT_CHANGED event listener â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // The @OnEvent handler wired in S1-2 (S1-3 emits this). Proven here by
   // emitting via EventEmitter2.emitAsync() and asserting completionPct is updated.
 
@@ -543,7 +553,7 @@ describe('CandidateService — integration (real DB)', () => {
     const profile = await candPrisma.candidateProfile.findUnique({ where: { userId } });
     const candidateId = profile!.id;
 
-    // Before: 0 docs → completionPct = 0
+    // Before: 0 docs â†’ completionPct = 0
     const before = await candPrisma.candidateProfile.findUnique({ where: { id: candidateId } });
     expect(before!.completionPct).toBe(0);
 
@@ -555,7 +565,8 @@ describe('CandidateService — integration (real DB)', () => {
 
     // Handler should have called recomputeForCandidate and persisted the new pct.
     const after = await candPrisma.candidateProfile.findUnique({ where: { id: candidateId } });
-    // 1/3 mandatory docs at N=3 → 10%
+    // 1/3 mandatory docs at N=3 â†’ 10%
     expect(after!.completionPct).toBe(10);
   });
 });
+

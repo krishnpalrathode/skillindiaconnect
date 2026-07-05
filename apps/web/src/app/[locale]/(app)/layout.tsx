@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter, usePathname, useParams } from 'next/navigation';
-import { User, Briefcase, FileText, Bell, Settings, LogOut } from 'lucide-react';
+import { User, Briefcase, FileText, Bell, Settings, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
@@ -56,11 +56,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const params = useParams<{ locale: string }>();
   const locale = params.locale ?? 'en';
 
+  // /jobs (search + detail) is public — browsable unauthenticated for SEO/guests.
+  // Every other route in this group is candidate-only.
+  const isPublicPath = pathname.includes('/jobs');
+
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!isLoading && !user && !isPublicPath) {
       router.replace(`/${locale}/login`);
     }
-  }, [user, isLoading, router, locale]);
+  }, [user, isLoading, router, locale, isPublicPath]);
+
+  // Guest (or auth still resolving) on a public path: render the page as-is,
+  // no sidebar chrome and no blocking spinner — SSR content must never be
+  // hidden behind a client-only auth gate (see mock-setup.tsx for the same rule).
+  if (isPublicPath && !user) {
+    return <>{children}</>;
+  }
 
   if (isLoading || !user) {
     return (
@@ -70,9 +81,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const isDashboard = pathname.endsWith('/dashboard');
   const isProfile = pathname.includes('/profile');
+  const isNotifications = pathname.includes('/notifications');
 
   const navItems = [
+    {
+      href: `/${locale}/dashboard`,
+      icon: <LayoutDashboard className="size-5" aria-hidden="true" />,
+      label: t('dashboard'),
+      active: isDashboard,
+    },
     {
       href: `/${locale}/profile`,
       icon: <User className="size-5" aria-hidden="true" />,
@@ -83,18 +102,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       href: `/${locale}/jobs`,
       icon: <Briefcase className="size-5" aria-hidden="true" />,
       label: t('jobs'),
-      disabled: true,
-    },
-    {
-      href: `/${locale}/applications`,
-      icon: <FileText className="size-5" aria-hidden="true" />,
-      label: t('applications'),
-      disabled: true,
+      active: pathname.includes('/jobs'),
     },
     {
       href: `/${locale}/notifications`,
       icon: <Bell className="size-5" aria-hidden="true" />,
       label: t('notifications'),
+      active: isNotifications,
+    },
+    {
+      href: `/${locale}/applications`,
+      icon: <FileText className="size-5" aria-hidden="true" />,
+      label: t('applications'),
       disabled: true,
     },
     {

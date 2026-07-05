@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { GoogleButton } from '@/components/auth/GoogleButton';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { PhoneLoginFlow } from '@/components/auth/PhoneLoginFlow';
@@ -14,17 +14,30 @@ type Method = 'email' | 'phone';
 export default function LoginPage() {
   const t = useTranslations('auth');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [method, setMethod] = useState<Method>('email');
 
-  // Already authenticated — redirect to dashboard
+  // `next` lets callers (e.g. SaveJobButton on a public job page) send the
+  // candidate back to where they were instead of always landing on /dashboard.
+  const next = searchParams.get('next');
+
+  // Already authenticated — redirect to dashboard.
+  // Must run in an effect, not during render: calling router.replace() while
+  // LoginPage is rendering updates the Router component mid-render, which
+  // React flags as "Cannot update a component while rendering a different component".
+  useEffect(() => {
+    if (user) {
+      router.replace(next || '/dashboard');
+    }
+  }, [user, next, router]);
+
   if (user) {
-    router.replace('/dashboard');
     return null;
   }
 
   function handleSuccess() {
-    router.replace('/dashboard');
+    router.replace(next || '/dashboard');
   }
 
   return (

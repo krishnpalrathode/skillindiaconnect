@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -18,8 +18,14 @@ export default function SignupPage() {
   // instead of letting handleSuccess() reach /onboarding.
   const postSignupRef = useRef(false);
 
+  // Must run in an effect, not during render — see login/page.tsx for why.
+  useEffect(() => {
+    if (user && !postSignupRef.current) {
+      router.replace('/dashboard');
+    }
+  }, [user, router]);
+
   if (user && !postSignupRef.current) {
-    router.replace('/dashboard');
     return null;
   }
 

@@ -7,8 +7,8 @@ const NOT_ON_WHATSAPP_SUFFIX = '0000';
 
 @Injectable()
 export class MockWhatsappChannel implements WhatsappChannel {
-  // Keyed by phone — lets test assertions inspect what was "sent" without logging the code.
   private readonly _sentCodes = new Map<string, string>();
+  private readonly _sentTemplates = new Map<string, string>();
 
   async sendOtp(
     phone: string,
@@ -33,8 +33,30 @@ export class MockWhatsappChannel implements WhatsappChannel {
     return this._sentCodes.get(phone);
   }
 
+  async sendTemplate(
+    phone: string,
+    templateKey: string,
+    _vars: Record<string, string>,
+  ): Promise<WhatsappSendResult> {
+    if (phone.endsWith(NOT_ON_WHATSAPP_SUFFIX)) {
+      return { ok: false, notOnWhatsapp: true };
+    }
+    if (process.env['NODE_ENV'] === 'development') {
+      console.debug(`[MockWhatsApp] sendTemplate template=${templateKey} phone=***`);
+    }
+    const messageId = `mock-tpl-${randomUUID()}`;
+    this._sentTemplates.set(`${phone}:${templateKey}`, messageId);
+    return { ok: true, providerMessageId: messageId };
+  }
+
+  /** Test-only: retrieve the last template message id sent to phone+template. */
+  getLastTemplateMessageId(phone: string, templateKey: string): string | undefined {
+    return this._sentTemplates.get(`${phone}:${templateKey}`);
+  }
+
   /** Test-only: reset the in-memory send log between tests. */
   clearSentCodes(): void {
     this._sentCodes.clear();
+    this._sentTemplates.clear();
   }
 }

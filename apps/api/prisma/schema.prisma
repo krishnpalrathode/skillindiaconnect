@@ -39,7 +39,7 @@ enum CompanyStatus {
 
 enum JobMarket {
   LOCAL
-  FOREIGN
+  GULF
 }
 
 enum EmploymentType {

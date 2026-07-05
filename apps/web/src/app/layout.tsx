@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Noto_Sans_Arabic } from 'next/font/google';
 import { getLocale } from 'next-intl/server';

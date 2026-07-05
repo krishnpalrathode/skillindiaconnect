@@ -85,7 +85,7 @@ export class AuthController {
       req.headers['user-agent'],
     );
     this.setRefreshCookie(res, result.refreshToken, result.refreshExp);
-    res.redirect(`${result.webAppUrl}/auth/callback`);
+    res.redirect(`${result.webAppUrl}/callback`);
   }
 
   // ─── Refresh ─────────────────────────────────────────────────────────────────
