@@ -6,10 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import type { components } from '@skillindiaconnect/shared-types';
 import { cn } from '@/lib/utils';
-import {
-  notificationMeta,
-  fallbackNotificationMeta,
-} from '@/lib/notifications/notificationMeta';
+import { notificationMeta, fallbackNotificationMeta } from '@/lib/notifications/notificationMeta';
 
 type Notification = components['schemas']['Notification'];
 

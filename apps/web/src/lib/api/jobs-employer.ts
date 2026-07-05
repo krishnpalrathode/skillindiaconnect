@@ -144,5 +144,7 @@ export function archiveJob(id: string): Promise<Job> {
 }
 
 export function duplicateJob(id: string): Promise<Job> {
-  return apiFetch<Job>(`/employers/me/jobs/${encodeURIComponent(id)}/duplicate`, { method: 'POST' });
+  return apiFetch<Job>(`/employers/me/jobs/${encodeURIComponent(id)}/duplicate`, {
+    method: 'POST',
+  });
 }
