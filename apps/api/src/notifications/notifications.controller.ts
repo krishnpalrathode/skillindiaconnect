@@ -7,9 +7,9 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { Notification } from '@prisma/client';
 import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user.decorator';
 import { NotificationService } from './notification.service';
+import { NotificationDto } from './notification.mapper';
 import { ListNotificationsDto } from './dto/list-notifications.dto';
 import { MarkReadDto } from './dto/mark-read.dto';
 
@@ -32,7 +32,7 @@ export class NotificationsController {
   async list(
     @CurrentUser() user: CurrentUserPayload,
     @Query() dto: ListNotificationsDto,
-  ): Promise<{ data: Notification[]; nextCursor: string | null }> {
+  ): Promise<{ data: NotificationDto[]; nextCursor: string | null }> {
     this.notificationService.assertCandidateRole(user.role);
     return this.notificationService.listNotifications(user.userId, dto);
   }

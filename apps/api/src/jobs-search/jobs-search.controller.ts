@@ -23,6 +23,10 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { UserRole } from '@prisma/client';
 import { Public } from '../auth/decorators/public.decorator';
+import {
+  OptionalAuth,
+  CurrentUserOptional,
+} from '../auth/decorators/optional-auth.decorator';
 import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user.decorator';
 import { JobsSearchService } from './jobs-search.service';
 import { SavedJobsService } from './saved-jobs.service';
@@ -41,19 +45,30 @@ export class JobsSearchController {
    */
   @Get()
   @Public()
+  @OptionalAuth()
   @Throttle({ default: { ttl: 60_000, limit: 30 } })
-  async search(@Query() query: SearchQueryDto) {
-    return this.searchService.search(query);
+  async search(
+    @Query() query: SearchQueryDto,
+    @CurrentUserOptional() user: CurrentUserPayload | null,
+  ) {
+    const viewer = user ? { userId: user.userId, role: user.role } : null;
+    return this.searchService.search(query, viewer);
   }
 
   /**
    * Public job detail. 404 for non-ACTIVE (paused / draft / archived / pending).
    * No employer PII — public-subset only (enforced in the mapper).
+   * Optional-auth: an authenticated candidate gets isSaved populated.
    */
   @Get(':id')
   @Public()
-  async detail(@Param('id', ParseUUIDPipe) id: string) {
-    const data = await this.searchService.getDetail(id);
+  @OptionalAuth()
+  async detail(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUserOptional() user: CurrentUserPayload | null,
+  ) {
+    const viewer = user ? { userId: user.userId, role: user.role } : null;
+    const data = await this.searchService.getDetail(id, viewer);
     return { data };
   }
 

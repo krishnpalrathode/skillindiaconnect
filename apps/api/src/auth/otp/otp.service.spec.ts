@@ -48,6 +48,9 @@ describe('OtpService', () => {
       update: jest.fn(),
       updateMany: jest.fn(),
     },
+    whatsappMessage: {
+      create: jest.fn(),
+    },
   };
 
   const whatsappMock = {
@@ -91,6 +94,31 @@ describe('OtpService', () => {
       // The hash is a hex string, NOT the raw 6-digit code
       expect(storedHash).toMatch(/^[0-9a-f]{64}$/);
       expect(storedHash).not.toMatch(/^\d{6}$/);
+    });
+
+    it('persists a whatsapp_messages delivery row (kind=OTP) with the provider id', async () => {
+      whatsappMock.sendOtp.mockResolvedValue({ ok: true, providerMessageId: 'mock-1' });
+
+      await service.issue('+911234567890', OtpPurpose.LOGIN, '1.2.3.4');
+
+      expect(prismaMock.whatsappMessage.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            kind: 'OTP',
+            phone: '+911234567890',
+            waMessageId: 'mock-1',
+            status: 'SENT',
+          }),
+        }),
+      );
+    });
+
+    it('does NOT persist a delivery row when the number is not on WhatsApp', async () => {
+      whatsappMock.sendOtp.mockResolvedValue({ ok: false, notOnWhatsapp: true });
+
+      await service.issue('+911234567890', OtpPurpose.LOGIN, '1.2.3.4');
+
+      expect(prismaMock.whatsappMessage.create).not.toHaveBeenCalled();
     });
 
     it('sets a 5-minute expiry on the challenge', async () => {

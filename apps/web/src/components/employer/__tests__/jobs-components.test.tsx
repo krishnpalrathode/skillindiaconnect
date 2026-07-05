@@ -440,6 +440,27 @@ describe('MyJobsTable', () => {
 
 // ─── JobForm — POST /jobs (Save as Draft) ─────────────────────────────────────
 
+// Fills every field the form now requires (title, category, location, salary).
+// Hours/day + days/week already default to 8/6, so they pass validation.
+async function fillRequiredJobFields(user: ReturnType<typeof userEvent.setup>) {
+  await user.clear(screen.getByLabelText(/job title/i));
+  await user.type(screen.getByLabelText(/job title/i), 'Test Welder');
+  // Category options load async from /job-categories — wait for one, then select.
+  await user.selectOptions(
+    screen.getByLabelText(/job category/i),
+    await screen.findByRole('option', { name: 'Electrician' }),
+  );
+  await user.clear(screen.getByLabelText(/location/i));
+  await user.type(screen.getByLabelText(/location/i), 'Dubai, UAE');
+  // Description textarea is labelled by placeholder only.
+  await user.type(
+    screen.getByPlaceholderText(/describe the position/i),
+    'We need an experienced worker for a long-term project.',
+  );
+  await user.type(screen.getByLabelText(/minimum salary/i), '1500');
+  await user.type(screen.getByLabelText(/maximum salary/i), '2000');
+}
+
 describe('JobForm — Save as Draft calls POST /jobs', () => {
   it('saves draft and shows saved confirmation', async () => {
     const user = userEvent.setup();
@@ -455,10 +476,7 @@ describe('JobForm — Save as Draft calls POST /jobs', () => {
     );
 
     // Fill required fields
-    await user.clear(screen.getByLabelText(/job title/i));
-    await user.type(screen.getByLabelText(/job title/i), 'Test Welder');
-    await user.clear(screen.getByLabelText(/location/i));
-    await user.type(screen.getByLabelText(/location/i), 'Dubai, UAE');
+    await fillRequiredJobFields(user);
 
     await user.click(screen.getByRole('button', { name: /save as draft/i }));
 
@@ -484,10 +502,7 @@ describe('JobForm — Publish errors', () => {
       </Intl>,
     );
 
-    await user.clear(screen.getByLabelText(/job title/i));
-    await user.type(screen.getByLabelText(/job title/i), 'Test Helper');
-    await user.clear(screen.getByLabelText(/location/i));
-    await user.type(screen.getByLabelText(/location/i), 'Abu Dhabi, UAE');
+    await fillRequiredJobFields(user);
 
     await user.click(screen.getByRole('button', { name: /post job/i }));
 
@@ -504,7 +519,7 @@ describe('JobForm — Publish errors', () => {
     // We need a second job to trigger the quota
     // Override publish to return quota error
     server.use(
-      http.post('/api/v1/jobs/:id/publish', () =>
+      http.post('/api/v1/employers/me/jobs/:id/publish', () =>
         HttpResponse.json(
           {
             type: 'about:blank',
@@ -527,10 +542,7 @@ describe('JobForm — Publish errors', () => {
       </Intl>,
     );
 
-    await user.clear(screen.getByLabelText(/job title/i));
-    await user.type(screen.getByLabelText(/job title/i), 'New Plumber');
-    await user.clear(screen.getByLabelText(/location/i));
-    await user.type(screen.getByLabelText(/location/i), 'Doha, Qatar');
+    await fillRequiredJobFields(user);
 
     await user.click(screen.getByRole('button', { name: /post job/i }));
 

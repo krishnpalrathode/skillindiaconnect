@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { createHash } from 'node:crypto';
-import { OtpChallenge, OtpPurpose, Prisma } from '@prisma/client';
+import { DeliveryStatus, OtpChallenge, OtpPurpose, Prisma, WaMessageKind } from '@prisma/client';
 import type { Redis } from 'ioredis';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { REDIS_CLIENT } from '../../core/redis/redis.provider';
@@ -66,6 +66,21 @@ export class OtpService {
     if (result.notOnWhatsapp) {
       return { sent: false, notOnWhatsapp: true };
     }
+
+    // Persist a delivery-tracking row (kind=OTP) so OTP sends are traceable like
+    // every other WhatsApp message. userId is unknown here (send is phone-only).
+    // The messages table legitimately stores the phone — the no-PII rule applies
+    // to logs/audit/Sentry, not the delivery ledger itself.
+    await this.prisma.whatsappMessage.create({
+      data: {
+        phone,
+        kind: WaMessageKind.OTP,
+        templateName: 'wa.otp',
+        waMessageId: result.providerMessageId ?? null,
+        status: result.ok ? DeliveryStatus.SENT : DeliveryStatus.FAILED,
+        statusUpdatedAt: new Date(),
+      },
+    });
 
     return { sent: true };
   }

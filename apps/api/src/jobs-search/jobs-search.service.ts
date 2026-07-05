@@ -12,7 +12,7 @@
  *    JOB_DETAIL_SELECT) so only public-subset fields ever leave this service.
  */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { JobStatus, Prisma } from '@prisma/client';
+import { JobStatus, Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import {
   JOB_CARD_SELECT,
@@ -23,7 +23,14 @@ import {
   toJobDetail,
 } from './public-job.mapper';
 import { SearchCacheService } from './search-cache.service';
+import { SavedJobsService } from './saved-jobs.service';
 import { SearchQueryDto } from './dto/search-query.dto';
+
+/** The optionally-authenticated viewer of a public job feed. */
+export interface JobViewer {
+  userId: string;
+  role: UserRole;
+}
 
 // ─────── Cursor types ─────────────────────────────────────────────────────────
 
@@ -81,14 +88,30 @@ export class JobsSearchService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cache: SearchCacheService,
+    private readonly savedJobs: SavedJobsService,
   ) {}
 
   /**
    * Public job search with cache-through on first pages.
    * Cursor pages (pagination) bypass cache since they are low-traffic and
    * per-cursor caching would require more complex invalidation.
+   *
+   * `viewer` is optional (routes are @Public with @OptionalAuth): when a
+   * candidate is present, isSaved is applied AFTER the cache read so the shared
+   * public cache never carries per-user state.
    */
-  async search(dto: SearchQueryDto): Promise<{ data: JobCard[]; nextCursor: string | null }> {
+  async search(
+    dto: SearchQueryDto,
+    viewer?: JobViewer | null,
+  ): Promise<{ data: JobCard[]; nextCursor: string | null }> {
+    const result = await this.searchPublic(dto);
+    await this.applySavedState(result.data, viewer);
+    return result;
+  }
+
+  private async searchPublic(
+    dto: SearchQueryDto,
+  ): Promise<{ data: JobCard[]; nextCursor: string | null }> {
     if (!dto.cursor) {
       const version = await this.cache.getSearchVersion();
       // Exclude `cursor` from hash — first-page key must not depend on cursor value
@@ -117,11 +140,52 @@ export class JobsSearchService {
   }
 
   /**
+   * Sets isSaved on each card for an authenticated CANDIDATE viewer (true/false);
+   * leaves it null for guests and non-candidates. Mutates the passed cards, which
+   * are always freshly built or freshly deserialized from cache — safe to mutate.
+   */
+  private async applySavedState(
+    cards: { id: string; isSaved: boolean | null }[],
+    viewer?: JobViewer | null,
+  ): Promise<void> {
+    if (!viewer || viewer.role !== UserRole.CANDIDATE || cards.length === 0) return;
+    const savedIds = await this.savedJobs.getSavedJobIds(
+      viewer.userId,
+      cards.map((c) => c.id),
+    );
+    for (const card of cards) card.isSaved = savedIds.has(card.id);
+  }
+
+  /**
+   * Active job categories — used to populate the public search filter and the
+   * employer job-post category picker. Ordered by English name for stable UI.
+   */
+  async listCategories(): Promise<
+    { id: string; slug: string; nameEn: string; nameHi: string | null; nameAr: string | null }[]
+  > {
+    return this.prisma.jobCategory.findMany({
+      where: { isActive: true },
+      select: { id: true, slug: true, nameEn: true, nameHi: true, nameAr: true },
+      orderBy: { nameEn: 'asc' },
+    });
+  }
+
+  /**
    * Public job detail. Returns the public-subset JobDetail for ACTIVE jobs only.
    * Non-active or unknown id → 404 (a paused/archived/draft job is not public).
    * Detail is briefly cached and invalidated by SearchCacheSubscriber on state change.
+   *
+   * `viewer` is optional; isSaved (on the detail AND its similar cards) is applied
+   * AFTER the public cache read so the shared cache stays per-user-agnostic.
    */
-  async getDetail(jobId: string): Promise<JobDetail> {
+  async getDetail(jobId: string, viewer?: JobViewer | null): Promise<JobDetail> {
+    const detail = await this.getDetailPublic(jobId);
+    // The detail itself is a JobCard-shaped object; batch it with its similar cards.
+    await this.applySavedState([detail, ...detail.similar], viewer);
+    return detail;
+  }
+
+  private async getDetailPublic(jobId: string): Promise<JobDetail> {
     const cached = await this.cache.getDetail<JobDetail>(jobId);
     if (cached) return cached;
 

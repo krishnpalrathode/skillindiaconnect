@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { IS_OPTIONAL_AUTH_KEY } from '../decorators/optional-auth.decorator';
 import { CurrentUserPayload } from '../decorators/current-user.decorator';
 import { TokenService } from '../token.service';
 
@@ -17,7 +18,14 @@ export class JwtAuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) return true;
+    if (isPublic) {
+      const isOptionalAuth = this.reflector.getAllAndOverride<boolean>(IS_OPTIONAL_AUTH_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]);
+      if (isOptionalAuth) await this.tryAttachUser(context);
+      return true;
+    }
 
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractBearer(request);
@@ -44,6 +52,30 @@ export class JwtAuthGuard implements CanActivate {
     };
     (request as Request & { user: CurrentUserPayload }).user = user;
     return true;
+  }
+
+  /**
+   * Best-effort user attachment for optional-auth public routes. Any failure
+   * (no token, expired, blacklisted, wrong type) silently leaves request.user
+   * unset — the route stays fully accessible to guests.
+   */
+  private async tryAttachUser(context: ExecutionContext): Promise<void> {
+    const request = context.switchToHttp().getRequest<Request>();
+    const token = this.extractBearer(request);
+    if (!token) return;
+    try {
+      const payload = this.tokenService.verifyAccess(token);
+      if (payload.type !== 'access') return;
+      if (await this.tokenService.isAccessJtiBlacklisted(payload.jti)) return;
+      (request as Request & { user: CurrentUserPayload }).user = {
+        userId: payload.sub,
+        role: payload.role,
+        jti: payload.jti,
+        exp: payload.exp,
+      };
+    } catch {
+      // Optional — ignore invalid tokens on public routes.
+    }
   }
 
   private extractBearer(request: Request): string | null {

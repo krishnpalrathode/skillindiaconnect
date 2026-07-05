@@ -46,6 +46,25 @@ export class SavedJobsService {
     });
   }
 
+  /**
+   * Which of `jobIds` the given candidate (by JWT userId) has saved. Returns an
+   * empty set for non-candidates or when the user has no profile / no saves.
+   * Used to populate JobCard/JobDetail.isSaved on the public feed per-viewer.
+   */
+  async getSavedJobIds(userId: string, jobIds: string[]): Promise<Set<string>> {
+    if (jobIds.length === 0) return new Set();
+    const profile = await this.prisma.candidateProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    if (!profile) return new Set();
+    const rows = await this.prisma.savedJob.findMany({
+      where: { candidateId: profile.id, jobId: { in: jobIds } },
+      select: { jobId: true },
+    });
+    return new Set(rows.map((r) => r.jobId));
+  }
+
   async unsave(userId: string, role: UserRole, jobId: string): Promise<void> {
     if (role !== UserRole.CANDIDATE) {
       throw new ForbiddenException({ code: 'CANDIDATE_ONLY' });

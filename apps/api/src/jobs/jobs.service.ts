@@ -11,7 +11,7 @@ import { SettingsService } from '../settings/settings.service';
 import { SETTING_KEYS } from '../settings/settings.keys';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
-import { JOB_EVENTS, JobPublishedPayload } from './jobs.events';
+import { JOB_EVENTS, JobPublishedPayload, JobPausedPayload } from './jobs.events';
 import { JobData, JobLifecycleService } from './job-lifecycle.service';
 import { PublishGuardService } from './publish-guard.service';
 import { CreateJobDto } from './dto/create-job.dto';
@@ -413,5 +413,13 @@ export class JobsService {
         }),
       ),
     );
+
+    // Emit JOB_EVENTS.PAUSED per job so SearchCacheSubscriber invalidates the
+    // public search cache — otherwise a suspended employer's now-PAUSED jobs
+    // keep showing in cached search results until the TTL expires.
+    for (const j of jobs) {
+      const payload: JobPausedPayload = { jobId: j.id, companyId, reason };
+      this.eventEmitter.emit(JOB_EVENTS.PAUSED, payload);
+    }
   }
 }

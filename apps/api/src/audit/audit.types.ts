@@ -30,6 +30,7 @@ export const AUDIT_ACTIONS = {
   // Account (S1-3)
   ACCOUNT_DELETION_REQUESTED: 'account.deletion_requested',
   // Employer (S2-B4 — stubs only until that sprint lands)
+  EMPLOYER_REGISTERED: 'employer.registered',
   EMPLOYER_APPROVED: 'employer.approved',
   EMPLOYER_REJECTED: 'employer.rejected',
   EMPLOYER_SUSPENDED: 'employer.suspended',

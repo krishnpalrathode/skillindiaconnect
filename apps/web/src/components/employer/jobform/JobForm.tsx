@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
 import { Field } from '@/components/ui/field';
@@ -21,7 +21,14 @@ import {
   getCurrenciesForMarket,
   type JobFormValues,
 } from '@/lib/jobs/jobFormState';
-import { createJob, updateJob, publishJob, type Job } from '@/lib/api/jobs-employer';
+import {
+  createJob,
+  updateJob,
+  publishJob,
+  getJobCategories,
+  type Job,
+  type JobCategory,
+} from '@/lib/api/jobs-employer';
 import { ApiRequestError } from '@/lib/api/client';
 
 interface JobFormProps {
@@ -49,6 +56,13 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
     null,
   );
   const [savedJobId, setSavedJobId] = useState<string | null>(job?.id ?? null);
+  const [categories, setCategories] = useState<JobCategory[]>([]);
+
+  useEffect(() => {
+    getJobCategories()
+      .then((r) => setCategories(r.data))
+      .catch(() => setCategories([]));
+  }, []);
 
   const patch = useCallback(
     (partial: Partial<JobFormValues>) => {
@@ -189,6 +203,44 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
               </label>
             ))}
           </div>
+        </Field>
+
+        <Field id="job-category" label="Job category" required error={errors.categoryId}>
+          <select
+            id="job-category"
+            value={values.categoryId}
+            onChange={(e) => patch({ categoryId: e.target.value })}
+            aria-required
+            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-primary-600 ps-3 pe-3"
+          >
+            <option value="" disabled>
+              {categories.length === 0 ? 'Loading categories…' : 'Select a category'}
+            </option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {locale === 'hi'
+                  ? (cat.nameHi ?? cat.nameEn)
+                  : locale === 'ar'
+                    ? (cat.nameAr ?? cat.nameEn)
+                    : cat.nameEn}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field id="job-employment-type" label="Employment type" required>
+          <select
+            id="job-employment-type"
+            value={values.employmentType}
+            onChange={(e) =>
+              patch({ employmentType: e.target.value as JobFormValues['employmentType'] })
+            }
+            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-primary-600 ps-3 pe-3"
+          >
+            <option value="FULL_TIME">Full-time</option>
+            <option value="PART_TIME">Part-time</option>
+            <option value="CONTRACT">Contract</option>
+          </select>
         </Field>
 
         <Field id="job-location" label={t('basic.locationLabel')} required error={errors.location}>

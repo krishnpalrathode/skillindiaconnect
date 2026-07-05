@@ -34,6 +34,7 @@ import { Redis } from 'ioredis';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { JobsSearchService } from './jobs-search.service';
 import { SearchCacheService } from './search-cache.service';
+import { SavedJobsService } from './saved-jobs.service';
 
 jest.setTimeout(180_000);
 
@@ -125,7 +126,8 @@ beforeAll(async () => {
     cacheService = new SearchCacheService(redis as never);
     Object.defineProperty(cacheService, 'redis', { value: redis, writable: false });
 
-    searchService = new JobsSearchService(prismaSvc, cacheService);
+    const savedJobsSvc = new SavedJobsService(prismaSvc);
+    searchService = new JobsSearchService(prismaSvc, cacheService, savedJobsSvc);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     if (

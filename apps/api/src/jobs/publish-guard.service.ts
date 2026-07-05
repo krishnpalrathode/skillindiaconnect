@@ -84,7 +84,7 @@ export class PublishGuardService {
 
       throw new UnprocessableEntityException({
         code: 'WORKER_PROTECTION_VIOLATION',
-        meta: { failedRules },
+        meta: { violations: failedRules },
       });
     }
 
@@ -114,7 +114,10 @@ export class PublishGuardService {
         where: { companyId: company.id, status: JobStatus.ACTIVE },
       });
       if (activeCount >= maxActiveJobs) {
-        throw new UnprocessableEntityException({ code: 'JOB_QUOTA_EXCEEDED' });
+        throw new UnprocessableEntityException({
+          code: 'JOB_QUOTA_EXCEEDED',
+          meta: { planLimit: maxActiveJobs },
+        });
       }
     }
   }
