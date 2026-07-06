@@ -34,6 +34,7 @@ import { Redis } from 'ioredis';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { JobsSearchService } from './jobs-search.service';
 import { SearchCacheService } from './search-cache.service';
+import { SavedJobsService } from './saved-jobs.service';
 
 jest.setTimeout(180_000);
 
@@ -125,7 +126,8 @@ beforeAll(async () => {
     cacheService = new SearchCacheService(redis as never);
     Object.defineProperty(cacheService, 'redis', { value: redis, writable: false });
 
-    searchService = new JobsSearchService(prismaSvc, cacheService);
+    const savedJobsSvc = new SavedJobsService(prismaSvc);
+    searchService = new JobsSearchService(prismaSvc, cacheService, savedJobsSvc);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     if (
@@ -179,12 +181,17 @@ async function createJob(opts: {
   transportation?: boolean;
 }) {
   const now = new Date();
+  // Resolve the effective status ONCE — the publishedAt/autoArchiveAt conditions
+  // below must check the defaulted value, not the raw (possibly-undefined) opt.
+  // Otherwise a job created without an explicit status defaults to ACTIVE but
+  // gets publishedAt=null, which silently breaks recent-sort cursor pagination.
+  const status = opts.status ?? JobStatus.ACTIVE;
   return prismaClient.job.create({
     data: {
       companyId: COMPANY_ID,
       title: opts.title,
       description: opts.description ?? 'Test description',
-      status: opts.status ?? JobStatus.ACTIVE,
+      status,
       market: opts.market ?? JobMarket.GULF,
       location: 'Dubai',
       categoryId: opts.categoryId ?? CATEGORY_ID,
@@ -199,10 +206,11 @@ async function createJob(opts: {
       daysPerWeek: 6,
       isFeatured: opts.isFeatured ?? false,
       isUrgent: opts.isUrgent ?? false,
-      publishedAt: opts.status === JobStatus.ACTIVE ? (opts.publishedAt ?? now) : null,
-      autoArchiveAt: opts.status === JobStatus.ACTIVE
-        ? new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)
-        : null,
+      publishedAt: status === JobStatus.ACTIVE ? (opts.publishedAt ?? now) : null,
+      autoArchiveAt:
+        status === JobStatus.ACTIVE
+          ? new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)
+          : null,
     },
   });
 }

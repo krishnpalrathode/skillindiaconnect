@@ -36,12 +36,12 @@ export class EmployerController {
     await this.audit.log({
       actorUserId: user.userId,
       actorRole: user.role,
-      action: AUDIT_ACTIONS.EMPLOYER_APPROVED, // employer.registered — reusing module bucket
+      action: AUDIT_ACTIONS.EMPLOYER_REGISTERED,
       module: AUDIT_MODULES.EMPLOYER,
       targetType: 'Company',
       targetId: company.id,
       status: AuditStatus.SUCCESS,
-      meta: { companyName: company.name, event: 'registered' },
+      meta: { companyName: company.name },
     });
 
     return { data: company };

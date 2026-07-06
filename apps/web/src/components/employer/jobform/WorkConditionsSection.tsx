@@ -13,7 +13,12 @@ interface WorkConditionsSectionProps {
     patch: Partial<
       Pick<
         JobFormValues,
-        'workConditions' | 'experienceRequiredYears' | 'vacancies' | 'genderPreference'
+        | 'hoursPerDay'
+        | 'daysPerWeek'
+        | 'overtime'
+        | 'experienceRequiredYears'
+        | 'vacancies'
+        | 'genderPreference'
       >
     >,
   ) => void;
@@ -31,23 +36,51 @@ export function WorkConditionsSection({ values, errors, onChange }: WorkConditio
         <p className="mt-0.5 text-sm text-neutral-500">{t('subtitle')}</p>
       </div>
 
-      <Field
-        id="work-conditions"
-        label={t('workConditionsLabel')}
-        hint={t('workConditionsHint')}
-        error={errors.workConditions}
+      {/* Structured working hours — map to hoursPerDay / daysPerWeek columns */}
+      <div className="grid grid-cols-2 gap-3">
+        <Field id="hours-per-day" label="Hours per day" required error={errors.hoursPerDay}>
+          <Input
+            id="hours-per-day"
+            type="number"
+            min={1}
+            max={24}
+            step={1}
+            value={values.hoursPerDay}
+            onChange={(e) => onChange({ hoursPerDay: e.target.value })}
+            placeholder="8"
+            hasError={!!errors.hoursPerDay}
+            aria-required
+          />
+        </Field>
+        <Field id="days-per-week" label="Days per week" required error={errors.daysPerWeek}>
+          <Input
+            id="days-per-week"
+            type="number"
+            min={1}
+            max={7}
+            step={1}
+            value={values.daysPerWeek}
+            onChange={(e) => onChange({ daysPerWeek: e.target.value })}
+            placeholder="6"
+            hasError={!!errors.daysPerWeek}
+            aria-required
+          />
+        </Field>
+      </div>
+
+      <label
+        htmlFor="overtime"
+        className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3 cursor-pointer hover:border-primary-400 hover:bg-primary-50/30 transition-colors"
       >
-        <textarea
-          id="work-conditions"
-          rows={3}
-          value={values.workConditions}
-          onChange={(e) => onChange({ workConditions: e.target.value })}
-          placeholder={t('workConditionsPlaceholder')}
-          maxLength={500}
-          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none resize-none focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-primary-600 ps-3 pe-3 min-h-[80px]"
-          aria-describedby="work-conditions-hint"
+        <input
+          id="overtime"
+          type="checkbox"
+          checked={values.overtime}
+          onChange={() => onChange({ overtime: !values.overtime })}
+          className="size-4 accent-primary-600 cursor-pointer"
         />
-      </Field>
+        <span className="text-sm font-medium text-neutral-900">Overtime available</span>
+      </label>
 
       <div className="grid grid-cols-2 gap-3">
         <Field

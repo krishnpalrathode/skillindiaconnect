@@ -1702,10 +1702,10 @@ export interface components {
         /** @enum {string} */
         GenderPreference: "MALE" | "FEMALE" | "ANY";
         /**
-         * @description PROFILE_VIEWED fires when an employer views a candidate's full profile (deduplicated per company per rolling 24 h window). Data payload: `{ companyName: string }`. PASSPORT_EXPIRY fires when a passport is within the reminder window. Data payload: `{ expiryDate: string, daysRemaining: integer }`.
+         * @description Must match the Prisma `NotificationType` enum (the DB source of truth). PROFILE_VIEWED fires when an employer views a candidate's full profile (deduplicated per company per rolling 24 h window). Data payload: `{ companyName: string }`. PASSPORT_EXPIRY fires when a passport is within the reminder window. Data payload: `{ expiryDate: string, daysRemaining: integer }`.
          * @enum {string}
          */
-        NotificationType: "APPLICATION_UPDATE" | "JOB_MATCH" | "PROFILE_REMINDER" | "DOCUMENT_STATUS" | "PROFILE_VIEWED" | "PASSPORT_EXPIRY" | "SYSTEM";
+        NotificationType: "APPLICATION_SELECTED" | "APPLICATION_SHORTLISTED" | "APPLICATION_REJECTED" | "NEW_JOB_MATCH" | "PROFILE_REMINDER" | "JOB_CLOSING_SOON" | "PASSPORT_EXPIRY" | "PROFILE_VIEWED" | "EMPLOYER_APPROVED" | "EMPLOYER_REJECTED" | "EMPLOYER_SUSPENDED" | "SUBSCRIPTION_PURCHASED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "CANDIDATE_MATCHES" | "RESUME_SENT";
         /**
          * @description Maps to the tabs on the Admin Settings screen (Screen 28). WORKER_PROTECTION settings are core rules — only SUPER_ADMIN may update them.
          * @enum {string}

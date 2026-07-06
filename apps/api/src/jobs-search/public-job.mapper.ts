@@ -156,6 +156,9 @@ export interface JobCard {
   createdAt: Date;
   viewsCount: number;
   companyName: string;
+  // Per-viewer: true/false for an authenticated candidate, null for guests.
+  // Applied by the service AFTER the public cache read (never cached per-user).
+  isSaved: boolean | null;
   company: PublicCompany;
 }
 
@@ -206,6 +209,7 @@ export function toJobCard(job: JobCardData): JobCard {
     createdAt: job.createdAt,
     viewsCount: job.viewsCount,
     companyName: job.company.name,
+    isSaved: null, // per-viewer; set by the service after the public cache read
     company: {
       id: job.company.id,
       name: job.company.name,
@@ -245,6 +249,7 @@ export function toJobDetail(job: JobDetailData, similar: JobCard[]): JobDetail {
     createdAt: job.createdAt,
     viewsCount: job.viewsCount,
     companyName: job.company.name,
+    isSaved: null, // per-viewer; set by the service after the public cache read
     description: job.description,
     requirements: job.requirements as string[],
     experienceRequiredYears: job.experienceRequiredYears ?? null,

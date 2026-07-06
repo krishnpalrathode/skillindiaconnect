@@ -33,7 +33,7 @@ vi.mock('@/lib/auth/auth-context', async (importOriginal) => {
 
 const UNREAD_NOTIFICATION: Notification = {
   id: 'test-notif-1',
-  type: 'JOB_MATCH',
+  type: 'NEW_JOB_MATCH',
   title: 'New Job Match',
   body: 'A mason role in Dubai matches your skills.',
   read: false,
@@ -45,7 +45,7 @@ const UNREAD_NOTIFICATION: Notification = {
 
 const READ_NOTIFICATION: Notification = {
   id: 'test-notif-2',
-  type: 'APPLICATION_UPDATE',
+  type: 'APPLICATION_SHORTLISTED',
   title: 'Application Shortlisted',
   body: 'Your application has been shortlisted.',
   read: true,

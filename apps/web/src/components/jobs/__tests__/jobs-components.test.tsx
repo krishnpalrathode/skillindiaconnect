@@ -12,6 +12,9 @@ import { db, makeAccessToken, toJobDetail } from '../../../mocks/data';
 import { setAccessToken, resetClient } from '../../../lib/api/client';
 import { server } from '../../../mocks/server';
 import { http, HttpResponse } from 'msw';
+import type { components } from '@skillindiaconnect/shared-types';
+
+type AuthUser = components['schemas']['UserSummary'] | null;
 
 // ─── Mock next/navigation ────────────────────────────────────────────────────
 
@@ -27,7 +30,7 @@ vi.mock('next/navigation', () => ({
 // has no cookie in tests and returns 401, so user stays null. We mock useAuth
 // directly to control auth state without the async bootstrap dance.
 
-const mockAuthUser = vi.fn(() => null);
+const mockAuthUser = vi.fn((): AuthUser => null);
 
 vi.mock('@/lib/auth/auth-context', async (importOriginal) => {
   const mod = await importOriginal<typeof import('@/lib/auth/auth-context')>();

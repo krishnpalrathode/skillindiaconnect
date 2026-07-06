@@ -879,7 +879,7 @@ export const db = {
         } satisfies MockNotification,
         {
           id: 'notif-1',
-          type: 'APPLICATION_UPDATE',
+          type: 'APPLICATION_SHORTLISTED',
           title: 'Application Shortlisted',
           body: 'Your application for Mason at Gulf Builders Arabia has been shortlisted.',
           read: true,
@@ -890,7 +890,7 @@ export const db = {
         } satisfies MockNotification,
         {
           id: 'notif-2',
-          type: 'JOB_MATCH',
+          type: 'NEW_JOB_MATCH',
           title: 'New Job Match',
           body: 'A new Gulf job matching your Mason skills is available.',
           read: false,
@@ -901,9 +901,9 @@ export const db = {
         } satisfies MockNotification,
         {
           id: 'notif-3',
-          type: 'SYSTEM',
-          title: 'Platform Update',
-          body: 'New features are available on SkillIndiaConnect. Check out your profile.',
+          type: 'PROFILE_VIEWED',
+          title: 'Your profile was viewed',
+          body: 'An employer viewed your profile. Keep it up to date to stand out.',
           read: false,
           readAt: null,
           createdAt: NOW,
@@ -919,7 +919,7 @@ export const db = {
         } satisfies MockNotification,
         {
           id: 'notif-5',
-          type: 'JOB_MATCH',
+          type: 'NEW_JOB_MATCH',
           title: 'New Job Match',
           body: 'A Plumber role in Dubai matches your skills. Apply before the deadline.',
           read: true,
@@ -930,9 +930,9 @@ export const db = {
         } satisfies MockNotification,
         {
           id: 'notif-6',
-          type: 'DOCUMENT_STATUS',
-          title: 'Passport Verified',
-          body: 'Your passport document has been successfully verified.',
+          type: 'PASSPORT_EXPIRY',
+          title: 'Passport expiring soon',
+          body: 'Your passport expires within 6 months. Please renew it to keep applying.',
           read: true,
           readAt: daysAgo(14),
           createdAt: daysAgo(14),

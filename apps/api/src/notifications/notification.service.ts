@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
-import { DeliveryStatus, Notification, NotificationType, Prisma, UserRole } from '@prisma/client';
+import { DeliveryStatus, NotificationType, Prisma, UserRole } from '@prisma/client';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
@@ -16,6 +16,7 @@ import {
   FILTER_BUCKETS,
 } from './dto/list-notifications.dto';
 import { MarkReadDto } from './dto/mark-read.dto';
+import { NotificationDto, toNotificationDto } from './notification.mapper';
 
 @Injectable()
 export class NotificationService {
@@ -77,7 +78,7 @@ export class NotificationService {
   async listNotifications(
     userId: string,
     dto: ListNotificationsDto,
-  ): Promise<{ data: Notification[]; nextCursor: string | null }> {
+  ): Promise<{ data: NotificationDto[]; nextCursor: string | null }> {
     const limit = Math.min(dto.limit ?? 20, 100);
 
     const rows = await this.prisma.notification.findMany({
@@ -92,10 +93,10 @@ export class NotificationService {
     });
 
     const hasMore = rows.length > limit;
-    const data = hasMore ? rows.slice(0, limit) : rows;
-    const nextCursor = hasMore ? (data[data.length - 1]?.id ?? null) : null;
+    const pageRows = hasMore ? rows.slice(0, limit) : rows;
+    const nextCursor = hasMore ? (pageRows[pageRows.length - 1]?.id ?? null) : null;
 
-    return { data, nextCursor };
+    return { data: pageRows.map(toNotificationDto), nextCursor };
   }
 
   async markRead(userId: string, dto: MarkReadDto): Promise<void> {

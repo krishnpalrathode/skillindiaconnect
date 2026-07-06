@@ -43,7 +43,7 @@ function summary(overrides?: Partial<ProfileViewsSummary>): ProfileViewsSummary 
 function notif(overrides: Partial<Notification>): Notification {
   return {
     id: 'n-1',
-    type: 'SYSTEM',
+    type: 'PROFILE_REMINDER',
     title: 'Title',
     body: 'Body',
     read: false,
@@ -167,10 +167,17 @@ describe('NotificationItem — PROFILE_VIEWED / PASSPORT_EXPIRY', () => {
     expect(screen.getByText(/has expired/i)).toBeInTheDocument();
   });
 
-  it('regression: an unmapped-action type (SYSTEM) renders without a link', () => {
+  it('regression: an unmapped-action type falls back and renders without a link', () => {
     render(
       <NotificationItem
-        notification={notif({ id: 'sys', type: 'SYSTEM', title: 'Platform Update', body: 'Hi' })}
+        notification={notif({
+          id: 'sys',
+          // A type not present in notificationMeta (e.g. a future enum value) must
+          // hit fallbackNotificationMeta — render, but with no route/link.
+          type: 'FUTURE_UNMAPPED_TYPE' as Notification['type'],
+          title: 'Platform Update',
+          body: 'Hi',
+        })}
         onMarkRead={vi.fn()}
       />,
     );

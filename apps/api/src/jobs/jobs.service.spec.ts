@@ -34,6 +34,7 @@ import { EmployerService } from '../employer/employer.service';
 import { SettingsService } from '../settings/settings.service';
 import { SETTING_KEYS } from '../settings/settings.keys';
 import { JobsService } from './jobs.service';
+import { JOB_EVENTS } from './jobs.events';
 import { JobLifecycleService } from './job-lifecycle.service';
 import { PublishGuardService } from './publish-guard.service';
 import { CreateJobDto } from './dto/create-job.dto';
@@ -45,6 +46,7 @@ const API_DIR = path.resolve(__dirname, '../..');
 let pg: StartedTestContainer;
 let prismaClient: PrismaClient;
 let service: JobsService;
+let eventEmitter: EventEmitter2;
 let dockerUnavailable = false;
 
 const EMPLOYER_USER_ID = 'jsvc-emp-1';
@@ -128,7 +130,7 @@ beforeAll(async () => {
     }
 
     const prismaSvc = prismaClient as unknown as PrismaService;
-    const eventEmitter = new EventEmitter2();
+    eventEmitter = new EventEmitter2();
     const auditService = new AuditService(prismaSvc);
     const employerService = new EmployerService(prismaSvc, null as never);
 
@@ -226,9 +228,10 @@ describe('JobsService', () => {
 
       const job = await service.create(baseDto(), EMPLOYER_USER_ID, UserRole.EMPLOYER);
 
-      // Raw query because omit excludes searchVector from the ORM return type
+      // Raw query because omit excludes searchVector from the ORM return type.
+      // Column is camelCase (no @map in the schema) — must be quoted in raw SQL.
       const rows = await prismaClient.$queryRaw<Array<{ sv_null: boolean }>>`
-        SELECT (search_vector IS NULL) AS sv_null
+        SELECT ("searchVector" IS NULL) AS sv_null
         FROM jobs
         WHERE id = ${job.id}
       `;
@@ -395,6 +398,7 @@ describe('JobsService', () => {
         data: { status: JobStatus.ACTIVE },
       });
 
+      const emitSpy = jest.spyOn(eventEmitter, 'emit');
       await service.pauseAllActiveJobsForCompany(companyId, 'employer_suspended');
 
       const paused = await prismaClient.job.findMany({
@@ -402,6 +406,11 @@ describe('JobsService', () => {
         select: { status: true },
       });
       expect(paused.every((j) => j.status === JobStatus.PAUSED)).toBe(true);
+
+      // Must emit JOB_EVENTS.PAUSED per job so the search cache invalidates.
+      const pausedEmits = emitSpy.mock.calls.filter(([evt]) => evt === JOB_EVENTS.PAUSED);
+      expect(pausedEmits).toHaveLength(2);
+      emitSpy.mockRestore();
     });
   });
 });

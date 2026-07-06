@@ -649,12 +649,19 @@ const candidateMeNotifications = http.get(`${BASE}/candidates/me/notifications`,
   const cursor = url.searchParams.get('cursor');
   const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
 
+  // Mirror the backend FILTER_BUCKETS (apps/api/.../list-notifications.dto.ts).
   const filterMap: Record<string, string[]> = {
-    applications: ['APPLICATION_UPDATE'],
-    jobs: ['JOB_MATCH'],
-    // S3-F3: PROFILE_VIEWED + PASSPORT_EXPIRY are profile-visibility events.
-    profile: ['PROFILE_REMINDER', 'DOCUMENT_STATUS', 'PROFILE_VIEWED', 'PASSPORT_EXPIRY'],
-    system: ['SYSTEM'],
+    applications: ['APPLICATION_SELECTED', 'APPLICATION_SHORTLISTED', 'APPLICATION_REJECTED'],
+    jobs: ['NEW_JOB_MATCH', 'JOB_CLOSING_SOON', 'CANDIDATE_MATCHES', 'RESUME_SENT'],
+    profile: ['PROFILE_REMINDER', 'PASSPORT_EXPIRY', 'PROFILE_VIEWED'],
+    system: [
+      'EMPLOYER_APPROVED',
+      'EMPLOYER_REJECTED',
+      'EMPLOYER_SUSPENDED',
+      'SUBSCRIPTION_PURCHASED',
+      'SUBSCRIPTION_EXPIRING',
+      'SUBSCRIPTION_EXPIRED',
+    ],
   };
 
   let notifs = db.notifications.get(user.id) ?? [];
@@ -1117,9 +1124,24 @@ const getJobById = http.get(`${BASE}/jobs/:id`, ({ request, params }) => {
   return HttpResponse.json({ data: detail });
 });
 
+// ─── S2: Job categories — public enumeration ─────────────────────────────────
+
+const MOCK_JOB_CATEGORIES = [
+  { id: 'cat-carpenter', slug: 'carpenter', nameEn: 'Carpenter', nameHi: null, nameAr: null },
+  { id: 'cat-driver', slug: 'driver', nameEn: 'Driver', nameHi: null, nameAr: null },
+  { id: 'cat-electrician', slug: 'electrician', nameEn: 'Electrician', nameHi: null, nameAr: null },
+  { id: 'cat-mason', slug: 'mason', nameEn: 'Mason', nameHi: null, nameAr: null },
+  { id: 'cat-plumber', slug: 'plumber', nameEn: 'Plumber', nameHi: null, nameAr: null },
+  { id: 'cat-welder', slug: 'welder', nameEn: 'Welder', nameHi: null, nameAr: null },
+];
+
+const getJobCategories = http.get(`${BASE}/job-categories`, () =>
+  HttpResponse.json({ data: MOCK_JOB_CATEGORIES }),
+);
+
 // ─── S2: Jobs — employer CRUD + lifecycle ────────────────────────────────────
 
-const postJobs = http.post(`${BASE}/jobs`, async ({ request }) => {
+const postJobs = http.post(`${BASE}/employers/me/jobs`, async ({ request }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
@@ -1138,7 +1160,8 @@ const postJobs = http.post(`${BASE}/jobs`, async ({ request }) => {
     title: string;
     market: 'GULF' | 'LOCAL';
     location: string;
-    salaryCurrency: string;
+    currency?: string;
+    salaryCurrency?: string;
     accommodation: boolean;
     healthInsurance: boolean;
     transportation: boolean;
@@ -1148,8 +1171,10 @@ const postJobs = http.post(`${BASE}/jobs`, async ({ request }) => {
     return errorResponse(422, 'VALIDATION_ERROR', 'Validation failed', 'Required fields missing.');
   }
 
+  const currency = body.currency ?? body.salaryCurrency ?? 'AED';
   const job = {
     id: `job-${Date.now()}`,
+    humanId: `JB-2026-${db.jobs.size + 1}`,
     title: body.title,
     status: 'DRAFT' as const,
     market: body.market,
@@ -1158,11 +1183,12 @@ const postJobs = http.post(`${BASE}/jobs`, async ({ request }) => {
     categoryId: body.categoryId ?? null,
     salaryMin: body.salaryMin ?? null,
     salaryMax: body.salaryMax ?? null,
-    salaryCurrency: body.salaryCurrency ?? 'AED',
-    accommodation: body.accommodation ?? false,
-    healthInsurance: body.healthInsurance ?? false,
-    transportation: body.transportation ?? false,
-    workConditions: body.workConditions,
+    // Store both keys so public (salaryCurrency) and employer (currency) reads agree.
+    currency,
+    salaryCurrency: currency,
+    accommodation: body.accommodation ?? true,
+    healthInsurance: body.healthInsurance ?? true,
+    transportation: body.transportation ?? true,
     requirements: body.requirements ?? [],
     experienceRequiredYears: body.experienceRequiredYears ?? null,
     vacancies: body.vacancies ?? null,
@@ -1178,7 +1204,7 @@ const postJobs = http.post(`${BASE}/jobs`, async ({ request }) => {
   return HttpResponse.json({ data: job }, { status: 201 });
 });
 
-const patchJobById = http.patch(`${BASE}/jobs/:id`, async ({ request, params }) => {
+const patchJobById = http.patch(`${BASE}/employers/me/jobs/:id`, async ({ request, params }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
@@ -1207,7 +1233,7 @@ const patchJobById = http.patch(`${BASE}/jobs/:id`, async ({ request, params }) 
   return HttpResponse.json({ data: job });
 });
 
-const publishJob = http.post(`${BASE}/jobs/:id/publish`, ({ request, params }) => {
+const publishJob = http.post(`${BASE}/employers/me/jobs/:id/publish`, ({ request, params }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
@@ -1262,7 +1288,7 @@ const publishJob = http.post(`${BASE}/jobs/:id/publish`, ({ request, params }) =
   return HttpResponse.json({ data: job });
 });
 
-const pauseJob = http.post(`${BASE}/jobs/:id/pause`, ({ request, params }) => {
+const pauseJob = http.post(`${BASE}/employers/me/jobs/:id/pause`, ({ request, params }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
@@ -1284,7 +1310,7 @@ const pauseJob = http.post(`${BASE}/jobs/:id/pause`, ({ request, params }) => {
   return HttpResponse.json({ data: job });
 });
 
-const resumeJob = http.post(`${BASE}/jobs/:id/resume`, ({ request, params }) => {
+const resumeJob = http.post(`${BASE}/employers/me/jobs/:id/resume`, ({ request, params }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
@@ -1331,7 +1357,7 @@ const resumeJob = http.post(`${BASE}/jobs/:id/resume`, ({ request, params }) => 
   return HttpResponse.json({ data: job });
 });
 
-const archiveJob = http.post(`${BASE}/jobs/:id/archive`, ({ request, params }) => {
+const archiveJob = http.post(`${BASE}/employers/me/jobs/:id/archive`, ({ request, params }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
@@ -1354,7 +1380,7 @@ const archiveJob = http.post(`${BASE}/jobs/:id/archive`, ({ request, params }) =
   return HttpResponse.json({ data: job });
 });
 
-const duplicateJob = http.post(`${BASE}/jobs/:id/duplicate`, ({ request, params }) => {
+const duplicateJob = http.post(`${BASE}/employers/me/jobs/:id/duplicate`, ({ request, params }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
@@ -2049,6 +2075,7 @@ export const handlers = [
   // S2: Jobs — public
   getJobs,
   getJobById,
+  getJobCategories,
   // S2: Jobs — employer CRUD + lifecycle
   postJobs,
   patchJobById,

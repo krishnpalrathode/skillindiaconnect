@@ -231,22 +231,32 @@ components:
     # ── Notification enums (S2 + S3) ───────────────────────────────────────────
     NotificationType:
       type: string
-      enum:
-        [
-          APPLICATION_UPDATE,
-          JOB_MATCH,
-          PROFILE_REMINDER,
-          DOCUMENT_STATUS,
-          PROFILE_VIEWED,
-          PASSPORT_EXPIRY,
-          SYSTEM,
-        ]
       description: >
+        Must match the Prisma `NotificationType` enum (the DB source of truth).
         PROFILE_VIEWED fires when an employer views a candidate's full profile
         (deduplicated per company per rolling 24 h window). Data payload:
         `{ companyName: string }`.
         PASSPORT_EXPIRY fires when a passport is within the reminder window.
         Data payload: `{ expiryDate: string, daysRemaining: integer }`.
+      enum:
+        [
+          APPLICATION_SELECTED,
+          APPLICATION_SHORTLISTED,
+          APPLICATION_REJECTED,
+          NEW_JOB_MATCH,
+          PROFILE_REMINDER,
+          JOB_CLOSING_SOON,
+          PASSPORT_EXPIRY,
+          PROFILE_VIEWED,
+          EMPLOYER_APPROVED,
+          EMPLOYER_REJECTED,
+          EMPLOYER_SUSPENDED,
+          SUBSCRIPTION_PURCHASED,
+          SUBSCRIPTION_EXPIRING,
+          SUBSCRIPTION_EXPIRED,
+          CANDIDATE_MATCHES,
+          RESUME_SENT,
+        ]
 
     # ── Settings enums (S2) ─────────────────────────────────────────────────────
     SettingGroup:

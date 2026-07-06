@@ -224,6 +224,10 @@ describe('listNotifications + markRead', () => {
     const { data, nextCursor } = await service.listNotifications(TEST_USER_ID, { limit: 10 });
     expect(data.length).toBe(2);
     expect(nextCursor).toBeNull();
+    // Mapped to the contract shape: derived `read` boolean, no internal `userId`/`data`.
+    expect(data[0]).toMatchObject({ read: false, readAt: null });
+    expect(data[0]).not.toHaveProperty('userId');
+    expect(data[0]).not.toHaveProperty('data');
   });
 
   it('listNotifications paginates with cursor', async () => {

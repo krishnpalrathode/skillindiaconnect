@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import type { components } from '@skillindiaconnect/shared-types';
 import { cn } from '@/lib/utils';
-import { notificationMeta } from '@/lib/notifications/notificationMeta';
+import { notificationMeta, fallbackNotificationMeta } from '@/lib/notifications/notificationMeta';
 
 type Notification = components['schemas']['Notification'];
 
@@ -30,7 +30,9 @@ export function NotificationItem({ notification, onMarkRead }: NotificationItemP
   const params = useParams<{ locale: string }>();
   const locale = params.locale ?? 'en';
 
-  const meta = notificationMeta[notification.type];
+  // Fall back gracefully if the API ever sends a type not in the map (prevents
+  // a single unknown notification from crashing the whole feed).
+  const meta = notificationMeta[notification.type] ?? fallbackNotificationMeta;
   const { Icon, colorClass, bgClass, routeFn } = meta;
   const route = routeFn?.(notification.relatedEntityId, notification.relatedEntityType);
   const href = route ? `/${locale}${route}` : undefined;

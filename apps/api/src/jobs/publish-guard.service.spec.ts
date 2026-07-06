@@ -289,7 +289,7 @@ describe('PublishGuardService — ordered enforcement gate', () => {
     const body = err!.getResponse() as Record<string, unknown>;
     expect(body.code).toBe('WORKER_PROTECTION_VIOLATION');
     const meta = body.meta as Record<string, unknown>;
-    expect((meta.failedRules as string[])).toContain('accommodation');
+    expect((meta.violations as string[])).toContain('accommodation');
 
     // BLOCKED audit row must be present
     const blockedRows = await prismaClient.auditLog.findMany({
@@ -378,7 +378,9 @@ describe('PublishGuardService — ordered enforcement gate', () => {
     } catch (e) {
       err = e as UnprocessableEntityException;
     }
-    expect((err!.getResponse() as Record<string, unknown>).code).toBe('JOB_QUOTA_EXCEEDED');
+    const body = err!.getResponse() as Record<string, unknown>;
+    expect(body.code).toBe('JOB_QUOTA_EXCEEDED');
+    expect((body.meta as Record<string, unknown>).planLimit).toBe(1);
   });
 
   it('QUOTA: employer with active PRO subscription (maxActiveJobs=null) → passes quota', async () => {
