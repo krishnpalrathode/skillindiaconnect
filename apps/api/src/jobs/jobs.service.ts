@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { JobStatus, UserRole } from '@prisma/client';
+import { JobMarket, JobStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { EmployerService } from '../employer/employer.service';
 import { SettingsService } from '../settings/settings.service';
@@ -39,6 +39,17 @@ const SORT_FIELD_MAP: Record<string, 'createdAt' | 'publishedAt' | 'title'> = {
   publishedAt: 'publishedAt',
   title: 'title',
 };
+
+/** Narrow projection of a job for the S4 apply flow (see getJobForApplication). */
+export interface JobForApplication {
+  id: string;
+  status: JobStatus;
+  market: JobMarket;
+  categoryId: string;
+  experienceRequiredYears: number | null;
+  companyId: string;
+  title: string;
+}
 
 @Injectable()
 export class JobsService {
@@ -379,6 +390,34 @@ export class JobsService {
     });
     if (!job) throw new NotFoundException({ code: 'JOB_NOT_FOUND' });
     await this.assertOwnership(job.companyId, userId);
+  }
+
+  // ── Cross-module seam: ApplicationsModule (S4-B1) ─────────────────────────
+
+  /**
+   * Narrow read for the apply flow (S4-B1). The Applications module must NOT
+   * query the jobs table directly (module-boundaries.md Rule 4) — it calls this.
+   *
+   * Returns only what the apply gate + match engine need (status, market,
+   * category, required years, companyId for the employer notification), or throws
+   * a 404 `JOB_NOT_FOUND` — identical to every other job-not-found path. The
+   * status is returned raw; gate 1 decides whether a non-ACTIVE job is applyable.
+   */
+  async getJobForApplication(jobId: string): Promise<JobForApplication> {
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      select: {
+        id: true,
+        status: true,
+        market: true,
+        categoryId: true,
+        experienceRequiredYears: true,
+        companyId: true,
+        title: true,
+      },
+    });
+    if (!job) throw new NotFoundException({ code: 'JOB_NOT_FOUND' });
+    return job;
   }
 
   // ── Cross-module seam: EmployerDashboardService (S3-B1) ───────────────────

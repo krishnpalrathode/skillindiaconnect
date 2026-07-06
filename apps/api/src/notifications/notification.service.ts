@@ -73,6 +73,29 @@ export class NotificationService {
     }
   }
 
+  /**
+   * In-app-ONLY send (S4-B1). Writes the `notifications` row synchronously and
+   * enqueues NOTHING — no WhatsApp, no email — regardless of the type's matrix
+   * entry. Use for intra-app receipts that must never fan out externally, e.g.
+   * the apply-side receipts (candidate "application submitted" + employer "new
+   * applicant"). SELECTED's WhatsApp fireworks are a separate, guarded send (B2)
+   * and go through notify(), not this method.
+   *
+   * The Applications module owns no notifications rows — it calls this seam so the
+   * Notifications module remains the sole writer of that table (Rule 4).
+   */
+  async notifyInApp(userId: string, type: NotificationType, payload: NotifyPayload): Promise<void> {
+    await this.prisma.notification.create({
+      data: {
+        userId,
+        type,
+        title: payload.title,
+        body: payload.body,
+        data: (payload.data as Prisma.InputJsonValue) ?? {},
+      },
+    });
+  }
+
   // ── Candidate read endpoints ────────────────────────────────────────────────
 
   async listNotifications(

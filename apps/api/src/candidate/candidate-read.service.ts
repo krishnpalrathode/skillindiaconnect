@@ -34,6 +34,50 @@ export class CandidateReadService {
     return { userId: profile.userId, candidateId: profile.id };
   }
 
+  // ── S4-B1: Apply-input read ──────────────────────────────────────────────
+
+  /**
+   * Narrow read for the apply gate + match engine (S4-B1). Returns everything the
+   * Applications module needs to gate and score an application — and NOTHING more.
+   * Keyed by the applicant's userId (a candidate applies as themselves).
+   *
+   * - `completionPct` is the STORED value (the single source the ring shows) — the
+   *   gate uses it as-is; it is never recomputed here.
+   * - `totalExperienceYears` sums years + months/12 (same basis as browse).
+   * - `documents` carries type + expiryDate ONLY (no r2Key/URLs) — enough for the
+   *   mandatory-docs and passport-expiry gates.
+   *
+   * Returns null when the userId has no candidate profile.
+   */
+  async getApplyInputs(userId: string): Promise<CandidateApplyInputs | null> {
+    const profile = await this.prisma.candidateProfile.findUnique({
+      where: { userId },
+      select: {
+        id: true,
+        completionPct: true,
+        jobCategoryId: true,
+        experiences: { select: { type: true, years: true, months: true } },
+        documents: { select: { type: true, expiryDate: true } },
+      },
+    });
+
+    if (!profile) return null;
+
+    return {
+      candidateId: profile.id,
+      completionPct: profile.completionPct,
+      categoryId: profile.jobCategoryId,
+      totalExperienceYears: profile.experiences.reduce(
+        (sum, e) => sum + e.years + e.months / 12,
+        0,
+      ),
+      hasForeignExperience: profile.experiences.some(
+        (e) => e.type === ExperienceType.FOREIGN,
+      ),
+      documents: profile.documents,
+    };
+  }
+
   // ── S3-B2: Employer-context reads ────────────────────────────────────────
 
   /**
@@ -221,6 +265,15 @@ export class CandidateReadService {
 }
 
 // ── Return-type interfaces (exported for Employer module mappers) ────────────
+
+export interface CandidateApplyInputs {
+  candidateId: string;
+  completionPct: number;
+  categoryId: string | null;
+  totalExperienceYears: number;
+  hasForeignExperience: boolean;
+  documents: { type: DocumentType; expiryDate: Date | null }[];
+}
 
 export interface CandidateForEmployerView {
   id: string;

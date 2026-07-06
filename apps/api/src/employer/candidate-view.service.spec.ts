@@ -6,7 +6,7 @@
  */
 
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { CompanyStatus, CompanyType, UserStatus } from '@prisma/client';
+import { CompanyStatus, CompanyType } from '@prisma/client';
 import { CandidateViewService } from './candidate-view.service';
 import { EmployerService } from './employer.service';
 import { CandidateReadService } from '../candidate/candidate-read.service';

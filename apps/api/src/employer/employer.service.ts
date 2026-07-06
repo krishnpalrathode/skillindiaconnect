@@ -182,6 +182,24 @@ export class EmployerService {
     return company.type;
   }
 
+  /**
+   * Narrow read for S4-B1: resolve a company's primary employer userId so the
+   * Applications module can send the "new applicant" in-app notification WITHOUT
+   * querying employer_users directly (module-boundaries.md Rule 4).
+   *
+   * Falls back to any linked employer user if no primary is flagged; returns null
+   * if the company has no linked user (defensive — the caller then skips the
+   * employer notification rather than failing the apply).
+   */
+  async getPrimaryUserIdForCompany(companyId: string): Promise<string | null> {
+    const link = await this.prisma.employerUser.findFirst({
+      where: { companyId },
+      orderBy: { isPrimary: 'desc' },
+      select: { userId: true },
+    });
+    return link?.userId ?? null;
+  }
+
   // ── Admin list ─────────────────────────────────────────────────────────────
 
   async adminList(opts: {

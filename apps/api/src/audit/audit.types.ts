@@ -12,6 +12,7 @@ export const AUDIT_MODULES = {
   CANDIDATE: 'Candidate',
   EMPLOYER: 'Employer',
   JOBS: 'Jobs',
+  APPLICATIONS: 'Applications',
   PAYMENTS: 'Payments',
   NOTIFICATIONS: 'Notifications',
   ERRORS: 'Errors',
@@ -45,6 +46,7 @@ export const AUDIT_ACTIONS = {
   JOB_AUTO_ARCHIVED: 'job.auto_archived',
   JOB_DUPLICATED: 'job.duplicated',
   // Applications (S4)
+  APPLICATION_CREATED: 'application.created',
   APPLICATION_STATUS_CHANGED: 'application.status.changed',
   APPLICATION_ADMIN_OVERRIDE: 'application.admin_override',
   // Payments (S5)

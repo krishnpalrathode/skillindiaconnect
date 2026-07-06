@@ -527,7 +527,7 @@ describe('EmployerProfileService — contacts (Testcontainers PG)', () => {
   it('cross-company contact access → 404 (not 403 — no existence leak)', async () => {
     if (dockerUnavailable) return;
     const { user: user1 } = await makeEmployerWithCompany();
-    const { user: user2, company: company2 } = await makeEmployerWithCompany();
+    const { company: company2 } = await makeEmployerWithCompany();
 
     // Contact belongs to company2
     const victimContact = await prisma.contactPerson.create({
