@@ -6,6 +6,7 @@ import { CandidateService } from './candidate.service';
 import { ExperienceService } from './experience.service';
 import { SkillService } from './skill.service';
 import { ProfileViewsReadService } from './profile-views-read.service';
+import { ApplicationsAggregateService } from '../applications/applications-aggregate.service';
 
 const MOCK_CANDIDATE_USER = {
   userId: 'user-1',
@@ -79,6 +80,10 @@ describe('CandidateController', () => {
         { provide: ExperienceService, useValue: experienceMock },
         { provide: SkillService, useValue: skillMock },
         { provide: ProfileViewsReadService, useValue: profileViewsReadMock },
+        {
+          provide: ApplicationsAggregateService,
+          useValue: { countsForCandidate: jest.fn().mockResolvedValue({ applied: 0, shortlisted: 0 }) },
+        },
       ],
     }).compile();
 

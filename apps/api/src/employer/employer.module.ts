@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { JobsModule } from '../jobs/jobs.module';
 import { CandidateModule } from '../candidate/candidate.module';
+import { ApplicationsModule } from '../applications/applications.module';
 import { EmployerController } from './employer.controller';
 import { AdminEmployerController } from './admin-employer.controller';
 import { EmployerProfileController } from './employer-profile.controller';
@@ -19,6 +20,8 @@ import { ProfileViewService } from './profile-view.service';
     forwardRef(() => JobsModule),
     // CandidateModule exports CandidateReadService — the boundary for employer→candidate reads.
     CandidateModule,
+    // ApplicationsModule exports ApplicationsAggregateService (S4-B3 dashboard KPIs/recent).
+    forwardRef(() => ApplicationsModule),
   ],
   controllers: [
     EmployerController,

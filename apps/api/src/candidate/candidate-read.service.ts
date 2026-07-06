@@ -92,6 +92,93 @@ export class CandidateReadService {
     return profile?.userId ?? null;
   }
 
+  /** Resolve a candidate profile id from its owning userId (S4-B3 candidate reads). */
+  async getCandidateIdForUser(userId: string): Promise<string | null> {
+    const profile = await this.prisma.candidateProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    return profile?.id ?? null;
+  }
+
+  /**
+   * BATCHED employer-context candidate views by id (S4-B3 applicant cards).
+   *
+   * UNLIKE browse (findVisibleCandidateForEmployerView), this does NOT apply the
+   * `profileVisible` gate: an applicant is visible to the employer who owns the job
+   * they applied to, regardless of whether they appear in the public browse pool.
+   * The privacy OMISSION semantics (phone/religion toggles, no dob, docs status-only)
+   * still flow through `toEmployerView` — this read just supplies the raw source.
+   * Same field selection as the single-candidate employer view. One query for the page.
+   */
+  async getEmployerViewsByIds(
+    ids: string[],
+  ): Promise<Map<string, CandidateForEmployerView>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.prisma.candidateProfile.findMany({
+      where: { id: { in: ids } },
+      select: {
+        id: true,
+        userId: true,
+        fullName: true,
+        dob: true,
+        phone: true,
+        religion: true,
+        languages: true,
+        jobCategoryId: true,
+        photoKey: true,
+        currentLocation: true,
+        nationality: true,
+        noticePeriod: true,
+        salaryExpectationMin: true,
+        salaryExpectationMax: true,
+        salaryExpectationCurrency: true,
+        isAvailable: true,
+        completionPct: true,
+        showPhone: true,
+        showReligion: true,
+        createdAt: true,
+        experiences: {
+          select: {
+            id: true,
+            type: true,
+            country: true,
+            companyName: true,
+            role: true,
+            years: true,
+            months: true,
+            startDate: true,
+            endDate: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+        skills: { select: { id: true, name: true }, orderBy: { name: 'asc' } },
+        documents: { select: { type: true, expiryDate: true } },
+      },
+    });
+    return new Map(rows.map((r) => [r.id, r as CandidateForEmployerView]));
+  }
+
+  /** Candidate ids whose fullName matches the admin search term (S4-B3 admin list). */
+  async searchCandidateIdsByName(q: string): Promise<string[]> {
+    const rows = await this.prisma.candidateProfile.findMany({
+      where: { fullName: { contains: q, mode: 'insensitive' } },
+      select: { id: true },
+      take: 200,
+    });
+    return rows.map((r) => r.id);
+  }
+
+  /** Batched candidate display names by id (S4-B3 summaries + admin list). */
+  async getNamesByIds(ids: string[]): Promise<Map<string, string>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.prisma.candidateProfile.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, fullName: true },
+    });
+    return new Map(rows.map((r) => [r.id, r.fullName]));
+  }
+
   // ── S3-B2: Employer-context reads ────────────────────────────────────────
 
   /**

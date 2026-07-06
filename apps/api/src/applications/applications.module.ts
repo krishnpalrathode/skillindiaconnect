@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { CandidateModule } from '../candidate/candidate.module';
 import { JobsModule } from '../jobs/jobs.module';
 import { EmployerModule } from '../employer/employer.module';
@@ -11,30 +11,47 @@ import { MatchService } from './match/match.service';
 import { StatusController } from './status.controller';
 import { AdminStatusController } from './admin-status.controller';
 import { StatusService } from './status.service';
+import { CandidateApplicationsController } from './candidate-applications.controller';
+import { ApplicantsController } from './applicants.controller';
+import { AdminApplicationsController } from './admin-applications.controller';
+import { ApplicationsReadService } from './applications-read.service';
+import { ApplicationsAggregateService } from './applications-aggregate.service';
 
 /**
- * Applications module (S4-B1 apply + B2 transitions).
+ * Applications module (S4 B1 apply · B2 transitions · B3 reads + aggregates).
  *
- * Owns `applications` + `application_timeline` (notes stay for S6). It reads
- * candidate data ONLY via CandidateReadService and job data ONLY via JobsService,
- * and resolves employer/company via EmployerService — never querying those
- * modules' tables directly (module-boundaries.md Rule 4).
+ * Owns `applications` + `application_timeline`. Reads candidate/job/company data
+ * ONLY via CandidateReadService / JobsService / EmployerService (Rule 4).
  *
- * Write surfaces: POST /jobs/:id/apply (B1); PATCH /applications/:id/status
- * (employer) + PATCH /admin/applications/:id/status (admin override) (B2). The
- * admin route is RBAC-gated by the global PermissionsGuard (applications.change_status).
- *
- * AuditModule + CoreModule (Prisma) + EventEmitter are @Global — auto-injectable.
+ * `ApplicationsAggregateService` is EXPORTED — the employer & candidate dashboards
+ * and the My-Jobs counts consume it (no one else queries the applications table).
+ * Those consumers import THIS module, so Candidate/Jobs/Employer are imported via
+ * forwardRef to break the resulting cycles (same pattern as Employer↔Jobs).
  */
 @Module({
   imports: [
-    CandidateModule, // CandidateReadService (apply inputs + candidate userId)
-    JobsModule, // JobsService (job read for apply + employer scoping)
-    EmployerModule, // EmployerService (company resolution + notify target)
-    SettingsModule, // MIN_COMPLETION_PCT + MANDATORY_DOCUMENTS
-    NotificationModule, // NotificationService (receipts + status notifications)
+    forwardRef(() => CandidateModule),
+    forwardRef(() => JobsModule),
+    forwardRef(() => EmployerModule),
+    SettingsModule,
+    NotificationModule,
   ],
-  controllers: [ApplyController, StatusController, AdminStatusController],
-  providers: [ApplyService, ApplyGateService, MatchService, StatusService],
+  controllers: [
+    ApplyController,
+    StatusController,
+    AdminStatusController,
+    CandidateApplicationsController,
+    ApplicantsController,
+    AdminApplicationsController,
+  ],
+  providers: [
+    ApplyService,
+    ApplyGateService,
+    MatchService,
+    StatusService,
+    ApplicationsReadService,
+    ApplicationsAggregateService,
+  ],
+  exports: [ApplicationsAggregateService],
 })
 export class ApplicationsModule {}

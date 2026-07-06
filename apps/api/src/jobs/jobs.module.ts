@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { EmployerModule } from '../employer/employer.module';
 import { SettingsModule } from '../settings/settings.module';
 import { QueueModule } from '../queue/queue.module';
+import { ApplicationsModule } from '../applications/applications.module';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
 import { JobLifecycleService } from './job-lifecycle.service';
@@ -31,6 +32,7 @@ import { JobsSubscriber } from './jobs.subscriber';
     forwardRef(() => EmployerModule), // forwardRef: EmployerModule also imports JobsModule for the dashboard seam (S3-B1)
     SettingsModule,   // SettingsService: protection rules, auto-archive days, quota settings
     QueueModule,      // BullMQ: auto-archive queue registration (producer side)
+    forwardRef(() => ApplicationsModule), // ApplicationsAggregateService: live My-Jobs applicant counts (S4-B3)
   ],
   controllers: [JobsController],
   providers: [

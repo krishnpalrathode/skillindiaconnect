@@ -1,12 +1,15 @@
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JobMarket, JobStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { EmployerService } from '../employer/employer.service';
+import { ApplicationsAggregateService } from '../applications/applications-aggregate.service';
 import { SettingsService } from '../settings/settings.service';
 import { SETTING_KEYS } from '../settings/settings.keys';
 import { AuditService } from '../audit/audit.service';
@@ -51,6 +54,18 @@ export interface JobForApplication {
   title: string;
 }
 
+/** Public-safe job subset for the candidate applications list (see getJobSubsets). */
+export interface JobSubset {
+  id: string;
+  title: string;
+  companyName: string;
+  location: string;
+  market: JobMarket;
+}
+
+/** My-Jobs row = the job plus its live applicant count (S4-B3). */
+export type JobWithApplicantCount = JobData & { applicantCount: number };
+
 @Injectable()
 export class JobsService {
   constructor(
@@ -61,6 +76,8 @@ export class JobsService {
     private readonly publishGuard: PublishGuardService,
     private readonly lifecycle: JobLifecycleService,
     private readonly eventEmitter: EventEmitter2,
+    @Inject(forwardRef(() => ApplicationsAggregateService))
+    private readonly applicationsAggregate: ApplicationsAggregateService,
   ) {}
 
   // ── Create ─────────────────────────────────────────────────────────────────
@@ -132,7 +149,7 @@ export class JobsService {
   async list(
     userId: string,
     dto: ListJobsDto,
-  ): Promise<{ data: JobData[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }> {
+  ): Promise<{ data: JobWithApplicantCount[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }> {
     const company = await this.employerService.getCompanyForEmployerUser(userId);
     const [field, dir] = (dto.sort ?? 'createdAt:desc').split(':');
     const safeField = SORT_FIELD_MAP[field ?? 'createdAt'] ?? 'createdAt';
@@ -159,7 +176,15 @@ export class JobsService {
       this.prisma.job.count({ where }),
     ]);
 
-    return { data, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } };
+    // S4-B3: live applicant counts for the page — ONE grouped query for all rows
+    // (never N per-row queries). Counts come through the applications aggregate.
+    const counts = await this.applicationsAggregate.countsPerJob(data.map((j) => j.id));
+    const enriched: JobWithApplicantCount[] = data.map((j) => ({
+      ...j,
+      applicantCount: counts.get(j.id)?.applications ?? 0,
+    }));
+
+    return { data: enriched, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } };
   }
 
   // ── Update ─────────────────────────────────────────────────────────────────
@@ -418,6 +443,41 @@ export class JobsService {
     });
     if (!job) throw new NotFoundException({ code: 'JOB_NOT_FOUND' });
     return job;
+  }
+
+  /**
+   * Batched public-safe job subset for the candidate applications list (S4-B3).
+   * Returns ONLY display-safe fields (no internal/employer PII) keyed by jobId.
+   * `companyName` is read via the job→company relation (denormalized for display,
+   * same precedent as getCompanyJobStats) — the caller never touches jobs/companies.
+   */
+  async getJobSubsets(jobIds: string[]): Promise<Map<string, JobSubset>> {
+    if (jobIds.length === 0) return new Map();
+    const rows = await this.prisma.job.findMany({
+      where: { id: { in: jobIds } },
+      select: {
+        id: true,
+        title: true,
+        location: true,
+        market: true,
+        company: { select: { name: true } },
+      },
+    });
+    return new Map(
+      rows.map((j) => [
+        j.id,
+        { id: j.id, title: j.title, companyName: j.company.name, location: j.location, market: j.market },
+      ]),
+    );
+  }
+
+  /** All job ids for a company (S4-B3 aggregates scope applications by these). */
+  async getJobIdsForCompany(companyId: string): Promise<string[]> {
+    const rows = await this.prisma.job.findMany({
+      where: { companyId },
+      select: { id: true },
+    });
+    return rows.map((r) => r.id);
   }
 
   // ── Cross-module seam: EmployerDashboardService (S3-B1) ───────────────────

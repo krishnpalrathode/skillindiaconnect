@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { CandidateController } from './candidate.controller';
 import { CandidateService } from './candidate.service';
 import { CandidateReadService } from './candidate-read.service';
@@ -11,9 +11,10 @@ import { OnboardingController } from './onboarding.controller';
 import { OnboardingService } from './onboarding.service';
 import { ProfileViewsReadService } from './profile-views-read.service';
 import { QueueModule } from '../queue/queue.module';
+import { ApplicationsModule } from '../applications/applications.module';
 
 @Module({
-  imports: [QueueModule],
+  imports: [QueueModule, forwardRef(() => ApplicationsModule)],
   controllers: [CandidateController, DocumentController, OnboardingController],
   providers: [
     CandidateService,

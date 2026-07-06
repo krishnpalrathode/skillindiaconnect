@@ -13,6 +13,7 @@ import { EmployerDashboardService } from './employer-dashboard.service';
 import { EmployerService } from './employer.service';
 import { JobsService } from '../jobs/jobs.service';
 import { PrismaService } from '../core/prisma/prisma.service';
+import { ApplicationsAggregateService } from '../applications/applications-aggregate.service';
 
 describe('EmployerDashboardService', () => {
   let service: EmployerDashboardService;
@@ -115,10 +116,18 @@ describe('EmployerDashboardService', () => {
       contactPerson: { findMany: jest.fn().mockResolvedValue(fakeContacts) },
     };
 
+    const mockAggregate = {
+      countsForCompany: jest
+        .fn()
+        .mockResolvedValue({ total: 0, shortlisted: 0, hiredThisMonth: 0 }),
+      recentApplicantsForCompany: jest.fn().mockResolvedValue([]),
+    };
+
     service = new EmployerDashboardService(
       mockPrisma as unknown as PrismaService,
       mockEmployerService as unknown as EmployerService,
       mockJobsService as unknown as JobsService,
+      mockAggregate as unknown as ApplicationsAggregateService,
     );
   });
 

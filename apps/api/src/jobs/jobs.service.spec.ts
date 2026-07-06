@@ -37,7 +37,14 @@ import { JobsService } from './jobs.service';
 import { JOB_EVENTS } from './jobs.events';
 import { JobLifecycleService } from './job-lifecycle.service';
 import { PublishGuardService } from './publish-guard.service';
+import { ApplicationsAggregateService } from '../applications/applications-aggregate.service';
 import { CreateJobDto } from './dto/create-job.dto';
+
+// My-Jobs applicant counts come from the aggregate; a stub returns empty counts —
+// the count values are covered in the applications aggregate spec, not here.
+const mockAggregate = {
+  countsPerJob: jest.fn(async () => new Map()),
+} as unknown as ApplicationsAggregateService;
 
 jest.setTimeout(180_000);
 
@@ -157,6 +164,7 @@ beforeAll(async () => {
       mockPublishGuard,
       lifecycle,
       eventEmitter,
+      mockAggregate,
     );
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -334,7 +342,7 @@ describe('JobsService', () => {
         get: jest.fn().mockResolvedValue(false),
       } as unknown as SettingsService;
       const lifecycle = new JobLifecycleService(prismaSvc, audit, em);
-      const guardedService = new JobsService(prismaSvc, employer, mockSettings, audit, mockGuard, lifecycle, em);
+      const guardedService = new JobsService(prismaSvc, employer, mockSettings, audit, mockGuard, lifecycle, em, mockAggregate);
 
       const job = await guardedService.create(baseDto(), EMPLOYER_USER_ID, UserRole.EMPLOYER);
       await expect(

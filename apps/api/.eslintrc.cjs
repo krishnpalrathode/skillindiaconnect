@@ -262,6 +262,40 @@ module.exports = {
             from: './src/applications/apply.service.ts',
             message: 'Applications has no public seam yet — do not import apply.service.',
           },
+          // B3: the read + status + aggregate INTERNALS are private. The ONLY public
+          // seam for other modules is ApplicationsAggregateService (dashboards/My-Jobs).
+          // Other modules must never import the read service, status service, or the
+          // controllers/mappers — no applications-table access outside this module.
+          {
+            target: './src/candidate',
+            from: './src/applications/applications-read.service.ts',
+            message: 'Use ApplicationsAggregateService — never import the read service.',
+          },
+          {
+            target: './src/jobs',
+            from: './src/applications/applications-read.service.ts',
+            message: 'Use ApplicationsAggregateService — never import the read service.',
+          },
+          {
+            target: './src/employer',
+            from: './src/applications/applications-read.service.ts',
+            message: 'Use ApplicationsAggregateService — never import the read service.',
+          },
+          {
+            target: './src/candidate',
+            from: './src/applications/status.service.ts',
+            message: 'Applications status transitions are internal (B2) — do not import.',
+          },
+          {
+            target: './src/jobs',
+            from: './src/applications/status.service.ts',
+            message: 'Applications status transitions are internal (B2) — do not import.',
+          },
+          {
+            target: './src/employer',
+            from: './src/applications/status.service.ts',
+            message: 'Applications status transitions are internal (B2) — do not import.',
+          },
         ],
       },
     ],

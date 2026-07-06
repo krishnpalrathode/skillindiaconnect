@@ -5,15 +5,18 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   Patch,
   Post,
+  forwardRef,
 } from '@nestjs/common';
 import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user.decorator';
 import { CandidateService } from './candidate.service';
 import { ExperienceService } from './experience.service';
 import { SkillService } from './skill.service';
 import { ProfileViewsReadService } from './profile-views-read.service';
+import { ApplicationsAggregateService } from '../applications/applications-aggregate.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { CreateExperienceDto } from './dto/create-experience.dto';
@@ -27,6 +30,8 @@ export class CandidateController {
     private readonly experienceService: ExperienceService,
     private readonly skillService: SkillService,
     private readonly profileViewsReadService: ProfileViewsReadService,
+    @Inject(forwardRef(() => ApplicationsAggregateService))
+    private readonly applicationsAggregate: ApplicationsAggregateService,
   ) {}
 
   // ─── Profile ──────────────────────────────────────────────────────────────
@@ -58,6 +63,16 @@ export class CandidateController {
     this.candidateService.assertCandidateRole(user.role);
     const candidateId = await this.candidateService.getCandidateIdByUserId(user.userId);
     return { data: await this.profileViewsReadService.getSummary(candidateId) };
+  }
+
+  // ─── Dashboard KPIs (S4-B3: Jobs Applied + Shortlisted, live) ─────────────
+
+  @Get('me/stats')
+  async getStats(@CurrentUser() user: CurrentUserPayload) {
+    this.candidateService.assertCandidateRole(user.role);
+    const candidateId = await this.candidateService.getCandidateIdByUserId(user.userId);
+    const counts = await this.applicationsAggregate.countsForCandidate(candidateId);
+    return { data: counts };
   }
 
   // ─── Settings ─────────────────────────────────────────────────────────────
