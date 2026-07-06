@@ -5,10 +5,10 @@ import { useTranslations } from 'next-intl';
 import { Users } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 
-type CandidateEmployerView = components['schemas']['CandidateEmployerView'];
+type ApplicantSummary = components['schemas']['ApplicantSummary'];
 
 interface RecentApplicantsProps {
-  applicants: CandidateEmployerView[];
+  applicants: ApplicantSummary[];
 }
 
 export function RecentApplicants({ applicants }: RecentApplicantsProps) {
@@ -38,10 +38,10 @@ export function RecentApplicants({ applicants }: RecentApplicantsProps) {
       ) : (
         <ul className="divide-y divide-neutral-100">
           {applicants.map((applicant) => (
-            <li key={applicant.id} className="flex items-center gap-3 px-4 sm:px-6 py-3">
+            <li key={applicant.applicationId} className="flex items-center gap-3 px-4 sm:px-6 py-3">
               <span className="size-9 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-sm font-semibold shrink-0">
-                {applicant.fullName
-                  ? applicant.fullName
+                {applicant.candidateName
+                  ? applicant.candidateName
                       .split(' ')
                       .map((n) => n[0])
                       .join('')
@@ -51,8 +51,9 @@ export function RecentApplicants({ applicants }: RecentApplicantsProps) {
               </span>
               <div className="min-w-0">
                 <p className="text-sm font-medium text-neutral-900 truncate">
-                  {applicant.fullName}
+                  {applicant.candidateName}
                 </p>
+                <p className="text-xs text-neutral-500 truncate">{applicant.jobTitle}</p>
               </div>
             </li>
           ))}

@@ -653,13 +653,14 @@ describe('RecentApplicants', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockApplicants: any[] = [
       {
-        id: 'cand-1',
-        email: 'ravi@example.com',
-        role: 'CANDIDATE',
-        fullName: 'Ravi Kumar',
-        completionPct: 80,
-        profileVisible: true,
-        isAvailable: true,
+        applicationId: 'app-1',
+        candidateId: 'cand-1',
+        candidateName: 'Ravi Kumar',
+        jobId: 'job-1',
+        jobTitle: 'Experienced Mason',
+        status: 'PENDING',
+        matchScore: 72,
+        appliedAt: new Date().toISOString(),
       },
     ];
     render(

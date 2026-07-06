@@ -797,13 +797,14 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get the employer's dashboard summary (Screen 15) — S3 shape
-         * @description Returns the S3 dashboard shape: KPIs (active jobs, totalApplications,
-         *     shortlisted, totalJobViews, hiredThisMonth), recent active jobs, and
-         *     the computed `profileChecklist`.
+         * Get the employer's dashboard summary (Screen 15)
+         * @description Returns the dashboard shape: KPIs (active jobs, totalApplications,
+         *     shortlisted, totalJobViews, hiredThisMonth), recent active jobs,
+         *     `recentApplicants`, and the computed `profileChecklist`.
          *
-         *     `recentApplicants` is always `[]` until Sprint 4 (applications). This is
-         *     an honest zero documented in the response schema.
+         *     As of Sprint 4, `totalApplications` / `shortlisted` are live counts and
+         *     `recentApplicants` is populated with employer-context `ApplicantSummary`
+         *     rows (no phone/religion/dob). An empty array now means no applicants yet.
          *
          *     `profileChecklist` is computed per-request — never stored as a percentage.
          *     Use its `hint` field to show the next actionable item to the employer.
@@ -1356,8 +1357,17 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * [S4] Apply to a job (candidate)
-         * @description **Sprint 4 — not yet implemented.** The apply gate enforces profile completion ≥ threshold, all mandatory documents present, and passport not expired. Match score is computed once at apply time and snapshotted.
+         * Apply to a job (candidate)
+         * @description Candidate applies to an ACTIVE job. **Apply-gate error ladder** — checked fail-fast IN THIS EXACT ORDER, each with a distinct code:
+         *     1. `JOB_NOT_ACTIVE` (422) — the job is not ACTIVE (draft/paused/archived). 2. `ALREADY_APPLIED` (409) — this candidate already applied to this job. 3. `PROFILE_INCOMPLETE` (422) — completion below the required threshold;
+         *        `meta: { completionPct: int, threshold: int }`.
+         *     4. `MANDATORY_DOCS_MISSING` (422) — a required document is absent;
+         *        `meta: { missing: DocumentType[] }`.
+         *     5. `PASSPORT_INVALID` (422) — passport expired or missing;
+         *        `meta: { reason: "expired" | "missing" }`.
+         *
+         *     On success (201) the match score is computed ONCE and snapshotted (`matchScore` + `matchBreakdown`), the gate snapshot fields are frozen (`docsCompleteCount` / `docsRequiredCount` / `passportValidAtApply`), the application enters PENDING with a DB-assigned `humanId` (`AP-YYYY-N`).
+         *     **Side effects:** an in-app receipt notification to the candidate, and an in-app new-applicant notification to the employer.
          */
         post: operations["applyToJob"];
         delete?: never;
@@ -1374,8 +1384,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [S4] List applicants for a job (employer)
-         * @description **Sprint 4 — not yet implemented.**
+         * List applicants for a job (employer)
+         * @description Employer lists applicants to their OWN job. Cursor-paginated. Each `ApplicantCard` reuses the S3 employer-context candidate subset, so the privacy omission semantics carry through (phone/religion omitted per the candidate's toggles, no dob, documents status-only). `counts` powers the status column headers on Screen 18.
          */
         get: operations["getJobApplicants"];
         put?: never;
@@ -1400,10 +1410,51 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * [S4] Update application status (employer)
-         * @description **Sprint 4 — not yet implemented.** Employers can only move status FORWARD (PENDING → SHORTLISTED → SELECTED/REJECTED). Backward/corrective moves require ADMIN_OVERRIDE with a mandatory reason. The "Selected" WhatsApp fires once per application (guarded by `selectedNotifiedAt`).
+         * Update application status (employer, forward-only)
+         * @description The owning employer moves an application FORWARD only. **Legal transitions:** PENDING → SHORTLISTED | SELECTED | REJECTED; SHORTLISTED → SELECTED | REJECTED. Any other move (including backward or same-state) → 422 `ILLEGAL_TRANSITION` with `meta: { from, to, allowed[] }`. Corrective/backward moves are ADMIN-ONLY (see PATCH /admin/applications/{id}/status).
+         *     **SELECTED side effect:** the FIRST entry into SELECTED fires ONE WhatsApp (`wa.selected`) + email + in-app, and sets `selectedNotifiedAt`. Re-entry into SELECTED (e.g. after an admin correction) sends email + in-app ONLY — the WhatsApp never fires twice (guarded by `selectedNotifiedAt`).
          */
         patch: operations["patchApplicationStatus"];
+        trace?: never;
+    };
+    "/candidates/me/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the candidate's applications
+         * @description The authenticated candidate's applications, cursor-paginated, newest first. `selectedNotifiedAt` (non-null) drives the "WhatsApp receipt sent" indicator on the card.
+         */
+        get: operations["getCandidateMeApplications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/candidates/me/applications/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get one of the candidate's applications (with timeline)
+         * @description Full candidate-facing application detail including the status `timeline`. Each timeline entry carries the actor's ROLE only (never identity) and `isAdminOverride`. The admin `overrideReason` is DELIBERATELY EXCLUDED from this candidate view — it is admin/audit-facing only.
+         */
+        get: operations["getCandidateMeApplicationById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/billing/plans": {
@@ -1574,8 +1625,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [S6] List all applications (admin)
-         * @description **Sprint 6 — not yet implemented.**
+         * List all applications (admin)
+         * @description Admin-wide application table (offset-paginated). RBAC: requires an admin role with the applications-read permission. The admin context is the ONLY context that may carry `overrideReason` on an application; candidate and employer contexts never see it.
          */
         get: operations["getAdminApplications"];
         put?: never;
@@ -1584,6 +1635,27 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/admin/applications/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Corrective application status move (admin override)
+         * @description Admins may move an application to ANY status (including backward/corrective moves the employer cannot make). A corrective move is an ADMIN_OVERRIDE and REQUIRES a non-empty `overrideReason`; omitting it → 422 `OVERRIDE_REASON_REQUIRED`. The reason is logged to the audit trail and recorded on the timeline entry (`isAdminOverride: true`), but is NEVER serialized into candidate/employer contexts.
+         *     Re-entry into SELECTED still respects the once-per-application WhatsApp guard (`selectedNotifiedAt`): email + in-app only, no second WhatsApp. RBAC: requires the applications-write permission.
+         */
+        patch: operations["patchAdminApplicationStatus"];
         trace?: never;
     };
     "/admin/roles/{role}/permissions": {
@@ -1876,12 +1948,12 @@ export interface components {
             /** Format: date-time */
             approvedAt?: string | null;
         };
-        /** @description S3 shape. `totalApplications` and `shortlisted` are honest zeros until Sprint 4 (applications). `totalJobViews` and `hiredThisMonth` are S3 KPIs. */
+        /** @description Employer dashboard KPIs. As of Sprint 4, `totalApplications` and `shortlisted` are LIVE application counts across the employer's jobs (they were honest zeros in S3). `totalJobViews` and `hiredThisMonth` are S3 KPIs. */
         EmployerDashboardKpi: {
             activeJobs: number;
-            /** @description Honest zero until Sprint 4 */
+            /** @description Total applications across all the employer's jobs (live in S4). */
             totalApplications: number;
-            /** @description Honest zero until Sprint 4 */
+            /** @description Applications in SHORTLISTED status across the employer's jobs (live in S4). */
             shortlisted: number;
             /** @description Total views across all the employer's job postings (S3) */
             totalJobViews: number;
@@ -1889,12 +1961,12 @@ export interface components {
             hiredThisMonth: number;
         };
         /**
-         * @description Employer dashboard summary (Screen 15) — S3 shape.
+         * @description Employer dashboard summary (Screen 15).
          *
-         *     `recentApplicants` is always `[]` until Sprint 4 (applications). This is an
-         *     honest zero: documented here so the frontend renders an empty state rather
-         *     than an error. Once S4 ships, applicants will populate with employer-context
-         *     viewer-aware DTO masking (phone/religion per candidate privacy toggles).
+         *     As of Sprint 4, `recentApplicants` is LIVE — the most recent applicants
+         *     across the employer's jobs, each an `ApplicantSummary` carrying
+         *     employer-context privacy masking (no phone/religion/dob). It was an honest
+         *     `[]` in S3. An empty array now means genuinely no applicants yet.
          *
          *     `profileChecklist` is computed per-request from current company state —
          *     never stored as a percentage. Use its `hint` field to surface the next
@@ -1903,8 +1975,8 @@ export interface components {
         EmployerDashboard: {
             kpis: components["schemas"]["EmployerDashboardKpi"];
             recentJobs: components["schemas"]["JobCard"][];
-            /** @description Always empty until Sprint 4 (applications) */
-            recentApplicants: components["schemas"]["CandidateEmployerView"][];
+            /** @description Most recent applicants across the employer's jobs (live in S4). */
+            recentApplicants: components["schemas"]["ApplicantSummary"][];
             profileChecklist: components["schemas"]["ProfileChecklist"];
         };
         /**
@@ -1949,6 +2021,8 @@ export interface components {
             companyId: string;
             /** @description Denormalized for display */
             companyName: string;
+            /** @description Total applications to this job. Live in Sprint 4 — powers the applicant count on the employer's My Jobs list (Screen 17), the entry point to the applicants view (Screen 18). Omitted before S4. */
+            applicantCount?: number;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -2188,6 +2262,158 @@ export interface components {
                 /** Format: date-time */
                 viewedAt: string;
             }[];
+        };
+        /**
+         * @description Application lifecycle status. There is NO `WITHDRAWN` state at MVP — candidates cannot withdraw an application (deliberately out of scope; a later sprint may add it). Employer transitions are forward-only (PENDING → SHORTLISTED → SELECTED|REJECTED); only admins may move backward/corrective, and only with a mandatory override reason.
+         * @enum {string}
+         */
+        ApplicationStatus: "PENDING" | "SHORTLISTED" | "SELECTED" | "REJECTED";
+        /** @description Per-factor breakdown of `matchScore`, SNAPSHOTTED at apply time and NEVER recomputed on later reads or status changes. The four factor scores sum to `matchScore` (0–100). Max weights: category 40, experienceYears 30, foreignExperience 20, documents 10. */
+        MatchBreakdown: {
+            /** @description 40 when the job category matches the candidate's category, else 0. */
+            category: {
+                score: number;
+                /** @example 40 */
+                max: number;
+            };
+            /** @description Scales with clamped years of experience. */
+            experienceYears: {
+                /** @description Candidate's total years of experience at apply time (unclamped). */
+                raw: number;
+                /** @description `raw` clamped to the scoring ceiling before scoring. */
+                clamped: number;
+                score: number;
+                /** @example 30 */
+                max: number;
+            };
+            /** @description 20 when any work experience has type FOREIGN, else 0. */
+            foreignExperience: {
+                score: number;
+                /** @example 20 */
+                max: number;
+            };
+            /** @description Scales with the count of mandatory documents present at apply. */
+            documents: {
+                score: number;
+                /** @example 10 */
+                max: number;
+            };
+        };
+        /** @description A candidate's application to a job. `matchScore` (0–100) and `matchBreakdown` are computed ONCE at apply time and snapshotted — NEVER recomputed on later reads or status changes. The snapshot fields (`docsCompleteCount` / `docsRequiredCount` / `passportValidAtApply`) freeze the gate state at apply time. `humanId` is DB-assigned in the format `AP-YYYY-N`. */
+        Application: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description DB-assigned human id, format `AP-YYYY-N`.
+             * @example AP-2026-1
+             */
+            humanId: string;
+            /** Format: uuid */
+            jobId: string;
+            /** Format: uuid */
+            candidateId: string;
+            status: components["schemas"]["ApplicationStatus"];
+            /** @description Snapshot at apply time — never recomputed. */
+            matchScore: number;
+            matchBreakdown: components["schemas"]["MatchBreakdown"];
+            coverLetter?: string | null;
+            /** @description Mandatory documents present at apply time (snapshot). */
+            docsCompleteCount: number;
+            /** @description Mandatory documents required at apply time (snapshot). */
+            docsRequiredCount: number;
+            /** @description Passport present and unexpired at apply time (snapshot). */
+            passportValidAtApply: boolean;
+            /**
+             * Format: date-time
+             * @description Set the FIRST time the application enters SELECTED — guards the once-per-application "Selected" WhatsApp. Re-entry to SELECTED does NOT change it (email + in-app only on re-entry).
+             */
+            selectedNotifiedAt?: string | null;
+            /** @description Optional employer feedback surfaced to the candidate on rejection. */
+            rejectionFeedback?: string | null;
+            /** @description Reason for the most recent admin corrective (override) move. ADMIN CONTEXT ONLY — present only in admin serializations; never emitted to candidate or employer contexts. */
+            overrideReason?: string | null;
+            /** Format: date-time */
+            appliedAt: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        /** @description Candidate-facing application list item (GET /candidates/me/applications). */
+        ApplicationCard: {
+            /** Format: uuid */
+            id: string;
+            /** @example AP-2026-1 */
+            humanId: string;
+            /** @description Minimal job subset for the applications list. */
+            job: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+                companyName: string;
+                location: string;
+                market: components["schemas"]["JobMarket"];
+            };
+            status: components["schemas"]["ApplicationStatus"];
+            matchScore: number;
+            /** Format: date-time */
+            appliedAt: string;
+            /**
+             * Format: date-time
+             * @description Non-null drives the "WhatsApp receipt sent" indicator on the card.
+             */
+            selectedNotifiedAt?: string | null;
+            rejectionFeedback?: string | null;
+        };
+        /** @description One status transition in an application's history. Carries the actor's ROLE only — NEVER actor identity. `overrideReason` is admin/audit-facing and is DELIBERATELY EXCLUDED from the candidate-facing timeline (see GET /candidates/me/applications/{id}). */
+        ApplicationTimelineEntry: {
+            fromStatus: components["schemas"]["ApplicationStatus"];
+            toStatus: components["schemas"]["ApplicationStatus"];
+            actorRole: components["schemas"]["UserRole"];
+            /** @description true when an admin made a non-forward-only (corrective) move. */
+            isAdminOverride: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ApplicationDetail: components["schemas"]["ApplicationCard"] & {
+            matchBreakdown: components["schemas"]["MatchBreakdown"];
+            coverLetter: string | null;
+            timeline: components["schemas"]["ApplicationTimelineEntry"][];
+        };
+        ApplicantCard: components["schemas"]["CandidateEmployerView"] & {
+            /** Format: uuid */
+            applicationId: string;
+            /** @example AP-2026-1 */
+            humanId: string;
+            status: components["schemas"]["ApplicationStatus"];
+            matchScore: number;
+            matchBreakdown: components["schemas"]["MatchBreakdown"];
+            coverLetter?: string | null;
+            /** Format: date-time */
+            appliedAt: string;
+            docsCompleteCount?: number;
+            docsRequiredCount?: number;
+            passportValidAtApply?: boolean;
+        };
+        /** @description Per-status applicant counts — powers Screen 18's column headers. */
+        ApplicantCounts: {
+            pending: number;
+            shortlisted: number;
+            selected: number;
+            rejected: number;
+        };
+        /** @description Compact applicant row for the employer dashboard's `recentApplicants`. Employer-context: applies the candidate privacy omission semantics (no phone / religion / dob). */
+        ApplicantSummary: {
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            candidateId: string;
+            candidateName: string;
+            /** Format: uuid */
+            jobId: string;
+            jobTitle: string;
+            status: components["schemas"]["ApplicationStatus"];
+            matchScore: number;
+            /** Format: date-time */
+            appliedAt: string;
         };
     };
     responses: never;
@@ -5158,10 +5384,54 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    coverLetter?: string;
+                };
+            };
+        };
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Application created (PENDING) with match snapshot */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Application"];
+                    };
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Caller is not a CANDIDATE */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description `ALREADY_APPLIED` — the candidate already applied to this job */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5169,12 +5439,21 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 4.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Already applied",
+                     *       "status": 409,
+                     *       "detail": "You have already applied to this job.",
+                     *       "code": "ALREADY_APPLIED"
                      *     }
                      */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description An apply-gate failure. `code` is one of (checked in order): `JOB_NOT_ACTIVE`, `PROFILE_INCOMPLETE` (meta.completionPct + meta.threshold), `MANDATORY_DOCS_MISSING` (meta.missing[]), `PASSPORT_INVALID` (meta.reason). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };
@@ -5183,10 +5462,14 @@ export interface operations {
     getJobApplicants: {
         parameters: {
             query?: {
-                /** @description 1-based page number for offset-paginated admin tables */
-                page?: components["parameters"]["PageParam"];
-                /** @description Items per page for offset-paginated admin tables (default 20, max 100) */
-                pageSize?: components["parameters"]["PageSizeParam"];
+                /** @description Opaque keyset cursor for cursor-paginated feeds */
+                cursor?: components["parameters"]["CursorParam"];
+                /** @description Page size for cursor-paginated feeds (default 20, max 100) */
+                limit?: components["parameters"]["LimitParam"];
+                /** @description Filter by application status. */
+                status?: components["schemas"]["ApplicationStatus"];
+                /** @description `match` = highest matchScore first; `recent` = newest first. */
+                sort?: "match" | "recent";
             };
             header?: never;
             path: {
@@ -5196,21 +5479,34 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Applicant cards for the job */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 4.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
+                    "application/json": {
+                        data: components["schemas"]["ApplicantCard"][];
+                        nextCursor: string | null;
+                        counts: components["schemas"]["ApplicantCounts"];
+                    };
+                };
+            };
+            /** @description Not the owning employer */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };
@@ -5225,14 +5521,47 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
-                "application/json": Record<string, never>;
+                "application/json": {
+                    status: components["schemas"]["ApplicationStatus"];
+                    /** @description Optional feedback shown to the candidate on REJECTED. */
+                    rejectionFeedback?: string;
+                };
             };
         };
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Updated application */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Application"];
+                    };
+                };
+            };
+            /** @description Not the owning employer */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description `ILLEGAL_TRANSITION` — the move is not forward-only */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5240,12 +5569,80 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 4.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Illegal transition",
+                     *       "status": 422,
+                     *       "detail": "Employers can only move an application forward.",
+                     *       "code": "ILLEGAL_TRANSITION",
+                     *       "meta": {
+                     *         "from": "SELECTED",
+                     *         "to": "PENDING",
+                     *         "allowed": []
+                     *       }
                      *     }
                      */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getCandidateMeApplications: {
+        parameters: {
+            query?: {
+                /** @description Opaque keyset cursor for cursor-paginated feeds */
+                cursor?: components["parameters"]["CursorParam"];
+                /** @description Page size for cursor-paginated feeds (default 20, max 100) */
+                limit?: components["parameters"]["LimitParam"];
+                /** @description Filter by application status. */
+                status?: components["schemas"]["ApplicationStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Application cards */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ApplicationCard"][];
+                        nextCursor: string | null;
+                    };
+                };
+            };
+        };
+    };
+    getCandidateMeApplicationById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Application detail with timeline */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ApplicationDetail"];
+                    };
+                };
+            };
+            /** @description Application not found (or not the candidate's) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };
@@ -5521,6 +5918,10 @@ export interface operations {
                 pageSize?: components["parameters"]["PageSizeParam"];
                 /** @description Sort expression in the format `field:asc` or `field:desc`. Allowed fields are whitelisted per endpoint. */
                 sort?: components["parameters"]["SortParam"];
+                /** @description Filter by application status. */
+                status?: components["schemas"]["ApplicationStatus"];
+                /** @description Filter to a single job. */
+                jobId?: string;
             };
             header?: never;
             path?: never;
@@ -5528,8 +5929,83 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Applications page (admin context) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Application"][];
+                        meta: {
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+            /** @description Missing the applications-read permission */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    patchAdminApplicationStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    status: components["schemas"]["ApplicationStatus"];
+                    overrideReason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated application (admin context, includes overrideReason) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Application"];
+                    };
+                };
+            };
+            /** @description Missing the applications-write permission */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description `OVERRIDE_REASON_REQUIRED` — a corrective move needs a reason */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5537,10 +6013,10 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Override reason required",
+                     *       "status": 422,
+                     *       "detail": "A corrective status change requires a reason.",
+                     *       "code": "OVERRIDE_REASON_REQUIRED"
                      *     }
                      */
                     "application/json": components["schemas"]["Error"];

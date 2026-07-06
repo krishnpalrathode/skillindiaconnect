@@ -11,6 +11,7 @@ in parallel against it.
 | 0.1.0   | S1-0   | Auth, candidate profile, onboarding, resume (settings/generate/download/send)                                                                           |
 | 0.2.0   | S2-0   | Employer identity (company + docs), jobs CRUD + lifecycle, public job search, candidate notifications, admin employer approval, admin platform settings |
 | 0.3.0   | S3-0   | Employer profile (hiring prefs, contacts, logo), S3 dashboard shape (totalJobViews, hiredThisMonth, profileChecklist), employer-views-candidate (CandidateEmployerView), minimal candidate browse (CandidateBrowseCard), profile-view analytics (ProfileViewsSummary) |
+| 0.4.0   | S4-0   | Applications: apply-gate ladder (`POST /jobs/{id}/apply`), match snapshot (`matchScore` + `MatchBreakdown`), forward-only state machine (`PATCH /applications/{id}/status`), admin corrective override (`PATCH /admin/applications/{id}/status`), candidate reads (`/candidates/me/applications`, `/candidates/me/applications/{id}` with timeline), employer applicant list + counts (`GET /jobs/{id}/applicants`), admin table (`GET /admin/applications`). Promoted S2/S3 honest-zeros to live: `EmployerDashboardKpi.totalApplications` / `.shortlisted`, `EmployerDashboard.recentApplicants` (now `ApplicantSummary[]`), `Job.applicantCount`. |
 
 ## Files
 
@@ -87,7 +88,25 @@ When you add a new endpoint to the spec:
   3. `JOB_QUOTA_EXCEEDED` (422) — Free plan: max 1 ACTIVE job; `meta.planLimit = 1`.
 - **Core-rule settings** (WORKER_PROTECTION group) require SUPER_ADMIN — ADMIN
   callers get 403 `CORE_RULE_FORBIDDEN`.
-- **Stubs (later sprints):** Paths marked `[S3]`/`[S4]`/etc. return
+- **Apply-gate ladder (S4, `POST /jobs/{id}/apply`)** — checked fail-fast in this
+  LOCKED order, each with its own `code` + `meta` (documented in both spec and MSW):
+  1. `JOB_NOT_ACTIVE` (422) — job not ACTIVE.
+  2. `ALREADY_APPLIED` (409) — candidate already applied.
+  3. `PROFILE_INCOMPLETE` (422) — `meta: { completionPct, threshold }`.
+  4. `MANDATORY_DOCS_MISSING` (422) — `meta: { missing: DocumentType[] }`.
+  5. `PASSPORT_INVALID` (422) — `meta: { reason: "expired" | "missing" }`.
+- **Match snapshot** — `matchScore` + `MatchBreakdown` are computed ONCE at apply
+  and frozen; never recomputed on later reads or status changes.
+- **Application state machine** — employers move FORWARD only
+  (PENDING → SHORTLISTED → SELECTED|REJECTED); illegal moves → 422
+  `ILLEGAL_TRANSITION` (`meta: { from, to, allowed[] }`). Admins may move anywhere
+  via `PATCH /admin/applications/{id}/status` but MUST supply `overrideReason` (else
+  422 `OVERRIDE_REASON_REQUIRED`). There is NO `WITHDRAWN` state at MVP.
+- **Once-per-application "Selected" WhatsApp** — guarded by `selectedNotifiedAt`;
+  set on the FIRST entry to SELECTED. Re-entry sends email + in-app only.
+- **`overrideReason` is admin-context-only** — never serialized to candidate or
+  employer contexts, and excluded from the candidate-facing status timeline.
+- **Stubs (later sprints):** Paths marked `[S5]`/`[S6]`/etc. return
   `501 NOT_IMPLEMENTED`. They exist so the full API surface is navigable.
 
 ## Validating the spec manually

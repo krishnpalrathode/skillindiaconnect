@@ -15,10 +15,23 @@ import {
   computeProfileChecklist,
   toCandidateEmployerView,
   toCandidateBrowseCard,
+  evaluateApplyGate,
+  computeMatchBreakdown,
+  nextApplicationId,
+  toApplication,
+  toApplicationCard,
+  toApplicationDetail,
+  toApplicantCard,
+  toApplicantSummary,
+  computeApplicantCounts,
+  EMPLOYER_ALLOWED_TRANSITIONS,
+  type MockApplication,
+  type MockApplicationTimelineEntry,
 } from './data';
 import { MOCK_SSR_ORIGIN } from './ssr-origin';
 
 type ErrorSchema = components['schemas']['Error'];
+type ApplicationStatusLocal = components['schemas']['ApplicationStatus'];
 
 // Browser and jsdom (vitest) both have a `location` global, so a relative
 // pattern resolves against the current page origin as usual. Node (SSR via
@@ -631,8 +644,14 @@ const candidateMeStats = http.get(`${BASE}/candidates/me/stats`, ({ request }) =
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
 
+  // S4: applied / shortlisted are live counts of the candidate's applications.
+  const mine = [...db.applications.values()].filter((a) => a.candidateId === user.id);
+  const applied = mine.length;
+  const shortlisted = mine.filter((a) => a.status === 'SHORTLISTED').length;
+  const profileViews = db.profileViews.filter((v) => v.candidateId === user.id).length;
+
   return HttpResponse.json({
-    data: { applied: 3, profileViews: 12, shortlisted: 1 },
+    data: { applied, profileViews, shortlisted },
   });
 });
 
@@ -998,12 +1017,21 @@ const employersMeDashboard = http.get(`${BASE}/employers/me/dashboard`, ({ reque
 
   const ownJobs = [...db.jobs.values()].filter((j) => j.companyId === company.id);
   const activeJobs = ownJobs.filter((j) => j.status === 'ACTIVE').length;
+  const ownJobIds = new Set(ownJobs.map((j) => j.id));
+
+  // S4: live application counts + recent applicants across the employer's jobs.
+  const ownApplications = [...db.applications.values()].filter((a) => ownJobIds.has(a.jobId));
+  const shortlisted = ownApplications.filter((a) => a.status === 'SHORTLISTED').length;
+  const recentApplicants = [...ownApplications]
+    .sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime())
+    .slice(0, 5)
+    .map((a) => toApplicantSummary(a));
 
   const dashboard: components['schemas']['EmployerDashboard'] = {
     kpis: {
       activeJobs,
-      totalApplications: 0,
-      shortlisted: 0,
+      totalApplications: ownApplications.length,
+      shortlisted,
       totalJobViews: 0,
       hiredThisMonth: 0,
     },
@@ -1011,7 +1039,7 @@ const employersMeDashboard = http.get(`${BASE}/employers/me/dashboard`, ({ reque
       .filter((j) => j.status === 'ACTIVE')
       .slice(0, 5)
       .map((j) => toJobCard(j, null)),
-    recentApplicants: [],
+    recentApplicants,
     profileChecklist: computeProfileChecklist(user.id),
   };
 
@@ -1043,7 +1071,16 @@ const employersMeJobs = http.get(`${BASE}/employers/me/jobs`, ({ request }) => {
     jobs = jobs.filter((j) => j.title.toLowerCase().includes(search));
   }
 
-  const result = offsetPaginate(jobs, page, pageSize);
+  // S4: attach the live applicant count that fronts the applicants view (Screen 18).
+  const withCounts = jobs.map((j) => {
+    const counts = computeApplicantCounts(j.id);
+    return {
+      ...j,
+      applicantCount: counts.pending + counts.shortlisted + counts.selected + counts.rejected,
+    };
+  });
+
+  const result = offsetPaginate(withCounts, page, pageSize);
   return HttpResponse.json(result);
 });
 
@@ -1968,6 +2005,386 @@ const candidateMeProfileViews = http.get(`${BASE}/candidates/me/profile-views`, 
   return HttpResponse.json({ data: summary });
 });
 
+// ─── S4: Applications ─────────────────────────────────────────────────────────
+
+let notifSeq = 1000;
+function pushNotification(
+  userId: string,
+  n: Omit<import('./data').MockNotification, 'id' | 'read' | 'readAt' | 'createdAt'>,
+) {
+  const list = db.notifications.get(userId) ?? [];
+  list.unshift({
+    id: `notif-s4-${notifSeq++}`,
+    read: false,
+    readAt: null,
+    createdAt: new Date().toISOString(),
+    ...n,
+  } as import('./data').MockNotification);
+  db.notifications.set(userId, list);
+}
+
+// Local cursor slice for lists whose items lack a `createdAt` key (applications
+// key on `appliedAt`/`id`). Mirrors cursorPaginate's opaque-base64 contract.
+function cursorSlice<T>(
+  sorted: T[],
+  cursor: string | null,
+  limit: number,
+  keyOf: (t: T) => string,
+): { data: T[]; nextCursor: string | null } {
+  let start = 0;
+  if (cursor) {
+    const decoded = atob(cursor);
+    const idx = sorted.findIndex((x) => keyOf(x) === decoded);
+    start = idx === -1 ? 0 : idx + 1;
+  }
+  const data = sorted.slice(start, start + limit);
+  const nextCursor =
+    start + limit < sorted.length && data.length > 0 ? btoa(keyOf(data[data.length - 1]!)) : null;
+  return { data, nextCursor };
+}
+
+// POST /jobs/:id/apply — the apply-gate ladder + match snapshot.
+const applyToJob = http.post(`${BASE}/jobs/:id/apply`, async ({ request, params }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+  if (user.role !== 'CANDIDATE')
+    return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Only candidates can apply to jobs.');
+
+  const job = db.jobs.get(params.id as string);
+  if (!job) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Job not found.');
+
+  const mc = db.candidates.get(user.id);
+  if (!mc) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Candidate profile not found.');
+
+  const body = (await request.json().catch(() => ({}))) as { coverLetter?: string };
+
+  const gate = evaluateApplyGate(mc, job);
+  if (!gate.ok) {
+    switch (gate.code) {
+      case 'JOB_NOT_ACTIVE':
+        return errorResponse(
+          422,
+          'JOB_NOT_ACTIVE',
+          'Job not active',
+          'This job is not accepting applications.',
+        );
+      case 'ALREADY_APPLIED':
+        return errorResponse(
+          409,
+          'ALREADY_APPLIED',
+          'Already applied',
+          'You have already applied to this job.',
+        );
+      case 'PROFILE_INCOMPLETE':
+        return errorResponse(
+          422,
+          'PROFILE_INCOMPLETE',
+          'Profile incomplete',
+          'Complete your profile before applying.',
+          { completionPct: gate.completionPct, threshold: gate.threshold },
+        );
+      case 'MANDATORY_DOCS_MISSING':
+        return errorResponse(
+          422,
+          'MANDATORY_DOCS_MISSING',
+          'Mandatory documents missing',
+          'Upload all required documents before applying.',
+          { missing: gate.missing },
+        );
+      case 'PASSPORT_INVALID':
+        return errorResponse(
+          422,
+          'PASSPORT_INVALID',
+          'Passport invalid',
+          gate.reason === 'expired' ? 'Your passport is expired.' : 'A valid passport is required.',
+          { reason: gate.reason },
+        );
+    }
+  }
+
+  // Passed the gate — compute the match snapshot ONCE and persist.
+  const { matchScore, matchBreakdown } = computeMatchBreakdown(
+    mc,
+    job,
+    gate.docsCompleteCount,
+    gate.docsRequiredCount,
+  );
+  const { id, humanId } = nextApplicationId();
+  const now = new Date().toISOString();
+  const app: MockApplication = {
+    id,
+    humanId,
+    jobId: job.id,
+    candidateId: user.id,
+    status: 'PENDING',
+    matchScore,
+    matchBreakdown,
+    coverLetter: body.coverLetter?.slice(0, 500) ?? null,
+    docsCompleteCount: gate.docsCompleteCount,
+    docsRequiredCount: gate.docsRequiredCount,
+    passportValidAtApply: gate.passportValidAtApply,
+    selectedNotifiedAt: null,
+    rejectionFeedback: null,
+    overrideReason: null,
+    appliedAt: now,
+    updatedAt: now,
+  };
+  db.applications.set(id, app);
+  db.applicationTimeline.set(id, []);
+
+  // Side effect: notify the owning employer of a new applicant (in-app).
+  const employerUserId = [...db.employers.entries()].find(([, c]) => c.id === job.companyId)?.[0];
+  if (employerUserId) {
+    pushNotification(employerUserId, {
+      type: 'CANDIDATE_MATCHES',
+      title: 'New applicant',
+      body: `${mc.profile.fullName || 'A candidate'} applied to ${job.title}.`,
+      relatedEntityId: id,
+      relatedEntityType: 'application',
+    });
+  }
+
+  return HttpResponse.json({ data: toApplication(app, 'candidate') }, { status: 201 });
+});
+
+// GET /jobs/:id/applicants — employer applicant list + counts.
+const getJobApplicants = http.get(`${BASE}/jobs/:id/applicants`, ({ request, params }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+  const job = db.jobs.get(params.id as string);
+  if (!job) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Job not found.');
+
+  const company = db.employers.get(user.id);
+  if (!company || company.id !== job.companyId)
+    return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'You do not own this job.');
+
+  const url = new URL(request.url);
+  const cursor = url.searchParams.get('cursor');
+  const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
+  const statusFilter = url.searchParams.get('status');
+  const sort = url.searchParams.get('sort') ?? 'match';
+
+  let apps = [...db.applications.values()].filter((a) => a.jobId === job.id);
+  if (statusFilter) apps = apps.filter((a) => a.status === statusFilter);
+  apps.sort((a, b) =>
+    sort === 'recent'
+      ? new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime()
+      : b.matchScore - a.matchScore || a.id.localeCompare(b.id),
+  );
+
+  const { data, nextCursor } = cursorSlice(apps, cursor, limit, (a) => a.id);
+  return HttpResponse.json({
+    data: data.map((a) => toApplicantCard(a)),
+    nextCursor,
+    counts: computeApplicantCounts(job.id),
+  });
+});
+
+// Shared status-transition side effects (employer + admin paths).
+function applyStatusTransition(
+  app: MockApplication,
+  to: ApplicationStatusLocal,
+  actorRole: import('./data').MockApplicationTimelineEntry['actorRole'],
+  opts: {
+    isAdminOverride: boolean;
+    overrideReason: string | null;
+    rejectionFeedback?: string | null;
+  },
+) {
+  const from = app.status;
+  const now = new Date().toISOString();
+
+  app.status = to;
+  app.updatedAt = now;
+  if (opts.isAdminOverride) app.overrideReason = opts.overrideReason;
+  if (to === 'REJECTED' && opts.rejectionFeedback !== undefined) {
+    app.rejectionFeedback = opts.rejectionFeedback;
+  }
+
+  const entry: MockApplicationTimelineEntry = {
+    fromStatus: from,
+    toStatus: to,
+    actorRole,
+    isAdminOverride: opts.isAdminOverride,
+    overrideReason: opts.overrideReason,
+    createdAt: now,
+  };
+  const timeline = db.applicationTimeline.get(app.id) ?? [];
+  timeline.push(entry);
+  db.applicationTimeline.set(app.id, timeline);
+
+  // SELECTED side effect: WhatsApp fires ONCE (guarded by selectedNotifiedAt).
+  if (to === 'SELECTED' && app.selectedNotifiedAt === null) {
+    app.selectedNotifiedAt = now; // first entry → the once-per-application receipt
+  }
+  // Notification on every status change into a terminal/interesting state.
+  const notifByStatus: Partial<
+    Record<ApplicationStatusLocal, import('./data').MockNotification['type']>
+  > = {
+    SHORTLISTED: 'APPLICATION_SHORTLISTED',
+    SELECTED: 'APPLICATION_SELECTED',
+    REJECTED: 'APPLICATION_REJECTED',
+  };
+  const notifType = notifByStatus[to];
+  if (notifType) {
+    const job = db.jobs.get(app.jobId);
+    pushNotification(app.candidateId, {
+      type: notifType,
+      title:
+        to === 'SELECTED'
+          ? 'You have been selected'
+          : to === 'SHORTLISTED'
+            ? 'Application shortlisted'
+            : 'Application update',
+      body: `Your application for ${job?.title ?? 'a job'} is now ${to.toLowerCase()}.`,
+      relatedEntityId: app.id,
+      relatedEntityType: 'application',
+    });
+  }
+}
+
+// PATCH /applications/:id/status — employer forward-only move.
+const patchApplicationStatus = http.patch(
+  `${BASE}/applications/:id/status`,
+  async ({ request, params }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const app = db.applications.get(params.id as string);
+    if (!app) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Application not found.');
+
+    const job = db.jobs.get(app.jobId);
+    const company = db.employers.get(user.id);
+    if (!company || !job || company.id !== job.companyId)
+      return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'You do not own this application.');
+
+    const body = (await request.json()) as {
+      status: ApplicationStatusLocal;
+      rejectionFeedback?: string;
+    };
+
+    const allowed = EMPLOYER_ALLOWED_TRANSITIONS[app.status] ?? [];
+    if (!allowed.includes(body.status)) {
+      return errorResponse(
+        422,
+        'ILLEGAL_TRANSITION',
+        'Illegal transition',
+        'Employers can only move an application forward.',
+        { from: app.status, to: body.status, allowed },
+      );
+    }
+
+    applyStatusTransition(app, body.status, 'EMPLOYER', {
+      isAdminOverride: false,
+      overrideReason: null,
+      rejectionFeedback: body.rejectionFeedback ?? null,
+    });
+
+    return HttpResponse.json({ data: toApplication(app, 'employer') });
+  },
+);
+
+// GET /candidates/me/applications — candidate list.
+const candidateMeApplications = http.get(`${BASE}/candidates/me/applications`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+  const url = new URL(request.url);
+  const cursor = url.searchParams.get('cursor');
+  const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
+  const statusFilter = url.searchParams.get('status');
+
+  let mine = [...db.applications.values()].filter((a) => a.candidateId === user.id);
+  if (statusFilter) mine = mine.filter((a) => a.status === statusFilter);
+  mine.sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime());
+
+  const { data, nextCursor } = cursorSlice(mine, cursor, limit, (a) => a.id);
+  return HttpResponse.json({ data: data.map((a) => toApplicationCard(a)), nextCursor });
+});
+
+// GET /candidates/me/applications/:id — candidate detail (timeline, no overrideReason).
+const candidateMeApplicationById = http.get(
+  `${BASE}/candidates/me/applications/:id`,
+  ({ request, params }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const app = db.applications.get(params.id as string);
+    if (!app || app.candidateId !== user.id)
+      return errorResponse(404, 'NOT_FOUND', 'Not found', 'Application not found.');
+
+    return HttpResponse.json({ data: toApplicationDetail(app) });
+  },
+);
+
+// GET /admin/applications — admin table (offset, admin context keeps overrideReason).
+const adminGetApplications = http.get(`${BASE}/admin/applications`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+  if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')
+    return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Admin access required.');
+
+  const url = new URL(request.url);
+  const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1', 10));
+  const pageSize = Math.min(100, parseInt(url.searchParams.get('pageSize') ?? '20', 10));
+  const statusFilter = url.searchParams.get('status');
+  const jobId = url.searchParams.get('jobId');
+
+  let apps = [...db.applications.values()];
+  if (statusFilter) apps = apps.filter((a) => a.status === statusFilter);
+  if (jobId) apps = apps.filter((a) => a.jobId === jobId);
+  apps.sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime());
+
+  const result = offsetPaginate(
+    apps.map((a) => toApplication(a, 'admin')),
+    page,
+    pageSize,
+  );
+  return HttpResponse.json(result);
+});
+
+// PATCH /admin/applications/:id/status — corrective override (reason required).
+const adminPatchApplicationStatus = http.patch(
+  `${BASE}/admin/applications/:id/status`,
+  async ({ request, params }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+    if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')
+      return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Admin access required.');
+
+    const app = db.applications.get(params.id as string);
+    if (!app) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Application not found.');
+
+    const body = (await request.json()) as {
+      status: ApplicationStatusLocal;
+      overrideReason?: string;
+    };
+    if (!body.overrideReason || body.overrideReason.trim().length === 0) {
+      return errorResponse(
+        422,
+        'OVERRIDE_REASON_REQUIRED',
+        'Override reason required',
+        'A corrective status change requires a reason.',
+      );
+    }
+
+    applyStatusTransition(app, body.status, 'ADMIN', {
+      isAdminOverride: true,
+      overrideReason: body.overrideReason,
+    });
+
+    return HttpResponse.json({ data: toApplication(app, 'admin') });
+  },
+);
+
 // ─── Health ───────────────────────────────────────────────────────────────────
 
 const health = http.get('/health', () => {
@@ -1991,9 +2408,6 @@ function notImplemented(sprint: string) {
 }
 
 const stubNotImplemented = [
-  http.post(`${BASE}/jobs/:id/apply`, notImplemented('Sprint 4')),
-  http.get(`${BASE}/jobs/:id/applicants`, notImplemented('Sprint 4')),
-  http.patch(`${BASE}/applications/:id/status`, notImplemented('Sprint 4')),
   http.get(`${BASE}/billing/plans`, notImplemented('Sprint 5')),
   http.post(`${BASE}/billing/checkout`, notImplemented('Sprint 5')),
   http.get(`${BASE}/billing/subscription`, notImplemented('Sprint 5')),
@@ -2002,7 +2416,6 @@ const stubNotImplemented = [
   http.get(`${BASE}/admin/candidates`, notImplemented('Sprint 6')),
   http.get(`${BASE}/admin/jobs`, notImplemented('Sprint 6')),
   http.patch(`${BASE}/admin/jobs/:id`, notImplemented('Sprint 6')),
-  http.get(`${BASE}/admin/applications`, notImplemented('Sprint 6')),
   http.get(`${BASE}/admin/roles/:role/permissions`, notImplemented('Sprint 6')),
   http.patch(`${BASE}/admin/roles/:role/permissions`, notImplemented('Sprint 6')),
   http.get(`${BASE}/admin/logs`, notImplemented('Sprint 6')),
@@ -2072,6 +2485,14 @@ export const handlers = [
   employersCandidateView,
   // S3: Candidate profile views
   candidateMeProfileViews,
+  // S4: Applications
+  applyToJob,
+  getJobApplicants,
+  patchApplicationStatus,
+  candidateMeApplications,
+  candidateMeApplicationById,
+  adminGetApplications,
+  adminPatchApplicationStatus,
   // S2: Jobs — public
   getJobs,
   getJobById,
