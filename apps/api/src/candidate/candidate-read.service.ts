@@ -78,6 +78,20 @@ export class CandidateReadService {
     };
   }
 
+  /**
+   * Resolve the User id that owns a candidate profile (S4-B2). Applications uses
+   * this to address status-change notifications to the candidate WITHOUT querying
+   * candidate_profiles directly. Returns null if the candidate no longer exists
+   * (e.g. tombstoned) — the caller then skips the notification.
+   */
+  async getUserIdForCandidate(candidateId: string): Promise<string | null> {
+    const profile = await this.prisma.candidateProfile.findUnique({
+      where: { id: candidateId },
+      select: { userId: true },
+    });
+    return profile?.userId ?? null;
+  }
+
   // ── S3-B2: Employer-context reads ────────────────────────────────────────
 
   /**
