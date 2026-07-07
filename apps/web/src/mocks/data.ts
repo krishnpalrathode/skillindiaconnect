@@ -440,6 +440,10 @@ export const db = {
         userId: APPLY_OK_USER_ID,
         profile: buildProfile(APPLY_OK_USER_ID, 'apply-ok@example.com', {
           fullName: 'Sunil Verma',
+          // dob + nationality make computeCompletion's "personal" section complete,
+          // so this fixture is eligible on BOTH the stored-pct apply gate AND the
+          // recomputed completion the eligibility preview reads (S4-F1 eligible path).
+          dob: '1994-05-12',
           phone: '+919871112233',
           phoneVerifiedAt: daysAgo(20),
           whatsappCapable: true,
@@ -458,8 +462,30 @@ export const db = {
               years: 6,
               months: 0,
             } satisfies WorkExperience,
+            {
+              id: 'exp-ok-2',
+              type: 'FOREIGN',
+              country: 'UAE',
+              companyName: 'Abu Dhabi Constructions',
+              role: 'Senior Mason',
+              years: 3,
+              months: 0,
+            } satisfies WorkExperience,
+            {
+              id: 'exp-ok-3',
+              type: 'INDIA',
+              country: 'India',
+              companyName: 'Jaipur Builders',
+              role: 'Mason',
+              years: 2,
+              months: 0,
+            } satisfies WorkExperience,
           ],
-          skills: [{ id: 'skill-ok-1', name: 'Masonry' } satisfies CandidateSkill],
+          skills: [
+            { id: 'skill-ok-1', name: 'Masonry' } satisfies CandidateSkill,
+            { id: 'skill-ok-2', name: 'Plastering' } satisfies CandidateSkill,
+            { id: 'skill-ok-3', name: 'Tiling' } satisfies CandidateSkill,
+          ],
           documents: [
             {
               id: 'doc-ok-passport',

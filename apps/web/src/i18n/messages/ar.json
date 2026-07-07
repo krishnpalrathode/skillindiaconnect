@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "continue": "[ar] Continue",
     "back": "[ar] Back",
@@ -1058,6 +1058,78 @@
       "archive": "أرشفة",
       "archiveLabel": "أرشفة الوظيفة: {title}",
       "repostAsDraft": "إعادة نشر كمسودة"
+    }
+  },
+  "apply": {
+    "title": "قدّم على هذه الوظيفة",
+    "close": "إغلاق",
+    "submit": "إرسال الطلب",
+    "submitting": "جارٍ إرسال طلبك…",
+    "cta": {
+      "apply": "قدّم الآن",
+      "completeProfile": "أكمل ملفك الشخصي للتقديم",
+      "applied": "تم التقديم"
+    },
+    "coverLetter": {
+      "label": "خطاب التقديم (اختياري)",
+      "placeholder": "أخبر صاحب العمل لماذا أنت مناسب لهذه الوظيفة…",
+      "counter": "{n}/{max}"
+    },
+    "eligibility": {
+      "title": "قبل التقديم",
+      "pct": "اكتمل ملفك الشخصي بنسبة {pct}%",
+      "allClear": "أنت تستوفي جميع متطلبات التقديم.",
+      "fix": "إصلاح",
+      "recheck": "إعادة الفحص"
+    },
+    "errors": {
+      "profileIncomplete": {
+        "title": "أكمل ملفك الشخصي",
+        "body": "ملفك الشخصي {pct}% — يلزم {threshold}% للتقديم.",
+        "action": "إكمال الملف الشخصي"
+      },
+      "docsMissing": {
+        "title": "مستندات ناقصة",
+        "body": "ارفع هذه المستندات للتقديم: {docs}.",
+        "action": "الذهاب إلى المستندات"
+      },
+      "passportInvalid": {
+        "title": "مشكلة في جواز السفر",
+        "expired": "انتهت صلاحية جواز سفرك. جدّده للتقديم.",
+        "missing": "يلزم جواز سفر صالح للتقديم.",
+        "action": "الذهاب إلى المستندات"
+      },
+      "alreadyApplied": {
+        "title": "لقد قدّمت بالفعل",
+        "body": "لقد قدّمت بالفعل على هذه الوظيفة.",
+        "action": "عرض الطلب"
+      },
+      "jobNotActive": {
+        "title": "لم تعد تقبل الطلبات",
+        "body": "هذه الوظيفة لم تعد تقبل الطلبات.",
+        "action": "تصفّح الوظائف"
+      },
+      "generic": {
+        "title": "حدث خطأ ما",
+        "body": "تعذّر إرسال طلبك. يرجى المحاولة مرة أخرى.",
+        "retry": "حاول مرة أخرى"
+      },
+      "docTypes": {
+        "PASSPORT": "جواز السفر",
+        "EXPERIENCE_CERT": "شهادة الخبرة",
+        "EDUCATIONAL_CERT": "الشهادة التعليمية"
+      }
+    },
+    "reveal": {
+      "score": "أنت متطابق بنسبة {score}%",
+      "category": "فئة الوظيفة",
+      "experience": "الخبرة",
+      "experienceBasis": "بناءً على {clamped} من {raw} سنوات",
+      "foreign": "الخبرة الأجنبية",
+      "foreignLocalNote": "لا تُحتسب للوظائف المحلية.",
+      "documents": "المستندات",
+      "componentScore": "{score}/{max}",
+      "track": "تتبّع في طلباتي"
     }
   }
 }

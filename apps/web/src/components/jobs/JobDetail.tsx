@@ -5,13 +5,12 @@ import Link from 'next/link';
 import { MapPin, Users, Briefcase } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { buttonVariants } from '@/components/ui/button';
 import { BenefitChips } from './BenefitChips';
 import { SaveJobButton } from './SaveJobButton';
 import { SimilarJobs } from './SimilarJobs';
+import { ApplyButton } from '@/components/apply/ApplyButton';
 import { formatPostedAgo, formatSalaryRange, isNewJob } from '@/lib/jobs/format';
 import { useAuth } from '@/lib/auth/auth-context';
-import { cn } from '@/lib/utils';
 import type { JobDetail as JobDetailType } from '@/lib/api/jobs';
 
 interface JobDetailProps {
@@ -63,18 +62,8 @@ export function JobDetail({ job, locale }: JobDetailProps) {
             <BenefitChips job={job} />
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
-              {/*
-                Apply Now is a placeholder link to the (not-yet-built) S4
-                application flow — out of scope for this screen. It is left
-                as a real link rather than a disabled button so the affordance
-                is visible and testable once S4 ships.
-              */}
-              <Link
-                href={`/${locale}/jobs/${job.id}/apply`}
-                className={cn(buttonVariants({ variant: 'primary' }))}
-              >
-                {t('applyNow')}
-              </Link>
+              {/* S4-F1: the eligibility-aware apply entry (live). */}
+              <ApplyButton job={job} locale={locale} />
               <SaveJobButton jobId={job.id} initialSaved={job.isSaved ?? null} variant="full" />
             </div>
           </CardHeader>

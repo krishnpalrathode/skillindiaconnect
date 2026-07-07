@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "continue": "Continue",
     "back": "Back",
@@ -69,7 +69,7 @@
     "forgotPassword": "Forgot password?",
     "loginButton": "Log in",
     "signupButton": "Create account",
-    "noAccount": "Don\u0027t have an account?",
+    "noAccount": "Don't have an account?",
     "signupLink": "Sign up",
     "hasAccount": "Already have an account?",
     "loginLink": "Log in",
@@ -82,7 +82,7 @@
       "good": "Good",
       "strong": "Strong"
     },
-    "termsText": "I agree to the \u003cterms\u003eTerms of Service\u003c/terms\u003e and \u003cprivacy\u003ePrivacy Policy\u003c/privacy\u003e",
+    "termsText": "I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>",
     "mustAcceptTerms": "Please accept the Terms of Service and Privacy Policy to continue",
     "emailTaken": "An account with this email already exists. Try logging in.",
     "invalidEmail": "Please enter a valid email address",
@@ -98,14 +98,14 @@
     "otpSentMessage": "Enter the 6-digit code we sent to your number",
     "invalidOtp": "Invalid or expired OTP. Please try again.",
     "otpRateLimited": "Too many attempts. Please wait before trying again.",
-    "otpDidntGet": "Didn\u0027t receive the code?",
+    "otpDidntGet": "Didn't receive the code?",
     "wrongNumber": "Wrong number",
     "resendCode": "Resend",
     "forgotTitle": "Reset your password",
-    "forgotSubtitle": "Enter your email and we\u0027ll send a reset link",
+    "forgotSubtitle": "Enter your email and we'll send a reset link",
     "sendResetEmail": "Send reset email",
     "forgotSentTitle": "Check your inbox",
-    "forgotSentBody": "If an account with that email exists, you\u0027ll receive a password reset link shortly.",
+    "forgotSentBody": "If an account with that email exists, you'll receive a password reset link shortly.",
     "backToLogin": "Back to log in",
     "rateLimited": "Too many requests. Please try again later.",
     "callbackError": "Sign-in failed. Please try again.",
@@ -128,7 +128,7 @@
     "dateOfBirth": "Date of birth",
     "gender": "Gender",
     "religion": "Religion",
-    "fatherName": "Father\u0027s name",
+    "fatherName": "Father's name",
     "address": "Address",
     "city": "City",
     "state": "State",
@@ -155,7 +155,7 @@
     "sections": {
       "personalInfo": "Personal Info",
       "workExperience": "Work Experience",
-      "documents": "Documents \u0026 Certificates",
+      "documents": "Documents & Certificates",
       "skills": "Skills",
       "accountSettings": "Account Settings"
     },
@@ -171,8 +171,8 @@
       "verifyPhoneLink": "Verify phone",
       "nameLabel": "Full name",
       "namePlaceholder": "Your full name",
-      "fatherNameLabel": "Father\u0027s name",
-      "fatherNamePlaceholder": "Father\u0027s full name",
+      "fatherNameLabel": "Father's name",
+      "fatherNamePlaceholder": "Father's full name",
       "dobLabel": "Date of birth",
       "maritalStatusLabel": "Marital status",
       "religionLabel": "Religion",
@@ -242,7 +242,7 @@
     "network": "Network error. Please check your connection.",
     "notFound": "Page not found",
     "unauthorized": "Please log in to continue",
-    "forbidden": "You don\u0027t have permission to do this"
+    "forbidden": "You don't have permission to do this"
   },
   "onboarding": {
     "pageTitle": "Complete your profile",
@@ -251,7 +251,7 @@
     "steps": {
       "personalInfo": "Personal Info",
       "workExperience": "Work Experience",
-      "documentsSkills": "Documents \u0026 Skills",
+      "documentsSkills": "Documents & Skills",
       "preview": "Preview"
     },
     "personalInfo": {
@@ -268,7 +268,7 @@
       "languagesPlaceholder": "Type languages separated by commas",
       "jobCategoryLabel": "Job category",
       "phoneVerifyTitle": "Verify your phone",
-      "phoneVerifySubtitle": "We\u0027ll send a WhatsApp OTP to confirm your number",
+      "phoneVerifySubtitle": "We'll send a WhatsApp OTP to confirm your number",
       "phoneLabel": "Mobile number",
       "phonePlaceholder": "9876543210",
       "phoneVerified": "Phone verified",
@@ -299,7 +299,7 @@
       "cancel": "Cancel"
     },
     "documentsSkills": {
-      "title": "Documents \u0026 Skills",
+      "title": "Documents & Skills",
       "subtitle": "Upload your documents and add your skills",
       "passportLabel": "Passport",
       "passportHint": "PDF or image, up to 10 MB",
@@ -327,7 +327,7 @@
       }
     },
     "preview": {
-      "title": "Preview \u0026 Export",
+      "title": "Preview & Export",
       "subtitle": "Review your profile completion and export your resume",
       "completionTitle": "Profile completion",
       "exportTitle": "Export resume",
@@ -335,7 +335,7 @@
       "sendWhatsapp": "Send via WhatsApp",
       "sendEmail": "Send to email",
       "exportComingSoon": "Resume export coming in Sprint 7",
-      "saveAndContinue": "Save \u0026 continue to profile",
+      "saveAndContinue": "Save & continue to profile",
       "videoTitle": "Video introduction",
       "videoComingSoon": "Coming soon"
     },
@@ -347,13 +347,13 @@
       "uploadComplete": "Uploaded",
       "fileTooLarge": "File is too large",
       "uploadFailed": "Upload failed. Tap to retry.",
-      "dropzoneHint": "Drag \u0026 drop or click to select",
+      "dropzoneHint": "Drag & drop or click to select",
       "maxSize": "Max {size} MB"
     },
     "nav": {
       "back": "Back",
       "next": "Next",
-      "saveAndContinue": "Save \u0026 Continue",
+      "saveAndContinue": "Save & Continue",
       "skipForNow": "Skip for now"
     },
     "maritalStatus": {
@@ -1058,6 +1058,78 @@
       "archive": "Archive",
       "archiveLabel": "Archive job: {title}",
       "repostAsDraft": "Repost as Draft"
+    }
+  },
+  "apply": {
+    "title": "Apply for this job",
+    "close": "Close",
+    "submit": "Submit application",
+    "submitting": "Submitting your application…",
+    "cta": {
+      "apply": "Apply now",
+      "completeProfile": "Complete your profile to apply",
+      "applied": "Applied"
+    },
+    "coverLetter": {
+      "label": "Cover letter (optional)",
+      "placeholder": "Tell the employer why you're a great fit…",
+      "counter": "{n}/{max}"
+    },
+    "eligibility": {
+      "title": "Before you apply",
+      "pct": "Your profile is {pct}% complete",
+      "allClear": "You meet all the requirements to apply.",
+      "fix": "Fix",
+      "recheck": "Recheck"
+    },
+    "errors": {
+      "profileIncomplete": {
+        "title": "Complete your profile",
+        "body": "Your profile is {pct}% — {threshold}% is needed to apply.",
+        "action": "Complete profile"
+      },
+      "docsMissing": {
+        "title": "Documents missing",
+        "body": "Upload these documents to apply: {docs}.",
+        "action": "Go to documents"
+      },
+      "passportInvalid": {
+        "title": "Passport problem",
+        "expired": "Your passport has expired. Renew it to apply.",
+        "missing": "A valid passport is required to apply.",
+        "action": "Go to documents"
+      },
+      "alreadyApplied": {
+        "title": "You've already applied",
+        "body": "You have already applied to this job.",
+        "action": "View application"
+      },
+      "jobNotActive": {
+        "title": "No longer accepting applications",
+        "body": "This job is no longer accepting applications.",
+        "action": "Browse jobs"
+      },
+      "generic": {
+        "title": "Something went wrong",
+        "body": "We couldn't submit your application. Please try again.",
+        "retry": "Try again"
+      },
+      "docTypes": {
+        "PASSPORT": "Passport",
+        "EXPERIENCE_CERT": "Experience certificate",
+        "EDUCATIONAL_CERT": "Educational certificate"
+      }
+    },
+    "reveal": {
+      "score": "You're a {score}% match",
+      "category": "Job category",
+      "experience": "Experience",
+      "experienceBasis": "Based on {clamped} of {raw} yrs",
+      "foreign": "Foreign experience",
+      "foreignLocalNote": "Not scored for local jobs.",
+      "documents": "Documents",
+      "componentScore": "{score}/{max}",
+      "track": "Track in My Applications"
     }
   }
 }
