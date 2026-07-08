@@ -168,9 +168,11 @@ describe('QuickActions', () => {
 // ─── MyApplicationsMini ───────────────────────────────────────────────────────
 
 describe('MyApplicationsMini', () => {
-  it('shows coming soon message', () => {
+  it('renders the live My Applications section (placeholder removed)', () => {
     render(<MyApplicationsMini />);
-    expect(screen.getByText(/coming soon/i)).toBeInTheDocument();
+    // The section heading is always present; the "coming soon" placeholder is gone.
+    expect(screen.getByRole('heading', { name: /my applications/i })).toBeInTheDocument();
+    expect(screen.queryByText(/coming soon/i)).toBeNull();
   });
 });
 

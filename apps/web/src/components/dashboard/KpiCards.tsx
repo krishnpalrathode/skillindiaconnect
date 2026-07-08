@@ -78,7 +78,9 @@ export function KpiCards({ stats, unreadCount, profileViews }: KpiCardsProps) {
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <KpiCard label={t('applied')} value={stats.applied} />
+      {/* S4-F2: the values are live (GET /candidates/me/stats) and now link into
+          Screen 08 — the "once applications open" placeholder is gone. */}
+      <KpiCard label={t('applied')} value={stats.applied} href={`/${locale}/applications`} />
       <KpiCard
         label={t('views')}
         value={viewsValue}
@@ -87,7 +89,11 @@ export function KpiCards({ stats, unreadCount, profileViews }: KpiCardsProps) {
         srLabel={viewsSrLabel}
         loading={viewsLoading}
       />
-      <KpiCard label={t('shortlisted')} value={stats.shortlisted} />
+      <KpiCard
+        label={t('shortlisted')}
+        value={stats.shortlisted}
+        href={`/${locale}/applications?status=SHORTLISTED`}
+      />
       <KpiCard label={t('updates')} value={unreadCount} href={`/${locale}/notifications`} />
     </div>
   );

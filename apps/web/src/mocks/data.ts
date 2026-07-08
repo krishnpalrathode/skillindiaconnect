@@ -1305,14 +1305,25 @@ export const db = {
           actorRole: 'EMPLOYER',
           isAdminOverride: false,
           overrideReason: null,
-          createdAt: daysAgo(3),
+          createdAt: daysAgo(5),
         },
         {
           fromStatus: 'SHORTLISTED',
-          toStatus: 'SELECTED',
+          toStatus: 'REJECTED',
           actorRole: 'EMPLOYER',
           isAdminOverride: false,
           overrideReason: null,
+          createdAt: daysAgo(3),
+        },
+        // Admin corrective (backward) move — isAdminOverride. overrideReason IS set
+        // here so tests can prove the candidate mapper DROPS it (S3 discipline): it
+        // must never reach the API response or the rendered timeline.
+        {
+          fromStatus: 'REJECTED',
+          toStatus: 'SELECTED',
+          actorRole: 'ADMIN',
+          isAdminOverride: true,
+          overrideReason: 'Candidate reinstated after internal review',
           createdAt: daysAgo(1),
         },
       ],

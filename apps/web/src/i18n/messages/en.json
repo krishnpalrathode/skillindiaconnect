@@ -820,7 +820,10 @@
     },
     "myApplications": {
       "title": "My Applications",
-      "coming": "Application tracking coming soon."
+      "coming": "Application tracking coming soon.",
+      "viewAll": "View all",
+      "empty": "You haven't applied to any jobs yet.",
+      "browseJobs": "Browse jobs"
     },
     "quickActions": {
       "title": "Quick Actions",
@@ -1130,6 +1133,48 @@
       "documents": "Documents",
       "componentScore": "{score}/{max}",
       "track": "Track in My Applications"
+    }
+  },
+  "applications": {
+    "title": "My Applications",
+    "filterLabel": "Filter applications by status",
+    "filter": {
+      "all": "All"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "SHORTLISTED": "Shortlisted",
+      "SELECTED": "Selected",
+      "REJECTED": "Rejected"
+    },
+    "matchShort": "{score}% match",
+    "appliedAgo": "Applied {ago}",
+    "loadMore": "Load more",
+    "error": "Couldn't load your applications.",
+    "retry": "Try again",
+    "emptyAll": "You haven't applied yet — browse jobs to get started.",
+    "emptyStatus": "No {status} applications yet.",
+    "browseJobs": "Browse jobs",
+    "backToList": "Back to My Applications",
+    "notFound": "Application not found.",
+    "coverLetter": "Your cover letter",
+    "receipt": {
+      "notified": "✓ Notified on WhatsApp · {date}"
+    },
+    "timeline": {
+      "heading": "Status timeline",
+      "applied": "Application submitted",
+      "SHORTLISTED": "Shortlisted by the employer",
+      "SELECTED": "Selected by the employer",
+      "REJECTED": "Not selected by the employer",
+      "PENDING": "Reopened",
+      "adminOverride": "Status updated by SkillIndiaConnect"
+    },
+    "rejection": {
+      "feedbackLabel": "Feedback from the employer",
+      "nextStepTitle": "Keep going",
+      "nextStepBody": "Every application builds momentum. Explore more roles in your trade.",
+      "browseJobs": "Browse more jobs"
     }
   }
 }

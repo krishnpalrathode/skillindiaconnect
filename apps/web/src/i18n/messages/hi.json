@@ -820,7 +820,10 @@
     },
     "myApplications": {
       "title": "मेरे आवेदन",
-      "coming": "आवेदन ट्रैकिंग जल्द आ रही है।"
+      "coming": "आवेदन ट्रैकिंग जल्द आ रही है।",
+      "viewAll": "सभी देखें",
+      "empty": "आपने अभी तक किसी नौकरी के लिए आवेदन नहीं किया।",
+      "browseJobs": "नौकरियाँ देखें"
     },
     "quickActions": {
       "title": "त्वरित कार्य",
@@ -1130,6 +1133,48 @@
       "documents": "दस्तावेज़",
       "componentScore": "{score}/{max}",
       "track": "मेरे आवेदनों में ट्रैक करें"
+    }
+  },
+  "applications": {
+    "title": "मेरे आवेदन",
+    "filterLabel": "स्थिति के अनुसार आवेदन फ़िल्टर करें",
+    "filter": {
+      "all": "सभी"
+    },
+    "status": {
+      "PENDING": "लंबित",
+      "SHORTLISTED": "शॉर्टलिस्ट",
+      "SELECTED": "चयनित",
+      "REJECTED": "अस्वीकृत"
+    },
+    "matchShort": "{score}% मैच",
+    "appliedAgo": "{ago} आवेदन किया",
+    "loadMore": "और देखें",
+    "error": "आपके आवेदन लोड नहीं हो सके।",
+    "retry": "फिर प्रयास करें",
+    "emptyAll": "आपने अभी तक आवेदन नहीं किया — शुरू करने के लिए नौकरियाँ देखें।",
+    "emptyStatus": "अभी कोई {status} आवेदन नहीं।",
+    "browseJobs": "नौकरियाँ देखें",
+    "backToList": "मेरे आवेदनों पर वापस",
+    "notFound": "आवेदन नहीं मिला।",
+    "coverLetter": "आपका कवर लेटर",
+    "receipt": {
+      "notified": "✓ व्हाट्सएप पर सूचित किया गया · {date}"
+    },
+    "timeline": {
+      "heading": "स्थिति समयरेखा",
+      "applied": "आवेदन जमा किया गया",
+      "SHORTLISTED": "नियोक्ता द्वारा शॉर्टलिस्ट किया गया",
+      "SELECTED": "नियोक्ता द्वारा चयनित",
+      "REJECTED": "नियोक्ता द्वारा चयनित नहीं",
+      "PENDING": "पुनः खोला गया",
+      "adminOverride": "SkillIndiaConnect द्वारा स्थिति अपडेट की गई"
+    },
+    "rejection": {
+      "feedbackLabel": "नियोक्ता से प्रतिक्रिया",
+      "nextStepTitle": "आगे बढ़ते रहें",
+      "nextStepBody": "हर आवेदन गति बनाता है। अपने क्षेत्र में और भूमिकाएँ देखें।",
+      "browseJobs": "और नौकरियाँ देखें"
     }
   }
 }

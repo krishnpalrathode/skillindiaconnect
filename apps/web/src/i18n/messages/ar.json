@@ -820,7 +820,10 @@
     },
     "myApplications": {
       "title": "طلباتي",
-      "coming": "تتبع الطلبات قريباً."
+      "coming": "تتبع الطلبات قريباً.",
+      "viewAll": "عرض الكل",
+      "empty": "لم تتقدّم لأي وظيفة بعد.",
+      "browseJobs": "تصفّح الوظائف"
     },
     "quickActions": {
       "title": "إجراءات سريعة",
@@ -1130,6 +1133,48 @@
       "documents": "المستندات",
       "componentScore": "{score}/{max}",
       "track": "تتبّع في طلباتي"
+    }
+  },
+  "applications": {
+    "title": "طلباتي",
+    "filterLabel": "تصفية الطلبات حسب الحالة",
+    "filter": {
+      "all": "الكل"
+    },
+    "status": {
+      "PENDING": "قيد الانتظار",
+      "SHORTLISTED": "القائمة المختصرة",
+      "SELECTED": "مقبول",
+      "REJECTED": "مرفوض"
+    },
+    "matchShort": "تطابق {score}%",
+    "appliedAgo": "تم التقديم {ago}",
+    "loadMore": "عرض المزيد",
+    "error": "تعذّر تحميل طلباتك.",
+    "retry": "حاول مرة أخرى",
+    "emptyAll": "لم تتقدّم بعد — تصفّح الوظائف للبدء.",
+    "emptyStatus": "لا توجد طلبات {status} بعد.",
+    "browseJobs": "تصفّح الوظائف",
+    "backToList": "العودة إلى طلباتي",
+    "notFound": "الطلب غير موجود.",
+    "coverLetter": "خطاب التقديم الخاص بك",
+    "receipt": {
+      "notified": "✓ تم الإخطار عبر واتساب · {date}"
+    },
+    "timeline": {
+      "heading": "الجدول الزمني للحالة",
+      "applied": "تم إرسال الطلب",
+      "SHORTLISTED": "أُدرج في القائمة المختصرة من قبل صاحب العمل",
+      "SELECTED": "تم اختياره من قبل صاحب العمل",
+      "REJECTED": "لم يتم اختياره من قبل صاحب العمل",
+      "PENDING": "أُعيد فتحه",
+      "adminOverride": "تم تحديث الحالة بواسطة SkillIndiaConnect"
+    },
+    "rejection": {
+      "feedbackLabel": "ملاحظات من صاحب العمل",
+      "nextStepTitle": "واصل التقدّم",
+      "nextStepBody": "كل طلب يبني زخمًا. استكشف المزيد من الأدوار في مجالك.",
+      "browseJobs": "تصفّح المزيد من الوظائف"
     }
   }
 }
