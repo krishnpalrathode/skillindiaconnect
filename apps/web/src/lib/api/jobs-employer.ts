@@ -45,6 +45,8 @@ export interface Job {
   archivedAt: string | null;
   autoArchiveAt: string | null;
   viewsCount: number;
+  /** Live applicant count (S4). Optional — omitted before S4 / on older payloads. */
+  applicantCount?: number;
   createdAt: string;
   updatedAt: string;
 }

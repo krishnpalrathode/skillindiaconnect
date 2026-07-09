@@ -341,9 +341,15 @@ export const db = {
         userId: NOT_WHATSAPP_CAPABLE_USER_ID,
         profile: buildProfile(NOT_WHATSAPP_CAPABLE_USER_ID, 'nowa@example.com', {
           fullName: 'Priya Sharma',
+          // A phone IS present — but showPhone=false (resumeSettings below), so the
+          // employer-context mapper OMITS it. This makes the hidden-phone applicant
+          // path (S4-F3 privacy) a real omission, not a trivially-empty field.
+          phone: '+919812345678',
           whatsappCapable: false,
           completionPct: 30,
           profileVisible: true,
+          nationality: 'Indian',
+          currentLocation: 'Pune, Maharashtra',
           // showPhone toggle is in resumeSettings.showPhone = false (below)
         }),
         resumeSettings: {
@@ -1275,6 +1281,34 @@ export const db = {
         overrideReason: null,
         appliedAt: daysAgo(3),
         updatedAt: daysAgo(3),
+      },
+    ],
+    // S4-F3: the HIDDEN-PHONE applicant (Priya, showPhone=false) on job-2 — proves
+    // the employer applicant card/detail omit the phone even though one exists.
+    [
+      'app-6',
+      {
+        id: 'app-6',
+        humanId: 'AP-2026-6',
+        jobId: 'job-2',
+        candidateId: NOT_WHATSAPP_CAPABLE_USER_ID,
+        status: 'PENDING',
+        matchScore: 48,
+        matchBreakdown: {
+          category: { score: 0, max: 40 },
+          experienceYears: { raw: 2, clamped: 2, score: 6, max: 30 },
+          foreignExperience: { score: 0, max: 20 },
+          documents: { score: 5, max: 10 },
+        },
+        coverLetter: null,
+        docsCompleteCount: 1,
+        docsRequiredCount: 2,
+        passportValidAtApply: true,
+        selectedNotifiedAt: null,
+        rejectionFeedback: null,
+        overrideReason: null,
+        appliedAt: daysAgo(1),
+        updatedAt: daysAgo(1),
       },
     ],
   ]),

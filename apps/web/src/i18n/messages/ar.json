@@ -1061,7 +1061,8 @@
       "archive": "أرشفة",
       "archiveLabel": "أرشفة الوظيفة: {title}",
       "repostAsDraft": "إعادة نشر كمسودة"
-    }
+    },
+    "applicantsCountLabel": "{count} متقدمين"
   },
   "apply": {
     "title": "قدّم على هذه الوظيفة",
@@ -1175,6 +1176,96 @@
       "nextStepTitle": "واصل التقدّم",
       "nextStepBody": "كل طلب يبني زخمًا. استكشف المزيد من الأدوار في مجالك.",
       "browseJobs": "تصفّح المزيد من الوظائف"
+    }
+  },
+  "applicants": {
+    "title": "المتقدمون",
+    "backToJobs": "العودة إلى وظائفي",
+    "notFound": "لم يتم العثور على هذه الوظيفة، أو ليس لديك صلاحية الوصول إليها.",
+    "error": "تعذّر تحميل المتقدمين.",
+    "retry": "حاول مرة أخرى",
+    "empty": "لا يوجد متقدمون في هذا العرض بعد.",
+    "loadMore": "عرض المزيد",
+    "approvalGate": {
+      "title": "الشركة قيد المراجعة",
+      "body": "يمكنك إدارة المتقدمين بعد الموافقة على شركتك.",
+      "back": "العودة إلى لوحة التحكم"
+    },
+    "filterLabel": "تصفية المتقدمين حسب الحالة",
+    "filter": {
+      "all": "الكل"
+    },
+    "status": {
+      "PENDING": "قيد الانتظار",
+      "SHORTLISTED": "القائمة المختصرة",
+      "SELECTED": "مقبول",
+      "REJECTED": "مرفوض"
+    },
+    "tabSrLabel": "{label} ({count})",
+    "sortLabel": "ترتيب",
+    "sort": {
+      "match": "الأفضل تطابقًا",
+      "recent": "الأحدث"
+    },
+    "matchShort": "تطابق {score}%",
+    "gulfBadge": "خبرة خليجية",
+    "ageYears": "{age} سنة",
+    "expYears": "خبرة {years} سنة",
+    "appliedAgo": "تم التقديم {ago}",
+    "showMore": "عرض المزيد",
+    "showLess": "عرض أقل",
+    "viewDetails": "عرض التفاصيل",
+    "docs": {
+      "heading": "المستندات",
+      "PASSPORT": "جواز السفر",
+      "EXPERIENCE_CERT": "الخبرة",
+      "EDUCATIONAL_CERT": "التعليم",
+      "valid": "صالح",
+      "expired": "منتهٍ"
+    },
+    "breakdown": {
+      "open": "تفصيل التطابق لـ {name}، تطابق {score}%",
+      "scoreShort": "{score}%",
+      "title": "تفصيل التطابق",
+      "category": "فئة الوظيفة",
+      "experience": "الخبرة",
+      "experienceBasis": "بناءً على {clamped} من {raw} سنوات",
+      "foreign": "الخبرة الأجنبية",
+      "foreignLocalNote": "لا تُحتسب للوظائف المحلية.",
+      "documents": "المستندات",
+      "componentScore": "{score}/{max}"
+    },
+    "actions": {
+      "shortlist": "إدراج",
+      "select": "اختيار",
+      "reject": "رفض",
+      "shortlistName": "إدراج {name}",
+      "selectName": "اختيار {name}",
+      "rejectName": "رفض {name}"
+    },
+    "selectDialog": {
+      "title": "اختيار {name}؟",
+      "body": "سيتم إخطارهم عبر واتساب — يُرسل هذا الإشعار مرة واحدة.",
+      "cancel": "إلغاء",
+      "confirm": "اختيار"
+    },
+    "rejectDialog": {
+      "title": "رفض {name}؟",
+      "body": "يمكنك إضافة ملاحظات اختيارية للمرشح.",
+      "feedbackLabel": "ملاحظات (اختياري)",
+      "feedbackPlaceholder": "شارك ملاحظة موجزة وبنّاءة…",
+      "visibleNote": "هذه الملاحظات مرئية للمرشح.",
+      "counter": "{n}/{max}",
+      "cancel": "إلغاء",
+      "confirm": "رفض"
+    },
+    "detail": {
+      "close": "إغلاق",
+      "coverLetter": "خطاب التقديم"
+    },
+    "toast": {
+      "staleRefresh": "تغيّرت حالة هذا الطلب — جارٍ التحديث.",
+      "error": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
     }
   }
 }

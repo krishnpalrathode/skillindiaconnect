@@ -1061,7 +1061,8 @@
       "archive": "संग्रहीत करें",
       "archiveLabel": "नौकरी संग्रहीत करें: {title}",
       "repostAsDraft": "ड्राफ्ट के रूप में पुनः पोस्ट करें"
-    }
+    },
+    "applicantsCountLabel": "{count} आवेदक"
   },
   "apply": {
     "title": "इस नौकरी के लिए आवेदन करें",
@@ -1175,6 +1176,96 @@
       "nextStepTitle": "आगे बढ़ते रहें",
       "nextStepBody": "हर आवेदन गति बनाता है। अपने क्षेत्र में और भूमिकाएँ देखें।",
       "browseJobs": "और नौकरियाँ देखें"
+    }
+  },
+  "applicants": {
+    "title": "आवेदक",
+    "backToJobs": "मेरी नौकरियों पर वापस",
+    "notFound": "यह नौकरी नहीं मिली, या आपके पास इसकी पहुँच नहीं है।",
+    "error": "आवेदक लोड नहीं हो सके।",
+    "retry": "फिर प्रयास करें",
+    "empty": "इस दृश्य में अभी कोई आवेदक नहीं।",
+    "loadMore": "और देखें",
+    "approvalGate": {
+      "title": "कंपनी समीक्षाधीन",
+      "body": "आपकी कंपनी स्वीकृत होने के बाद आप आवेदक प्रबंधित कर सकते हैं।",
+      "back": "डैशबोर्ड पर वापस"
+    },
+    "filterLabel": "स्थिति के अनुसार आवेदक फ़िल्टर करें",
+    "filter": {
+      "all": "सभी"
+    },
+    "status": {
+      "PENDING": "लंबित",
+      "SHORTLISTED": "शॉर्टलिस्ट",
+      "SELECTED": "चयनित",
+      "REJECTED": "अस्वीकृत"
+    },
+    "tabSrLabel": "{label} ({count})",
+    "sortLabel": "क्रमबद्ध करें",
+    "sort": {
+      "match": "सर्वोत्तम मैच",
+      "recent": "सबसे नया"
+    },
+    "matchShort": "{score}% मैच",
+    "gulfBadge": "खाड़ी अनुभव",
+    "ageYears": "{age} वर्ष",
+    "expYears": "{years} वर्ष अनुभव",
+    "appliedAgo": "{ago} आवेदन किया",
+    "showMore": "और दिखाएं",
+    "showLess": "कम दिखाएं",
+    "viewDetails": "विवरण देखें",
+    "docs": {
+      "heading": "दस्तावेज़",
+      "PASSPORT": "पासपोर्ट",
+      "EXPERIENCE_CERT": "अनुभव",
+      "EDUCATIONAL_CERT": "शिक्षा",
+      "valid": "वैध",
+      "expired": "समाप्त"
+    },
+    "breakdown": {
+      "open": "{name} के लिए मैच विवरण, {score}% मैच",
+      "scoreShort": "{score}%",
+      "title": "मैच विवरण",
+      "category": "नौकरी श्रेणी",
+      "experience": "अनुभव",
+      "experienceBasis": "{raw} में से {clamped} वर्ष के आधार पर",
+      "foreign": "विदेशी अनुभव",
+      "foreignLocalNote": "स्थानीय नौकरियों के लिए स्कोर नहीं।",
+      "documents": "दस्तावेज़",
+      "componentScore": "{score}/{max}"
+    },
+    "actions": {
+      "shortlist": "शॉर्टलिस्ट",
+      "select": "चयन करें",
+      "reject": "अस्वीकार करें",
+      "shortlistName": "{name} को शॉर्टलिस्ट करें",
+      "selectName": "{name} को चयनित करें",
+      "rejectName": "{name} को अस्वीकार करें"
+    },
+    "selectDialog": {
+      "title": "{name} को चयनित करें?",
+      "body": "उन्हें व्हाट्सएप पर सूचित किया जाएगा — यह सूचना एक बार भेजी जाती है।",
+      "cancel": "रद्द करें",
+      "confirm": "चयन करें"
+    },
+    "rejectDialog": {
+      "title": "{name} को अस्वीकार करें?",
+      "body": "आप उम्मीदवार के लिए वैकल्पिक प्रतिक्रिया जोड़ सकते हैं।",
+      "feedbackLabel": "प्रतिक्रिया (वैकल्पिक)",
+      "feedbackPlaceholder": "एक संक्षिप्त, रचनात्मक टिप्पणी साझा करें…",
+      "visibleNote": "यह प्रतिक्रिया उम्मीदवार को दिखाई देती है।",
+      "counter": "{n}/{max}",
+      "cancel": "रद्द करें",
+      "confirm": "अस्वीकार करें"
+    },
+    "detail": {
+      "close": "बंद करें",
+      "coverLetter": "कवर लेटर"
+    },
+    "toast": {
+      "staleRefresh": "इस आवेदन की स्थिति बदल गई — रीफ्रेश कर रहे हैं।",
+      "error": "कुछ गड़बड़ हो गई। कृपया फिर से प्रयास करें।"
     }
   }
 }

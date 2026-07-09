@@ -217,13 +217,14 @@ export function MyJobsTable() {
                     <JobStatusBadge status={job.status} />
                   </td>
                   <td className="px-3 py-3">
-                    {/* S2 placeholder — applications are S4 */}
-                    <span
-                      className="text-neutral-400 text-sm"
-                      aria-label={t('applicationsPlaceholder')}
+                    {/* S4-F3: live applicant count → the job's pipeline (Screen 18). */}
+                    <Link
+                      href={`/${locale}/employer/jobs/${job.id}/applicants`}
+                      className="inline-flex min-h-11 items-center gap-1 rounded font-medium text-primary-600 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+                      aria-label={t('applicantsCountLabel', { count: job.applicantCount ?? 0 })}
                     >
-                      0
-                    </span>
+                      {job.applicantCount ?? 0}
+                    </Link>
                   </td>
                   <td className="px-3 py-3 text-neutral-500">
                     {job.publishedAt

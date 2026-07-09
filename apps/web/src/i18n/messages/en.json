@@ -1061,7 +1061,8 @@
       "archive": "Archive",
       "archiveLabel": "Archive job: {title}",
       "repostAsDraft": "Repost as Draft"
-    }
+    },
+    "applicantsCountLabel": "{count} applicants"
   },
   "apply": {
     "title": "Apply for this job",
@@ -1175,6 +1176,96 @@
       "nextStepTitle": "Keep going",
       "nextStepBody": "Every application builds momentum. Explore more roles in your trade.",
       "browseJobs": "Browse more jobs"
+    }
+  },
+  "applicants": {
+    "title": "Applicants",
+    "backToJobs": "Back to My Jobs",
+    "notFound": "This job was not found, or you do not have access to it.",
+    "error": "Couldn't load applicants.",
+    "retry": "Try again",
+    "empty": "No applicants in this view yet.",
+    "loadMore": "Load more",
+    "approvalGate": {
+      "title": "Company under review",
+      "body": "You can manage applicants once your company is approved.",
+      "back": "Back to dashboard"
+    },
+    "filterLabel": "Filter applicants by status",
+    "filter": {
+      "all": "All"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "SHORTLISTED": "Shortlisted",
+      "SELECTED": "Selected",
+      "REJECTED": "Rejected"
+    },
+    "tabSrLabel": "{label} ({count})",
+    "sortLabel": "Sort",
+    "sort": {
+      "match": "Best match",
+      "recent": "Most recent"
+    },
+    "matchShort": "{score}% match",
+    "gulfBadge": "Gulf experience",
+    "ageYears": "{age} yrs",
+    "expYears": "{years} yrs exp",
+    "appliedAgo": "Applied {ago}",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "viewDetails": "View details",
+    "docs": {
+      "heading": "Documents",
+      "PASSPORT": "Passport",
+      "EXPERIENCE_CERT": "Experience",
+      "EDUCATIONAL_CERT": "Education",
+      "valid": "Valid",
+      "expired": "Expired"
+    },
+    "breakdown": {
+      "open": "Match breakdown for {name}, {score}% match",
+      "scoreShort": "{score}%",
+      "title": "Match breakdown",
+      "category": "Job category",
+      "experience": "Experience",
+      "experienceBasis": "Based on {clamped} of {raw} yrs",
+      "foreign": "Foreign experience",
+      "foreignLocalNote": "Not scored for local jobs.",
+      "documents": "Documents",
+      "componentScore": "{score}/{max}"
+    },
+    "actions": {
+      "shortlist": "Shortlist",
+      "select": "Select",
+      "reject": "Reject",
+      "shortlistName": "Shortlist {name}",
+      "selectName": "Select {name}",
+      "rejectName": "Reject {name}"
+    },
+    "selectDialog": {
+      "title": "Select {name}?",
+      "body": "They'll be notified on WhatsApp — this notification is sent once.",
+      "cancel": "Cancel",
+      "confirm": "Select"
+    },
+    "rejectDialog": {
+      "title": "Reject {name}?",
+      "body": "You can add optional feedback for the candidate.",
+      "feedbackLabel": "Feedback (optional)",
+      "feedbackPlaceholder": "Share a brief, constructive note…",
+      "visibleNote": "This feedback is visible to the candidate.",
+      "counter": "{n}/{max}",
+      "cancel": "Cancel",
+      "confirm": "Reject"
+    },
+    "detail": {
+      "close": "Close",
+      "coverLetter": "Cover letter"
+    },
+    "toast": {
+      "staleRefresh": "This application's status changed — refreshing.",
+      "error": "Something went wrong. Please try again."
     }
   }
 }
