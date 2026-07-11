@@ -27,6 +27,17 @@ import {
   EMPLOYER_ALLOWED_TRANSITIONS,
   type MockApplication,
   type MockApplicationTimelineEntry,
+  // S5: Billing
+  getPlan,
+  getSubscriptionStatus,
+  getActivePlanMaxJobs,
+  nextOrderRef,
+  toOrder,
+  settleMockOrder,
+  ORDER_FLIP_POLL_THRESHOLD,
+  MOCK_FAIL_IDEMPOTENCY_PREFIX,
+  MOCK_GATEWAY_DOWN_IDEMPOTENCY_PREFIX,
+  type MockOrder,
 } from './data';
 import { MOCK_SSR_ORIGIN } from './ssr-origin';
 
@@ -1306,18 +1317,24 @@ const publishJob = http.post(`${BASE}/employers/me/jobs/:id/publish`, ({ request
     );
   }
 
-  // Rule 3: quota (Free = max 1 active job)
-  const activeCount = [...db.jobs.values()].filter(
-    (j) => j.companyId === company.id && j.status === 'ACTIVE' && j.id !== id,
-  ).length;
-  if (activeCount >= 1) {
-    return errorResponse(
-      422,
-      'JOB_QUOTA_EXCEEDED',
-      'Job quota exceeded',
-      'Free plan allows 1 active job. Archive or pause your existing job first.',
-      { planLimit: 1, activeCount },
-    );
+  // Rule 3: quota — plan-driven (S5 seam): the limit is the plan's
+  // maxActiveJobs (Free = 1; Pro ACTIVE/GRACE = null = unlimited). After the
+  // grace window the FREE limit re-applies (Answer 07). A mock purchase that
+  // flips to PAID therefore LIFTS this quota through the same seam.
+  const planLimit = getActivePlanMaxJobs(user.id);
+  if (planLimit !== null) {
+    const activeCount = [...db.jobs.values()].filter(
+      (j) => j.companyId === company.id && j.status === 'ACTIVE' && j.id !== id,
+    ).length;
+    if (activeCount >= planLimit) {
+      return errorResponse(
+        422,
+        'JOB_QUOTA_EXCEEDED',
+        'Job quota exceeded',
+        `Your plan allows ${planLimit} active job${planLimit === 1 ? '' : 's'}. Archive or pause an existing job first, or upgrade to Pro.`,
+        { planLimit, activeCount },
+      );
+    }
   }
 
   job.status = 'ACTIVE';
@@ -2387,6 +2404,235 @@ const adminPatchApplicationStatus = http.patch(
 
 // ─── Health ───────────────────────────────────────────────────────────────────
 
+// ─── S5: Billing handlers ─────────────────────────────────────────────────────
+// NO webhook handlers here — /webhooks/razorpay and /webhooks/stripe are
+// server-to-server (signature-authed) and never called by the web app. The
+// mocks simulate the webhook's EFFECT instead: an order flips CREATED→PAID
+// only after ORDER_FLIP_POLL_THRESHOLD polls of GET /billing/orders/{id}
+// (settleMockOrder), so instant activation is IMPOSSIBLE on mocks and the FE
+// must build the "confirming your payment…" polling state.
+
+const billingPlans = http.get(`${BASE}/billing/plans`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+  return HttpResponse.json({ data: db.plans });
+});
+
+const billingSubscription = http.get(`${BASE}/billing/subscription`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+  // Never a 404 — no record = the well-formed FREE state.
+  return HttpResponse.json({ data: getSubscriptionStatus(user.id) });
+});
+
+const billingInvoices = http.get(`${BASE}/billing/invoices`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+  const url = new URL(request.url);
+  const page = Number(url.searchParams.get('page') ?? '1');
+  const pageSize = Number(url.searchParams.get('pageSize') ?? '20');
+
+  const mine = db.invoices
+    .filter((inv) => inv.userId === user.id)
+    .sort((a, b) => new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime())
+    // Strip the mock-internal userId down to the contract Invoice shape.
+    .map(({ userId: _internal, ...invoice }) => invoice);
+
+  return HttpResponse.json(offsetPaginate(mine, page, pageSize));
+});
+
+const billingCheckout = http.post(`${BASE}/billing/checkout`, async ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+  const company = db.employers.get(user.id);
+  if (!company || company.status !== 'APPROVED') {
+    return errorResponse(
+      403,
+      'EMPLOYER_NOT_APPROVED',
+      'Employer not approved',
+      'Your company must be approved before purchasing a plan.',
+    );
+  }
+
+  // Idempotency: a seen key replays the ORIGINAL session verbatim — a retry
+  // never creates a second order.
+  const idemKey = request.headers.get('Idempotency-Key');
+  if (idemKey && db.checkoutIdempotency.has(idemKey)) {
+    const existing = db.orders.get(db.checkoutIdempotency.get(idemKey)!);
+    if (existing) return HttpResponse.json({ data: existing.session }, { status: 201 });
+  }
+
+  const body = (await request.json()) as { planCode?: string };
+  const plan = body.planCode ? getPlan(body.planCode as never) : undefined;
+  // FREE (or an unknown/inactive plan) is not purchasable.
+  if (!plan || plan.code === 'FREE' || plan.priceSubunits === 0) {
+    return errorResponse(
+      422,
+      'PLAN_NOT_PURCHASABLE',
+      'Plan not purchasable',
+      'The FREE plan cannot be purchased.',
+    );
+  }
+
+  // Same plan already active and not yet inside the renewal window → 409.
+  // (Same-plan renewal EXTENDS the term; it opens 7 days before expiry.)
+  const sub = getSubscriptionStatus(user.id);
+  if (sub.plan.code === plan.code && sub.status === 'ACTIVE' && !sub.renewable) {
+    return errorResponse(
+      409,
+      'SUBSCRIPTION_ALREADY_ACTIVE',
+      'Subscription already active',
+      `Your ${plan.name} plan is already active. Renewal opens 7 days before expiry.`,
+    );
+  }
+
+  // The honest no-usable-gateway failure (reachable via the gwdown- key prefix).
+  if (idemKey?.startsWith(MOCK_GATEWAY_DOWN_IDEMPOTENCY_PREFIX)) {
+    return errorResponse(
+      503,
+      'GATEWAY_UNAVAILABLE',
+      'Service Unavailable',
+      'International payments are temporarily unavailable. Please try again later.',
+    );
+  }
+
+  // SERVER-SIDE routing — the request carries { planCode } ONLY, and the
+  // client can never force a gateway:
+  //   LOCAL   → Razorpay domestic, GST added (the authoritative split)
+  //   FOREIGN → Razorpay International; Stripe only when STRIPE_ENABLED is on
+  const stripeEnabled = db.settings.find((s) => s.key === 'STRIPE_ENABLED')?.value === true;
+  const isLocal = company.type === 'LOCAL';
+  const gateway: components['schemas']['PaymentGateway'] =
+    !isLocal && stripeEnabled ? 'STRIPE' : 'RAZORPAY';
+
+  const amountSubunits = plan.priceSubunits;
+  const gstSubunits = isLocal ? Math.round((amountSubunits * (plan.gstRatePct ?? 18)) / 100) : 0;
+  const totalSubunits = amountSubunits + gstSubunits;
+
+  const orderId = `mock-order-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const session: components['schemas']['CheckoutSession'] = {
+    orderId,
+    humanOrderRef: nextOrderRef(),
+    gateway,
+    amountSubunits,
+    gstSubunits,
+    totalSubunits,
+    currency: plan.currency,
+    // EXACTLY ONE gateway block, always matching `gateway`.
+    ...(gateway === 'RAZORPAY'
+      ? { razorpay: { keyId: 'rzp_test_mock', gatewayOrderId: `order_Mock${orderId.slice(-6)}` } }
+      : { stripe: { redirectUrl: `https://checkout.stripe.com/c/pay/mock-${orderId}` } }),
+  };
+
+  const order: MockOrder = {
+    id: orderId,
+    humanOrderRef: session.humanOrderRef!,
+    userId: user.id,
+    planCode: plan.code,
+    status: 'CREATED', // webhook-only activation: NEVER PAID at creation
+    gateway,
+    amountSubunits,
+    gstSubunits,
+    totalSubunits,
+    currency: plan.currency,
+    createdAt: new Date().toISOString(),
+    subscriptionActivatedAt: null,
+    invoiceId: null,
+    pollCount: 0,
+    failOnFlip: idemKey?.startsWith(MOCK_FAIL_IDEMPOTENCY_PREFIX) ?? false,
+    session,
+  };
+  db.orders.set(orderId, order);
+  if (idemKey) db.checkoutIdempotency.set(idemKey, orderId);
+
+  return HttpResponse.json({ data: session }, { status: 201 });
+});
+
+const billingOrderById = http.get(`${BASE}/billing/orders/:id`, ({ request, params }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+  const order = db.orders.get(params['id'] as string);
+  // Nonexistent and another company's order are indistinguishable (404).
+  if (!order || order.userId !== user.id) {
+    return errorResponse(404, 'NOT_FOUND', 'Not found', 'Order not found.');
+  }
+
+  // THE simulated webhook effect: the flip happens only after enough polls —
+  // never at checkout, never on a client callback. On PAID, settleMockOrder
+  // activates the subscription, mints the next sequential invoice, and the
+  // publish quota lifts via the plan seam.
+  order.pollCount += 1;
+  if (order.status === 'CREATED' && order.pollCount >= ORDER_FLIP_POLL_THRESHOLD) {
+    settleMockOrder(order);
+  }
+
+  return HttpResponse.json({ data: toOrder(order) });
+});
+
+// S5: the Pro document gate — the S3 decision-2 landing.
+const employersCandidateDocumentUrl = http.get(
+  `${BASE}/employers/candidates/:id/documents/:type/url`,
+  ({ request, params }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const company = db.employers.get(user.id);
+    if (!company) return errorResponse(404, 'NOT_FOUND', 'Not found', 'No company profile found.');
+    if (company.status !== 'APPROVED') {
+      return errorResponse(
+        403,
+        'EMPLOYER_NOT_APPROVED',
+        'Employer not approved',
+        'Your company profile is pending admin approval.',
+      );
+    }
+
+    // Plan gate: document access is Pro-only (ACTIVE or GRACE). Free → the
+    // upsell driver.
+    const sub = getSubscriptionStatus(user.id);
+    const isPro = sub.plan.code !== 'FREE' && (sub.status === 'ACTIVE' || sub.status === 'GRACE');
+    if (!isPro) {
+      return errorResponse(
+        403,
+        'PLAN_UPGRADE_REQUIRED',
+        'Forbidden',
+        'Document access is a Pro feature. Upgrade to view candidate documents.',
+      );
+    }
+
+    // S3 privacy inheritance — 404 indistinguishability: nonexistent, hidden
+    // (profileVisible=false), and absent-document all return the SAME 404. The
+    // plan gate above never bypasses these checks for visible data.
+    const candidateId = params['id'] as string;
+    const mc = db.candidates.get(candidateId);
+    if (!mc || mc.profile.profileVisible === false) {
+      return errorResponse(404, 'NOT_FOUND', 'Not found', 'Not found.');
+    }
+    const docType = params['type'] as string;
+    const doc = (mc.profile.documents ?? []).find((d) => d.type === docType);
+    if (!doc) {
+      return errorResponse(404, 'NOT_FOUND', 'Not found', 'Not found.');
+    }
+
+    // Real system: short-expiry signed R2 GET, every issuance audited.
+    return HttpResponse.json({
+      data: {
+        url: `https://r2.mock.skillindiaconnect.example/candidate-docs/${candidateId}/${docType}?sig=mock&exp=300`,
+        expiresInSeconds: 300,
+      },
+    });
+  },
+);
+
 const health = http.get('/health', () => {
   return HttpResponse.json({ status: 'ok (mock)' });
 });
@@ -2408,10 +2654,9 @@ function notImplemented(sprint: string) {
 }
 
 const stubNotImplemented = [
-  http.get(`${BASE}/billing/plans`, notImplemented('Sprint 5')),
-  http.post(`${BASE}/billing/checkout`, notImplemented('Sprint 5')),
-  http.get(`${BASE}/billing/subscription`, notImplemented('Sprint 5')),
-  http.get(`${BASE}/billing/invoices`, notImplemented('Sprint 5')),
+  // S5 billing endpoints are LIVE above (billingPlans … employersCandidateDocumentUrl).
+  // /webhooks/* are deliberately NOT stubbed either — they are server-to-server
+  // and must never be reachable from browser code.
   http.get(`${BASE}/admin/dashboard`, notImplemented('Sprint 6')),
   http.get(`${BASE}/admin/candidates`, notImplemented('Sprint 6')),
   http.get(`${BASE}/admin/jobs`, notImplemented('Sprint 6')),
@@ -2515,6 +2760,13 @@ export const handlers = [
   adminSuspendEmployer,
   adminGetSettings,
   adminPatchSettings,
+  // S5: Billing (webhooks deliberately absent — see the billing section comment)
+  billingPlans,
+  billingSubscription,
+  billingInvoices,
+  billingCheckout,
+  billingOrderById,
+  employersCandidateDocumentUrl,
   // Later-sprint stubs
   ...stubNotImplemented,
 ];

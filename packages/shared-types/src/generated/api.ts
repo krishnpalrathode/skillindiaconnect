@@ -1030,6 +1030,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/employers/candidates/{id}/documents/{type}/url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a signed candidate-document URL — Pro-plan gate (S5)
+         * @description Issues a SHORT-EXPIRY signed R2 GET URL for one of the candidate's
+         *     uploaded documents. This is the S3 decision-2 landing: the employer
+         *     context exposed document STATUS only — actual document ACCESS is the
+         *     Pro-plan feature.
+         *
+         *     **Plan gate:** requires an APPROVED employer on an ACTIVE (or GRACE)
+         *     Pro plan. Free-plan callers get 403 `PLAN_UPGRADE_REQUIRED` — the
+         *     upsell driver; the UI routes it to the pricing page.
+         *
+         *     **Privacy inheritance (S3 rules apply unchanged):**
+         *     - A `profileVisible = false` candidate returns 404 IDENTICAL to
+         *       nonexistent — a Pro employer probing an invisible candidate learns
+         *       nothing (the S3 indistinguishability discipline).
+         *     - Only document types the candidate has actually uploaded resolve;
+         *       an absent document type is the SAME 404.
+         *     - The Pro gate never bypasses `profileVisible` — the 404 checks run
+         *       regardless of plan.
+         *
+         *     **Audit:** EVERY issuance is written to the audit log (employer user,
+         *     candidate, document type, timestamp). The signed URL and the object
+         *     key are never logged.
+         */
+        get: operations["getEmployersCandidateDocumentUrl"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/jobs": {
         parameters: {
             query?: never;
@@ -1065,7 +1105,8 @@ export interface paths {
          *     1. EMPLOYER_NOT_APPROVED (403) — enforced at publish only if company status changes.
          *     2. WORKER_PROTECTION_VIOLATION (422) — accommodation, healthInsurance, and
          *        transportation must all be `true`. `meta.violations[]` lists which rules failed.
-         *     3. JOB_QUOTA_EXCEEDED (422) — Free plan: max 1 ACTIVE job. `meta.planLimit = 1`.
+         *     3. JOB_QUOTA_EXCEEDED (422) — quota = the plan's `maxActiveJobs` (S5):
+         *        Free 1, Pro unlimited. `meta.planLimit` reflects the plan.
          */
         post: operations["postJobs"];
         delete?: never;
@@ -1130,9 +1171,12 @@ export interface paths {
          *        `meta.violations[]` listing which fields failed (e.g.
          *        `["accommodation", "healthInsurance"]`).
          *
-         *     3. **JOB_QUOTA_EXCEEDED (422)** — Free plan employers may have at most 1
-         *        ACTIVE job at a time. Returns 422 with `meta.planLimit = 1` and
-         *        `meta.activeCount = N`.
+         *     3. **JOB_QUOTA_EXCEEDED (422)** — the ACTIVE-job quota comes from the
+         *        company's subscription plan (`Plan.maxActiveJobs`; S5): Free = 1,
+         *        Pro = unlimited (null). Returns 422 with `meta.planLimit` set to the
+         *        plan's limit and `meta.activeCount = N`. An ACTIVE/GRACE Pro
+         *        subscription lifts the quota; after grace expires the FREE limit
+         *        re-applies (Answer 07).
          */
         post: operations["publishJob"];
         delete?: never;
@@ -1465,32 +1509,24 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [S5] List available subscription plans
-         * @description **Sprint 5 — not yet implemented.**
+         * List available subscription plans (S5)
+         * @description The seeded three plans (FREE / PRO_MONTHLY ₹2,999.00 = 299900 paise /
+         *     PRO_YEARLY ₹24,999.00 = 2499900 paise), each with code, name,
+         *     `priceSubunits` (base, EXCLUDING GST), period, `maxActiveJobs`
+         *     (null = unlimited) and marketing `features[]`.
+         *
+         *     **GST display choice (locked):** the plan list carries `gstRatePct` as
+         *     a DISPLAY HINT so the pricing page can show "₹2,999 + 18% GST" for
+         *     LOCAL companies without a checkout round-trip. The AUTHORITATIVE split
+         *     is the checkout response's `gstSubunits` — the client never computes
+         *     tax itself. FOREIGN companies display the base price only.
+         *
+         *     Caller: any authenticated EMPLOYER (approval not required to browse
+         *     pricing).
          */
         get: operations["getBillingPlans"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/billing/checkout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * [S5] Create a checkout session
-         * @description **Sprint 5 — not yet implemented.** Accepts `Idempotency-Key` header (Redis, 24 h).
-         */
-        post: operations["postBillingCheckout"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1505,8 +1541,17 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [S5] Get current subscription status
-         * @description **Sprint 5 — not yet implemented.**
+         * Get current subscription status (S5)
+         * @description The PlanStatusWidget + subscription page source. ALWAYS returns a
+         *     well-formed `SubscriptionStatus` — a company that never purchased
+         *     anything gets the FREE state (plan FREE, status ACTIVE,
+         *     `expiresAt: null`), NOT a 404.
+         *
+         *     Grace semantics (Answer 07) and the renewal-window rule are documented
+         *     on the `SubscriptionStatus` schema: 7-day grace after expiry; after
+         *     grace, all ACTIVE jobs except the most recently published one are
+         *     paused; same-plan renewal EXTENDS the current term and is allowed only
+         *     while `renewable` is true.
          */
         get: operations["getBillingSubscription"];
         put?: never;
@@ -1525,12 +1570,164 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [S5] List invoices
-         * @description **Sprint 5 — not yet implemented.**
+         * List invoices (S5)
+         * @description Offset-paginated invoice history, newest first. `number` is the
+         *     sequential GST-compliant format `SIC-YYYY-NNNNN` (per-year, gapless —
+         *     e.g. `SIC-2026-00042`). `pdfUrl` is a SHORT-EXPIRY signed URL
+         *     (~15 min), minted fresh on every read and null until the async PDF
+         *     generation completes — refetch the list to cure a stale URL.
          */
         get: operations["getBillingInvoices"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a checkout session (S5)
+         * @description Starts a purchase. The request carries `{ planCode }` and NOTHING else —
+         *     **no gateway field exists on the request**; routing is decided
+         *     server-side from the company:
+         *
+         *     - LOCAL (Indian) company → Razorpay domestic (INR, GST added)
+         *     - FOREIGN company → Razorpay International primary; Stripe ONLY when
+         *       the `payments.stripe_enabled` platform setting is on
+         *
+         *     A client cannot force a gateway. The response's `gateway` +
+         *     single matching gateway block tell the frontend what to launch.
+         *
+         *     **Idempotency:** send an `Idempotency-Key` header (UUID per checkout
+         *     intent). Retries with the same key replay the original response —
+         *     never a second order.
+         *
+         *     **Activation is webhook-only:** after the gateway flow, poll
+         *     `GET /billing/orders/{orderId}` until PAID (webhook-driven) or show a
+         *     timeout UX. The client success callback changes NOTHING server-side.
+         *
+         *     Error ladder:
+         *     1. `EMPLOYER_NOT_APPROVED` (403) — company must be APPROVED.
+         *     2. `PLAN_NOT_PURCHASABLE` (422) — FREE or an inactive plan.
+         *     3. `SUBSCRIPTION_ALREADY_ACTIVE` (409) — same plan already active and
+         *        not yet renewable. Same-plan renewal EXTENDS the term (new expiry =
+         *        current expiry + one period) and is allowed only inside the renewal
+         *        window (last 7 days) or during GRACE/EXPIRED — see
+         *        `SubscriptionStatus.renewable`.
+         *     4. `GATEWAY_UNAVAILABLE` (503) — no usable gateway for this company
+         *        (e.g. FOREIGN + Stripe disabled + Razorpay International
+         *        unavailable). The honest failure: surface "try again later", never
+         *        silently fall back to a wrong gateway.
+         */
+        post: operations["postBillingCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get order status — the post-checkout poll target (S5)
+         * @description THE poll target. After the gateway flow the frontend polls this
+         *     endpoint until `status` becomes PAID (webhook-driven) or FAILED, or
+         *     gives up into a "still confirming — we'll email you" timeout UX.
+         *
+         *     **A client callback NEVER flips an order.** Only the
+         *     signature-verified gateway webhook (or admin reconciliation) moves
+         *     CREATED → PAID/FAILED. Polling is safe and side-effect-free
+         *     (idempotent read). On PAID the same webhook transaction sets
+         *     `subscriptionActivatedAt` and `invoiceId`.
+         *
+         *     404 for an order that does not exist OR belongs to another company —
+         *     indistinguishable.
+         */
+        get: operations["getBillingOrderById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/razorpay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Razorpay payment webhook (S5 — server-to-server, NOT mocked)
+         * @description **The signature IS the auth** (hence `security: []` — no bearer token).
+         *
+         *     Processing contract (locked, shared with `/webhooks/stripe`):
+         *     1. **Verify BEFORE parse:** the `X-Razorpay-Signature` HMAC is checked
+         *        against the RAW request body (raw-body middleware on webhook routes
+         *        only) BEFORE any JSON parsing. Unsigned or bad-signature requests →
+         *        401, logged — never processed.
+         *     2. **Dedupe on `(provider, eventId)`** via the `webhook_events` table —
+         *        gateway retries of an already-processed event are acknowledged (200)
+         *        and skipped.
+         *     3. **Respond 200 FAST, then enqueue:** the handler persists the event
+         *        and enqueues a BullMQ job; activation (order → PAID, subscription
+         *        activation, invoice generation, notifications) happens in the
+         *        WORKER, never inline.
+         *     4. **Out-of-order reconciliation:** events may arrive late or out of
+         *        order. State transitions reconcile against current order state —
+         *        a `payment.captured` for an already-PAID order is a no-op; a
+         *        `payment.failed` arriving after `payment.captured` never regresses
+         *        PAID → FAILED.
+         */
+        post: operations["postWebhookRazorpay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/stripe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stripe payment webhook (S5 — server-to-server, NOT mocked)
+         * @description **The signature IS the auth** (`Stripe-Signature` header verified
+         *     against the RAW body before parsing). Identical processing contract to
+         *     `/webhooks/razorpay`: verify-before-parse → `(provider, eventId)`
+         *     dedupe via `webhook_events` → 200 fast + BullMQ enqueue (all heavy
+         *     work in the worker) → out-of-order reconciliation against current
+         *     order state (PAID never regresses).
+         *
+         *     Server-to-server only: not consumed by the web app and NOT present in
+         *     the MSW handlers — the mocks simulate the webhook's EFFECT via the
+         *     delayed order flip.
+         */
+        post: operations["postWebhookStripe"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1728,7 +1925,7 @@ export interface components {
              */
             detail: string;
             /**
-             * @description Machine-readable error code — the stable contract field. Examples: EMAIL_TAKEN, INVALID_CREDENTIALS, ACCOUNT_SUSPENDED, INVALID_OTP, PHONE_NOT_ON_WHATSAPP, PROFILE_INCOMPLETE, MANDATORY_DOCS_MISSING, ILLEGAL_TRANSITION, EMPLOYER_NOT_APPROVED, WORKER_PROTECTION_VIOLATION, JOB_QUOTA_EXCEEDED, CORE_RULE_FORBIDDEN, NOT_IMPLEMENTED.
+             * @description Machine-readable error code — the stable contract field. Examples: EMAIL_TAKEN, INVALID_CREDENTIALS, ACCOUNT_SUSPENDED, INVALID_OTP, PHONE_NOT_ON_WHATSAPP, PROFILE_INCOMPLETE, MANDATORY_DOCS_MISSING, ILLEGAL_TRANSITION, EMPLOYER_NOT_APPROVED, WORKER_PROTECTION_VIOLATION, JOB_QUOTA_EXCEEDED, CORE_RULE_FORBIDDEN, PLAN_NOT_PURCHASABLE, SUBSCRIPTION_ALREADY_ACTIVE, GATEWAY_UNAVAILABLE, PLAN_UPGRADE_REQUIRED, NOT_IMPLEMENTED.
              * @example EMAIL_TAKEN
              */
             code: string;
@@ -1987,7 +2184,8 @@ export interface components {
          *     1. `EMPLOYER_NOT_APPROVED` (403) — company.status must be APPROVED.
          *     2. `WORKER_PROTECTION_VIOLATION` (422) — accommodation, healthInsurance, and
          *        transportation must all be true. `meta.violations[]` lists which failed.
-         *     3. `JOB_QUOTA_EXCEEDED` (422) — Free plan: max 1 ACTIVE job. `meta.planLimit = 1`.
+         *     3. `JOB_QUOTA_EXCEEDED` (422) — quota = the plan's `maxActiveJobs`
+         *        (S5): Free 1, Pro unlimited. `meta.planLimit` reflects the plan.
          */
         Job: {
             /** Format: uuid */
@@ -2415,6 +2613,178 @@ export interface components {
             /** Format: date-time */
             appliedAt: string;
         };
+        /**
+         * @description The seeded three plans. FREE is never purchasable via checkout.
+         * @enum {string}
+         */
+        PlanCode: "FREE" | "PRO_MONTHLY" | "PRO_YEARLY";
+        /**
+         * @description Chosen SERVER-SIDE at checkout — the client never selects or sends a gateway. Routing rule: LOCAL companies → Razorpay domestic (INR + GST); FOREIGN companies → Razorpay International primary, Stripe only when the `payments.stripe_enabled` platform setting is on.
+         * @enum {string}
+         */
+        PaymentGateway: "RAZORPAY" | "STRIPE";
+        /**
+         * @description CREATED → PAID/FAILED is driven EXCLUSIVELY by the verified gateway webhook (or admin reconciliation). The client success callback never flips an order. EXPIRED = never completed within the gateway window.
+         * @enum {string}
+         */
+        OrderStatus: "CREATED" | "PAID" | "FAILED" | "EXPIRED";
+        /**
+         * @description ACTIVE until `expiresAt`; then a 7-day GRACE window (`graceEndsAt`) during which everything keeps working and renewal banners show; after grace, EXPIRED — all the company's ACTIVE jobs EXCEPT the most recently published one are paused (Answer 07), returning the company to Free-plan behavior. The FREE plan is always a well-formed ACTIVE state with `expiresAt: null` — never an error.
+         * @enum {string}
+         */
+        SubscriptionState: "ACTIVE" | "GRACE" | "EXPIRED";
+        /** @description A purchasable (or the free) subscription plan. `priceSubunits` is the base price EXCLUDING GST. For LOCAL (Indian) companies the UI displays price + GST — `gstRatePct` here is a DISPLAY HINT ONLY; the checkout response's `gstSubunits` split is the authoritative figure (server computed, never derived client-side). */
+        Plan: {
+            code: components["schemas"]["PlanCode"];
+            /** @example Pro Monthly */
+            name: string;
+            /**
+             * @description Base price in integer subunits, EXCLUDING GST (FREE = 0).
+             * @example 299900
+             */
+            priceSubunits: number;
+            /**
+             * @description ISO-4217 code the price is denominated in.
+             * @example INR
+             */
+            currency: string;
+            /**
+             * @description Billing period; null for FREE (never expires).
+             * @enum {string|null}
+             */
+            period: "MONTHLY" | "YEARLY" | null;
+            /**
+             * @description Concurrent ACTIVE-job quota enforced at publish (`JOB_QUOTA_EXCEEDED`, meta.planLimit). null = unlimited.
+             * @example 1
+             */
+            maxActiveJobs: number | null;
+            /**
+             * @description GST rate hint for LOCAL-company price display (e.g. 18). The checkout response carries the authoritative split.
+             * @example 18
+             */
+            gstRatePct?: number;
+            /** @description Marketing feature strings for the plan card. */
+            features: string[];
+        };
+        /**
+         * @description The company's current subscription — the PlanStatusWidget + subscription page source. A company that never purchased anything gets a well-formed FREE state (status ACTIVE, expiresAt null) — NOT a 404.
+         *
+         *     **Renewal-window semantics:** renewal of the SAME plan EXTENDS the current term (new expiry = current `expiresAt` + one period — paid time is never lost). `renewable` turns true inside the renewal window (the last 7 days before `expiresAt`) and stays true through GRACE and EXPIRED. Attempting a same-plan checkout while `renewable` is false → 409 `SUBSCRIPTION_ALREADY_ACTIVE`. A DIFFERENT paid plan may be purchased at any time (an upgrade replaces the term).
+         *
+         *     **Grace semantics (Answer 07):** after `expiresAt` the status becomes GRACE for 7 days (`graceEndsAt`). After grace, EXPIRED: all the company's ACTIVE jobs except the most recently published one are paused, and quota enforcement returns to the FREE limit.
+         */
+        SubscriptionStatus: {
+            plan: components["schemas"]["Plan"];
+            status: components["schemas"]["SubscriptionState"];
+            /** Format: date-time */
+            startsAt: string;
+            /**
+             * Format: date-time
+             * @description null for FREE (never expires).
+             */
+            expiresAt: string | null;
+            /**
+             * Format: date-time
+             * @description Present (non-null) only while status = GRACE.
+             */
+            graceEndsAt?: string | null;
+            /** @description Whole days until `expiresAt` (during ACTIVE) or until `graceEndsAt` (during GRACE); 0 when EXPIRED; null for FREE. */
+            daysRemaining: number | null;
+            /** @description True when a same-plan renewal checkout is currently allowed (inside the renewal window, or in GRACE/EXPIRED). False → same-plan checkout returns 409 SUBSCRIPTION_ALREADY_ACTIVE. */
+            renewable: boolean;
+        };
+        /** @description A GST-compliant invoice, generated when the webhook confirms payment. `number` is SEQUENTIAL per calendar year in the format `SIC-YYYY-NNNNN` (e.g. `SIC-2026-00042`) — gapless, assigned at generation time, never reused. */
+        Invoice: {
+            /** Format: uuid */
+            id: string;
+            /** @example SIC-2026-00042 */
+            number: string;
+            /** Format: date-time */
+            issuedAt: string;
+            /** @description Grand total INCLUDING GST, integer subunits. */
+            totalSubunits: number;
+            /** @example INR */
+            currency: string;
+            /** @example Pro Monthly */
+            planName: string;
+            /** @description SHORT-EXPIRY signed URL (~15 minutes) to the invoice PDF — minted fresh on every list/detail read, so a stale URL is cured by refetching the invoice list. null until the PDF has been generated (generation is async, worker-side). */
+            pdfUrl: string | null;
+        };
+        /**
+         * @description The checkout response — tells the frontend WHICH gateway to launch and with what payload. EXACTLY ONE of `razorpay` / `stripe` is present, and it always matches `gateway`; the frontend branches on `gateway`, it never chooses. `gstSubunits` is the authoritative GST split (0 for FOREIGN companies; server-computed for LOCAL).
+         *
+         *     **Activation is webhook-only:** completing the gateway flow does NOT activate anything. The frontend must poll `GET /billing/orders/{id}` until the (signature-verified) webhook flips the order to PAID — or surface a "still confirming" timeout UX. A client-side success callback NEVER changes order or subscription state.
+         */
+        CheckoutSession: {
+            /**
+             * Format: uuid
+             * @description The poll target — `GET /billing/orders/{orderId}`.
+             */
+            orderId: string;
+            /**
+             * @description Human-readable order reference (support conversations).
+             * @example ORD-2026-00107
+             */
+            humanOrderRef?: string;
+            gateway: components["schemas"]["PaymentGateway"];
+            /** @description Base amount excluding GST, integer subunits. */
+            amountSubunits: number;
+            /** @description GST portion, integer subunits (0 when not applicable). */
+            gstSubunits: number;
+            /** @description amountSubunits + gstSubunits — what the gateway charges. */
+            totalSubunits: number;
+            /** @example INR */
+            currency: string;
+            /** @description Present iff gateway = RAZORPAY. */
+            razorpay?: {
+                /** @description Publishable Razorpay key id for Checkout.js. */
+                keyId: string;
+                /** @description The Razorpay order id to open Checkout.js with. */
+                gatewayOrderId: string;
+            };
+            /** @description Present iff gateway = STRIPE. */
+            stripe?: {
+                /** @description Stripe-hosted Checkout URL to redirect the browser to. */
+                redirectUrl: string;
+            };
+        };
+        /** @description A checkout order — THE poll target after the gateway flow. Status moves CREATED → PAID/FAILED only via the verified webhook (or admin reconciliation); polling this endpoint is safe and side-effect-free. On PAID, `subscriptionActivatedAt` and `invoiceId` are set by the same webhook-driven transaction. */
+        Order: {
+            /** Format: uuid */
+            id: string;
+            /** @example ORD-2026-00107 */
+            humanOrderRef?: string;
+            planCode: components["schemas"]["PlanCode"];
+            status: components["schemas"]["OrderStatus"];
+            gateway: components["schemas"]["PaymentGateway"];
+            amountSubunits: number;
+            gstSubunits: number;
+            totalSubunits: number;
+            /** @example INR */
+            currency: string;
+            /** Format: date-time */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Set when the webhook activates the subscription (PAID only).
+             */
+            subscriptionActivatedAt: string | null;
+            /**
+             * Format: uuid
+             * @description Set when the invoice is generated (PAID only).
+             */
+            invoiceId: string | null;
+        };
+        /** @description A short-expiry signed R2 GET URL for a candidate document (Pro-plan employer feature). EVERY issuance is written to the audit log (who / which candidate / which document type / when) — the URL itself and the object key are never logged. */
+        DocumentUrlGrant: {
+            /** @description Signed R2 GET URL. Fetch immediately; do not persist. */
+            url: string;
+            /**
+             * @description Seconds until the signed URL stops working (short — e.g. 300).
+             * @example 300
+             */
+            expiresInSeconds: number;
+        };
     };
     responses: never;
     parameters: {
@@ -2428,6 +2798,8 @@ export interface components {
         PageSizeParam: number;
         /** @description Sort expression in the format `field:asc` or `field:desc`. Allowed fields are whitelisted per endpoint. */
         SortParam: string;
+        /** @description Client-generated idempotency key (S5 checkout). The server stores the FIRST response for this key in Redis for 24 h and replays it verbatim for any retry carrying the same key — a double-click or a network retry never creates a second order. Recommended value: a UUID v4 minted per checkout intent (not per attempt). */
+        IdempotencyKeyHeader: string;
     };
     requestBodies: never;
     headers: never;
@@ -4566,6 +4938,67 @@ export interface operations {
             };
         };
     };
+    getEmployersCandidateDocumentUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                type: components["schemas"]["DocumentType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Short-expiry signed URL grant (issuance audited) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DocumentUrlGrant"];
+                    };
+                };
+            };
+            /** @description `EMPLOYER_NOT_APPROVED` (company not approved) or `PLAN_UPGRADE_REQUIRED` (Free plan — the upsell driver). Branch on `code`. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Document access is a Pro feature. Upgrade to view candidate documents.",
+                     *       "code": "PLAN_UPGRADE_REQUIRED"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Candidate not found, profile hidden (profileVisible = false), or this document type not uploaded — all byte-identical (indistinguishable to the caller). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not found",
+                     *       "status": 404,
+                     *       "detail": "Not found.",
+                     *       "code": "NOT_FOUND"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     getJobs: {
         parameters: {
             query?: {
@@ -5657,55 +6090,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description The available plans */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 5.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    postBillingCheckout: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": Record<string, never>;
-            };
-        };
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 5.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": {
+                        data: components["schemas"]["Plan"][];
+                    };
                 };
             };
         };
@@ -5719,22 +6112,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Current subscription state (FREE is a real state, not an error) */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 5.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": {
+                        data: components["schemas"]["SubscriptionStatus"];
+                    };
                 };
             };
         };
@@ -5753,8 +6139,56 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Invoice page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Invoice"][];
+                        meta: {
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    postBillingCheckout: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Client-generated idempotency key (S5 checkout). The server stores the FIRST response for this key in Redis for 24 h and replays it verbatim for any retry carrying the same key — a double-click or a network retry never creates a second order. Recommended value: a UUID v4 minted per checkout intent (not per attempt). */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    planCode: components["schemas"]["PlanCode"];
+                };
+            };
+        };
+        responses: {
+            /** @description Checkout session created — exactly one gateway block present, matching `gateway`. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CheckoutSession"];
+                    };
+                };
+            };
+            /** @description Company not approved */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5762,12 +6196,163 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 5.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Your company must be approved before purchasing a plan.",
+                     *       "code": "EMPLOYER_NOT_APPROVED"
                      *     }
                      */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Same plan already active and not yet renewable */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Your Pro Monthly plan is already active. Renewal opens 7 days before expiry.",
+                     *       "code": "SUBSCRIPTION_ALREADY_ACTIVE"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Plan not purchasable (FREE or inactive) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unprocessable Entity",
+                     *       "status": 422,
+                     *       "detail": "The FREE plan cannot be purchased.",
+                     *       "code": "PLAN_NOT_PURCHASABLE"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description No usable payment gateway for this company right now */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Service Unavailable",
+                     *       "status": 503,
+                     *       "detail": "International payments are temporarily unavailable. Please try again later.",
+                     *       "code": "GATEWAY_UNAVAILABLE"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getBillingOrderById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The order (poll until PAID / FAILED) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Order"];
+                    };
+                };
+            };
+            /** @description Order not found (or not this company's — indistinguishable) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postWebhookRazorpay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Raw Razorpay event JSON. Parsed only AFTER signature verification. */
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Event accepted (persisted + enqueued, or deduped as already seen) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid signature — logged, never processed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postWebhookStripe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Raw Stripe event JSON. Parsed only AFTER signature verification. */
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Event accepted (persisted + enqueued, or deduped as already seen) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid signature — logged, never processed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };

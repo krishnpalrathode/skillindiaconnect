@@ -12,6 +12,7 @@ in parallel against it.
 | 0.2.0   | S2-0   | Employer identity (company + docs), jobs CRUD + lifecycle, public job search, candidate notifications, admin employer approval, admin platform settings |
 | 0.3.0   | S3-0   | Employer profile (hiring prefs, contacts, logo), S3 dashboard shape (totalJobViews, hiredThisMonth, profileChecklist), employer-views-candidate (CandidateEmployerView), minimal candidate browse (CandidateBrowseCard), profile-view analytics (ProfileViewsSummary) |
 | 0.4.0   | S4-0   | Applications: apply-gate ladder (`POST /jobs/{id}/apply`), match snapshot (`matchScore` + `MatchBreakdown`), forward-only state machine (`PATCH /applications/{id}/status`), admin corrective override (`PATCH /admin/applications/{id}/status`), candidate reads (`/candidates/me/applications`, `/candidates/me/applications/{id}` with timeline), employer applicant list + counts (`GET /jobs/{id}/applicants`), admin table (`GET /admin/applications`). Promoted S2/S3 honest-zeros to live: `EmployerDashboardKpi.totalApplications` / `.shortlisted`, `EmployerDashboard.recentApplicants` (now `ApplicantSummary[]`), `Job.applicantCount`. |
+| 0.5.0   | S5-0   | Billing: plans (`GET /billing/plans`), subscription status (`GET /billing/subscription` — FREE is a well-formed state, never 404), invoices (`GET /billing/invoices`, sequential `SIC-YYYY-NNNNN`), checkout (`POST /billing/checkout` — `{ planCode }` only, server-side gateway routing, `Idempotency-Key`), order polling (`GET /billing/orders/{id}` — webhook-only activation), payment webhooks (`POST /webhooks/razorpay|stripe` — spec-only, NOT mocked), the Pro document gate (`GET /employers/candidates/{id}/documents/{type}/url` — `PLAN_UPGRADE_REQUIRED`, audited issuance, S3 404-indistinguishability inherited). Money = integer subunits everywhere. Publish quota is now plan-driven (`Plan.maxActiveJobs`). |
 
 ## Files
 
@@ -106,7 +107,47 @@ When you add a new endpoint to the spec:
   set on the FIRST entry to SELECTED. Re-entry sends email + in-app only.
 - **`overrideReason` is admin-context-only** — never serialized to candidate or
   employer contexts, and excluded from the candidate-facing status timeline.
-- **Stubs (later sprints):** Paths marked `[S5]`/`[S6]`/etc. return
+- **S5 billing — locked semantics:**
+  - **Server-side gateway routing:** the checkout REQUEST carries `{ planCode }`
+    and nothing else — no gateway field exists on it. The RESPONSE's `gateway` +
+    the single matching `razorpay`/`stripe` block (never both) tell the FE what
+    to launch. LOCAL companies → Razorpay domestic (INR + GST); FOREIGN →
+    Razorpay International primary, Stripe only when `payments.stripe_enabled`
+    is on. A client cannot force a gateway.
+  - **Money = integer subunits** (paise/cents): `amountSubunits`, `gstSubunits`,
+    `totalSubunits` + `currency` in every schema. A float money field anywhere
+    is a contract defect.
+  - **Activation is webhook-only:** the gateway success callback changes
+    nothing; the FE polls `GET /billing/orders/{id}` until the webhook flips it
+    to PAID (or FAILED / a timeout UX). Checkout errors, in ladder order:
+    `EMPLOYER_NOT_APPROVED` (403), `PLAN_NOT_PURCHASABLE` (422, FREE included),
+    `SUBSCRIPTION_ALREADY_ACTIVE` (409 — same-plan renewal EXTENDS the term and
+    opens 7 days before expiry), `GATEWAY_UNAVAILABLE` (503).
+  - **Grace (Answer 07):** 7-day GRACE after expiry; then EXPIRED pauses all
+    ACTIVE jobs except the most recently published one. Publish quota is
+    plan-driven (`Plan.maxActiveJobs`; Free 1, Pro unlimited).
+  - **The Pro document gate** (`GET /employers/candidates/{id}/documents/{type}/url`):
+    Free → 403 `PLAN_UPGRADE_REQUIRED`; every issuance audited; inherits S3's
+    404 indistinguishability (hidden candidate ≡ nonexistent ≡ absent document)
+    and never bypasses `profileVisible`.
+- **S5 webhooks are NOT mocked (deliberate):** `POST /webhooks/razorpay` and
+  `POST /webhooks/stripe` are server-to-server — the signature IS the auth
+  (verify-before-parse on the raw body, `(provider, eventId)` dedupe, 200-fast
+  + BullMQ enqueue, out-of-order reconciliation). The browser never calls them,
+  so they are excluded from `handlers.ts`. Instead the mocks simulate the
+  webhook's EFFECT: a mock order flips CREATED→PAID only after
+  `ORDER_FLIP_POLL_THRESHOLD` (3) polls of `GET /billing/orders/{id}` — never
+  instantly — forcing the FE to build the real "confirming your payment…"
+  polling state (the S1 lesson applied to TIMING divergence). An
+  `Idempotency-Key` starting with `fail-` flips the order to FAILED instead
+  (the failure UX hook); `gwdown-` makes checkout return 503
+  `GATEWAY_UNAVAILABLE`. On the simulated PAID: the mock subscription becomes
+  ACTIVE, the next sequential invoice appears, and the S2-0 publish mock's
+  quota lifts through the same plan seam. Fixture states: FREE (approved
+  employers by default, incl. the LOCAL `employer-local@example.com` for the
+  GST split), PRO ACTIVE (`employer-pro@example.com` — the document-gate signed
+  URL), PRO GRACE (`employer-grace@example.com`).
+- **Stubs (later sprints):** Paths marked `[S6]`/etc. return
   `501 NOT_IMPLEMENTED`. They exist so the full API surface is navigable.
 
 ## Validating the spec manually

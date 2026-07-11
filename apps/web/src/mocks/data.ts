@@ -21,6 +21,16 @@ type ApplicantCard = components['schemas']['ApplicantCard'];
 type ApplicantCounts = components['schemas']['ApplicantCounts'];
 type ApplicantSummary = components['schemas']['ApplicantSummary'];
 type DocumentType = components['schemas']['DocumentType'];
+// S5: Billing
+type Plan = components['schemas']['Plan'];
+type PlanCode = components['schemas']['PlanCode'];
+type PaymentGateway = components['schemas']['PaymentGateway'];
+type SubscriptionStatus = components['schemas']['SubscriptionStatus'];
+type SubscriptionState = components['schemas']['SubscriptionState'];
+type Invoice = components['schemas']['Invoice'];
+type CheckoutSession = components['schemas']['CheckoutSession'];
+type Order = components['schemas']['Order'];
+type OrderStatus = components['schemas']['OrderStatus'];
 
 // ─── Fixed mock constants ────────────────────────────────────────────────────
 
@@ -37,6 +47,30 @@ export const EMPLOYER_REJECTED_USER_ID = 'mock-user-employer-rejected';
 export const EMPLOYER_REJECTED_EMAIL = 'employer-rejected@example.com';
 export const EMPLOYER_SUSPENDED_USER_ID = 'mock-user-employer-suspended';
 export const EMPLOYER_SUSPENDED_EMAIL = 'employer-suspended@example.com';
+
+// S5: Billing fixture employer IDs (all APPROVED — each isolates one billing state)
+//  - LOCAL  + FREE  → checkout routes to Razorpay domestic WITH the GST split
+//  - FOREIGN + FREE → employer-1 above (checkout routes Razorpay Intl / Stripe-when-enabled)
+//  - PRO ACTIVE     → the document-gate signed-URL fixture; publish quota unlimited
+//  - PRO GRACE      → the PlanStatusWidget grace-state fixture
+export const EMPLOYER_LOCAL_USER_ID = 'mock-user-employer-local';
+export const EMPLOYER_LOCAL_EMAIL = 'employer-local@example.com';
+export const EMPLOYER_PRO_USER_ID = 'mock-user-employer-pro';
+export const EMPLOYER_PRO_EMAIL = 'employer-pro@example.com';
+export const EMPLOYER_GRACE_USER_ID = 'mock-user-employer-grace';
+export const EMPLOYER_GRACE_EMAIL = 'employer-grace@example.com';
+
+// S5: The delayed webhook-effect simulation. An order flips CREATED→PAID (or
+// →FAILED) only after this many polls of GET /billing/orders/{id} — NEVER
+// instantly — so the FE is forced to build the "confirming your payment…"
+// polling state (instant activation is impossible on mocks, by design).
+export const ORDER_FLIP_POLL_THRESHOLD = 3;
+// S5: A checkout sent with an Idempotency-Key starting with this prefix
+// produces an order that flips to FAILED instead of PAID — the failure UX hook.
+export const MOCK_FAIL_IDEMPOTENCY_PREFIX = 'fail-';
+// S5: …and this prefix makes checkout itself return 503 GATEWAY_UNAVAILABLE
+// (the honest no-usable-gateway failure — buildable without breaking fixtures).
+export const MOCK_GATEWAY_DOWN_IDEMPOTENCY_PREFIX = 'gwdown-';
 
 // S4: Apply-gate scenario candidate IDs — each isolates one gate-ladder rung.
 export const APPLY_OK_USER_ID = 'mock-user-candidate-apply-ok';
@@ -138,11 +172,57 @@ export interface MockApplicationTimelineEntry {
   createdAt: string;
 }
 
+// ─── S5: Billing ──────────────────────────────────────────────────────────────
+
+/**
+ * A non-FREE subscription record. ABSENCE of a record = the well-formed FREE
+ * state (never an error) — `getSubscriptionStatus()` synthesizes it.
+ */
+export interface MockSubscription {
+  planCode: PlanCode;
+  status: SubscriptionState;
+  startsAt: string;
+  expiresAt: string;
+  /** Non-null only while status = GRACE. */
+  graceEndsAt: string | null;
+}
+
+/**
+ * A mock checkout order. `pollCount` drives the DELAYED webhook-effect flip
+ * (CREATED→PAID/FAILED after ORDER_FLIP_POLL_THRESHOLD polls — never
+ * instantly). `session` is the CheckoutSession snapshot replayed verbatim for
+ * Idempotency-Key retries.
+ */
+export interface MockOrder {
+  id: string;
+  humanOrderRef: string;
+  userId: string;
+  planCode: PlanCode;
+  status: OrderStatus;
+  gateway: PaymentGateway;
+  amountSubunits: number;
+  gstSubunits: number;
+  totalSubunits: number;
+  currency: string;
+  createdAt: string;
+  subscriptionActivatedAt: string | null;
+  invoiceId: string | null;
+  pollCount: number;
+  /** Set at creation (fail-prefixed Idempotency-Key) → flips to FAILED. */
+  failOnFlip: boolean;
+  session: CheckoutSession;
+}
+
+export interface MockInvoice extends Invoice {
+  userId: string;
+}
+
 // ─── Seeded data ─────────────────────────────────────────────────────────────
 
 const NOW = new Date().toISOString();
 const PAST_DATE = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
+const daysFromNow = (n: number) => new Date(Date.now() + n * 24 * 60 * 60 * 1000).toISOString();
 
 export const db = {
   users: new Map<string, MockUser>([
@@ -214,6 +294,38 @@ export const db = {
         passwordHash: 'hashed-password',
         role: 'EMPLOYER',
         status: 'SUSPENDED',
+      },
+    ],
+    // S5: Billing fixture employers — LOCAL/FREE (GST routing), PRO ACTIVE
+    // (doc gate + quota lift), PRO GRACE (PlanStatusWidget grace state).
+    [
+      EMPLOYER_LOCAL_USER_ID,
+      {
+        id: EMPLOYER_LOCAL_USER_ID,
+        email: EMPLOYER_LOCAL_EMAIL,
+        passwordHash: 'hashed-password',
+        role: 'EMPLOYER',
+        status: 'ACTIVE',
+      },
+    ],
+    [
+      EMPLOYER_PRO_USER_ID,
+      {
+        id: EMPLOYER_PRO_USER_ID,
+        email: EMPLOYER_PRO_EMAIL,
+        passwordHash: 'hashed-password',
+        role: 'EMPLOYER',
+        status: 'ACTIVE',
+      },
+    ],
+    [
+      EMPLOYER_GRACE_USER_ID,
+      {
+        id: EMPLOYER_GRACE_USER_ID,
+        email: EMPLOYER_GRACE_EMAIL,
+        passwordHash: 'hashed-password',
+        role: 'EMPLOYER',
+        status: 'ACTIVE',
       },
     ],
     // S3: Additional browsable candidate users
@@ -719,6 +831,72 @@ export const db = {
         languagePref: 'en',
         description: 'Company account is suspended.',
         registrationCertKey: 'employer-docs/suspended-company/reg-cert.pdf',
+        rejectionReason: null,
+        createdAt: PAST_DATE,
+        approvedAt: PAST_DATE,
+      } satisfies MockCompany,
+    ],
+    // S5: LOCAL approved employer (FREE plan) — checkout routes to Razorpay
+    // domestic and the response carries the GST split.
+    [
+      EMPLOYER_LOCAL_USER_ID,
+      {
+        id: 'mock-company-local',
+        name: 'Shree Ram Constructions',
+        type: 'LOCAL',
+        status: 'APPROVED',
+        registrationNumber: 'MH-2024-55555',
+        industryType: 'Construction',
+        phone: '+912233445566',
+        location: 'Pune, India',
+        employeeRange: '51-200',
+        languagePref: 'en',
+        description: 'Residential and commercial construction across Maharashtra.',
+        registrationCertKey: 'employer-docs/mock-company-local/reg-cert.pdf',
+        rejectionReason: null,
+        createdAt: PAST_DATE,
+        approvedAt: PAST_DATE,
+      } satisfies MockCompany,
+    ],
+    // S5: FOREIGN approved employer on PRO_MONTHLY (ACTIVE) — the document-gate
+    // signed-URL fixture; publish quota is unlimited for this company.
+    [
+      EMPLOYER_PRO_USER_ID,
+      {
+        id: 'mock-company-pro',
+        name: 'Emirates Skill Partners',
+        type: 'FOREIGN',
+        status: 'APPROVED',
+        registrationNumber: 'DXB-2023-77777',
+        industryType: 'Recruitment',
+        phone: '+971504455667',
+        location: 'Dubai, UAE',
+        employeeRange: '11-50',
+        languagePref: 'en',
+        description: 'Gulf recruitment agency on the Pro plan.',
+        registrationCertKey: 'employer-docs/mock-company-pro/reg-cert.pdf',
+        rejectionReason: null,
+        createdAt: PAST_DATE,
+        approvedAt: PAST_DATE,
+      } satisfies MockCompany,
+    ],
+    // S5: FOREIGN approved employer whose PRO_MONTHLY is in its 7-day GRACE
+    // window — the PlanStatusWidget grace-state fixture.
+    [
+      EMPLOYER_GRACE_USER_ID,
+      {
+        id: 'mock-company-grace',
+        name: 'Doha Manpower Services',
+        type: 'FOREIGN',
+        status: 'APPROVED',
+        registrationNumber: 'QAT-2023-88888',
+        industryType: 'Manpower',
+        phone: '+97455667788',
+        location: 'Doha, Qatar',
+        employeeRange: '51-200',
+        languagePref: 'en',
+        description: 'Qatar manpower agency whose Pro plan just lapsed into grace.',
+        registrationCertKey: 'employer-docs/mock-company-grace/reg-cert.pdf',
         rejectionReason: null,
         createdAt: PAST_DATE,
         approvedAt: PAST_DATE,
@@ -1527,7 +1705,135 @@ export const db = {
       updatedAt: null,
       updatedBy: null,
     },
+    // S5: mirrors the real `payments.stripe_enabled` platform setting. When
+    // true, FOREIGN-company checkout routes to Stripe (the fixture flag that
+    // makes the Stripe response reachable on mocks). Flip via the admin
+    // settings mock or directly in a test.
+    {
+      key: 'STRIPE_ENABLED',
+      group: 'PAYMENTS',
+      label: 'Stripe Enabled',
+      description: 'Route FOREIGN-company checkout to Stripe instead of Razorpay International.',
+      value: false,
+      isCoreRule: false,
+      updatedAt: null,
+      updatedBy: null,
+    },
   ] as MockSetting[],
+
+  // ── S5: Billing stores ───────────────────────────────────────────────────────
+
+  // The seeded three plans. Money = integer subunits (paise) — no floats.
+  plans: [
+    {
+      code: 'FREE',
+      name: 'Free',
+      priceSubunits: 0,
+      currency: 'INR',
+      period: null,
+      maxActiveJobs: 1,
+      gstRatePct: 18,
+      features: ['1 active job', 'Applicant pipeline', 'Candidate browse'],
+    },
+    {
+      code: 'PRO_MONTHLY',
+      name: 'Pro Monthly',
+      priceSubunits: 299900,
+      currency: 'INR',
+      period: 'MONTHLY',
+      maxActiveJobs: null,
+      gstRatePct: 18,
+      features: ['Unlimited active jobs', 'Candidate document access', 'Priority support'],
+    },
+    {
+      code: 'PRO_YEARLY',
+      name: 'Pro Yearly',
+      priceSubunits: 2499900,
+      currency: 'INR',
+      period: 'YEARLY',
+      maxActiveJobs: null,
+      gstRatePct: 18,
+      features: [
+        'Unlimited active jobs',
+        'Candidate document access',
+        'Priority support',
+        '2 months free vs monthly',
+      ],
+    },
+  ] as Plan[],
+
+  // Non-FREE subscriptions by employer userId. Absent = well-formed FREE state.
+  subscriptions: new Map<string, MockSubscription>([
+    [
+      EMPLOYER_PRO_USER_ID,
+      {
+        planCode: 'PRO_MONTHLY',
+        status: 'ACTIVE',
+        startsAt: daysAgo(10),
+        expiresAt: daysFromNow(20),
+        graceEndsAt: null,
+      },
+    ],
+    [
+      EMPLOYER_GRACE_USER_ID,
+      {
+        planCode: 'PRO_MONTHLY',
+        status: 'GRACE',
+        startsAt: daysAgo(33),
+        expiresAt: daysAgo(3),
+        graceEndsAt: daysFromNow(4),
+      },
+    ],
+  ]),
+
+  // Checkout orders by order id. `pollCount` drives the delayed webhook-effect flip.
+  orders: new Map<string, MockOrder>(),
+
+  // Idempotency-Key → orderId. A retry with a seen key replays the stored session.
+  checkoutIdempotency: new Map<string, string>(),
+
+  // Invoices, newest last. Seeded history for the PRO + GRACE fixtures; the
+  // most recent PRO invoice has pdfUrl null (async generation still pending).
+  invoices: [
+    {
+      userId: EMPLOYER_GRACE_USER_ID,
+      id: 'mock-invoice-grace-1',
+      number: 'SIC-2026-00040',
+      issuedAt: daysAgo(33),
+      totalSubunits: 299900,
+      currency: 'INR',
+      planName: 'Pro Monthly',
+      pdfUrl:
+        'https://r2.mock.skillindiaconnect.example/invoices/SIC-2026-00040.pdf?sig=mock&exp=900',
+    },
+    {
+      userId: EMPLOYER_PRO_USER_ID,
+      id: 'mock-invoice-pro-1',
+      number: 'SIC-2026-00041',
+      issuedAt: daysAgo(40),
+      totalSubunits: 299900,
+      currency: 'INR',
+      planName: 'Pro Monthly',
+      pdfUrl:
+        'https://r2.mock.skillindiaconnect.example/invoices/SIC-2026-00041.pdf?sig=mock&exp=900',
+    },
+    {
+      userId: EMPLOYER_PRO_USER_ID,
+      id: 'mock-invoice-pro-2',
+      number: 'SIC-2026-00042',
+      issuedAt: daysAgo(10),
+      totalSubunits: 299900,
+      currency: 'INR',
+      planName: 'Pro Monthly',
+      pdfUrl: null, // async PDF generation pending — the FE must render this state
+    },
+  ] as MockInvoice[],
+
+  // Sequential counters (invoice numbers are per-year gapless: SIC-YYYY-NNNNN).
+  billingCounters: {
+    nextInvoiceSeq: 43,
+    nextOrderSeq: 109,
+  },
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -2020,3 +2326,153 @@ export const EMPLOYER_ALLOWED_TRANSITIONS: Record<ApplicationStatus, Application
   SELECTED: [],
   REJECTED: [],
 };
+
+// ─── S5: Billing helpers ──────────────────────────────────────────────────────
+
+export function getPlan(code: PlanCode): Plan | undefined {
+  return db.plans.find((p) => p.code === code);
+}
+
+/** Whole days from now until `iso`, floored at 0. */
+function wholeDaysUntil(iso: string): number {
+  return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
+}
+
+/**
+ * The company's subscription — ALWAYS well-formed. No record = the FREE state
+ * (plan FREE, status ACTIVE, expiresAt null) — never a 404.
+ *
+ * `renewable` mirrors the contract: true inside the renewal window (last 7
+ * days before expiry) and throughout GRACE/EXPIRED; false otherwise. FREE is
+ * never renewable (there is nothing to renew — purchases are upgrades).
+ */
+export function getSubscriptionStatus(userId: string): SubscriptionStatus {
+  const sub = db.subscriptions.get(userId);
+  if (!sub) {
+    return {
+      plan: getPlan('FREE')!,
+      status: 'ACTIVE',
+      startsAt: PAST_DATE,
+      expiresAt: null,
+      graceEndsAt: null,
+      daysRemaining: null,
+      renewable: false,
+    };
+  }
+  const daysRemaining =
+    sub.status === 'GRACE' && sub.graceEndsAt
+      ? wholeDaysUntil(sub.graceEndsAt)
+      : sub.status === 'EXPIRED'
+        ? 0
+        : wholeDaysUntil(sub.expiresAt);
+  const renewable =
+    sub.status === 'GRACE' || sub.status === 'EXPIRED' || wholeDaysUntil(sub.expiresAt) <= 7;
+  return {
+    plan: getPlan(sub.planCode)!,
+    status: sub.status,
+    startsAt: sub.startsAt,
+    expiresAt: sub.expiresAt,
+    graceEndsAt: sub.graceEndsAt,
+    daysRemaining,
+    renewable,
+  };
+}
+
+/**
+ * The publish-quota seam (S2-0 → S5): the ACTIVE-job limit comes from the
+ * subscription plan. ACTIVE/GRACE keep the paid plan's limit (null =
+ * unlimited); EXPIRED (or no record) falls back to FREE's limit.
+ */
+export function getActivePlanMaxJobs(userId: string): number | null {
+  const sub = db.subscriptions.get(userId);
+  const effective =
+    sub && (sub.status === 'ACTIVE' || sub.status === 'GRACE') ? sub.planCode : 'FREE';
+  return getPlan(effective)!.maxActiveJobs ?? null;
+}
+
+/** Sequential per-year GST invoice number: SIC-YYYY-NNNNN (gapless). */
+export function nextInvoiceNumber(): string {
+  const seq = db.billingCounters.nextInvoiceSeq++;
+  return `SIC-${new Date().getFullYear()}-${String(seq).padStart(5, '0')}`;
+}
+
+export function nextOrderRef(): string {
+  const seq = db.billingCounters.nextOrderSeq++;
+  return `ORD-${new Date().getFullYear()}-${String(seq).padStart(5, '0')}`;
+}
+
+/** Strip mock-internal fields down to the contract `Order` shape. */
+export function toOrder(o: MockOrder): Order {
+  return {
+    id: o.id,
+    humanOrderRef: o.humanOrderRef,
+    planCode: o.planCode,
+    status: o.status,
+    gateway: o.gateway,
+    amountSubunits: o.amountSubunits,
+    gstSubunits: o.gstSubunits,
+    totalSubunits: o.totalSubunits,
+    currency: o.currency,
+    createdAt: o.createdAt,
+    subscriptionActivatedAt: o.subscriptionActivatedAt,
+    invoiceId: o.invoiceId,
+  };
+}
+
+/**
+ * THE simulated webhook effect. Called by the order-status GET handler once
+ * `pollCount` crosses ORDER_FLIP_POLL_THRESHOLD — NEVER at checkout time and
+ * never on a client callback (mirrors webhook-only activation; instant
+ * activation is impossible on mocks, by design).
+ *
+ * On PAID (same "transaction", like the real worker):
+ *  - the subscription becomes ACTIVE (same-plan renewal EXTENDS from the
+ *    current expiry — paid time is never lost; otherwise a fresh term),
+ *  - an invoice appears with the next sequential number (pdfUrl null —
+ *    generation is async in the real system),
+ *  - `subscriptionActivatedAt` + `invoiceId` are stamped on the order,
+ *  - and the publish quota changes via getActivePlanMaxJobs.
+ */
+export function settleMockOrder(order: MockOrder): void {
+  if (order.status !== 'CREATED') return;
+
+  if (order.failOnFlip) {
+    order.status = 'FAILED';
+    return;
+  }
+
+  order.status = 'PAID';
+  const now = new Date();
+  const plan = getPlan(order.planCode)!;
+  const periodMs = (plan.period === 'YEARLY' ? 365 : 30) * 24 * 60 * 60 * 1000;
+
+  const existing = db.subscriptions.get(order.userId);
+  const extendsSamePlan =
+    existing &&
+    existing.planCode === order.planCode &&
+    new Date(existing.expiresAt).getTime() > now.getTime();
+  const base = extendsSamePlan ? new Date(existing.expiresAt).getTime() : now.getTime();
+
+  db.subscriptions.set(order.userId, {
+    planCode: order.planCode,
+    status: 'ACTIVE',
+    startsAt: extendsSamePlan ? existing.startsAt : now.toISOString(),
+    expiresAt: new Date(base + periodMs).toISOString(),
+    graceEndsAt: null,
+  });
+
+  const invoice: MockInvoice = {
+    userId: order.userId,
+    id: `mock-invoice-${order.id}`,
+    number: nextInvoiceNumber(),
+    issuedAt: now.toISOString(),
+    totalSubunits: order.totalSubunits,
+    currency: order.currency,
+    planName: plan.name,
+    pdfUrl: null, // async generation — a later list read may still show null
+  };
+  db.invoices.push(invoice);
+
+  order.subscriptionActivatedAt = now.toISOString();
+  order.invoiceId = invoice.id;
+}
