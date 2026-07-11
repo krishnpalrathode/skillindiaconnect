@@ -38,8 +38,10 @@
     "ioredis": "^5.3.2",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "razorpay": "^2.9.6",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "stripe": "^22.3.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

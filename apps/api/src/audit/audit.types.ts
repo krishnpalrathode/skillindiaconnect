@@ -50,6 +50,8 @@ export const AUDIT_ACTIONS = {
   APPLICATION_STATUS_CHANGED: 'application.status.changed',
   APPLICATION_ADMIN_OVERRIDE: 'application.admin_override',
   // Payments (S5)
+  CHECKOUT_CREATED: 'checkout.created',
+  CHECKOUT_FAILED: 'checkout.failed',
   PAYMENT_CAPTURED: 'payment.captured',
   WEBHOOK_RECEIVED: 'webhook.received',
   // Notifications (S2-B3)

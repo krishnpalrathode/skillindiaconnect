@@ -16,6 +16,7 @@ import { EmployerModule } from './employer/employer.module';
 import { JobsModule } from './jobs/jobs.module';
 import { JobsSearchModule } from './jobs-search/jobs-search.module';
 import { ApplicationsModule } from './applications/applications.module';
+import { PaymentsModule } from './payments/payments.module';
 import { JwtAuthGuard } from './auth/guards/auth.guard';
 import { PermissionsGuard } from './auth/rbac/permissions.guard';
 
@@ -39,6 +40,7 @@ import { PermissionsGuard } from './auth/rbac/permissions.guard';
     JobsModule,
     JobsSearchModule,
     ApplicationsModule,
+    PaymentsModule,
     EventEmitterModule.forRoot(),
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
   ],

@@ -58,6 +58,10 @@ async function main(): Promise<void> {
     ['candidates.min_completion_pct', 70, false],
     ['candidates.video_max_minutes', 5, false],
     ['candidates.video_max_mb', 500, false],
+    // S5-B1: Payments — GST for the LOCAL checkout split; Stripe routing flag
+    // for FOREIGN companies (off = Razorpay International, the locked primary).
+    ['payments.gst_rate_pct', 18, false],
+    ['payments.stripe_enabled', false, false],
   ];
   for (const [key, value, isCoreRule] of settings) {
     await prisma.setting.upsert({

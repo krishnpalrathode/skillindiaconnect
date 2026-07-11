@@ -27,6 +27,19 @@ export const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().min(1),
   R2_BUCKET: z.string().min(1),
   R2_ENDPOINT: z.string().url(),
+
+  // Payments (S5-B1). Razorpay is the LOCKED PRIMARY gateway — required.
+  // Stripe is the hedge for FOREIGN companies: OPTIONAL at boot, required at
+  // routing (RoutingService selects Stripe only when the key exists AND the
+  // payments.stripe_enabled setting is on).
+  RAZORPAY_KEY_ID: z.string().min(1),
+  RAZORPAY_KEY_SECRET: z.string().min(1),
+  // Empty string ≡ absent — `.env` files commonly leave optional keys blank
+  // (`STRIPE_SECRET_KEY=`), and a blank key must not construct a Stripe client.
+  STRIPE_SECRET_KEY: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().min(1).optional(),
+  ),
 });
 
 export type Env = z.infer<typeof envSchema>;
