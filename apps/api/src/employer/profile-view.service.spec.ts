@@ -271,9 +271,9 @@ describe('ProfileViewService + ProfileViewsReadService — Testcontainers PG', (
     const summary = await pvrService.getSummary(candidate.id);
     expect(summary.total).toBe(1);
     expect(summary.last30Days).toBe(1);
-    expect(summary.recent).toHaveLength(1);
-    expect(summary.recent[0]!.companyName).toBe(company.name);
-    expect(typeof summary.recent[0]!.viewedAt).toBe('string');
+    expect(summary.recentViews).toHaveLength(1);
+    expect(summary.recentViews[0]!.companyName).toBe(company.name);
+    expect(typeof summary.recentViews[0]!.viewedAt).toBe('string');
   });
 
   it('profile-views summary is scoped: candidate A cannot see candidate B views', async () => {
@@ -285,6 +285,6 @@ describe('ProfileViewService + ProfileViewsReadService — Testcontainers PG', (
 
     const summaryB = await pvrService.getSummary(candidateB.id);
     expect(summaryB.total).toBe(0);
-    expect(summaryB.recent).toHaveLength(0);
+    expect(summaryB.recentViews).toHaveLength(0);
   });
 });

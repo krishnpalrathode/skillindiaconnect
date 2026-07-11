@@ -7,7 +7,8 @@ const RECENT_VIEW_LIMIT = 10;
 export interface ProfileViewsSummary {
   total: number;
   last30Days: number;
-  recent: { companyName: string; viewedAt: string }[];
+  // Frozen S3 contract key is `recentViews` (the web RecentViewersCard reads it).
+  recentViews: { companyName: string; viewedAt: string }[];
 }
 
 /**
@@ -42,7 +43,7 @@ export class ProfileViewsReadService {
     return {
       total,
       last30Days,
-      recent: recent.map((v) => ({
+      recentViews: recent.map((v) => ({
         companyName: v.company.name,
         viewedAt: v.viewedAt.toISOString(),
       })),

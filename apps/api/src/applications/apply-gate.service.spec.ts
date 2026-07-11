@@ -248,11 +248,11 @@ describe('ApplyGateService (integration)', () => {
     );
   });
 
-  gatedIt('gate 3 — low completion → PROFILE_INCOMPLETE with {current, required}', async () => {
+  gatedIt('gate 3 — low completion → PROFILE_INCOMPLETE with {completionPct, threshold}', async () => {
     await expectGate(
       gate.assertCanApply(candidate({ completionPct: 50 }), job(), SETTINGS),
       'PROFILE_INCOMPLETE',
-      { current: 50, required: 70 },
+      { completionPct: 50, threshold: 70 },
     );
   });
 
@@ -339,7 +339,7 @@ describe('ApplyGateService (integration)', () => {
         minCompletionPct: 80,
       }),
       'PROFILE_INCOMPLETE',
-      { current: 75, required: 80 },
+      { completionPct: 75, threshold: 80 },
     );
   });
 

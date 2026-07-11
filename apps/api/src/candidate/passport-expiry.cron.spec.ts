@@ -4,7 +4,8 @@
  * Rule (cron-queue-dedupe.md): the @Cron handler does NOTHING but enqueue a
  * BullMQ job with a deterministic jobId. These tests verify:
  *   1. Exactly one queue.add() call per invocation.
- *   2. jobId is deterministic and date-derived (`passport-expiry:YYYY-MM-DD`).
+ *   2. jobId is deterministic and date-derived (`passport-expiry-YYYY-MM-DD`).
+ *      NB: no ':' — BullMQ v5 rejects colons in custom job IDs.
  *   3. Job name is JOB_NAMES.PASSPORT_EXPIRY_SCAN.
  *   4. No DB access happens inline (queue mock never touches Prisma).
  */
@@ -32,11 +33,13 @@ describe('PassportExpiryCron', () => {
     expect(name).toBe(JOB_NAMES.PASSPORT_EXPIRY_SCAN);
   });
 
-  it('jobId is deterministic and follows passport-expiry:YYYY-MM-DD pattern', async () => {
+  it('jobId is deterministic, follows passport-expiry-YYYY-MM-DD, and has no colon', async () => {
     await cron.schedulePassportExpiryReminders();
     const [, , opts] = mockQueue.add.mock.calls[0]!;
     const today = new Date().toISOString().slice(0, 10);
-    expect(opts.jobId).toBe(`passport-expiry:${today}`);
+    expect(opts.jobId).toBe(`passport-expiry-${today}`);
+    // BullMQ v5 throws "Custom Id cannot contain :" — guard the regression.
+    expect(opts.jobId).not.toContain(':');
   });
 
   it('same-day second call produces identical jobId (BullMQ dedupe)', async () => {

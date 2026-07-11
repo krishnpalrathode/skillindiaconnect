@@ -23,6 +23,17 @@ import {
   CandidateSelfDto,
 } from './mappers/candidate-self.mapper';
 
+/**
+ * Human labels for the mandatory document types, used to build the contract's
+ * human-readable `missingForApply` list (see getCompletion). Kept local because
+ * this is the only place the API renders doc types as user-facing prose.
+ */
+const DOC_TYPE_LABELS: Record<(typeof MVP_MANDATORY_DOC_TYPES)[number], string> = {
+  PASSPORT: 'Passport',
+  EXPERIENCE_CERT: 'Experience certificate',
+  EDUCATIONAL_CERT: 'Educational certificate',
+};
+
 @Injectable()
 export class CandidateService {
   constructor(
@@ -146,15 +157,20 @@ export class CandidateService {
       mandatoryDocCount,
     });
 
+    // Per the OpenAPI contract, `missingForApply` is a HUMAN-READABLE list (the
+    // web EligibilityPreview renders each entry verbatim, and derives the fix-link
+    // target from the text via /passport|document/i). So these must be prose, not
+    // machine tokens — and the doc/passport entries must contain "document" or
+    // "passport" so the checklist deep-links to /profile#documents.
     const missingForApply: string[] = [];
 
     if (result.pct < minPct) {
-      missingForApply.push('min_completion');
+      missingForApply.push(`Complete at least ${minPct}% of your profile`);
     }
 
     for (const docType of MVP_MANDATORY_DOC_TYPES) {
       if (!mandatoryDocTypesPresent.includes(docType)) {
-        missingForApply.push(`document:${docType}`);
+        missingForApply.push(`${DOC_TYPE_LABELS[docType]} document required`);
       }
     }
 
@@ -162,7 +178,7 @@ export class CandidateService {
       (d: { type: DocumentType; expiryDate: Date | null }) => d.type === 'PASSPORT',
     );
     if (!passport || (passport.expiryDate && passport.expiryDate < new Date())) {
-      missingForApply.push('passport_expiry');
+      missingForApply.push('Valid (unexpired) passport required');
     }
 
     const canApply = missingForApply.length === 0;

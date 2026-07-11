@@ -61,9 +61,11 @@ export class ApplyGateService {
 
     // ── Gate 3: profile completion (STORED pct — never recomputed here) ──────
     if (candidate.completionPct < settings.minCompletionPct) {
+      // Contract meta keys are `completionPct` / `threshold` (openapi.yaml apply
+      // gate ladder) — the web ApplyErrorState reads exactly these. Do NOT rename.
       throw new UnprocessableEntityException({
         code: 'PROFILE_INCOMPLETE',
-        meta: { current: candidate.completionPct, required: settings.minCompletionPct },
+        meta: { completionPct: candidate.completionPct, threshold: settings.minCompletionPct },
       });
     }
 

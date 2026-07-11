@@ -50,6 +50,12 @@ export class NotificationProcessor extends WorkerHost {
     const matrixEntry = NOTIFICATION_MATRIX[type];
     const templateKey = matrixEntry.whatsappTemplate ?? type;
     const kind = matrixEntry.whatsappKind ?? WaMessageKind.STATUS_UPDATE;
+    // Application-linked sends (e.g. APPLICATION_SELECTED) carry the id in the
+    // notify payload — thread it onto the delivery row for traceability.
+    const applicationId =
+      typeof payload.data?.['applicationId'] === 'string'
+        ? (payload.data['applicationId'] as string)
+        : null;
 
     // ── Downgrade: user not WhatsApp-capable or has opted out ─────────────────
     // Distinct from the failure-fallback path (tried to send but failed).
@@ -66,6 +72,7 @@ export class NotificationProcessor extends WorkerHost {
             status: DeliveryStatus.FAILED,
             errorCode: 'NOT_WHATSAPP_CAPABLE',
             statusUpdatedAt: new Date(),
+            applicationId,
           },
         });
       }
@@ -82,15 +89,33 @@ export class NotificationProcessor extends WorkerHost {
     }
 
     // ── Attempt WhatsApp send ──────────────────────────────────────────────────
-    const msgRow = await this.prisma.whatsappMessage.create({
-      data: {
-        userId,
-        phone: profile.phone!,
-        kind,
-        templateName: templateKey,
-        status: DeliveryStatus.QUEUED,
-      },
-    });
+    // One row per LOGICAL send: the first attempt creates it and pins its id on
+    // the job (BullMQ persists updateData across retries), so retry attempts
+    // UPDATE that same row instead of minting a FAILED row per attempt.
+    let msgRow =
+      job.data.waMessageRowId != null
+        ? await this.prisma.whatsappMessage.findUnique({
+            where: { id: job.data.waMessageRowId },
+          })
+        : null;
+    if (msgRow) {
+      msgRow = await this.prisma.whatsappMessage.update({
+        where: { id: msgRow.id },
+        data: { status: DeliveryStatus.QUEUED, statusUpdatedAt: new Date(), errorCode: null },
+      });
+    } else {
+      msgRow = await this.prisma.whatsappMessage.create({
+        data: {
+          userId,
+          phone: profile.phone!,
+          kind,
+          templateName: templateKey,
+          status: DeliveryStatus.QUEUED,
+          applicationId,
+        },
+      });
+      await job.updateData({ ...job.data, waMessageRowId: msgRow.id });
+    }
 
     try {
       const result = await this.whatsappChannel.sendTemplate(profile.phone!, templateKey, {});

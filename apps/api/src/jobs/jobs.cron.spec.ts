@@ -33,16 +33,18 @@ describe('JobsCron — cron enqueues only, no inline work', () => {
     expect(jobName).toBe(JOB_NAMES.AUTO_ARCHIVE_JOBS);
   });
 
-  it('deterministic jobId matches pattern auto-archive:YYYY-MM-DD', async () => {
+  it('deterministic jobId matches pattern auto-archive-YYYY-MM-DD (no colon)', async () => {
     const before = new Date().toISOString().slice(0, 10);
     await cron.scheduleAutoArchive();
     const after = new Date().toISOString().slice(0, 10);
 
     const [, , opts] = queueMock.add.mock.calls[0]!;
     const jobId = (opts as { jobId?: string }).jobId ?? '';
-    expect(jobId).toMatch(/^auto-archive:\d{4}-\d{2}-\d{2}$/);
+    expect(jobId).toMatch(/^auto-archive-\d{4}-\d{2}-\d{2}$/);
+    // BullMQ v5 throws "Custom Id cannot contain :" — guard the regression.
+    expect(jobId).not.toContain(':');
     // The date in the jobId must be today (boundary-safe: before ≤ date ≤ after)
-    const dateInId = jobId.replace('auto-archive:', '');
+    const dateInId = jobId.replace('auto-archive-', '');
     expect(dateInId >= before && dateInId <= after).toBe(true);
   });
 

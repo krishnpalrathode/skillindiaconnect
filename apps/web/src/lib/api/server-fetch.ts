@@ -40,11 +40,12 @@ export async function serverFetch<T>(path: string, init: RequestInit = {}): Prom
   if (!res.ok) {
     const body = await res.json().catch(() => ({
       code: 'UNKNOWN_ERROR',
-      status: res.status,
       title: 'Error',
       detail: 'An unexpected error occurred.',
     }));
-    throw new ServerApiError(body as ApiError);
+    // Stamp the transport status LAST — `error.status` must always be the real
+    // HTTP status (SSR pages gate notFound() on it), never undefined.
+    throw new ServerApiError({ ...(body as ApiError), status: res.status });
   }
 
   return res.json() as Promise<T>;

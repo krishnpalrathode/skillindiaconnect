@@ -24,7 +24,9 @@ export class PassportExpiryCron {
   @Cron('0 1 * * *')
   async schedulePassportExpiryReminders(): Promise<void> {
     const day = new Date().toISOString().slice(0, 10); // e.g. 2026-07-04
-    const jobId = `passport-expiry:${day}`;
+    // BullMQ (v5) forbids ':' in custom job IDs (it is the internal Redis key
+    // separator) — a colon throws and the scan is NEVER enqueued. Use '-'.
+    const jobId = `passport-expiry-${day}`;
     await this.queue.add(JOB_NAMES.PASSPORT_EXPIRY_SCAN, {}, { jobId });
     this.logger.log(`Enqueued passport-expiry scan (jobId: ${jobId})`);
   }

@@ -35,6 +35,10 @@ export class AdminStatusController {
       overrideReason: dto.overrideReason,
     });
 
-    return { data: { ...toApplicationResponse(updated), overrideReason: dto.overrideReason } };
+    // The transition above throws OVERRIDE_REASON_REQUIRED for any absent/blank
+    // reason, so reaching here guarantees a non-empty reason to echo back.
+    return {
+      data: { ...toApplicationResponse(updated), overrideReason: dto.overrideReason! },
+    };
   }
 }

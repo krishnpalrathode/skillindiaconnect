@@ -13,6 +13,12 @@ export interface NotificationJobData {
   type: NotificationType;
   channel: 'whatsapp' | 'email';
   payload: NotifyPayload;
+  /**
+   * Set by the WhatsApp processor (via job.updateData) after it creates the
+   * delivery row on the FIRST attempt, so BullMQ retries UPDATE that same row
+   * instead of minting a new one per attempt — one row per logical send.
+   */
+  waMessageRowId?: string;
 }
 
 /** BullMQ retry configuration for notification channel jobs. */

@@ -430,7 +430,7 @@ describe('CandidateService â€” integration (real DB)', () => {
 
   // â”€â”€ getCompletion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  it('getCompletion: empty profile â†’ canApply=false, missingForApply includes min_completion', async () => {
+  it('getCompletion: empty profile â†’ canApply=false, missingForApply flags the completion threshold', async () => {
     if (candDockerUnavailable) return;
     const { id: userId } = await candUser();
 
@@ -442,30 +442,32 @@ describe('CandidateService â€” integration (real DB)', () => {
     const result = await candService.getCompletion(userId);
 
     expect(result.canApply).toBe(false);
-    expect(result.missingForApply).toContain('min_completion');
+    // Contract: human-readable prose, not a machine token (rendered verbatim by web).
+    expect(result.missingForApply).toContain('Complete at least 60% of your profile');
   });
 
-  it('getCompletion: empty profile â†’ missingForApply lists all 3 mandatory doc tokens', async () => {
+  it('getCompletion: empty profile â†’ missingForApply lists all 3 mandatory document blockers', async () => {
     if (candDockerUnavailable) return;
     const { id: userId } = await candUser();
 
     const result = await candService.getCompletion(userId);
 
-    expect(result.missingForApply).toContain('document:PASSPORT');
-    expect(result.missingForApply).toContain('document:EXPERIENCE_CERT');
-    expect(result.missingForApply).toContain('document:EDUCATIONAL_CERT');
+    // Human-readable + must contain "document" so the web fix-link deep-links to #documents.
+    expect(result.missingForApply).toContain('Passport document required');
+    expect(result.missingForApply).toContain('Experience certificate document required');
+    expect(result.missingForApply).toContain('Educational certificate document required');
   });
 
-  it('getCompletion: no passport â†’ passport_expiry in missingForApply', async () => {
+  it('getCompletion: no passport â†’ valid-passport blocker in missingForApply', async () => {
     if (candDockerUnavailable) return;
     const { id: userId } = await candUser();
 
     const result = await candService.getCompletion(userId);
 
-    expect(result.missingForApply).toContain('passport_expiry');
+    expect(result.missingForApply).toContain('Valid (unexpired) passport required');
   });
 
-  it('getCompletion: expired passport â†’ passport_expiry in missingForApply', async () => {
+  it('getCompletion: expired passport â†’ valid-passport blocker in missingForApply', async () => {
     if (candDockerUnavailable) return;
     const { id: userId } = await candUser();
     await candService.getProfileByUserId(userId);
@@ -475,7 +477,7 @@ describe('CandidateService â€” integration (real DB)', () => {
 
     const result = await candService.getCompletion(userId);
 
-    expect(result.missingForApply).toContain('passport_expiry');
+    expect(result.missingForApply).toContain('Valid (unexpired) passport required');
   });
 
   it('getCompletion: valid passport (future expiry) with all 3 docs + sufficient pct â†’ canApply=true', async () => {

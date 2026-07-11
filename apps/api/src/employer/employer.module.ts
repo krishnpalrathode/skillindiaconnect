@@ -19,7 +19,10 @@ import { ProfileViewService } from './profile-view.service';
     // EmployerDashboardService needs JobsService for real dashboard aggregates (S3-B1).
     forwardRef(() => JobsModule),
     // CandidateModule exports CandidateReadService — the boundary for employer→candidate reads.
-    CandidateModule,
+    // forwardRef: S4-B3 pulled CandidateModule into the Candidate↔Applications↔Jobs↔Employer
+    // cycle (CandidateModule now imports ApplicationsModule), so at app boot this binding is
+    // still undefined when EmployerModule's decorator evaluates — defer it like the others.
+    forwardRef(() => CandidateModule),
     // ApplicationsModule exports ApplicationsAggregateService (S4-B3 dashboard KPIs/recent).
     forwardRef(() => ApplicationsModule),
   ],

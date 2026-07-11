@@ -90,10 +90,12 @@ export async function apiFetch<T>(
     const body = await res.json().catch(() => ({
       code: 'UNKNOWN_ERROR',
       title: 'Error',
-      status: res.status,
       detail: 'An unexpected error occurred.',
     }));
-    throw new ApiRequestError(body as ApiError);
+    // Stamp the transport status LAST so `error.status` is always the real HTTP
+    // status — consumers gate UX on it (404 → notFound, 403 → forbidden), and a
+    // body that omits or mis-states `status` must never leave it undefined.
+    throw new ApiRequestError({ ...(body as ApiError), status: res.status });
   }
 
   if (res.status === 204) return undefined as T;
@@ -126,10 +128,10 @@ export async function apiFetchRaw<T>(
     const body = await res.json().catch(() => ({
       code: 'UNKNOWN_ERROR',
       title: 'Error',
-      status: res.status,
       detail: 'An unexpected error occurred.',
     }));
-    throw new ApiRequestError(body as ApiError);
+    // Same status-stamping rule as apiFetch — transport status is ground truth.
+    throw new ApiRequestError({ ...(body as ApiError), status: res.status });
   }
 
   return res.json() as Promise<T>;
