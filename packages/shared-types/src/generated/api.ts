@@ -3827,6 +3827,8 @@ export interface operations {
                      */
                     languagePref?: "en" | "hi" | "ar";
                     description?: string;
+                    /** @description R2 key returned by POST /employers/me/company/documents/presign (which works BEFORE registration) after the direct PUT upload. Ownership- and existence-validated; attached to the new company. */
+                    registrationCertKey?: string;
                 };
             };
         };

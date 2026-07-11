@@ -4,7 +4,7 @@
     "back": "Back",
     "save": "Save",
     "cancel": "Cancel",
-    "loading": "Loadingâ€¦",
+    "loading": "Loading…",
     "required": "Required",
     "optional": "Optional",
     "submit": "Submit",
@@ -53,7 +53,7 @@
   },
   "auth": {
     "loginTitle": "Log in to SkillIndiaConnect",
-    "loginSubtitle": "Welcome back â€” continue your journey",
+    "loginSubtitle": "Welcome back — continue your journey",
     "signupTitle": "Create your account",
     "signupSubtitle": "Join thousands of workers finding opportunities",
     "googleLogin": "Continue with Google",
@@ -109,9 +109,7 @@
     "backToLogin": "Back to log in",
     "rateLimited": "Too many requests. Please try again later.",
     "callbackError": "Sign-in failed. Please try again.",
-    "signingIn": "Signing you inâ€¦",
-    "onboardingComingSoon": "Candidate onboarding â€” coming soon",
-    "employerOnboardingComingSoon": "Employer onboarding â€” coming soon",
+    "signingIn": "Signing you in…",
     "phone": "Phone number",
     "phonePlaceholderLegacy": "Enter your phone number",
     "otp": "One-time password",
@@ -138,7 +136,7 @@
     "skills": "Skills",
     "experience": "Experience",
     "education": "Education",
-    "loading": "Loading your profileâ€¦",
+    "loading": "Loading your profile…",
     "loadingError": "Failed to load your profile. Please refresh.",
     "retry": "Retry",
     "hero": {
@@ -148,7 +146,7 @@
       "downloadResume": "Download resume",
       "shareProfile": "Share profile",
       "comingSoon": "Coming soon",
-      "availableForWork": "Active â€” Available for Work",
+      "availableForWork": "Active — Available for Work",
       "notAvailable": "Not currently available",
       "memberSince": "Member since {date}"
     },
@@ -208,9 +206,9 @@
       "notificationsHeading": "Notifications",
       "salaryHeading": "Salary Expectation",
       "showPhone": "Show phone to employers",
-      "showPhoneHint": "Controls what employers see â€” you always see your phone here",
+      "showPhoneHint": "Controls what employers see — you always see your phone here",
       "showReligion": "Show religion to employers",
-      "showReligionHint": "Controls what employers see â€” you always see your religion here",
+      "showReligionHint": "Controls what employers see — you always see your religion here",
       "waNotifications": "WhatsApp notifications",
       "emailNotifications": "Email notifications",
       "profileVisible": "Profile visible to employers",
@@ -221,7 +219,7 @@
       "salaryMinPlaceholder": "e.g. 25000",
       "salaryMaxPlaceholder": "e.g. 50000",
       "saveSalary": "Save salary",
-      "salaryNote": "Unscored â€” for matching guidance only"
+      "salaryNote": "Unscored — for matching guidance only"
     }
   },
   "document": {
@@ -246,7 +244,7 @@
   },
   "onboarding": {
     "pageTitle": "Complete your profile",
-    "loading": "Loading your profileâ€¦",
+    "loading": "Loading your profile…",
     "stepOf": "Step {current} of {total}",
     "steps": {
       "personalInfo": "Personal Info",
@@ -342,7 +340,7 @@
     "upload": {
       "selectFile": "Select file",
       "changeFile": "Change file",
-      "uploading": "Uploadingâ€¦ {pct}%",
+      "uploading": "Uploading… {pct}%",
       "retryUpload": "Retry upload",
       "uploadComplete": "Uploaded",
       "fileTooLarge": "File is too large",
@@ -383,7 +381,7 @@
     },
     "banner": {
       "pendingTitle": "Your company is under review.",
-      "pendingBody": "Verification usually takes up to 24 hours. You can set up your profile now â€” job posting unlocks after approval.",
+      "pendingBody": "Verification usually takes up to 24 hours. You can set up your profile now — job posting unlocks after approval.",
       "rejectedTitle": "Company registration rejected.",
       "rejectedBodyFallback": "Please review your submission and resubmit.",
       "rejectedAction": "Resubmit registration â†’",
@@ -399,7 +397,7 @@
       "manage": "Manage Subscription"
     },
     "shell": {
-      "loadingCompany": "Loading companyâ€¦",
+      "loadingCompany": "Loading company…",
       "errorTitle": "Could not load company profile.",
       "errorBody": "Please check your connection and try again.",
       "retry": "Retry"
@@ -573,7 +571,8 @@
         "sectionTitle": "Hiring Preferences",
         "emptyHint": "Add hiring preferences to help us match the right candidates to your jobs.",
         "categoriesLabel": "Preferred job categories",
-        "categoriesHint": "Comma-separated, e.g. Electrician, Plumber",
+        "categoriesHint": "Select the trades you usually hire for",
+        "categoriesLoading": "Loading categories…",
         "nationalitiesLabel": "Preferred nationalities",
         "nationalitiesHint": "Comma-separated, e.g. Indian, Nepali",
         "minExperienceLabel": "Minimum experience (years)",
@@ -706,13 +705,13 @@
     }
   },
   "jobs": {
-    "metaTitle": "Find Jobs â€” SkillIndiaConnect",
+    "metaTitle": "Find Jobs — SkillIndiaConnect",
     "metaDescription": "Browse thousands of blue-collar jobs in India and the Gulf. Filter by location, salary, and category.",
     "pageTitle": "Find Jobs",
     "pageSubtitle": "Explore opportunities across India and the Gulf",
     "filtersLabel": "Job filters",
     "searchLabel": "Search jobs",
-    "searchPlaceholder": "Job title or keywordâ€¦",
+    "searchPlaceholder": "Job title or keyword…",
     "searchButton": "Search",
     "marketTabsLabel": "Job market",
     "tabs": {
@@ -796,7 +795,7 @@
     }
   },
   "dashboard": {
-    "metaTitle": "My Dashboard â€” SkillIndiaConnect",
+    "metaTitle": "My Dashboard — SkillIndiaConnect",
     "pageTitle": "Dashboard",
     "greeting": "Hello, {name}",
     "kpi": {
@@ -837,7 +836,7 @@
     }
   },
   "notifications": {
-    "metaTitle": "Notifications â€” SkillIndiaConnect",
+    "metaTitle": "Notifications — SkillIndiaConnect",
     "pageTitle": "Notifications",
     "empty": {
       "all": "You have no notifications yet.",
@@ -847,7 +846,7 @@
     "markAllRead": "Mark all as read",
     "markRead": "Mark as read",
     "loadMore": "Load more",
-    "loading": "Loading notificationsâ€¦",
+    "loading": "Loading notifications…",
     "errorLoad": "Failed to load notifications.",
     "retry": "Retry",
     "filters": {

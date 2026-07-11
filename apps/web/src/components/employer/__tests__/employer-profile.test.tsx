@@ -123,14 +123,16 @@ describe('HiringPreferencesSection', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /edit/i }));
 
-    const categoriesInput = screen.getByRole('textbox', { name: /preferred job categories/i });
-    await userEvent.type(categoriesInput, 'Electrician, Plumber');
+    // Category picker is fed by GET /job-categories — real IDs, never free text
+    // (the API validates preferredCategories as job-category UUIDs).
+    await userEvent.click(await screen.findByRole('checkbox', { name: /electrician/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /plumber/i }));
 
     fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
     await waitFor(() => {
       expect(onUpdated).toHaveBeenCalledWith(
-        expect.objectContaining({ preferredCategories: ['Electrician', 'Plumber'] }),
+        expect.objectContaining({ preferredCategories: ['cat-electrician', 'cat-plumber'] }),
       );
     });
   });
@@ -145,10 +147,10 @@ describe('HiringPreferencesSection', () => {
     expect(screen.getByText(/add hiring preferences/i)).toBeInTheDocument();
   });
 
-  it('shows chips in view mode when prefs exist', () => {
+  it('shows chips in view mode when prefs exist (ids resolved to names)', async () => {
     const profile = makeProfile({
       hiringPreferences: {
-        preferredCategories: ['Mason', 'Carpenter'],
+        preferredCategories: ['cat-mason', 'cat-carpenter'],
         preferredNationalities: ['Indian'],
         minExperience: 2,
         notes: '',
@@ -161,7 +163,8 @@ describe('HiringPreferencesSection', () => {
       </I18n>,
     );
 
-    expect(screen.getByText('Mason')).toBeInTheDocument();
+    // Names appear once GET /job-categories resolves the stored ids.
+    expect(await screen.findByText('Mason')).toBeInTheDocument();
     expect(screen.getByText('Carpenter')).toBeInTheDocument();
   });
 });

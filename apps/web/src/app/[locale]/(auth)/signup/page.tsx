@@ -31,8 +31,8 @@ export default function SignupPage() {
 
   function handleSuccess(role: 'CANDIDATE' | 'EMPLOYER') {
     postSignupRef.current = true;
-    // Employer goes through a separate onboarding flow
-    router.replace(role === 'EMPLOYER' ? '/onboarding/employer' : '/onboarding');
+    // Employer goes through a separate onboarding flow (Screen 14, employer shell)
+    router.replace(role === 'EMPLOYER' ? '/employer/onboarding' : '/onboarding');
   }
 
   return (

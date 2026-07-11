@@ -98,8 +98,9 @@ export class EmployerProfileController {
     @Body() dto: ConfirmLogoDto,
   ) {
     this.assertEmployerRole(user.role);
-    await this.profileService.confirmLogo(user.userId, dto);
-    return { data: { ok: true } };
+    // Contract: the response is the UPDATED EmployerProfile — the web replaces
+    // its entire profile state with it (never an ack object).
+    return { data: await this.profileService.confirmLogo(user.userId, dto) };
   }
 
   private assertEmployerRole(role: UserRole): void {
