@@ -1,3 +1,4 @@
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Razorpay from 'razorpay';
@@ -28,11 +29,13 @@ export class RazorpayAdapter implements PaymentGatewayPort {
   // for Razorpay the env is required, so a null client only occurs in tests
   // or a broken deploy — routing checks isConfigured before selecting us).
   private readonly client: Razorpay | null;
+  private readonly webhookSecret: string;
   /** Publishable key id — safe to expose; Checkout.js is opened with it. */
   readonly keyId: string;
 
   constructor(config: ConfigService) {
     this.keyId = config.get<string>('RAZORPAY_KEY_ID') ?? '';
+    this.webhookSecret = config.get<string>('RAZORPAY_WEBHOOK_SECRET') ?? '';
     this.client = this.keyId
       ? new Razorpay({
           key_id: this.keyId,
@@ -67,13 +70,42 @@ export class RazorpayAdapter implements PaymentGatewayPort {
     return { gatewayOrderId: order.id, keyId: this.keyId };
   }
 
-  // ── S5-B2 (webhooks) — typed now, wired by B2 ────────────────────────────────
+  // ── S5-B2: webhooks ──────────────────────────────────────────────────────────
 
-  verifyWebhook(_rawBody: Buffer, _signature: string): boolean {
-    throw new Error('RazorpayAdapter.verifyWebhook is implemented in S5-B2.');
+  /**
+   * HMAC-SHA256 of the RAW bytes against RAZORPAY_WEBHOOK_SECRET, compared
+   * CONSTANT-TIME against the `x-razorpay-signature` header value. Runs
+   * BEFORE any parsing — a bad signature means the body is never JSON.parsed.
+   */
+  verifyWebhook(rawBody: Buffer, signature: string): boolean {
+    if (!this.webhookSecret) {
+      throw new Error('Razorpay webhook secret is not configured (RAZORPAY_WEBHOOK_SECRET).');
+    }
+    if (!signature) return false;
+    const expected = createHmac('sha256', this.webhookSecret).update(rawBody).digest('hex');
+    const a = Buffer.from(expected, 'utf8');
+    const b = Buffer.from(signature, 'utf8');
+    // timingSafeEqual throws on length mismatch — check length first; the
+    // length of an HMAC hex digest is public knowledge, not a timing leak.
+    return a.length === b.length && timingSafeEqual(a, b);
   }
 
-  parseEvent(_rawBody: Buffer): VerifiedGatewayEvent {
-    throw new Error('RazorpayAdapter.parseEvent is implemented in S5-B2.');
+  /**
+   * Parse a VERIFIED body. Razorpay's canonical unique event id travels in
+   * the `x-razorpay-event-id` HEADER; when absent (older webhook configs) we
+   * fall back to a hash of the raw bytes — deterministic, so replays of the
+   * identical delivery still dedupe on (provider, eventId).
+   */
+  parseEvent(
+    rawBody: Buffer,
+    headers?: Record<string, string | string[] | undefined>,
+  ): VerifiedGatewayEvent {
+    const parsed = JSON.parse(rawBody.toString('utf8')) as { event?: string };
+    const headerId = headers?.['x-razorpay-event-id'];
+    const eventId =
+      typeof headerId === 'string' && headerId.length > 0
+        ? headerId
+        : `rzp-${createHash('sha256').update(rawBody).digest('hex').slice(0, 40)}`;
+    return { eventId, type: parsed.event ?? 'unknown', payload: parsed };
   }
 }

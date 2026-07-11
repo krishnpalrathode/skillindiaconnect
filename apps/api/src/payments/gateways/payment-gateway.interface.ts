@@ -66,13 +66,19 @@ export interface PaymentGatewayPort {
 
   /**
    * S5-B2: verify the webhook signature against the RAW body BEFORE any
-   * parsing (verify-before-parse). B1 adapters throw — wired by B2.
+   * parsing (verify-before-parse). Returns false on a bad/missing signature;
+   * throws ONLY on adapter misconfiguration (missing secret). `JSON.parse`
+   * must never run before this returns true.
    */
   verifyWebhook(rawBody: Buffer, signature: string): boolean;
 
   /**
-   * S5-B2: parse a VERIFIED raw body into a normalized event. B1 adapters
-   * throw — wired by B2.
+   * S5-B2: parse a VERIFIED raw body into a normalized event. `headers` is an
+   * optional hint source — Razorpay's canonical event id travels in the
+   * `x-razorpay-event-id` HEADER, not the body (Stripe's is `event.id`).
    */
-  parseEvent(rawBody: Buffer): VerifiedGatewayEvent;
+  parseEvent(
+    rawBody: Buffer,
+    headers?: Record<string, string | string[] | undefined>,
+  ): VerifiedGatewayEvent;
 }

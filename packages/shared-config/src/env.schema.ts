@@ -40,6 +40,18 @@ export const envSchema = z.object({
     (v) => (v === '' ? undefined : v),
     z.string().min(1).optional(),
   ),
+
+  // Webhooks (S5-B2). Razorpay's webhook secret is required (the locked
+  // primary). Stripe's is OPTIONAL and PAIRED with STRIPE_SECRET_KEY — the
+  // pairing is enforced at USE time (StripeAdapter.verifyWebhook throws a
+  // clear config error if events arrive without the secret), not here: a
+  // zod .refine would wrap the object in ZodEffects and break the
+  // check-env-drift script's `.shape` introspection.
+  RAZORPAY_WEBHOOK_SECRET: z.string().min(1),
+  STRIPE_WEBHOOK_SECRET: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().min(1).optional(),
+  ),
 });
 
 export type Env = z.infer<typeof envSchema>;

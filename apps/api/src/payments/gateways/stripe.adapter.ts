@@ -23,12 +23,14 @@ export class StripeAdapter implements PaymentGatewayPort {
   private readonly logger = new Logger(StripeAdapter.name);
   private readonly client: Stripe | null;
   private readonly webAppUrl: string;
+  private readonly webhookSecret: string;
 
   constructor(config: ConfigService) {
     const key = config.get<string>('STRIPE_SECRET_KEY');
     // Constructed ONLY when the optional key exists — never a dummy client.
     this.client = key ? new Stripe(key) : null;
     this.webAppUrl = config.get<string>('WEB_APP_URL') ?? '';
+    this.webhookSecret = config.get<string>('STRIPE_WEBHOOK_SECRET') ?? '';
   }
 
   get isConfigured(): boolean {
@@ -75,13 +77,41 @@ export class StripeAdapter implements PaymentGatewayPort {
     return { gatewayOrderId: session.id, redirectUrl: session.url };
   }
 
-  // ── S5-B2 (webhooks) — typed now, wired by B2 ────────────────────────────────
+  // ── S5-B2: webhooks ──────────────────────────────────────────────────────────
 
-  verifyWebhook(_rawBody: Buffer, _signature: string): boolean {
-    throw new Error('StripeAdapter.verifyWebhook is implemented in S5-B2.');
+  /**
+   * `stripe.webhooks.constructEvent(rawBody, sig, secret)` — Stripe's SDK does
+   * the timestamped HMAC verification (its own constant-time compare) against
+   * the RAW bytes. Returns false on a bad signature; throws ONLY on the
+   * misconfigured middle: events arriving while STRIPE_WEBHOOK_SECRET is
+   * unset (the secret is optional-at-boot, PAIRED with the key at use time).
+   */
+  verifyWebhook(rawBody: Buffer, signature: string): boolean {
+    if (!this.client) {
+      throw new Error('Stripe is not configured (STRIPE_SECRET_KEY missing).');
+    }
+    if (!this.webhookSecret) {
+      throw new Error(
+        'Stripe webhook secret is not configured (STRIPE_WEBHOOK_SECRET). ' +
+          'It must be set alongside STRIPE_SECRET_KEY before enabling Stripe webhooks.',
+      );
+    }
+    if (!signature) return false;
+    try {
+      this.client.webhooks.constructEvent(rawBody, signature, this.webhookSecret);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
-  parseEvent(_rawBody: Buffer): VerifiedGatewayEvent {
-    throw new Error('StripeAdapter.parseEvent is implemented in S5-B2.');
+  /** Parse a VERIFIED body. Stripe's unique event id is `event.id` (evt_…). */
+  parseEvent(rawBody: Buffer): VerifiedGatewayEvent {
+    const event = JSON.parse(rawBody.toString('utf8')) as { id?: string; type?: string };
+    return {
+      eventId: event.id ?? 'unknown',
+      type: event.type ?? 'unknown',
+      payload: event,
+    };
   }
 }

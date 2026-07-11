@@ -32,12 +32,57 @@ describe('RazorpayAdapter', () => {
     expect(new RazorpayAdapter(configWith({})).isConfigured).toBe(false);
   });
 
-  it('verifyWebhook/parseEvent are B2 stubs that throw loudly', () => {
-    const adapter = new RazorpayAdapter(
-      configWith({ RAZORPAY_KEY_ID: 'rzp_test_x', RAZORPAY_KEY_SECRET: 's' }),
-    );
-    expect(() => adapter.verifyWebhook(Buffer.from(''), 'sig')).toThrow(/S5-B2/);
-    expect(() => adapter.parseEvent(Buffer.from(''))).toThrow(/S5-B2/);
+  describe('verifyWebhook (S5-B2) — HMAC-SHA256 on raw bytes, constant-time', () => {
+    const SECRET = 'whsec_unit_test';
+    const adapter = () =>
+      new RazorpayAdapter(
+        configWith({
+          RAZORPAY_KEY_ID: 'rzp_test_x',
+          RAZORPAY_KEY_SECRET: 's',
+          RAZORPAY_WEBHOOK_SECRET: SECRET,
+        }),
+      );
+    const sign = (body: Buffer) =>
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      (require('node:crypto') as typeof import('node:crypto'))
+        .createHmac('sha256', SECRET)
+        .update(body)
+        .digest('hex');
+
+    it('accepts a correctly signed body', () => {
+      const body = Buffer.from(JSON.stringify({ event: 'payment.captured' }));
+      expect(adapter().verifyWebhook(body, sign(body))).toBe(true);
+    });
+
+    it('rejects a tampered body / wrong signature / missing signature', () => {
+      const body = Buffer.from(JSON.stringify({ event: 'payment.captured' }));
+      const sig = sign(body);
+      const tampered = Buffer.from(JSON.stringify({ event: 'payment.captured', x: 1 }));
+      expect(adapter().verifyWebhook(tampered, sig)).toBe(false);
+      expect(adapter().verifyWebhook(body, 'deadbeef')).toBe(false);
+      expect(adapter().verifyWebhook(body, '')).toBe(false);
+    });
+
+    it('throws the config error when the webhook secret is missing', () => {
+      const bare = new RazorpayAdapter(
+        configWith({ RAZORPAY_KEY_ID: 'rzp_test_x', RAZORPAY_KEY_SECRET: 's' }),
+      );
+      expect(() => bare.verifyWebhook(Buffer.from('x'), 'sig')).toThrow(
+        /RAZORPAY_WEBHOOK_SECRET/,
+      );
+    });
+
+    it('parseEvent prefers the x-razorpay-event-id header, falls back to a raw-bytes hash', () => {
+      const body = Buffer.from(JSON.stringify({ event: 'payment.captured' }));
+      const withHeader = adapter().parseEvent(body, { 'x-razorpay-event-id': 'evt_hdr_1' });
+      expect(withHeader).toMatchObject({ eventId: 'evt_hdr_1', type: 'payment.captured' });
+
+      const noHeader1 = adapter().parseEvent(body);
+      const noHeader2 = adapter().parseEvent(body);
+      expect(noHeader1.eventId).toMatch(/^rzp-[0-9a-f]{40}$/);
+      // Deterministic — an identical replayed delivery still dedupes.
+      expect(noHeader2.eventId).toBe(noHeader1.eventId);
+    });
   });
 
   describe('live smoke (gated — skipped without real test-mode keys)', () => {
