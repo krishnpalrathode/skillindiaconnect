@@ -72,6 +72,12 @@ export const AUDIT_ACTIONS = {
   EMPLOYER_CONTACT_DELETED: 'employer.contact.deleted',
   // Passport expiry cron (S3-B3)
   PASSPORT_EXPIRY_RUN: 'passport_expiry.run',
+  // Subscription lifecycle (S5-B3)
+  SUBSCRIPTION_GRACE_STARTED: 'subscription.grace_started',
+  SUBSCRIPTION_EXPIRED: 'subscription.expired',
+  SUBSCRIPTION_LIFECYCLE_RUN: 'subscription_lifecycle.run',
+  // Pro document gate (S5-B3) — the DPDP who-saw-whose-passport trail
+  DOCUMENT_VIEWED: 'document.viewed',
 } as const;
 
 export type AuditActionName = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

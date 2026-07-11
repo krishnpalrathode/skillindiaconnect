@@ -3,6 +3,7 @@ import { EmployerModule } from '../employer/employer.module';
 import { SettingsModule } from '../settings/settings.module';
 import { QueueModule } from '../queue/queue.module';
 import { ApplicationsModule } from '../applications/applications.module';
+import { SubscriptionReadModule } from '../payments/subscription-read.module';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
 import { JobLifecycleService } from './job-lifecycle.service';
@@ -33,6 +34,7 @@ import { JobsSubscriber } from './jobs.subscriber';
     SettingsModule,   // SettingsService: protection rules, auto-archive days, quota settings
     QueueModule,      // BullMQ: auto-archive queue registration (producer side)
     forwardRef(() => ApplicationsModule), // ApplicationsAggregateService: live My-Jobs applicant counts (S4-B3)
+    SubscriptionReadModule, // effectivePlan(): the publish-quota plan truth (S5-B3)
   ],
   controllers: [JobsController],
   providers: [

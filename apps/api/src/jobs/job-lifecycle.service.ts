@@ -51,7 +51,9 @@ export class JobLifecycleService {
   async pause(
     jobId: string,
     companyId: string,
-    actorUserId: string,
+    // undefined = system action (e.g. the S5-B3 subscription-expiry cascade);
+    // the audit row then carries only the role.
+    actorUserId: string | undefined,
     actorRole: UserRole,
     reason?: string,
   ): Promise<JobData> {

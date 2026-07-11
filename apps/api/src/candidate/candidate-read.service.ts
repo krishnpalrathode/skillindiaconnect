@@ -251,6 +251,34 @@ export class CandidateReadService {
   }
 
   /**
+   * S5-B3 document gate: resolve the r2Key for ONE document of a VISIBLE
+   * candidate. Returns null for ALL of: nonexistent candidate,
+   * profileVisible = false, PENDING_DELETION, or the document type not
+   * uploaded — one null, so the caller maps every cause to a single
+   * indistinguishable 404 (the S3-B2 anti-enumeration discipline).
+   *
+   * This is the ONLY employer-context read that surfaces a document key.
+   * The Pro-plan gate runs in the caller BEFORE this read — a Free employer
+   * never reaches it.
+   */
+  async findVisibleDocumentKeyForEmployer(
+    candidateId: string,
+    type: DocumentType,
+  ): Promise<{ r2Key: string } | null> {
+    return this.prisma.candidateDocument.findFirst({
+      where: {
+        candidateId,
+        type,
+        candidate: {
+          profileVisible: true,
+          user: { status: { not: UserStatus.PENDING_DELETION } },
+        },
+      },
+      select: { r2Key: true },
+    });
+  }
+
+  /**
    * Browse visible candidates for the employer feed.
    *
    * - Only profileVisible=true, non-PENDING_DELETION candidates appear.

@@ -22,6 +22,7 @@ import { QUEUE_NAMES } from './queue.constants';
       { name: QUEUE_NAMES.NOTIFICATION },
       { name: QUEUE_NAMES.AUTO_ARCHIVE },
       { name: QUEUE_NAMES.PASSPORT_EXPIRY },
+      { name: QUEUE_NAMES.SUBSCRIPTION_LIFECYCLE },
     ),
   ],
   exports: [BullModule],

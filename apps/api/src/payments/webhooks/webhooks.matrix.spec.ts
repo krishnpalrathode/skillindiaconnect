@@ -55,7 +55,6 @@ let dockerUnavailable = false;
 
 let companyId: string;
 let proMonthlyId: string;
-let proYearlyId: string;
 
 // ── Signed-payload helpers (REAL signatures) ──────────────────────────────────
 
@@ -164,11 +163,9 @@ beforeAll(async () => {
         data: { code: 'PRO_MONTHLY', name: 'Pro Monthly', priceSubunits: 299_900, period: PlanPeriod.MONTHLY, features: [] },
       })
     ).id;
-    proYearlyId = (
-      await prisma.plan.create({
-        data: { code: 'PRO_YEARLY', name: 'Pro Yearly', priceSubunits: 2_499_900, period: PlanPeriod.YEARLY, features: [] },
-      })
-    ).id;
+    await prisma.plan.create({
+      data: { code: 'PRO_YEARLY', name: 'Pro Yearly', priceSubunits: 2_499_900, period: PlanPeriod.YEARLY, features: [] },
+    });
     companyId = (
       await prisma.company.create({
         data: {
