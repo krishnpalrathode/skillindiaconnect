@@ -5,31 +5,25 @@ import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { AlertTriangle, ArrowUpRight } from 'lucide-react';
-import { getSubscription, type EmployerSubscription } from '@/lib/api/employer';
+import { getSubscriptionStatus } from '@/lib/api/billing';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import type { components } from '@skillindiaconnect/shared-types';
 
-function daysUntil(dateStr: string): number {
-  const now = Date.now();
-  const target = new Date(dateStr).getTime();
-  return Math.max(0, Math.ceil((target - now) / (1000 * 60 * 60 * 24)));
-}
+type SubscriptionStatus = components['schemas']['SubscriptionStatus'];
 
 export function PlanStatusWidget() {
   const t = useTranslations('employer');
   const params = useParams<{ locale: string }>();
   const locale = params?.locale ?? 'en';
 
-  const [subscription, setSubscription] = useState<EmployerSubscription | null>(null);
+  const [sub, setSub] = useState<SubscriptionStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    getSubscription()
-      .then(setSubscription)
-      .catch(() => {
-        // Sprint 5 stub returns 501 — treat as free plan
-        setSubscription(null);
-      })
+    getSubscriptionStatus()
+      .then(setSub)
+      .catch(() => setSub(null))
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -42,18 +36,33 @@ export function PlanStatusWidget() {
     );
   }
 
-  const isFree = !subscription || subscription.planKey === 'FREE';
-  const daysLeft = subscription?.expiresAt ? daysUntil(subscription.expiresAt) : null;
-  const nearExpiry = daysLeft !== null && daysLeft <= 7;
+  const isFree = !sub || sub.plan.code === 'FREE';
+  const isGrace = sub?.status === 'GRACE';
+  const isExpired = sub?.status === 'EXPIRED';
+  const isActive = sub?.status === 'ACTIVE' && !isFree;
+  const daysRemaining = sub?.daysRemaining ?? null;
+  const nearExpiry = isActive && daysRemaining !== null && daysRemaining <= 7;
+
+  const subscriptionHref = `/${locale}/employer/subscription`;
 
   return (
-    <div className="px-3 py-3 rounded-lg bg-neutral-50 border border-neutral-200 mx-2 mb-3">
+    <div
+      className={cn(
+        'px-3 py-3 rounded-lg border mx-2 mb-3',
+        isGrace ? 'bg-warning-bg border-warning-fg/25' : 'bg-neutral-50 border-neutral-200',
+      )}
+    >
       <div className="flex items-start justify-between gap-1">
         <div className="min-w-0">
           <p className="text-xs font-semibold text-neutral-700 truncate">
-            {isFree ? t('plan.freePlan') : (subscription?.planName ?? t('plan.proPlan'))}
+            {isFree || isExpired
+              ? t('plan.freePlan')
+              : isGrace
+                ? t('plan.gracePlan', { plan: sub!.plan.name })
+                : (sub?.plan.name ?? t('plan.proPlan'))}
           </p>
-          {!isFree && daysLeft !== null && (
+
+          {isActive && daysRemaining !== null && (
             <p
               className={cn(
                 'text-xs mt-0.5',
@@ -66,23 +75,39 @@ export function PlanStatusWidget() {
                   aria-hidden="true"
                 />
               )}
-              {t('plan.daysLeft', { count: daysLeft })}
+              {t('plan.daysLeft', { count: daysRemaining })}
             </p>
           )}
-          {isFree && <p className="text-xs text-neutral-500 mt-0.5">{t('plan.freeHint')}</p>}
+
+          {isGrace && daysRemaining !== null && (
+            <p className="text-xs mt-0.5 text-warning-fg font-medium">
+              <AlertTriangle
+                className="inline size-3 me-0.5 align-text-bottom"
+                aria-hidden="true"
+              />
+              {t('plan.graceDaysLeft', { count: daysRemaining })}
+            </p>
+          )}
+
+          {(isFree || isExpired) && (
+            <p className="text-xs text-neutral-500 mt-0.5">{t('plan.freeHint')}</p>
+          )}
         </div>
       </div>
+
       <Link
-        href={`/${locale}/employer/subscription`}
+        href={subscriptionHref}
         className={cn(
           'mt-2 flex items-center gap-1 text-xs font-medium rounded transition-colors',
           'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
-          isFree
+          isFree || isExpired
             ? 'text-primary-600 hover:text-primary-700'
-            : 'text-neutral-600 hover:text-neutral-800',
+            : isGrace
+              ? 'text-warning-fg hover:text-warning-fg/80'
+              : 'text-neutral-600 hover:text-neutral-800',
         )}
       >
-        {isFree ? t('plan.upgrade') : t('plan.manage')}
+        {isFree || isExpired ? t('plan.upgrade') : isGrace ? t('plan.renewNow') : t('plan.manage')}
         <ArrowUpRight className="size-3" aria-hidden="true" />
       </Link>
     </div>

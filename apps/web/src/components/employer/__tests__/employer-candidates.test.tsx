@@ -141,6 +141,7 @@ describe('DocumentsStatusCard', () => {
     render(
       <I18n>
         <DocumentsStatusCard
+          candidateId="test-candidate"
           documentsStatus={[{ type: 'PASSPORT', uploaded: true, passportValid: false }]}
         />
       </I18n>,
@@ -152,6 +153,7 @@ describe('DocumentsStatusCard', () => {
     render(
       <I18n>
         <DocumentsStatusCard
+          candidateId="test-candidate"
           documentsStatus={[{ type: 'PASSPORT', uploaded: true, passportValid: true }]}
         />
       </I18n>,
@@ -159,21 +161,23 @@ describe('DocumentsStatusCard', () => {
     expect(screen.getByText('Valid')).toBeInTheDocument();
   });
 
-  it('renders nothing clickable/focusable on any document row', () => {
-    const { container } = render(
+  it('renders a View button for uploaded docs (S5-F2 Pro gate)', () => {
+    render(
       <I18n>
         <DocumentsStatusCard
+          candidateId="test-candidate"
           documentsStatus={[{ type: 'PASSPORT', uploaded: true, passportValid: true }]}
         />
       </I18n>,
     );
-    expect(container.querySelectorAll('a, button, [role="button"], [tabindex]').length).toBe(0);
+    // DocumentViewButton renders a "View" button for each uploaded doc
+    expect(screen.getByRole('button', { name: /view passport document/i })).toBeInTheDocument();
   });
 
   it('marks a missing mandatory type as not uploaded', () => {
     render(
       <I18n>
-        <DocumentsStatusCard documentsStatus={[]} />
+        <DocumentsStatusCard candidateId="test-candidate" documentsStatus={[]} />
       </I18n>,
     );
     expect(screen.getAllByText('Not uploaded').length).toBeGreaterThan(0);

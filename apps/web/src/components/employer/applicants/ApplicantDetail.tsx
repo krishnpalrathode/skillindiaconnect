@@ -131,7 +131,7 @@ export function ApplicantDetail({
           )}
           <ExperienceTimeline experiences={a.experiences ?? []} />
           <SkillsList skills={a.skills ?? []} />
-          <DocumentsStatusCard documentsStatus={a.documentsStatus} />
+          <DocumentsStatusCard candidateId={a.id} documentsStatus={a.documentsStatus} />
         </div>
 
         <div className="sticky bottom-0 mt-4 border-t border-neutral-200 bg-neutral-50 pt-3">

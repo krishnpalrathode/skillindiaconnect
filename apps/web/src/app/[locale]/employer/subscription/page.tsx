@@ -13,10 +13,13 @@ import { PlanCards } from '@/components/billing/PlanCards';
 import { CheckoutLauncher } from '@/components/billing/CheckoutLauncher';
 import { PaymentConfirming } from '@/components/billing/PaymentConfirming';
 import { UpgradeContext } from '@/components/billing/UpgradeContext';
+import { CurrentPlanCard } from '@/components/billing/CurrentPlanCard';
+import { InvoiceList } from '@/components/billing/InvoiceList';
 
 type Plan = components['schemas']['Plan'];
 type PlanCode = components['schemas']['PlanCode'];
 type CheckoutSession = components['schemas']['CheckoutSession'];
+type SubscriptionStatus = components['schemas']['SubscriptionStatus'];
 
 type View =
   | { kind: 'plans' }
@@ -47,6 +50,7 @@ export default function SubscriptionPage() {
 
   const [plans, setPlans] = useState<Plan[] | null>(null);
   const [currentPlanCode, setCurrentPlanCode] = useState<PlanCode>('FREE');
+  const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -63,6 +67,7 @@ export default function SubscriptionPage() {
     try {
       const [planList, sub] = await Promise.all([getPlans(), getSubscriptionStatus()]);
       setPlans(planList);
+      setSubscription(sub);
       setCurrentPlanCode(sub.plan.code);
     } catch {
       setLoadError(true);
@@ -145,6 +150,14 @@ export default function SubscriptionPage() {
         <h1 className="text-2xl font-bold text-neutral-900">{t('pageTitle')}</h1>
         <p className="text-sm text-neutral-500 mt-1">{t('pageSubtitle')}</p>
       </div>
+
+      {/* Manage view — current plan status + invoice history (S5-F2). */}
+      {view.kind === 'plans' && subscription && (
+        <>
+          <CurrentPlanCard subscription={subscription} />
+          <InvoiceList />
+        </>
+      )}
 
       {view.kind === 'plans' && (
         <>

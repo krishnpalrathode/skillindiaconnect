@@ -393,10 +393,13 @@
     "plan": {
       "freePlan": "Free Plan",
       "proPlan": "Pro Plan",
+      "gracePlan": "{plan} (Grace)",
       "freeHint": "Upgrade for more active jobs",
       "daysLeft": "{count, plural, one {# day left} other {# days left}}",
+      "graceDaysLeft": "{count, plural, one {Grace ends in # day} other {Grace ends in # days}}",
       "upgrade": "Upgrade plan",
-      "manage": "Manage Subscription"
+      "manage": "Manage Subscription",
+      "renewNow": "Renew now"
     },
     "shell": {
       "loadingCompany": "Loading companyâ€¦",
@@ -1309,6 +1312,41 @@
     "errNotPurchasable": "That plan can't be purchased.",
     "errAlreadyActive": "This plan is already active. Renewal opens 7 days before it expires.",
     "errGatewayUnavailable": "Payments are temporarily unavailable. Please try again later.",
-    "errGeneric": "We couldn't start checkout. Please try again."
+    "errGeneric": "We couldn't start checkout. Please try again.",
+    "manage": {
+      "currentPlanTitle": "Current plan",
+      "statusFree": "Free",
+      "daysRemaining": "{count, plural, one {# day remaining} other {# days remaining}}",
+      "expiresOn": "Expires {date}",
+      "graceDaysLeft": "{count, plural, one {Grace period — # day to renew} other {Grace period — # days to renew}}",
+      "expiredHint": "Jobs were paused — upgrade to restore",
+      "freeHint": "Upgrade to post more jobs and access documents",
+      "upgradeNow": "Upgrade to Pro",
+      "renewNow": "Renew now",
+      "managePlan": "Manage plan",
+      "graceBannerTitle": "{plan} plan expired",
+      "graceBannerBody": "Grace period ends {date} — {count, plural, one {# day} other {# days}} to renew before jobs are paused. Your plan still works.",
+      "invoicesTitle": "Invoices",
+      "invoicesEmpty": "No invoices yet.",
+      "invoicesLoadError": "Couldn't load invoices.",
+      "retry": "Try again",
+      "invoiceNumber": "Invoice",
+      "invoiceDate": "Date",
+      "invoicePlan": "Plan",
+      "invoiceAmount": "Amount",
+      "invoiceActions": "Actions",
+      "downloadPdf": "Download PDF",
+      "downloadPdfLabel": "Download PDF for invoice {number}",
+      "pdfPending": "Generating…",
+      "viewDoc": "View",
+      "viewDocLoading": "Opening…",
+      "viewDocLabel": "View {doc} document",
+      "docUnavailable": "Not available",
+      "docExpiredRetry": "Link expired — try again",
+      "upgradeDialogTitle": "Pro plan required",
+      "upgradeDialogBody": "Document access is a Pro feature. Upgrade to view and download candidate documents.",
+      "upgradeDialogCta": "View plans",
+      "upgradeDialogClose": "Cancel"
+    }
   }
 }

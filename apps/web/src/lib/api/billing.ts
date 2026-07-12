@@ -51,3 +51,26 @@ export function createCheckout(
 export function getOrder(orderId: string): Promise<Order> {
   return apiFetch<Order>(`/billing/orders/${orderId}`);
 }
+
+type Invoice = components['schemas']['Invoice'];
+type DocumentType = components['schemas']['DocumentType'];
+
+/** GET /billing/invoices — offset-paginated invoice history for the authenticated employer. */
+export function getInvoices(page = 1, pageSize = 20): Promise<Invoice[]> {
+  return apiFetch<Invoice[]>(`/billing/invoices?page=${page}&pageSize=${pageSize}`);
+}
+
+/**
+ * GET /employers/candidates/{id}/documents/{type}/url — short-expiry signed URL
+ * for a candidate document.
+ *
+ * 200: { url, expiresInSeconds }
+ * 403 PLAN_UPGRADE_REQUIRED: caller must show the upsell (Free plan).
+ * 404: candidate hidden or document absent.
+ */
+export function getDocumentUrl(
+  candidateId: string,
+  documentType: DocumentType,
+): Promise<{ url: string; expiresInSeconds: number }> {
+  return apiFetch(`/employers/candidates/${candidateId}/documents/${documentType}/url`);
+}

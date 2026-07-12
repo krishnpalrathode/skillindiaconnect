@@ -150,7 +150,10 @@ export default function CandidateViewPage() {
         <CandidateFacts candidate={candidate} />
         <ExperienceTimeline experiences={candidate.experiences ?? []} />
         <SkillsList skills={candidate.skills ?? []} />
-        <DocumentsStatusCard documentsStatus={candidate.documentsStatus} />
+        <DocumentsStatusCard
+          candidateId={candidate.id}
+          documentsStatus={candidate.documentsStatus}
+        />
       </div>
     </div>
   );

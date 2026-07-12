@@ -36,10 +36,7 @@ export const envSchema = z.object({
   RAZORPAY_KEY_SECRET: z.string().min(1),
   // Empty string ≡ absent — `.env` files commonly leave optional keys blank
   // (`STRIPE_SECRET_KEY=`), and a blank key must not construct a Stripe client.
-  STRIPE_SECRET_KEY: z.preprocess(
-    (v) => (v === '' ? undefined : v),
-    z.string().min(1).optional(),
-  ),
+  STRIPE_SECRET_KEY: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).optional()),
 
   // Webhooks (S5-B2). Razorpay's webhook secret is required (the locked
   // primary). Stripe's is OPTIONAL and PAIRED with STRIPE_SECRET_KEY — the

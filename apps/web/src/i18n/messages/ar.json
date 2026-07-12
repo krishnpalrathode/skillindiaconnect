@@ -393,10 +393,13 @@
     "plan": {
       "freePlan": "الخطة المجانية",
       "proPlan": "الخطة الاحترافية",
+      "gracePlan": "{plan} (فترة السماح)",
       "freeHint": "قم بالترقية للمزيد من الوظائف النشطة",
       "daysLeft": "{count} يوم متبقٍ",
+      "graceDaysLeft": "فترة السماح تنتهي في {count} يوم",
       "upgrade": "ترقية الخطة",
-      "manage": "إدارة الاشتراك"
+      "manage": "إدارة الاشتراك",
+      "renewNow": "تجديد الآن"
     },
     "shell": {
       "loadingCompany": "جارٍ تحميل الشركة…",
@@ -1309,6 +1312,41 @@
     "errNotPurchasable": "لا يمكن شراء تلك الخطة.",
     "errAlreadyActive": "هذه الخطة نشطة بالفعل. يفتح التجديد قبل 7 أيام من انتهائها.",
     "errGatewayUnavailable": "المدفوعات غير متاحة مؤقتاً. يرجى المحاولة لاحقاً.",
-    "errGeneric": "تعذّر بدء الدفع. يرجى المحاولة مرة أخرى."
+    "errGeneric": "تعذّر بدء الدفع. يرجى المحاولة مرة أخرى.",
+    "manage": {
+      "currentPlanTitle": "الخطة الحالية",
+      "statusFree": "مجاني",
+      "daysRemaining": "{count} يوم متبقٍ",
+      "expiresOn": "تنتهي في {date}",
+      "graceDaysLeft": "فترة السماح تنتهي في {count} يوم",
+      "expiredHint": "تم إيقاف الوظائف — قم بالترقية لاستعادتها",
+      "freeHint": "قم بالترقية لنشر المزيد من الوظائف والوصول إلى الوثائق",
+      "upgradeNow": "الترقية إلى Pro",
+      "renewNow": "تجديد الآن",
+      "managePlan": "إدارة الخطة",
+      "graceBannerTitle": "انتهت خطة {plan}",
+      "graceBannerBody": "تنتهي فترة السماح في {date} — {count} يوم للتجديد قبل إيقاف الوظائف. خطتك لا تزال تعمل.",
+      "invoicesTitle": "الفواتير",
+      "invoicesEmpty": "لا توجد فواتير بعد.",
+      "invoicesLoadError": "تعذّر تحميل الفواتير.",
+      "retry": "حاول مجدداً",
+      "invoiceNumber": "الفاتورة",
+      "invoiceDate": "التاريخ",
+      "invoicePlan": "الخطة",
+      "invoiceAmount": "المبلغ",
+      "invoiceActions": "الإجراءات",
+      "downloadPdf": "تحميل PDF",
+      "downloadPdfLabel": "تحميل PDF للفاتورة {number}",
+      "pdfPending": "جارٍ الإنشاء…",
+      "viewDoc": "عرض",
+      "viewDocLoading": "جارٍ الفتح…",
+      "viewDocLabel": "عرض وثيقة {doc}",
+      "docUnavailable": "غير متاح",
+      "docExpiredRetry": "انتهت صلاحية الرابط — حاول مجدداً",
+      "upgradeDialogTitle": "الخطة الاحترافية مطلوبة",
+      "upgradeDialogBody": "الوصول إلى الوثائق ميزة للخطة الاحترافية. قم بالترقية لعرض وثائق المرشحين.",
+      "upgradeDialogCta": "عرض الخطط",
+      "upgradeDialogClose": "إلغاء"
+    }
   }
 }

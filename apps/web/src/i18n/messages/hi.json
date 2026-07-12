@@ -393,10 +393,13 @@
     "plan": {
       "freePlan": "निःशुल्क योजना",
       "proPlan": "प्रो योजना",
+      "gracePlan": "{plan} (ग्रेस)",
       "freeHint": "अधिक सक्रिय नौकरियों के लिए अपग्रेड करें",
       "daysLeft": "{count} दिन शेष",
+      "graceDaysLeft": "{count} दिन में ग्रेस समाप्त",
       "upgrade": "योजना अपग्रेड करें",
-      "manage": "सदस्यता प्रबंधित करें"
+      "manage": "सदस्यता प्रबंधित करें",
+      "renewNow": "अभी नवीनीकरण करें"
     },
     "shell": {
       "loadingCompany": "कंपनी लोड हो रही है…",
@@ -1309,6 +1312,41 @@
     "errNotPurchasable": "वह प्लान खरीदा नहीं जा सकता।",
     "errAlreadyActive": "यह प्लान पहले से सक्रिय है। नवीनीकरण समाप्ति से 7 दिन पहले खुलता है।",
     "errGatewayUnavailable": "भुगतान अस्थायी रूप से अनुपलब्ध है। कृपया बाद में प्रयास करें।",
-    "errGeneric": "हम चेकआउट शुरू नहीं कर सके। कृपया फिर से प्रयास करें।"
+    "errGeneric": "हम चेकआउट शुरू नहीं कर सके। कृपया फिर से प्रयास करें।",
+    "manage": {
+      "currentPlanTitle": "वर्तमान प्लान",
+      "statusFree": "निःशुल्क",
+      "daysRemaining": "{count} दिन शेष",
+      "expiresOn": "{date} को समाप्त",
+      "graceDaysLeft": "{count} दिन में ग्रेस समाप्त",
+      "expiredHint": "नौकरियाँ रुकी हुई हैं — पुनः शुरू करने के लिए अपग्रेड करें",
+      "freeHint": "अधिक नौकरियाँ पोस्ट करने और दस्तावेज़ देखने के लिए अपग्रेड करें",
+      "upgradeNow": "प्रो में अपग्रेड करें",
+      "renewNow": "अभी नवीनीकरण करें",
+      "managePlan": "प्लान प्रबंधित करें",
+      "graceBannerTitle": "{plan} प्लान समाप्त हो गया",
+      "graceBannerBody": "ग्रेस अवधि {date} को समाप्त होगी — नौकरियाँ रुकने से बचाने के लिए {count} दिन में नवीनीकरण करें। आपका प्लान अभी काम कर रहा है।",
+      "invoicesTitle": "चालान",
+      "invoicesEmpty": "अभी तक कोई चालान नहीं।",
+      "invoicesLoadError": "चालान लोड नहीं हो सके।",
+      "retry": "फिर प्रयास करें",
+      "invoiceNumber": "चालान",
+      "invoiceDate": "तारीख",
+      "invoicePlan": "प्लान",
+      "invoiceAmount": "राशि",
+      "invoiceActions": "क्रियाएं",
+      "downloadPdf": "PDF डाउनलोड करें",
+      "downloadPdfLabel": "चालान {number} के लिए PDF डाउनलोड करें",
+      "pdfPending": "तैयार हो रहा है…",
+      "viewDoc": "देखें",
+      "viewDocLoading": "खुल रहा है…",
+      "viewDocLabel": "{doc} दस्तावेज़ देखें",
+      "docUnavailable": "उपलब्ध नहीं",
+      "docExpiredRetry": "लिंक समाप्त — फिर प्रयास करें",
+      "upgradeDialogTitle": "प्रो प्लान आवश्यक",
+      "upgradeDialogBody": "दस्तावेज़ देखना प्रो सुविधा है। उम्मीदवार के दस्तावेज़ देखने के लिए अपग्रेड करें।",
+      "upgradeDialogCta": "प्लान देखें",
+      "upgradeDialogClose": "रद्द करें"
+    }
   }
 }

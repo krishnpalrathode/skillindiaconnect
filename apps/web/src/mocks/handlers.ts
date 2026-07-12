@@ -235,13 +235,25 @@ const authGoogleCallback = http.get(`${BASE}/auth/google/callback`, () => {
 const authRefresh = http.post(`${BASE}/auth/refresh`, ({ request }) => {
   const cookie = request.headers.get('Cookie') ?? '';
   const match = /sic_refresh=([^;]+)/.exec(cookie);
+
+  // Fallback: when no refresh cookie, accept a valid access token in the
+  // Authorization header. AuthProvider fires doRefresh() on every mount (which
+  // includes test renders), and that POST carries the current access token.
+  // Without this path, doRefresh() returns 401 and calls setAccessToken(null),
+  // wiping whatever token loginAs() just set for the test.
   if (!match) {
-    return errorResponse(
-      401,
-      'INVALID_REFRESH',
-      'Invalid refresh token',
-      'Refresh token is missing or expired.',
-    );
+    const accessToken = (request.headers.get('Authorization') ?? '').replace('Bearer ', '').trim();
+    const session = accessToken ? db.sessions.get(accessToken) : undefined;
+    if (!session) {
+      return errorResponse(
+        401,
+        'INVALID_REFRESH',
+        'Invalid refresh token',
+        'Refresh token is missing or expired.',
+      );
+    }
+    const { accessToken: newToken } = issueTokens(session.userId);
+    return HttpResponse.json({ data: { accessToken: newToken } });
   }
 
   const session = db.sessions.get(match[1]!);
