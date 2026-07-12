@@ -42,6 +42,8 @@ interface PasswordFieldProps {
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
   name?: string;
   autoComplete?: string;
+  /** Optional decorative leading icon (visual only; omitted = original render). */
+  startIcon?: React.ReactNode;
 }
 
 /**
@@ -64,6 +66,7 @@ export function PasswordField({
   onBlur,
   name,
   autoComplete = 'current-password',
+  startIcon,
 }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
   const score = showStrength ? scorePassword(value ?? '') : 0;
@@ -78,6 +81,14 @@ export function PasswordField({
 
       {/* Wrapper is purely visual; the Input carries the id so htmlFor works */}
       <div className="relative">
+        {startIcon && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-neutral-400"
+          >
+            {startIcon}
+          </span>
+        )}
         <Input
           id={id}
           type={visible ? 'text' : 'password'}
@@ -91,7 +102,7 @@ export function PasswordField({
           aria-describedby={errorId}
           onChange={onChange}
           onBlur={onBlur}
-          className="pe-11"
+          className={cn('pe-11', startIcon && 'ps-10')}
         />
         <button
           type="button"
