@@ -182,6 +182,47 @@ export class EmployerService {
     return company.type;
   }
 
+  // ── Cross-module seam (S6a-B1 admin read surfaces) ────────────────────────
+
+  /**
+   * S6a-B1 (admin dashboard): company counts keyed by CompanyStatus. ONE grouped
+   * query — never a count-per-status loop.
+   */
+  async countByStatus(): Promise<Record<string, number>> {
+    const grouped = await this.prisma.company.groupBy({
+      by: ['status'],
+      _count: { _all: true },
+    });
+    // Zero-filled: the dashboard renders a fixed tile set and must not silently
+    // drop one just because nothing is currently in that state.
+    const counts: Record<string, number> = {
+      PENDING: 0,
+      APPROVED: 0,
+      REJECTED: 0,
+      SUSPENDED: 0,
+    };
+    for (const row of grouped) {
+      counts[row.status] = row._count._all;
+    }
+    return counts;
+  }
+
+  /**
+   * S6a-B1 (admin certificate grant): the r2Key of the company's most recent
+   * registration certificate, or null if none was ever uploaded.
+   *
+   * The Admin module never touches company_documents itself (Rule 4) — it asks
+   * here. Returns the KEY; the caller presigns it and audits the issuance.
+   */
+  async getRegistrationCertKey(companyId: string): Promise<string | null> {
+    const doc = await this.prisma.companyDocument.findFirst({
+      where: { companyId },
+      orderBy: { uploadedAt: 'desc' },
+      select: { r2Key: true },
+    });
+    return doc?.r2Key ?? null;
+  }
+
   /**
    * Narrow read for S4-B1: resolve a company's primary employer userId so the
    * Applications module can send the "new applicant" in-app notification WITHOUT

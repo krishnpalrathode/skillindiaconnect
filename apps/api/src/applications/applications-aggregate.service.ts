@@ -121,6 +121,28 @@ export class ApplicationsAggregateService {
   }
 
   /**
+   * S6a-B1 (admin dashboard): platform-wide application counts keyed by
+   * ApplicationStatus. ONE grouped query.
+   */
+  async countsPlatformWide(): Promise<Record<string, number>> {
+    const grouped = await this.prisma.application.groupBy({
+      by: ['status'],
+      _count: { _all: true },
+    });
+    // Zero-filled so the dashboard's fixed tile set never loses a column.
+    const counts: Record<string, number> = {
+      PENDING: 0,
+      SHORTLISTED: 0,
+      SELECTED: 0,
+      REJECTED: 0,
+    };
+    for (const row of grouped) {
+      counts[row.status] = row._count._all;
+    }
+    return counts;
+  }
+
+  /**
    * Batched per-job counts for the My Jobs table — ONE grouped query for the whole
    * page (never N queries for N rows). Jobs absent from the result have zero counts.
    */

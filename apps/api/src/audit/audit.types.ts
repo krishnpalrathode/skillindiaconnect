@@ -76,8 +76,13 @@ export const AUDIT_ACTIONS = {
   SUBSCRIPTION_GRACE_STARTED: 'subscription.grace_started',
   SUBSCRIPTION_EXPIRED: 'subscription.expired',
   SUBSCRIPTION_LIFECYCLE_RUN: 'subscription_lifecycle.run',
-  // Pro document gate (S5-B3) — the DPDP who-saw-whose-passport trail
+  // Pro document gate (S5-B3) — the DPDP who-saw-whose-passport trail.
+  // REUSED by S6a-B1's admin grants (employer certs + candidate documents):
+  // one action, one meaning — "someone was granted sight of a document".
   DOCUMENT_VIEWED: 'document.viewed',
+  // Audit-trail read side (S6a-B1). The export records ITSELF — bulk extraction
+  // of the trail is exactly the kind of event the trail exists to record.
+  AUDIT_EXPORTED: 'audit.exported',
 } as const;
 
 export type AuditActionName = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

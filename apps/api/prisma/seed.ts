@@ -36,8 +36,9 @@ async function main(): Promise<void> {
     throw new Error('Refusing to run seed in production.');
   }
 
-  if (ALL_PERMS.length !== 20) {
-    throw new Error(`Expected 20 permission keys, got ${ALL_PERMS.length}.`);
+  // 20 seeded in S2 + 2 added by S6a-B1 (logs.export, candidates.view_documents).
+  if (ALL_PERMS.length !== 22) {
+    throw new Error(`Expected 22 permission keys, got ${ALL_PERMS.length}.`);
   }
   const permSet = new Set(ALL_PERMS);
 
@@ -189,6 +190,7 @@ async function main(): Promise<void> {
       'candidates.delete': off,
       'candidates.onboard_manual': on,
       'candidates.export': on,
+      'candidates.view_documents': on,
       'employers.view': on,
       'employers.approve_reject': on,
       'employers.suspend': on,
@@ -201,6 +203,8 @@ async function main(): Promise<void> {
       'applications.notes': on,
       'reports.view': on,
       'logs.view': on,
+      // S6a-B1: ADMIN may bulk-export the audit trail; MODERATOR may not.
+      'logs.export': on,
       'billing.manage': lockedOff,
       'subscriptions.manage': lockedOff,
       'admin_users.manage': lockedOff,
@@ -211,6 +215,8 @@ async function main(): Promise<void> {
       'candidates.delete': off,
       'candidates.onboard_manual': off,
       'candidates.export': off,
+      // Moderators do NOT read passports — the doc grant is its own key.
+      'candidates.view_documents': off,
       'employers.view': on,
       'employers.approve_reject': on,
       'employers.suspend': off,
@@ -223,6 +229,9 @@ async function main(): Promise<void> {
       'applications.notes': on,
       'reports.view': on,
       'logs.view': on,
+      // THE two-key boundary, live: a MODERATOR can READ the audit log on screen
+      // but cannot bulk-extract it (S6a-B1 proves this with a 403 test).
+      'logs.export': off,
       'billing.manage': lockedOff,
       'subscriptions.manage': lockedOff,
       'admin_users.manage': lockedOff,
@@ -233,6 +242,7 @@ async function main(): Promise<void> {
       'candidates.delete': lockedOff,
       'candidates.onboard_manual': off,
       'candidates.export': off,
+      'candidates.view_documents': off,
       'employers.view': on,
       'employers.approve_reject': off,
       'employers.suspend': off,
@@ -245,6 +255,7 @@ async function main(): Promise<void> {
       'applications.notes': off,
       'reports.view': on,
       'logs.view': off,
+      'logs.export': off,
       'billing.manage': lockedOff,
       'subscriptions.manage': lockedOff,
       'admin_users.manage': lockedOff,

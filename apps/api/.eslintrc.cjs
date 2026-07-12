@@ -296,6 +296,38 @@ module.exports = {
             from: './src/applications/status.service.ts',
             message: 'Applications status transitions are internal (B2) — do not import.',
           },
+          // ── S6a-B1: the admin zone ──────────────────────────────────────────
+          // The admin module OWNS NO TABLES. It composes other modules' PUBLIC
+          // service exports only — never their controllers, DTOs, mappers or
+          // internal providers. If an admin screen needs a figure that doesn't
+          // exist, add a narrow read to the OWNING module; do not reach in here.
+          {
+            target: './src/admin',
+            from: './src/applications/status.service.ts',
+            message: 'Applications status transitions are internal (B2) — do not import.',
+          },
+          {
+            target: './src/admin',
+            from: './src/audit/audit.subscriber.ts',
+            message: 'Use AuditService.log() — never import the audit subscriber directly.',
+          },
+          {
+            target: './src/admin',
+            from: './src/settings/settings.controller.ts',
+            message: 'Use SettingsService — never import the settings controller directly.',
+          },
+          {
+            target: './src/admin',
+            from: './src/jobs/publish-guard.service.ts',
+            message:
+              'The publish gate is internal to Jobs — admin composes JobsService, not its guards.',
+          },
+          {
+            target: './src/admin',
+            from: './src/employer/employer-approval.service.ts',
+            message:
+              'Employer approval is an S2-B4 mutation surface — S6a-B1 is read-only; do not import.',
+          },
         ],
       },
     ],

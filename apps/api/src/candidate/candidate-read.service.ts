@@ -169,6 +169,21 @@ export class CandidateReadService {
     return rows.map((r) => r.id);
   }
 
+  /**
+   * S6a-B1 (admin dashboard): platform-wide candidate counts. Two grouped
+   * queries at most — never a per-row walk. `active` excludes PENDING_DELETION
+   * users (they are on their way out and shouldn't inflate the headline number).
+   */
+  async countCandidates(): Promise<{ total: number; active: number }> {
+    const [total, active] = await Promise.all([
+      this.prisma.candidateProfile.count(),
+      this.prisma.candidateProfile.count({
+        where: { user: { status: UserStatus.ACTIVE } },
+      }),
+    ]);
+    return { total, active };
+  }
+
   /** Batched candidate display names by id (S4-B3 summaries + admin list). */
   async getNamesByIds(ids: string[]): Promise<Map<string, string>> {
     if (ids.length === 0) return new Map();
@@ -274,6 +289,38 @@ export class CandidateReadService {
           user: { status: { not: UserStatus.PENDING_DELETION } },
         },
       },
+      select: { r2Key: true },
+    });
+  }
+
+  /**
+   * S6a-B1 (admin document grant): resolve the r2Key for ONE document of ANY
+   * candidate — visible or not.
+   *
+   * THE DELIBERATE PRIVACY RELAXATION. The employer path
+   * (findVisibleDocumentKeyForEmployer) gates on `profileVisible: true`; this one
+   * does NOT, and that difference is the entire point of the separate
+   * `candidates.view_documents` permission. Fraud review, dispute resolution and
+   * DPDP data-subject requests routinely concern candidates who have hidden
+   * themselves — an admin who cannot see them cannot investigate them.
+   *
+   * This is only defensible because EVERY grant is audited (`document.viewed`
+   * with the actor). The relaxation and the audit are one control, not two:
+   * implement both or neither.
+   *
+   * PENDING_DELETION candidates ARE still reachable — a pending deletion is
+   * exactly when a dispute is most likely to be live, and their documents still
+   * exist. Once the purge worker runs, the R2 object and the row are gone, so
+   * this returns null and the caller 404s naturally. No special case needed.
+   *
+   * Returns null for: unknown candidate, or that document type not uploaded.
+   */
+  async findDocumentKeyForAdmin(
+    candidateId: string,
+    type: DocumentType,
+  ): Promise<{ r2Key: string } | null> {
+    return this.prisma.candidateDocument.findFirst({
+      where: { candidateId, type },
       select: { r2Key: true },
     });
   }

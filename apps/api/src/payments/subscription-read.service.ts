@@ -46,6 +46,28 @@ export class SubscriptionReadService {
     private readonly settingsService: SettingsService,
   ) {}
 
+  /**
+   * S6a-B1 (admin dashboard): revenue invoiced in the CURRENT calendar month,
+   * in integer subunits.
+   *
+   * Keyed on the INVOICE's issuedAt, not the order's createdAt: an order created
+   * on the 31st and paid on the 1st belongs to the month it was invoiced in, and
+   * the invoice is the financial record of truth. ONE aggregate query — the sum
+   * happens in Postgres, never by pulling rows into Node.
+   */
+  async revenueThisMonthSubunits(now: Date = new Date()): Promise<number> {
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const result = await this.prisma.order.aggregate({
+      _sum: { totalSubunits: true },
+      where: {
+        invoice: { issuedAt: { gte: startOfMonth, lt: startOfNextMonth } },
+      },
+    });
+    return result._sum.totalSubunits ?? 0;
+  }
+
   async effectivePlan(companyId: string): Promise<EffectivePlan> {
     // Latest paid subscription regardless of status: activation (S5-B2)
     // retires superseded rows and creates/extends the live one, so the

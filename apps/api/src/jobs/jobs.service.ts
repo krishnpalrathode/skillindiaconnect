@@ -471,6 +471,31 @@ export class JobsService {
     );
   }
 
+  /**
+   * S6a-B1 (admin dashboard): platform-wide job counts keyed by JobStatus. ONE
+   * grouped query. PENDING_REVIEW is included and is what feeds the dashboard's
+   * `pendingJobReviews` queue depth — the admin module derives it from this map
+   * rather than issuing a second count.
+   */
+  async countByStatus(): Promise<Record<string, number>> {
+    const grouped = await this.prisma.job.groupBy({
+      by: ['status'],
+      _count: { _all: true },
+    });
+    // Zero-filled so the dashboard's fixed tile set never loses a column.
+    const counts: Record<string, number> = {
+      DRAFT: 0,
+      PENDING_REVIEW: 0,
+      ACTIVE: 0,
+      PAUSED: 0,
+      ARCHIVED: 0,
+    };
+    for (const row of grouped) {
+      counts[row.status] = row._count._all;
+    }
+    return counts;
+  }
+
   /** All job ids for a company (S4-B3 aggregates scope applications by these). */
   async getJobIdsForCompany(companyId: string): Promise<string[]> {
     const rows = await this.prisma.job.findMany({
