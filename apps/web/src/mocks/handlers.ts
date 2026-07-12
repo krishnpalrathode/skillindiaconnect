@@ -38,11 +38,28 @@ import {
   MOCK_FAIL_IDEMPOTENCY_PREFIX,
   MOCK_GATEWAY_DOWN_IDEMPOTENCY_PREFIX,
   type MockOrder,
+  // S6: Admin console
+  roleHasPermission,
+  ALL_PERMISSION_KEYS,
+  ADMIN_ROLES,
+  RESEND_WHATSAPP_CAP,
+  LOGS_EXPORT_MAX_ROWS,
+  LOGS_EXPORT_MAX_RANGE_DAYS,
+  type MockCandidate,
+  type MockJob,
 } from './data';
 import { MOCK_SSR_ORIGIN } from './ssr-origin';
 
 type ErrorSchema = components['schemas']['Error'];
 type ApplicationStatusLocal = components['schemas']['ApplicationStatus'];
+// S6: Admin console
+type PermissionKey = components['schemas']['PermissionKey'];
+type AuditLogEntrySchema = components['schemas']['AuditLogEntry'];
+type AdminCandidateCardSchema = components['schemas']['AdminCandidateCard'];
+type AdminJobRowSchema = components['schemas']['AdminJobRow'];
+type NoteEntrySchema = components['schemas']['NoteEntry'];
+type MockCandidateShape = MockCandidate;
+type MockJobShape = MockJob;
 
 // Browser and jsdom (vitest) both have a `location` global, so a relative
 // pattern resolves against the current page origin as usual. Node (SSR via
@@ -2649,34 +2666,954 @@ const health = http.get('/health', () => {
   return HttpResponse.json({ status: 'ok (mock)' });
 });
 
-// ─── Stub catch-all for later-sprint endpoints ────────────────────────────────
+// ─── S6: Admin console handlers ───────────────────────────────────────────────
+//
+// RBAC-ACCURATE BY DESIGN. Every handler below runs `requirePermission()` against
+// the SAME seeded matrix the API uses (data.ts SEED_MATRIX ← prisma/seed.ts), so
+// the console is built against REAL denials:
+//   - MODERATOR → GET  /admin/logs/export            → 403 (logs.export off)
+//   - MODERATOR → PATCH /admin/roles/matrix          → 403 (roles.manage locked off)
+//   - ADMIN     → POST /admin/candidates/{id}/purge  → 403 (candidates.delete off)
+//   - SUPER_ADMIN → everything                       → allowed
+// A permissive mock would ship an admin UI full of buttons a MODERATOR can't use.
+//
+// EN-only: no HI/AR fixtures, no RTL obligations on admin screens.
 
-function notImplemented(sprint: string) {
-  return () =>
-    HttpResponse.json(
-      {
-        type: 'about:blank',
-        title: 'Not implemented',
-        status: 501,
-        detail: `This endpoint is planned for ${sprint}.`,
-        code: 'NOT_IMPLEMENTED',
-      } satisfies ErrorSchema,
-      { status: 501 },
-    );
+/** 403 with the permission the caller lacked — the contract's AdminForbidden. */
+function forbidden(requiredPermission: PermissionKey) {
+  return HttpResponse.json(
+    {
+      type: 'about:blank',
+      title: 'Forbidden',
+      status: 403,
+      detail: 'You do not have permission to perform this action.',
+      code: 'FORBIDDEN',
+      meta: { requiredPermission },
+    } satisfies ErrorSchema,
+    { status: 403 },
+  );
 }
 
-const stubNotImplemented = [
-  // S5 billing endpoints are LIVE above (billingPlans … employersCandidateDocumentUrl).
-  // /webhooks/* are deliberately NOT stubbed either — they are server-to-server
-  // and must never be reachable from browser code.
-  http.get(`${BASE}/admin/dashboard`, notImplemented('Sprint 6')),
-  http.get(`${BASE}/admin/candidates`, notImplemented('Sprint 6')),
-  http.get(`${BASE}/admin/jobs`, notImplemented('Sprint 6')),
-  http.patch(`${BASE}/admin/jobs/:id`, notImplemented('Sprint 6')),
-  http.get(`${BASE}/admin/roles/:role/permissions`, notImplemented('Sprint 6')),
-  http.patch(`${BASE}/admin/roles/:role/permissions`, notImplemented('Sprint 6')),
-  http.get(`${BASE}/admin/logs`, notImplemented('Sprint 6')),
-];
+/**
+ * The single RBAC gate. Returns the acting user, or an error Response to return
+ * verbatim. Mirrors the API's guard: 401 without a token, 403 without the grant.
+ */
+function requirePermission(request: Request, permission: PermissionKey) {
+  const user = getAuthUser(request);
+  if (!user) {
+    return {
+      error: errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.'),
+    };
+  }
+  if (!roleHasPermission(user.role, permission)) {
+    return { error: forbidden(permission) };
+  }
+  return { user };
+}
+
+/** Append an audit row — the admin console's own actions are audited too. */
+function writeAudit(entry: Omit<AuditLogEntrySchema, 'id' | 'createdAt'>) {
+  db.auditLogs.unshift({
+    ...entry,
+    id: String(++db.nextAuditLogId),
+    createdAt: new Date().toISOString(),
+  } as AuditLogEntrySchema);
+}
+
+// ── Screen 29: audit log ─────────────────────────────────────────────────────
+
+/** Shared filter for the log query + the CSV export. */
+function filterAuditLogs(url: URL): AuditLogEntrySchema[] {
+  // NOT `module` — Next.js forbids assigning that identifier (no-assign-module-variable).
+  const moduleFilter = url.searchParams.get('module');
+  const action = url.searchParams.get('action');
+  const actorId = url.searchParams.get('actorId');
+  const status = url.searchParams.get('status');
+  const from = url.searchParams.get('from');
+  const to = url.searchParams.get('to');
+  const q = url.searchParams.get('q');
+
+  return db.auditLogs.filter((row) => {
+    if (moduleFilter && row.module !== moduleFilter) return false;
+    if (action && row.action !== action) return false;
+    if (actorId && row.actorUserId !== actorId) return false;
+    if (status && row.status !== status) return false;
+    if (from && row.createdAt < from) return false;
+    if (to && row.createdAt > to) return false;
+    if (q) {
+      const hay = `${row.action} ${row.targetId ?? ''}`.toLowerCase();
+      if (!hay.includes(q.toLowerCase())) return false;
+    }
+    return true;
+  });
+}
+
+const adminGetLogs = http.get(`${BASE}/admin/logs`, ({ request }) => {
+  const gate = requirePermission(request, 'logs.view');
+  if (gate.error) return gate.error;
+
+  const url = new URL(request.url);
+  const limit = Math.min(Number(url.searchParams.get('limit') ?? '20'), 100);
+  const cursor = url.searchParams.get('cursor');
+
+  // Keyset over the BigInt PK, newest first (ids descend through the fixture).
+  const all = filterAuditLogs(url);
+  const start = cursor ? all.findIndex((r) => r.id === cursor) + 1 : 0;
+  const page = all.slice(start, start + limit);
+  const nextCursor = start + limit < all.length ? (page[page.length - 1]?.id ?? null) : null;
+
+  // Reading the audit log is itself an audited event — watching the watchers.
+  writeAudit({
+    module: 'Admin',
+    action: 'logs.viewed',
+    actorUserId: gate.user.id,
+    actorRole: gate.user.role,
+    targetType: null,
+    targetId: null,
+    status: 'SUCCESS',
+    meta: { returned: page.length },
+  });
+
+  return HttpResponse.json({ data: page, nextCursor });
+});
+
+const adminExportLogs = http.get(`${BASE}/admin/logs/export`, ({ request }) => {
+  // A SEPARATE, higher grant than logs.view: reading a page on screen and
+  // walking out with the whole table are different acts. MODERATOR has
+  // logs.view but NOT logs.export → this 403s for them.
+  const gate = requirePermission(request, 'logs.export');
+  if (gate.error) return gate.error;
+
+  const url = new URL(request.url);
+  const from = url.searchParams.get('from');
+  const to = url.searchParams.get('to');
+
+  // The documented bounds — an unbounded export of an append-only audit table
+  // is a memory incident waiting to happen.
+  if (from && to) {
+    const days = (new Date(to).getTime() - new Date(from).getTime()) / 86_400_000;
+    if (days > LOGS_EXPORT_MAX_RANGE_DAYS) {
+      return HttpResponse.json(
+        {
+          type: 'about:blank',
+          title: 'Unprocessable Entity',
+          status: 422,
+          detail: 'This export is too large. Narrow the date range or filters.',
+          code: 'EXPORT_TOO_LARGE',
+          meta: { maxRows: LOGS_EXPORT_MAX_ROWS, maxRangeDays: LOGS_EXPORT_MAX_RANGE_DAYS },
+        } satisfies ErrorSchema,
+        { status: 422 },
+      );
+    }
+  }
+
+  const rows = filterAuditLogs(url);
+  if (rows.length > LOGS_EXPORT_MAX_ROWS) {
+    return HttpResponse.json(
+      {
+        type: 'about:blank',
+        title: 'Unprocessable Entity',
+        status: 422,
+        detail: 'This export is too large. Narrow the date range or filters.',
+        code: 'EXPORT_TOO_LARGE',
+        meta: { maxRows: LOGS_EXPORT_MAX_ROWS, maxRangeDays: LOGS_EXPORT_MAX_RANGE_DAYS },
+      } satisfies ErrorSchema,
+      { status: 422 },
+    );
+  }
+
+  const header = 'id,createdAt,module,action,actorUserId,actorRole,targetType,targetId,status';
+  const csv = [
+    header,
+    ...rows.map((r) =>
+      [
+        r.id,
+        r.createdAt,
+        r.module,
+        r.action,
+        r.actorUserId ?? '',
+        r.actorRole ?? '',
+        r.targetType ?? '',
+        r.targetId ?? '',
+        r.status,
+      ].join(','),
+    ),
+  ].join('\n');
+
+  // The export writes its own audit row — an export is exactly the kind of event
+  // the log exists to record.
+  writeAudit({
+    module: 'Admin',
+    action: 'logs.exported',
+    actorUserId: gate.user.id,
+    actorRole: gate.user.role,
+    targetType: null,
+    targetId: null,
+    status: 'SUCCESS',
+    meta: { rows: rows.length },
+  });
+
+  return new HttpResponse(csv, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/csv',
+      'Content-Disposition': 'attachment; filename="audit-log.csv"',
+    },
+  });
+});
+
+// ── Admin dashboard ──────────────────────────────────────────────────────────
+
+const adminDashboard = http.get(`${BASE}/admin/dashboard`, ({ request }) => {
+  const gate = requirePermission(request, 'reports.view');
+  if (gate.error) return gate.error;
+
+  const countBy = <T extends string>(items: T[]) =>
+    items.reduce<Record<string, number>>((acc, k) => ({ ...acc, [k]: (acc[k] ?? 0) + 1 }), {});
+
+  const employers = countBy([...db.employers.values()].map((c) => c.status));
+  const jobs = countBy([...db.jobs.values()].map((j) => j.status));
+  const applications = countBy([...db.applications.values()].map((a) => a.status));
+
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+  const revenueThisMonthSubunits = [...db.orders.values()]
+    .filter((o) => o.status === 'PAID' && new Date(o.createdAt) >= startOfMonth)
+    .reduce((sum, o) => sum + o.totalSubunits, 0);
+
+  return HttpResponse.json({
+    data: {
+      counts: {
+        candidates: [...db.candidates.values()].filter(
+          (c) => !db.candidateLifecycle.get(c.profile.id)?.purgedAt,
+        ).length,
+        employers,
+        jobs,
+        applications,
+      },
+      revenueThisMonthSubunits,
+      currency: 'INR',
+      pendingEmployerReviews: [...db.employers.values()].filter((c) => c.status === 'PENDING')
+        .length,
+      pendingJobReviews: [...db.jobs.values()].filter((j) => j.status === 'PENDING_REVIEW').length,
+    },
+  });
+});
+
+// ── Screen 27: the RBAC matrix ───────────────────────────────────────────────
+
+const adminGetRolesMatrix = http.get(`${BASE}/admin/roles/matrix`, ({ request }) => {
+  const gate = requirePermission(request, 'roles.view');
+  if (gate.error) return gate.error;
+
+  return HttpResponse.json({
+    data: {
+      roles: ADMIN_ROLES,
+      permissions: ALL_PERMISSION_KEYS,
+      cells: db.rolePermissions,
+    },
+  });
+});
+
+const adminPatchRolesMatrix = http.patch(`${BASE}/admin/roles/matrix`, async ({ request }) => {
+  // SUPER_ADMIN-effective: roles.manage is seeded locked-OFF for every other
+  // role, so ADMIN/MODERATOR/SUPPORT all get a genuine 403 here.
+  const gate = requirePermission(request, 'roles.manage');
+  if (gate.error) return gate.error;
+
+  const body = (await request.json()) as {
+    role: string;
+    permission: PermissionKey;
+    enabled: boolean;
+  };
+
+  const cell = db.rolePermissions.find(
+    (c) => c.role === body.role && c.permission === body.permission,
+  );
+  if (!cell) {
+    return errorResponse(404, 'PERMISSION_NOT_FOUND', 'Not found', 'No such role/permission cell.');
+  }
+
+  // A locked cell is IMMUTABLE — and the guard is server-side, because a
+  // disabled checkbox is not a security control. NO write occurs.
+  if (cell.locked) {
+    return HttpResponse.json(
+      {
+        type: 'about:blank',
+        title: 'Locked',
+        status: 423,
+        detail: 'This permission is locked and cannot be changed.',
+        code: 'PERMISSION_CELL_LOCKED',
+      } satisfies ErrorSchema,
+      { status: 423 },
+    );
+  }
+
+  const from = cell.enabled;
+  cell.enabled = body.enabled;
+
+  writeAudit({
+    module: 'Admin',
+    action: 'permission.updated',
+    actorUserId: gate.user.id,
+    actorRole: gate.user.role,
+    targetType: 'RolePermission',
+    targetId: `${body.role}:${body.permission}`,
+    status: 'SUCCESS',
+    meta: { role: body.role, permission: body.permission, from, to: body.enabled },
+  });
+
+  return HttpResponse.json({ data: cell });
+});
+
+// ── Screen 24: employer certificate access ───────────────────────────────────
+
+const adminEmployerCertificateUrl = http.get(
+  `${BASE}/admin/employers/:id/certificate/url`,
+  ({ request, params }) => {
+    const gate = requirePermission(request, 'employers.view');
+    if (gate.error) return gate.error;
+
+    const companyId = params['id'] as string;
+    const company = [...db.employers.values()].find((c) => c.id === companyId);
+    // Nonexistent company and "no certificate on file" are indistinguishable.
+    if (!company?.registrationCertKey) {
+      return errorResponse(404, 'NOT_FOUND', 'Not found', 'Not found.');
+    }
+
+    // Audited per issuance — the key and the URL never enter the audit meta.
+    writeAudit({
+      module: 'Employer',
+      action: 'document.viewed',
+      actorUserId: gate.user.id,
+      actorRole: gate.user.role,
+      targetType: 'CompanyDocument',
+      targetId: companyId,
+      status: 'SUCCESS',
+      meta: { documentType: 'REGISTRATION_CERT', companyId },
+    });
+
+    return HttpResponse.json({
+      data: {
+        url: `https://r2.mock.skillindiaconnect.example/certs/${companyId}.pdf?sig=mock&exp=300`,
+        expiresInSeconds: 300,
+      },
+    });
+  },
+);
+
+// ── Screen 25: admin candidates + purge ──────────────────────────────────────
+
+/** Admin-context card: fuller than the employer view, but NEVER a document key. */
+function toAdminCandidateCard(c: MockCandidateShape): AdminCandidateCardSchema {
+  const p = c.profile;
+  const user = db.users.get(c.userId);
+  const life = db.candidateLifecycle.get(p.id) ?? { deletionDueAt: null, purgedAt: null };
+  return {
+    id: p.id,
+    userId: c.userId,
+    fullName: p.fullName,
+    phone: p.phone ?? null,
+    email: p.email ?? null,
+    status: user?.status ?? 'ACTIVE',
+    profileVisible: p.profileVisible ?? true,
+    completionPct: p.completionPct ?? 0,
+    // Upload STATUS only — the admin card carries no keys or URLs; content is a
+    // separate, per-issuance-audited grant.
+    documents: (p.documents ?? []).map((d) => ({
+      type: d.type,
+      uploaded: true,
+      expiryDate: d.expiryDate ?? null,
+    })),
+    deletionDueAt: life.deletionDueAt,
+    purgedAt: life.purgedAt,
+    createdAt: p.createdAt ?? new Date().toISOString(),
+  } as AdminCandidateCardSchema;
+}
+
+const adminGetCandidates = http.get(`${BASE}/admin/candidates`, ({ request }) => {
+  const gate = requirePermission(request, 'candidates.view');
+  if (gate.error) return gate.error;
+
+  const url = new URL(request.url);
+  const page = Number(url.searchParams.get('page') ?? '1');
+  const pageSize = Number(url.searchParams.get('pageSize') ?? '20');
+  const search = url.searchParams.get('search')?.toLowerCase();
+  const status = url.searchParams.get('status');
+  const visibility = url.searchParams.get('visibility');
+
+  let rows = [...db.candidates.values()].map(toAdminCandidateCard);
+  if (search) {
+    rows = rows.filter((r) =>
+      `${r.fullName} ${r.email ?? ''} ${r.phone ?? ''}`.toLowerCase().includes(search),
+    );
+  }
+  if (status) rows = rows.filter((r) => r.status === status);
+  if (visibility != null) rows = rows.filter((r) => r.profileVisible === (visibility === 'true'));
+
+  return HttpResponse.json(offsetPaginate(rows, page, pageSize));
+});
+
+const adminSuspendCandidate = http.post(
+  `${BASE}/admin/candidates/:id/suspend`,
+  async ({ request, params }) => {
+    const gate = requirePermission(request, 'candidates.edit');
+    if (gate.error) return gate.error;
+
+    const candidate = [...db.candidates.values()].find((c) => c.profile.id === params['id']);
+    if (!candidate) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Candidate not found.');
+
+    const body = (await request.json()) as { reason?: string };
+    if (!body.reason?.trim()) {
+      return errorResponse(
+        422,
+        'VALIDATION_ERROR',
+        'Validation failed',
+        'A reason is required to suspend a candidate.',
+      );
+    }
+
+    const user = db.users.get(candidate.userId);
+    if (user) user.status = 'SUSPENDED';
+
+    writeAudit({
+      module: 'Candidate',
+      action: 'candidate.suspended',
+      actorUserId: gate.user.id,
+      actorRole: gate.user.role,
+      targetType: 'CandidateProfile',
+      targetId: candidate.profile.id,
+      status: 'SUCCESS',
+      meta: { reason: body.reason },
+    });
+
+    return HttpResponse.json({ data: toAdminCandidateCard(candidate) });
+  },
+);
+
+const adminReactivateCandidate = http.post(
+  `${BASE}/admin/candidates/:id/reactivate`,
+  ({ request, params }) => {
+    const gate = requirePermission(request, 'candidates.edit');
+    if (gate.error) return gate.error;
+
+    const candidate = [...db.candidates.values()].find((c) => c.profile.id === params['id']);
+    if (!candidate) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Candidate not found.');
+
+    // The purge is irreversible — a tombstone can never be brought back.
+    if (db.candidateLifecycle.get(candidate.profile.id)?.purgedAt) {
+      return errorResponse(
+        409,
+        'CANDIDATE_PURGED',
+        'Conflict',
+        'This candidate has been purged and cannot be reactivated.',
+      );
+    }
+
+    const user = db.users.get(candidate.userId);
+    if (user) user.status = 'ACTIVE';
+
+    writeAudit({
+      module: 'Candidate',
+      action: 'candidate.reactivated',
+      actorUserId: gate.user.id,
+      actorRole: gate.user.role,
+      targetType: 'CandidateProfile',
+      targetId: candidate.profile.id,
+      status: 'SUCCESS',
+      meta: {},
+    });
+
+    return HttpResponse.json({ data: toAdminCandidateCard(candidate) });
+  },
+);
+
+const adminCandidateDocumentUrl = http.get(
+  `${BASE}/admin/candidates/:id/documents/:type/url`,
+  ({ request, params }) => {
+    // Decision 5: admins read candidate DOCUMENTS — behind its own key, because
+    // this is the DPDP who-saw-whose-passport trail. MODERATOR/SUPPORT are OFF.
+    const gate = requirePermission(request, 'candidates.view_documents');
+    if (gate.error) return gate.error;
+
+    const candidate = [...db.candidates.values()].find((c) => c.profile.id === params['id']);
+    const type = params['type'] as string;
+    const doc = candidate?.profile.documents?.find((d) => d.type === type);
+
+    // ONE 404 for all three causes: no such candidate, purged (documents gone),
+    // or this type never uploaded. Admins are NOT subject to profileVisible.
+    const purged = candidate && db.candidateLifecycle.get(candidate.profile.id)?.purgedAt;
+    if (!candidate || purged || !doc) {
+      return errorResponse(404, 'NOT_FOUND', 'Not found', 'Not found.');
+    }
+
+    writeAudit({
+      module: 'Candidate',
+      action: 'document.viewed',
+      actorUserId: gate.user.id,
+      actorRole: gate.user.role,
+      targetType: 'CandidateDocument',
+      targetId: candidate.profile.id,
+      status: 'SUCCESS',
+      // The TYPE — never the key, never the signed URL.
+      meta: { documentType: type, candidateId: candidate.profile.id },
+    });
+
+    return HttpResponse.json({
+      data: {
+        url: `https://r2.mock.skillindiaconnect.example/docs/${candidate.profile.id}/${type}.pdf?sig=mock&exp=300`,
+        expiresInSeconds: 300,
+      },
+    });
+  },
+);
+
+const adminPurgeCandidate = http.post(
+  `${BASE}/admin/candidates/:id/purge`,
+  async ({ request, params }) => {
+    // SUPER_ADMIN-effective (candidates.delete is OFF for ADMIN, locked OFF for
+    // SUPPORT) — an ADMIN calling this gets a real 403.
+    const gate = requirePermission(request, 'candidates.delete');
+    if (gate.error) return gate.error;
+
+    const candidate = [...db.candidates.values()].find((c) => c.profile.id === params['id']);
+    if (!candidate) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Candidate not found.');
+
+    if (db.candidateLifecycle.get(candidate.profile.id)?.purgedAt) {
+      return errorResponse(
+        409,
+        'CANDIDATE_ALREADY_PURGED',
+        'Conflict',
+        'This candidate has already been purged.',
+      );
+    }
+
+    const body = (await request.json()) as { reason?: string; confirm?: boolean };
+    // A mis-click must never anonymize a human being.
+    if (body.confirm !== true || !body.reason?.trim()) {
+      return errorResponse(
+        422,
+        'PURGE_NOT_CONFIRMED',
+        'Unprocessable Entity',
+        'Purge requires an explicit confirmation and a reason.',
+      );
+    }
+
+    // THE TOMBSTONE. Anonymize in place — the row survives so financial records
+    // and audit rows keep referential integrity, and any applicant card
+    // referencing this candidate now exercises the S4 null-candidate path.
+    const now = new Date().toISOString();
+    const p = candidate.profile;
+    p.fullName = 'Deleted user';
+    p.phone = undefined;
+    p.email = `purged-${candidate.userId}@deleted.invalid`;
+    p.documents = [];
+    p.profileVisible = false;
+    db.candidateLifecycle.set(p.id, { deletionDueAt: null, purgedAt: now });
+
+    const user = db.users.get(candidate.userId);
+    if (user) {
+      user.status = 'PENDING_DELETION';
+      user.email = `purged-${candidate.userId}@deleted.invalid`;
+    }
+
+    writeAudit({
+      module: 'Candidate',
+      action: 'candidate.purged',
+      actorUserId: gate.user.id,
+      actorRole: gate.user.role,
+      targetType: 'CandidateProfile',
+      targetId: p.id,
+      status: 'SUCCESS',
+      meta: { reason: body.reason },
+    });
+
+    return HttpResponse.json({ data: { purgeScheduledFor: now } }, { status: 202 });
+  },
+);
+
+// ── Screen 26: admin jobs ────────────────────────────────────────────────────
+
+function toAdminJobRow(job: MockJobShape): AdminJobRowSchema {
+  const meta = db.jobAdminMeta.get(job.id) ?? {
+    humanId: `JB-2026-${job.id}`,
+    isFeatured: false,
+    isUrgent: false,
+  };
+  const applicantCount = [...db.applications.values()].filter((a) => a.jobId === job.id).length;
+  return {
+    id: job.id,
+    humanId: meta.humanId,
+    title: job.title,
+    companyId: job.companyId,
+    companyName: job.companyName,
+    status: job.status,
+    isFeatured: meta.isFeatured,
+    isUrgent: meta.isUrgent,
+    applicantCount,
+    publishedAt: job.publishedAt ?? null,
+    createdAt: job.createdAt,
+  } as AdminJobRowSchema;
+}
+
+const adminGetJobs = http.get(`${BASE}/admin/jobs`, ({ request }) => {
+  const gate = requirePermission(request, 'jobs.view');
+  if (gate.error) return gate.error;
+
+  const url = new URL(request.url);
+  const page = Number(url.searchParams.get('page') ?? '1');
+  const pageSize = Number(url.searchParams.get('pageSize') ?? '20');
+  const status = url.searchParams.get('status');
+  const employerId = url.searchParams.get('employerId');
+  const search = url.searchParams.get('search')?.toLowerCase();
+
+  // EVERY status — including DRAFT and PENDING_REVIEW, which no employer-facing
+  // or public list returns. That is what makes the moderation queue possible.
+  let rows = [...db.jobs.values()].map(toAdminJobRow);
+  if (status) rows = rows.filter((r) => r.status === status);
+  if (employerId) rows = rows.filter((r) => r.companyId === employerId);
+  if (search) {
+    rows = rows.filter((r) => `${r.title} ${r.companyName}`.toLowerCase().includes(search));
+  }
+
+  return HttpResponse.json(offsetPaginate(rows, page, pageSize));
+});
+
+const adminReviewJob = http.post(`${BASE}/admin/jobs/:id/review`, async ({ request, params }) => {
+  const gate = requirePermission(request, 'jobs.moderate');
+  if (gate.error) return gate.error;
+
+  const job = db.jobs.get(params['id'] as string);
+  if (!job) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Job not found.');
+
+  if (job.status !== 'PENDING_REVIEW') {
+    return errorResponse(
+      409,
+      'JOB_NOT_PENDING_REVIEW',
+      'Conflict',
+      'This job is not awaiting review.',
+    );
+  }
+
+  const body = (await request.json()) as { decision?: string; reason?: string };
+  if (body.decision === 'REJECT' && !body.reason?.trim()) {
+    return errorResponse(
+      422,
+      'REVIEW_REASON_REQUIRED',
+      'Unprocessable Entity',
+      'A reason is required when rejecting a job.',
+    );
+  }
+
+  if (body.decision === 'APPROVE') {
+    job.status = 'ACTIVE';
+    job.publishedAt = new Date().toISOString();
+  } else {
+    // Back to DRAFT with the reason, so the employer can fix and resubmit.
+    job.status = 'DRAFT';
+  }
+
+  writeAudit({
+    module: 'Jobs',
+    action: body.decision === 'APPROVE' ? 'job.review.approved' : 'job.review.rejected',
+    actorUserId: gate.user.id,
+    actorRole: gate.user.role,
+    targetType: 'Job',
+    targetId: job.id,
+    status: 'SUCCESS',
+    meta: { decision: body.decision, ...(body.reason ? { reason: body.reason } : {}) },
+  });
+
+  return HttpResponse.json({ data: toAdminJobRow(job) });
+});
+
+const adminPauseJob = http.post(`${BASE}/admin/jobs/:id/pause`, ({ request, params }) => {
+  const gate = requirePermission(request, 'jobs.moderate');
+  if (gate.error) return gate.error;
+
+  const job = db.jobs.get(params['id'] as string);
+  if (!job) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Job not found.');
+  if (job.status !== 'ACTIVE') {
+    return errorResponse(409, 'ILLEGAL_JOB_TRANSITION', 'Conflict', 'Only ACTIVE jobs can pause.');
+  }
+
+  job.status = 'PAUSED';
+  writeAudit({
+    module: 'Jobs',
+    action: 'job.paused',
+    actorUserId: gate.user.id,
+    actorRole: gate.user.role,
+    targetType: 'Job',
+    targetId: job.id,
+    status: 'SUCCESS',
+    meta: { by: 'admin' },
+  });
+  return HttpResponse.json({ data: toAdminJobRow(job) });
+});
+
+const adminArchiveJob = http.post(`${BASE}/admin/jobs/:id/archive`, ({ request, params }) => {
+  const gate = requirePermission(request, 'jobs.moderate');
+  if (gate.error) return gate.error;
+
+  const job = db.jobs.get(params['id'] as string);
+  if (!job) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Job not found.');
+  if (job.status === 'ARCHIVED') {
+    return errorResponse(409, 'ILLEGAL_JOB_TRANSITION', 'Conflict', 'Job is already archived.');
+  }
+
+  job.status = 'ARCHIVED';
+  job.archivedAt = new Date().toISOString();
+  writeAudit({
+    module: 'Jobs',
+    action: 'job.archived',
+    actorUserId: gate.user.id,
+    actorRole: gate.user.role,
+    targetType: 'Job',
+    targetId: job.id,
+    status: 'SUCCESS',
+    meta: { by: 'admin' },
+  });
+  return HttpResponse.json({ data: toAdminJobRow(job) });
+});
+
+const adminPatchJobFlags = http.patch(
+  `${BASE}/admin/jobs/:id/flags`,
+  async ({ request, params }) => {
+    const gate = requirePermission(request, 'jobs.moderate');
+    if (gate.error) return gate.error;
+
+    const job = db.jobs.get(params['id'] as string);
+    if (!job) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Job not found.');
+
+    const body = (await request.json()) as { featured?: boolean; urgent?: boolean };
+    const meta = db.jobAdminMeta.get(job.id) ?? {
+      humanId: `JB-2026-${job.id}`,
+      isFeatured: false,
+      isUrgent: false,
+    };
+    // ADMIN-SET ONLY (decision 3) — the employer can never reach this. Omitted
+    // fields stay unchanged.
+    if (body.featured !== undefined) meta.isFeatured = body.featured;
+    if (body.urgent !== undefined) meta.isUrgent = body.urgent;
+    db.jobAdminMeta.set(job.id, meta);
+
+    writeAudit({
+      module: 'Jobs',
+      action: 'job.flags.updated',
+      actorUserId: gate.user.id,
+      actorRole: gate.user.role,
+      targetType: 'Job',
+      targetId: job.id,
+      status: 'SUCCESS',
+      meta: { isFeatured: meta.isFeatured, isUrgent: meta.isUrgent },
+    });
+
+    return HttpResponse.json({ data: toAdminJobRow(job) });
+  },
+);
+
+const adminCreateJobOnBehalf = http.post(`${BASE}/admin/jobs`, async ({ request }) => {
+  const gate = requirePermission(request, 'jobs.post_admin');
+  if (gate.error) return gate.error;
+
+  const body = (await request.json()) as Record<string, unknown> & { employerId?: string };
+  const company = [...db.employers.values()].find((c) => c.id === body.employerId);
+  if (!company) {
+    return errorResponse(404, 'NOT_FOUND', 'Not found', 'Employer not found.');
+  }
+
+  // The publish gates STILL apply — an admin cannot launder a job past them.
+  // Rung 1: the TARGET employer must be approved.
+  if (company.status !== 'APPROVED') {
+    return errorResponse(
+      403,
+      'EMPLOYER_NOT_APPROVED',
+      'Forbidden',
+      'The target employer is not approved.',
+    );
+  }
+  // Rung 2: worker protection, evaluated against the admin's own payload.
+  const violations = (['accommodation', 'healthInsurance', 'transportation'] as const).filter(
+    (k) => body[k] === false,
+  );
+  if (violations.length > 0) {
+    return HttpResponse.json(
+      {
+        type: 'about:blank',
+        title: 'Unprocessable Entity',
+        status: 422,
+        detail: 'Worker protection rules must all be met.',
+        code: 'WORKER_PROTECTION_VIOLATION',
+        meta: { violations },
+      } satisfies ErrorSchema,
+      { status: 422 },
+    );
+  }
+
+  const id = `job-admin-${Date.now()}`;
+  const job = {
+    ...(body as object),
+    id,
+    status: 'DRAFT',
+    companyId: company.id,
+    companyName: company.name,
+    createdAt: new Date().toISOString(),
+    publishedAt: null,
+    archivedAt: null,
+  } as MockJobShape;
+  db.jobs.set(id, job);
+  db.jobAdminMeta.set(id, {
+    humanId: `JB-2026-${String(db.jobs.size).padStart(5, '0')}`,
+    isFeatured: false,
+    isUrgent: false,
+  });
+
+  writeAudit({
+    module: 'Jobs',
+    action: 'job.created',
+    actorUserId: gate.user.id,
+    actorRole: gate.user.role,
+    targetType: 'Job',
+    targetId: id,
+    status: 'SUCCESS',
+    meta: { onBehalfOf: company.id },
+  });
+
+  return HttpResponse.json({ data: job }, { status: 201 });
+});
+
+// ── Screen 26: internal notes + the manual WhatsApp resend ───────────────────
+
+const adminGetNotes = http.get(`${BASE}/admin/applications/:id/notes`, ({ request, params }) => {
+  const gate = requirePermission(request, 'applications.notes');
+  if (gate.error) return gate.error;
+
+  const appId = params['id'] as string;
+  if (!db.applications.has(appId)) {
+    return errorResponse(404, 'NOT_FOUND', 'Not found', 'Application not found.');
+  }
+  // INTERNAL ONLY — these never appear on any candidate or employer surface.
+  return HttpResponse.json({ data: db.applicationNotes.get(appId) ?? [] });
+});
+
+const adminPostNote = http.post(
+  `${BASE}/admin/applications/:id/notes`,
+  async ({ request, params }) => {
+    const gate = requirePermission(request, 'applications.notes');
+    if (gate.error) return gate.error;
+
+    const appId = params['id'] as string;
+    if (!db.applications.has(appId)) {
+      return errorResponse(404, 'NOT_FOUND', 'Not found', 'Application not found.');
+    }
+
+    const body = (await request.json()) as { body?: string };
+    if (!body.body?.trim()) {
+      return errorResponse(
+        422,
+        'VALIDATION_ERROR',
+        'Validation failed',
+        'A note body is required.',
+      );
+    }
+
+    const note = {
+      id: `note-${Date.now()}`,
+      authorUserId: gate.user.id,
+      authorRole: gate.user.role,
+      body: body.body,
+      createdAt: new Date().toISOString(),
+    } as NoteEntrySchema;
+
+    const notes = db.applicationNotes.get(appId) ?? [];
+    notes.push(note);
+    db.applicationNotes.set(appId, notes);
+
+    return HttpResponse.json({ data: note }, { status: 201 });
+  },
+);
+
+const adminDeleteNote = http.delete(
+  `${BASE}/admin/applications/:id/notes/:noteId`,
+  ({ request, params }) => {
+    const gate = requirePermission(request, 'applications.notes');
+    if (gate.error) return gate.error;
+
+    const appId = params['id'] as string;
+    const noteId = params['noteId'] as string;
+    const notes = db.applicationNotes.get(appId) ?? [];
+    const idx = notes.findIndex((n) => n.id === noteId);
+    if (idx === -1) {
+      return errorResponse(404, 'NOT_FOUND', 'Not found', 'Note not found.');
+    }
+    notes.splice(idx, 1);
+    db.applicationNotes.set(appId, notes);
+    return new HttpResponse(null, { status: 204 });
+  },
+);
+
+const adminResendWhatsapp = http.post(
+  `${BASE}/admin/applications/:id/resend-whatsapp`,
+  ({ request, params }) => {
+    const gate = requirePermission(request, 'applications.change_status');
+    if (gate.error) return gate.error;
+
+    const appId = params['id'] as string;
+    const application = db.applications.get(appId);
+    if (!application) {
+      return errorResponse(404, 'NOT_FOUND', 'Not found', 'Application not found.');
+    }
+
+    // The bypassGuard seam is SELECTED-only: resending "you've been selected" to
+    // someone who wasn't is the exact harm the once-per-application guard exists
+    // to prevent.
+    if (application.status !== 'SELECTED') {
+      return errorResponse(
+        422,
+        'APPLICATION_NOT_SELECTED',
+        'Unprocessable Entity',
+        'Only SELECTED applications can have the WhatsApp resent.',
+      );
+    }
+
+    const sends = db.whatsappResends.get(appId) ?? [];
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const recent = sends.filter((t) => new Date(t).getTime() > dayAgo);
+    if (recent.length >= RESEND_WHATSAPP_CAP) {
+      return errorResponse(
+        429,
+        'RATE_LIMITED',
+        'Too Many Requests',
+        'This application has reached its resend limit. Try again later.',
+      );
+    }
+
+    const resentAt = new Date().toISOString();
+    recent.push(resentAt);
+    db.whatsappResends.set(appId, recent);
+
+    // The bypass is never anonymous — the acting admin is on the audit row.
+    writeAudit({
+      module: 'Applications',
+      action: 'application.whatsapp.resent',
+      actorUserId: gate.user.id,
+      actorRole: gate.user.role,
+      targetType: 'Application',
+      targetId: appId,
+      status: 'SUCCESS',
+      meta: { template: 'wa.selected', attempt: recent.length },
+    });
+
+    return HttpResponse.json({ data: { resentAt } }, { status: 202 });
+  },
+);
+
+// No `stubNotImplemented` array remains: as of S6 EVERY contract endpoint is
+// live in this file. The only deliberate omissions are /webhooks/razorpay and
+// /webhooks/stripe — server-to-server, signature-authed, and never reachable
+// from browser code (the mocks simulate their EFFECT instead; see the billing
+// section).
 
 // ─── Export all handlers ──────────────────────────────────────────────────────
 
@@ -2779,6 +3716,26 @@ export const handlers = [
   billingCheckout,
   billingOrderById,
   employersCandidateDocumentUrl,
-  // Later-sprint stubs
-  ...stubNotImplemented,
+  // S6: Admin console (RBAC-accurate — each enforces its PermissionKey)
+  adminDashboard,
+  adminGetLogs,
+  adminExportLogs,
+  adminGetRolesMatrix,
+  adminPatchRolesMatrix,
+  adminEmployerCertificateUrl,
+  adminGetCandidates,
+  adminSuspendCandidate,
+  adminReactivateCandidate,
+  adminCandidateDocumentUrl,
+  adminPurgeCandidate,
+  adminGetJobs,
+  adminCreateJobOnBehalf,
+  adminReviewJob,
+  adminPauseJob,
+  adminArchiveJob,
+  adminPatchJobFlags,
+  adminGetNotes,
+  adminPostNote,
+  adminDeleteNote,
+  adminResendWhatsapp,
 ];

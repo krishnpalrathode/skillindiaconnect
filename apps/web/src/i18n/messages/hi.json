@@ -1045,7 +1045,8 @@
       "active": "सक्रिय",
       "draft": "ड्राफ्ट",
       "paused": "रोका गया",
-      "archived": "संग्रहीत"
+      "archived": "संग्रहीत",
+      "pendingReview": "समीक्षा लंबित"
     },
     "actions": {
       "groupLabel": "{title} के लिए कार्रवाई",

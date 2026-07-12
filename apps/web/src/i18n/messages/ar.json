@@ -1045,7 +1045,8 @@
       "active": "نشطة",
       "draft": "مسودة",
       "paused": "متوقفة",
-      "archived": "مؤرشفة"
+      "archived": "مؤرشفة",
+      "pendingReview": "قيد المراجعة"
     },
     "actions": {
       "groupLabel": "إجراءات لـ{title}",

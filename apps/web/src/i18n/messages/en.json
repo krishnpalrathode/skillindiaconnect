@@ -1045,7 +1045,8 @@
       "active": "Active",
       "draft": "Draft",
       "paused": "Paused",
-      "archived": "Archived"
+      "archived": "Archived",
+      "pendingReview": "Pending review"
     },
     "actions": {
       "groupLabel": "Actions for {title}",

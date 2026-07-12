@@ -12,6 +12,7 @@ in parallel against it.
 | 0.2.0   | S2-0   | Employer identity (company + docs), jobs CRUD + lifecycle, public job search, candidate notifications, admin employer approval, admin platform settings |
 | 0.3.0   | S3-0   | Employer profile (hiring prefs, contacts, logo), S3 dashboard shape (totalJobViews, hiredThisMonth, profileChecklist), employer-views-candidate (CandidateEmployerView), minimal candidate browse (CandidateBrowseCard), profile-view analytics (ProfileViewsSummary) |
 | 0.4.0   | S4-0   | Applications: apply-gate ladder (`POST /jobs/{id}/apply`), match snapshot (`matchScore` + `MatchBreakdown`), forward-only state machine (`PATCH /applications/{id}/status`), admin corrective override (`PATCH /admin/applications/{id}/status`), candidate reads (`/candidates/me/applications`, `/candidates/me/applications/{id}` with timeline), employer applicant list + counts (`GET /jobs/{id}/applicants`), admin table (`GET /admin/applications`). Promoted S2/S3 honest-zeros to live: `EmployerDashboardKpi.totalApplications` / `.shortlisted`, `EmployerDashboard.recentApplicants` (now `ApplicantSummary[]`), `Job.applicantCount`. |
+| 0.6.0   | S6-0   | Admin console (both halves): audit log query + CSV export (`GET /admin/logs`, `/admin/logs/export`), admin dashboard (`GET /admin/dashboard`), the RBAC matrix (`GET`/`PATCH /admin/roles/matrix` — 423 `PERMISSION_CELL_LOCKED`), employer certificate access (`GET /admin/employers/{id}/certificate/url`), admin candidates + the purge (`GET /admin/candidates`, suspend/reactivate, `GET .../documents/{type}/url`, `POST .../purge`), admin jobs (`GET`/`POST /admin/jobs`, `/review`, `/pause`, `/archive`, `PATCH /flags`), internal application notes + the manual WhatsApp resend. New schemas: `AuditLogEntry`, `AdminDashboard`, `RbacMatrix`/`RbacCell`, `PermissionKey`, `AdminCandidateCard`, `AdminJobRow`, `NoteEntry`, `OffsetMeta`, `JobCreateRequest` (extracted from `POST /jobs`, now shared with on-behalf posting). **Enum gaps closed:** `UserRole` gained `MODERATOR`/`SUPPORT` and `JobStatus` gained `PENDING_REVIEW` — both existed in Prisma + the S2 seed but were unaddressable in the contract. |
 | 0.5.0   | S5-0   | Billing: plans (`GET /billing/plans`), subscription status (`GET /billing/subscription` — FREE is a well-formed state, never 404), invoices (`GET /billing/invoices`, sequential `SIC-YYYY-NNNNN`), checkout (`POST /billing/checkout` — `{ planCode }` only, server-side gateway routing, `Idempotency-Key`), order polling (`GET /billing/orders/{id}` — webhook-only activation), payment webhooks (`POST /webhooks/razorpay|stripe` — spec-only, NOT mocked), the Pro document gate (`GET /employers/candidates/{id}/documents/{type}/url` — `PLAN_UPGRADE_REQUIRED`, audited issuance, S3 404-indistinguishability inherited). Money = integer subunits everywhere. Publish quota is now plan-driven (`Plan.maxActiveJobs`). |
 
 ## Files
@@ -147,8 +148,71 @@ When you add a new endpoint to the spec:
   employers by default, incl. the LOCAL `employer-local@example.com` for the
   GST split), PRO ACTIVE (`employer-pro@example.com` — the document-gate signed
   URL), PRO GRACE (`employer-grace@example.com`).
-- **Stubs (later sprints):** Paths marked `[S6]`/etc. return
-  `501 NOT_IMPLEMENTED`. They exist so the full API surface is navigable.
+- **S6 admin console — locked semantics:**
+  - **EN-only.** i18n keys still exist so admin screens can be translated later,
+    but there are no HI/AR fixtures and **no RTL obligations** on admin screens.
+    User-facing (candidate/employer) i18n is untouched.
+  - **RBAC is DATA, not role checks.** Every admin endpoint declares a
+    `PermissionKey`; denial is 403 `FORBIDDEN` with `meta.requiredPermission`. A
+    role holds a permission iff its `role_permissions` cell is enabled — so
+    "SUPER_ADMIN-effective" means "seeded ON for SUPER_ADMIN, locked OFF for
+    everyone else", never a hardcoded role branch.
+  - **The 5 permission keys S6 ADDS** (`logs.export`, `roles.view`,
+    `roles.manage`, `candidates.view_documents`, `jobs.moderate`) must be seeded
+    into `permission.constants.ts` + `prisma/seed.ts` by **S6a-B2** — the seed
+    hard-throws on an unknown matrix key. Deliberately NOT forked into
+    near-duplicates: the purge reuses `candidates.delete` (already
+    SUPER_ADMIN-effective), suspend/reactivate reuse `candidates.edit`, and
+    on-behalf posting reuses `jobs.post_admin`.
+  - **Locked matrix cells are immutable:** PATCH a locked cell → **423
+    `PERMISSION_CELL_LOCKED`**, and NO write occurs. The whole SUPER_ADMIN column
+    plus the seeded locked set are locked. The server enforces it because a
+    disabled checkbox is not a security control. A successful write invalidates
+    the affected role's permission cache (mechanism, not a client concern).
+  - **The purge is immediate and IRREVERSIBLE:** `POST
+    /admin/candidates/{id}/purge` requires `{ reason, confirm: true }` — missing
+    either → 422 `PURGE_NOT_CONFIRMED`, because a mis-click must never anonymize
+    a human being. It anonymizes in place (name → "Deleted user", contacts
+    nulled, documents gone) and TOMBSTONES rather than row-deletes, so financial
+    records and audit rows keep referential integrity and applications fall onto
+    the S4 null-candidate path. It is the ADMIN trigger for the **same worker**
+    as the candidate's own 30-day self-deletion — the difference is the trigger
+    and the timing (no grace period), not the effect.
+  - **Admin document access (both kinds) is audited per issuance:** employer
+    certificates and candidate documents each mint a short-expiry signed GET and
+    write a `document.viewed` row carrying the document TYPE — never the object
+    key, never the signed URL. This is the DPDP who-saw-whose-passport trail.
+    404 covers nonexistent / purged / never-uploaded, indistinguishably; unlike
+    the employer gate, admins are NOT subject to `profileVisible`.
+  - **Featured / Urgent are ADMIN-SET ONLY** (`PATCH /admin/jobs/{id}/flags`) —
+    an employer can never set them on their own job, which is what keeps them
+    meaningful. They drive the S2-F1 badges and the S2-B6 `?badge=` filters.
+  - **On-behalf posting does not bypass the gates:** `POST /admin/jobs` runs the
+    S2-B5 publish ladder against the TARGET employer unchanged
+    (`EMPLOYER_NOT_APPROVED` → `WORKER_PROTECTION_VIOLATION` → `JOB_QUOTA_EXCEEDED`).
+  - **Internal notes are internal.** `NoteEntry` never appears on `Application`,
+    `ApplicationDetail`, `ApplicationCard`, `ApplicantCard`, or the
+    candidate-facing timeline. Adding it to a non-admin surface is a contract
+    violation, not a feature.
+  - **The manual WhatsApp resend is the `bypassGuard` seam:** SELECTED-only (else
+    422 `APPLICATION_NOT_SELECTED`), capped at 3 per application per 24 h (else
+    429), and always audited with the acting admin — the bypass is never
+    anonymous.
+  - **The audit log:** keyset-paginated over the BigInt PK (rendered as a
+    string), newest first; `meta` is already redaction-safe at write time (S2-B2),
+    so no raw PII can reach the screen. Reading the log is itself audited, and so
+    is exporting it. The CSV export is a SEPARATE, higher grant (`logs.export`)
+    and is bounded — ≤10,000 rows and ≤90 days, else 422 `EXPORT_TOO_LARGE`.
+- **S6 mocks are RBAC-ACCURATE (the point of them):** `handlers.ts` enforces each
+  endpoint's `PermissionKey` against a faithful copy of the API's seeded matrix,
+  with a fixture user per admin role (`superadmin@`, `admin@`, `moderator@`,
+  `support@example.com`). So the console is built against REAL denials — a
+  MODERATOR genuinely gets 403 on `logs.export` / `roles.manage`, and an ADMIN
+  genuinely gets 403 on the purge. A permissive mock would ship an admin UI full
+  of buttons the user cannot actually press.
+- **No `NOT_IMPLEMENTED` stubs remain.** As of S6 every contract endpoint is live
+  in `handlers.ts`. The only deliberate omissions are `/webhooks/razorpay|stripe`
+  (server-to-server; the mocks simulate their EFFECT instead).
 
 ## Validating the spec manually
 

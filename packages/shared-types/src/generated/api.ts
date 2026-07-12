@@ -1742,10 +1742,46 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [S6] Admin overview dashboard
-         * @description **Sprint 6 — not yet implemented.**
+         * Admin overview dashboard (S6)
+         * @description **RBAC: `reports.view`.**
+         *
+         *     Live platform KPIs — candidate/employer/job/application counts, this
+         *     month's PAID-order revenue, and the two work-queue depths that drive the
+         *     Screen-24 / Screen-26 badges. Every figure is a live aggregate over
+         *     existing tables; nothing here is an honest-zero placeholder.
          */
         get: operations["getAdminDashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/employers/{id}/certificate/url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Signed URL for an employer's registration certificate (S6)
+         * @description **RBAC: `employers.view`.**
+         *
+         *     S2-B4's admin employer list carries only the certificate REFERENCE; an
+         *     admin must actually READ the document to approve or reject a company.
+         *     This mints a SHORT-EXPIRY signed R2 GET URL for it.
+         *
+         *     **Every issuance is audited** (`document.viewed`: actor, company, when).
+         *     The object key and the signed URL itself are NEVER written to the audit
+         *     meta — only the fact of the grant.
+         *
+         *     404 when the company does not exist OR has no certificate uploaded —
+         *     indistinguishable.
+         */
+        get: operations["getAdminEmployerCertificateUrl"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1762,12 +1798,140 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [S6] List all candidates (admin)
-         * @description **Sprint 6 — not yet implemented.**
+         * List candidates (admin) — Screen 25 (S6)
+         * @description **RBAC: `candidates.view`.**
+         *
+         *     Offset-paginated admin candidate table. The admin card is FULLER than the
+         *     employer view (contact details and deletion state are included — admins
+         *     are the DPDP data controllers) but still carries **no document keys or
+         *     URLs**; document CONTENT is a separate, per-issuance-audited grant.
+         *
+         *     Purged candidates appear as tombstones (`fullName` = "Deleted user",
+         *     contacts null, `purgedAt` set) — they are not hidden, so the audit trail
+         *     stays navigable.
          */
         get: operations["getAdminCandidates"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/candidates/{id}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suspend a candidate account (S6)
+         * @description **RBAC: `candidates.edit`.**
+         *
+         *     Sets the user to SUSPENDED (they can no longer log in or apply). A
+         *     `reason` is MANDATORY and is written to the audit row. Reversible via
+         *     `/reactivate` — this is NOT the purge.
+         */
+        post: operations["postAdminCandidateSuspend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/candidates/{id}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reactivate a suspended candidate (S6)
+         * @description **RBAC: `candidates.edit`.** Returns a SUSPENDED user to ACTIVE. Audited.
+         *     A PURGED candidate can never be reactivated (409) — the purge is
+         *     irreversible.
+         */
+        post: operations["postAdminCandidateReactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/candidates/{id}/documents/{type}/url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Signed URL for a candidate document (admin) — S6
+         * @description **RBAC: `candidates.view_documents`** (locked decision 5 — admins may
+         *     read candidate DOCUMENTS, not just employer certificates).
+         *
+         *     Mints a SHORT-EXPIRY signed R2 GET URL. **Every issuance is audited**
+         *     (`document.viewed`: actor, candidate, document TYPE, when) — the object
+         *     key and the signed URL are never in the audit meta. This is the DPDP
+         *     who-saw-whose-passport trail, and it is the reason this permission is a
+         *     separate key rather than being folded into `candidates.view`.
+         *
+         *     **404 discipline (differs from the employer gate — read carefully):**
+         *     an admin is NOT subject to `profileVisible`, so a hidden candidate is
+         *     still readable. The single 404 covers: candidate does not exist, the
+         *     candidate is PURGED (documents are gone), or this document type was
+         *     never uploaded. Those three are indistinguishable.
+         */
+        get: operations["getAdminCandidateDocumentUrl"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/candidates/{id}/purge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Purge (anonymize) a candidate — IRREVERSIBLE (S6)
+         * @description **RBAC: `candidates.delete`** (SUPER_ADMIN-effective: seeded ON+locked for
+         *     SUPER_ADMIN, locked OFF for ADMIN/MODERATOR/SUPPORT). Deliberately reuses
+         *     the existing key rather than forking a new `candidates.purge`.
+         *
+         *     **Immediate and IRREVERSIBLE.** On success the purge worker anonymizes
+         *     the profile in place: name → "Deleted user", contact fields nulled,
+         *     documents deleted from R2, photo/video removed. `purgedAt` is set. The
+         *     user row is TOMBSTONED, not row-deleted, so financial records and audit
+         *     rows (which are never cascade-deleted) keep their referential integrity —
+         *     applications survive with a null-candidate tombstone, which is exactly the
+         *     S4 null-candidate applicant-card path.
+         *
+         *     **Relationship to self-deletion:** a candidate's own account deletion sets
+         *     `deletionDueAt = now + 30 days` and the SAME purge worker anonymizes them
+         *     when it elapses. This endpoint is the ADMIN trigger for that identical
+         *     worker — the difference is the trigger and the timing (immediate, no
+         *     30-day grace), not the effect.
+         *
+         *     **Confirmation is mandatory:** `confirm` must be exactly `true` and a
+         *     `reason` must be supplied. A body missing either → 422
+         *     `PURGE_NOT_CONFIRMED`; a mis-click must never anonymize a human being.
+         */
+        post: operations["postAdminCandidatePurge"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1782,19 +1946,114 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [S6] List all job postings (admin)
-         * @description **Sprint 6 — not yet implemented.**
+         * List all job postings (admin) — Screen 26 (S6)
+         * @description **RBAC: `jobs.view`.**
+         *
+         *     Offset-paginated. Unlike every employer-facing or public list, this
+         *     returns EVERY status — including DRAFT and PENDING_REVIEW, which is what
+         *     makes the moderation queue possible.
          */
         get: operations["getAdminJobs"];
         put?: never;
-        post?: never;
+        /**
+         * Create a job ON BEHALF of an employer (S6)
+         * @description **RBAC: `jobs.post_admin`** (locked decision 4 — reuses the existing key
+         *     rather than forking `jobs.create_onbehalf`).
+         *
+         *     Minimal on-behalf posting: the standard job-create shape plus the
+         *     `employerId` it is being created FOR. The job belongs to that employer.
+         *
+         *     **The publish gates STILL apply, unchanged.** An admin cannot launder a
+         *     job past them: on publish, the S2-B5 ladder runs against the TARGET
+         *     employer exactly as it would for the employer themselves —
+         *     `EMPLOYER_NOT_APPROVED` (403), `WORKER_PROTECTION_VIOLATION` (422), then
+         *     `JOB_QUOTA_EXCEEDED` (422) against that employer's plan. Creating a DRAFT
+         *     is always allowed; publishing a protection-violating or over-quota job on
+         *     someone's behalf is not.
+         */
+        post: operations["postAdminJob"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/admin/jobs/{id}": {
+    "/admin/jobs/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resolve a PENDING_REVIEW job (S6)
+         * @description **RBAC: `jobs.moderate`.**
+         *
+         *     The resolution half of the S2-B5 seam: when the
+         *     `jobs.require_admin_approval` setting is ON, publishing puts a job into
+         *     PENDING_REVIEW and it stops there. This endpoint resolves it.
+         *
+         *     - `APPROVE` → the job goes ACTIVE (`publishedAt` set). The worker-
+         *       protection and quota gates were already enforced at publish time.
+         *     - `REJECT` → the job returns to DRAFT with the `reason` recorded and
+         *       surfaced to the employer, so they can fix and resubmit.
+         *
+         *     `reason` is required for REJECT. Both outcomes are audited. 409 if the
+         *     job is not in PENDING_REVIEW — there is nothing to resolve.
+         */
+        post: operations["postAdminJobReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/jobs/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pause any job (admin) — S6
+         * @description **RBAC: `jobs.moderate`.** Admins may act on ANY employer's job (the
+         *     employer-facing pause is scoped to their own). ACTIVE → PAUSED. Audited;
+         *     emits the same `job.paused` event, so the search cache invalidates.
+         */
+        post: operations["postAdminJobPause"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/jobs/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive any job (admin) — S6
+         * @description **RBAC: `jobs.moderate`.** ACTIVE or PAUSED → ARCHIVED, on any employer's
+         *     job. Terminal. Audited; emits `job.archived`.
+         */
+        post: operations["postAdminJobArchive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/jobs/{id}/flags": {
         parameters: {
             query?: never;
             header?: never;
@@ -1808,10 +2067,17 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * [S6] Moderate a job posting
-         * @description **Sprint 6 — not yet implemented.**
+         * Set the Featured / Urgent flags (S6)
+         * @description **RBAC: `jobs.moderate`.**
+         *
+         *     Featured and Urgent are **ADMIN-SET ONLY** (locked decision 3) — an
+         *     employer can never set them on their own job, which is what keeps them
+         *     meaningful. They drive the S2-F1 job-card badges and the S2-B6 search
+         *     filters (`?badge=featured|urgent`).
+         *
+         *     Omitted fields are left unchanged. Audited.
          */
-        patch: operations["patchAdminJobById"];
+        patch: operations["patchAdminJobFlags"];
         trace?: never;
     };
     "/admin/applications": {
@@ -1855,7 +2121,7 @@ export interface paths {
         patch: operations["patchAdminApplicationStatus"];
         trace?: never;
     };
-    "/admin/roles/{role}/permissions": {
+    "/admin/applications/{id}/notes": {
         parameters: {
             query?: never;
             header?: never;
@@ -1863,20 +2129,125 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [S6] Get permissions for a role
-         * @description **Sprint 6 — not yet implemented.**
+         * List internal notes on an application (S6)
+         * @description **RBAC: `applications.notes`.**
+         *
+         *     **INTERNAL ONLY.** Notes exist for the admin/support team and are NEVER
+         *     surfaced to the candidate or the employer — they are absent from
+         *     `Application`, `ApplicationDetail`, `ApplicationCard`, `ApplicantCard`,
+         *     and the candidate-facing status timeline. The timeline mapper already
+         *     excludes them; adding them to any non-admin surface is a contract
+         *     violation, not a feature.
          */
-        get: operations["getAdminRolePermissions"];
+        get: operations["getAdminApplicationNotes"];
+        put?: never;
+        /**
+         * Add an internal note to an application (S6)
+         * @description **RBAC: `applications.notes`.** Internal-only (see GET). Audited.
+         */
+        post: operations["postAdminApplicationNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/applications/{id}/notes/{noteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete an internal note (S6)
+         * @description **RBAC: `applications.notes`.** Audited.
+         */
+        delete: operations["deleteAdminApplicationNote"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/applications/{id}/resend-whatsapp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Manually resend the "Selected" WhatsApp (S6)
+         * @description **RBAC: `applications.change_status`.**
+         *
+         *     The support escape hatch for the once-per-application WhatsApp guard.
+         *     S4-B2 fires `wa.selected` exactly ONCE per application (guarded by
+         *     `selectedNotifiedAt`); when a candidate genuinely never received it,
+         *     support needs a way to send it again. This is the `bypassGuard` seam:
+         *     it re-sends `wa.selected` DESPITE `selectedNotifiedAt` being set.
+         *
+         *     **Valid only for SELECTED applications** — resending a "you've been
+         *     selected" message to someone who wasn't is the exact harm the guard
+         *     exists to prevent, so a non-SELECTED application is 422
+         *     `APPLICATION_NOT_SELECTED`.
+         *
+         *     **Rate-limited: 3 resends per application per 24h** (and the standard
+         *     authed limit applies). Exceeding it → 429. Every resend is audited with
+         *     the acting admin — this bypass is never anonymous.
+         */
+        post: operations["postAdminApplicationResendWhatsapp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/roles/matrix": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The RBAC permission matrix — Screen 27 (S6)
+         * @description **RBAC: `roles.view`.**
+         *
+         *     The full role × permission grid. `locked` cells are IMMUTABLE: the entire
+         *     SUPER_ADMIN column plus the seeded locked set (e.g. `billing.manage` for
+         *     non-super roles). The FE renders locked cells as disabled — and the
+         *     server enforces it anyway (423), because a disabled checkbox is not a
+         *     security control.
+         *
+         *     Only admin-side roles are columns; CANDIDATE and EMPLOYER have no rows.
+         */
+        get: operations["getAdminRolesMatrix"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
         /**
-         * [S6] Update permissions for a role (Super-Admin only)
-         * @description **Sprint 6 — not yet implemented.**
+         * Toggle one permission cell (S6)
+         * @description **RBAC: `roles.manage`** (SUPER_ADMIN-effective — seeded ON+locked for
+         *     SUPER_ADMIN, locked OFF for everyone else).
+         *
+         *     Flips exactly ONE cell. A locked cell → **423 `PERMISSION_CELL_LOCKED`**
+         *     and NO write occurs (the guard is server-side, not merely a disabled
+         *     checkbox).
+         *
+         *     **Cache note (mechanism, not a client concern):** a successful write
+         *     INVALIDATES the permission cache for the affected role, so the next
+         *     request by any user of that role re-reads the matrix. The client does not
+         *     need to do anything — it just refetches the matrix to re-render.
+         *     Every change is audited (who flipped which cell, from what to what).
          */
-        patch: operations["patchAdminRolePermissions"];
+        patch: operations["patchAdminRolesMatrix"];
         trace?: never;
     };
     "/admin/logs": {
@@ -1887,10 +2258,59 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [S6] Get audit logs
-         * @description **Sprint 6 — not yet implemented.** Audit logs are never cascade-deleted.
+         * Query the audit log — Screen 29 (S6)
+         * @description **RBAC: `logs.view`.**
+         *
+         *     KEYSET-paginated over the BigInt primary key, newest first (an offset
+         *     scan over an append-only table this large degrades badly). `nextCursor`
+         *     is the last row's `id`; pass it back as `?cursor=`. Audit rows are
+         *     append-only and are NEVER cascade-deleted.
+         *
+         *     `meta` on every row is ALREADY REDACTED at write time (S2-B2's denylist),
+         *     so no raw PII — passport numbers, phones, emails, tokens, OTPs, document
+         *     keys or URLs — can reach this screen. The client renders it verbatim.
+         *
+         *     **The query itself is audited** — reading the audit log is an audited
+         *     event. Watching the watchers is the point.
          */
         get: operations["getAdminLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/logs/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export the audit log as CSV (S6)
+         * @description **RBAC: `logs.export`** — a SEPARATE, higher-privilege key than
+         *     `logs.view`. Reading a page on screen and walking out with the whole
+         *     table are different acts, and the matrix must be able to grant one
+         *     without the other.
+         *
+         *     Same filters as `GET /admin/logs`. Returns `text/csv` with a
+         *     `Content-Disposition: attachment` header.
+         *
+         *     **Bounded — the cap is part of the contract:** at most **10,000 rows** per
+         *     export, and the date range may not exceed **90 days**. A request that
+         *     would exceed either → 422 `EXPORT_TOO_LARGE` (`meta.maxRows`,
+         *     `meta.maxRangeDays`) telling the caller to narrow the filters. An
+         *     unbounded export of an append-only audit table is a memory incident
+         *     waiting to happen.
+         *
+         *     **The export writes its own audit row** (`logs.exported`: who, which
+         *     filters, how many rows) — an export is exactly the kind of event the log
+         *     exists to record.
+         */
+        get: operations["getAdminLogsExport"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1934,8 +2354,11 @@ export interface components {
                 [key: string]: unknown;
             };
         };
-        /** @enum {string} */
-        UserRole: "CANDIDATE" | "EMPLOYER" | "ADMIN" | "SUPER_ADMIN";
+        /**
+         * @description MODERATOR and SUPPORT are admin-side roles that exist in the database and the seeded RBAC matrix from S2 but were missing from this enum until S6 made them addressable (they are matrix columns on Screen 27, and audit rows carry them as `actorRole`).
+         * @enum {string}
+         */
+        UserRole: "CANDIDATE" | "EMPLOYER" | "SUPER_ADMIN" | "ADMIN" | "MODERATOR" | "SUPPORT";
         /** @enum {string} */
         UserStatus: "ACTIVE" | "SUSPENDED" | "PENDING_DELETION";
         /** @enum {string} */
@@ -1962,10 +2385,10 @@ export interface components {
         /** @enum {string} */
         EmployeeRange: "1-10" | "11-50" | "51-200" | "201-500" | "500+";
         /**
-         * @description DRAFT — visible only to the owning employer, not in public search. ACTIVE — live in public search; candidates can save and apply (S4). PAUSED — hidden from public search; can be resumed to ACTIVE. ARCHIVED — permanent, read-only; cannot be un-archived.
+         * @description DRAFT — visible only to the owning employer, not in public search. PENDING_REVIEW — published while the `jobs.require_admin_approval` setting is ON, so it awaits admin resolution and is NOT yet live. It exists in the database from S2-B5 but was only addressable on the ADMIN surface, which S6 adds (`POST /admin/jobs/{id}/review`). No employer or public list returns it. ACTIVE — live in public search; candidates can save and apply (S4). PAUSED — hidden from public search; can be resumed to ACTIVE. ARCHIVED — permanent, read-only; cannot be un-archived.
          * @enum {string}
          */
-        JobStatus: "DRAFT" | "ACTIVE" | "PAUSED" | "ARCHIVED";
+        JobStatus: "DRAFT" | "PENDING_REVIEW" | "ACTIVE" | "PAUSED" | "ARCHIVED";
         /** @enum {string} */
         JobMarket: "GULF" | "LOCAL";
         /** @enum {string} */
@@ -2785,8 +3208,285 @@ export interface components {
              */
             expiresInSeconds: number;
         };
+        JobCreateRequest: {
+            title: string;
+            market: components["schemas"]["JobMarket"];
+            location: string;
+            description?: string;
+            /** Format: uuid */
+            categoryId?: string;
+            salaryMin?: number;
+            salaryMax?: number;
+            /** @example AED */
+            salaryCurrency: string;
+            accommodation: boolean;
+            healthInsurance: boolean;
+            transportation: boolean;
+            workConditions?: string;
+            requirements?: string[];
+            experienceRequiredYears?: number;
+            vacancies?: number;
+            genderPreference?: components["schemas"]["GenderPreference"];
+        };
+        /** @description The standard offset-pagination envelope used by every admin table. */
+        OffsetMeta: {
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        /**
+         * @description Outcome recorded on an audit row.
+         * @enum {string}
+         */
+        AuditStatus: "SUCCESS" | "FAILED" | "BLOCKED" | "DELIVERED" | "ERROR";
+        /**
+         * @description The RBAC permission keys (Screen 27). The first 20 are the S2-seeded set;
+         *     the last 5 are ADDED BY S6 (`logs.export`, `roles.view`, `roles.manage`,
+         *     `candidates.view_documents`, `jobs.moderate`) and must be seeded by
+         *     S6a-B2 into `permission.constants.ts` + the seed matrix.
+         *
+         *     Deliberately NOT forked into new near-duplicates: candidate purge reuses
+         *     `candidates.delete` (already SUPER_ADMIN-effective / locked-off
+         *     elsewhere), suspend/reactivate reuse `candidates.edit`, and on-behalf job
+         *     creation reuses `jobs.post_admin`.
+         * @enum {string}
+         */
+        PermissionKey: "candidates.view" | "candidates.edit" | "candidates.delete" | "candidates.onboard_manual" | "candidates.export" | "employers.view" | "employers.approve_reject" | "employers.suspend" | "employers.delete" | "jobs.view" | "jobs.post_admin" | "jobs.archive" | "applications.manage" | "applications.change_status" | "applications.notes" | "reports.view" | "logs.view" | "billing.manage" | "subscriptions.manage" | "admin_users.manage" | "logs.export" | "roles.view" | "roles.manage" | "candidates.view_documents" | "jobs.moderate";
+        /**
+         * @description One audit row (Screen 29). `meta` is ALREADY REDACTED at write time by
+         *     the S2-B2 denylist — no raw PII (passport numbers, phones, emails,
+         *     tokens, OTPs, document keys/URLs) ever reaches this surface, so the
+         *     client may render it verbatim. Audit rows are append-only and are never
+         *     cascade-deleted.
+         */
+        AuditLogEntry: {
+            /**
+             * @description The BigInt primary key rendered as a STRING (it exceeds JS's safe integer range). This is also the keyset cursor.
+             * @example 1048576
+             */
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+            /**
+             * @description The B2 taxonomy — drives Screen 29's filter chips.
+             * @example Payments
+             */
+            module: string;
+            /**
+             * @description Dot-namespaced action.
+             * @example subscription.activated
+             */
+            action: string;
+            /**
+             * Format: uuid
+             * @description Null for system-driven events (cron sweeps, webhooks).
+             */
+            actorUserId?: string | null;
+            /** @description Null for system-driven events. */
+            actorRole?: components["schemas"]["UserRole"] | null;
+            /** @example Subscription */
+            targetType?: string | null;
+            targetId?: string | null;
+            status: components["schemas"]["AuditStatus"];
+            /** @description Redaction-safe context (counts, ids, codes) — never raw PII. */
+            meta: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * @description Admin overview KPIs. All figures are LIVE aggregates over the existing
+         *     tables (no honest-zeros remain at S6): candidate/employer/job/application
+         *     counts come from the same sources as the employer dashboard, and revenue
+         *     sums PAID orders in the current calendar month.
+         */
+        AdminDashboard: {
+            counts: {
+                /** @description Non-purged candidate profiles. */
+                candidates: number;
+                /**
+                 * @description Company counts keyed by CompanyStatus.
+                 * @example {
+                 *       "PENDING": 4,
+                 *       "APPROVED": 37,
+                 *       "REJECTED": 2,
+                 *       "SUSPENDED": 1
+                 *     }
+                 */
+                employers: {
+                    [key: string]: number;
+                };
+                /**
+                 * @description Job counts keyed by JobStatus.
+                 * @example {
+                 *       "DRAFT": 5,
+                 *       "PENDING_REVIEW": 3,
+                 *       "ACTIVE": 22,
+                 *       "PAUSED": 4,
+                 *       "ARCHIVED": 11
+                 *     }
+                 */
+                jobs: {
+                    [key: string]: number;
+                };
+                /**
+                 * @description Application counts keyed by ApplicationStatus.
+                 * @example {
+                 *       "PENDING": 40,
+                 *       "SHORTLISTED": 12,
+                 *       "SELECTED": 5,
+                 *       "REJECTED": 9
+                 *     }
+                 */
+                applications: {
+                    [key: string]: number;
+                };
+            };
+            /** @description Sum of PAID order totals this calendar month, integer subunits. */
+            revenueThisMonthSubunits: number;
+            /** @example INR */
+            currency: string;
+            /** @description Companies awaiting approval — the Screen-24 work queue depth. */
+            pendingEmployerReviews: number;
+            /** @description Jobs in PENDING_REVIEW — the Screen-26 work queue depth. */
+            pendingJobReviews: number;
+        };
+        /**
+         * @description One cell of the Screen-27 matrix. `locked = true` means IMMUTABLE — the
+         *     entire SUPER_ADMIN column plus the seeded locked set (e.g.
+         *     `billing.manage` for non-super roles). A PATCH targeting a locked cell is
+         *     rejected 423 `PERMISSION_CELL_LOCKED` and writes nothing.
+         */
+        RbacCell: {
+            role: components["schemas"]["UserRole"];
+            permission: components["schemas"]["PermissionKey"];
+            enabled: boolean;
+            locked: boolean;
+        };
+        /**
+         * @description The full permission matrix. `roles` carries ONLY the admin-side roles —
+         *     CANDIDATE and EMPLOYER have no rows (they are not admin-console roles and
+         *     are never rendered as columns).
+         */
+        RbacMatrix: {
+            /**
+             * @example [
+             *       "SUPER_ADMIN",
+             *       "ADMIN",
+             *       "MODERATOR",
+             *       "SUPPORT"
+             *     ]
+             */
+            roles: components["schemas"]["UserRole"][];
+            permissions: components["schemas"]["PermissionKey"][];
+            cells: components["schemas"]["RbacCell"][];
+        };
+        /**
+         * @description Admin-context candidate row (Screen 25) — FULLER than the employer view
+         *     (contact details and deletion state are included, since admins are the
+         *     DPDP data controllers) but STILL carries NO document keys or URLs.
+         *     Document CONTENT is a separate, per-issuance-audited grant
+         *     (`GET /admin/candidates/{id}/documents/{type}/url`).
+         *
+         *     A PURGED candidate is a tombstone: `fullName` is "Deleted user",
+         *     contact fields are null, `documents` is empty, and `purgedAt` is set.
+         */
+        AdminCandidateCard: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            userId: string;
+            fullName: string;
+            /** @description Admin context — the candidate's showPhone toggle does NOT hide it. */
+            phone?: string | null;
+            email?: string | null;
+            status: components["schemas"]["UserStatus"];
+            /** @description The candidate's own browse-pool visibility toggle. */
+            profileVisible: boolean;
+            completionPct: number;
+            /** @description Upload STATUS only — never a key or URL. */
+            documents?: components["schemas"]["CandidateDocumentStatus"][];
+            /**
+             * Format: date-time
+             * @description Set when the candidate requested their own 30-day self-deletion.
+             */
+            deletionDueAt?: string | null;
+            /**
+             * Format: date-time
+             * @description Set once anonymized (admin purge OR the elapsed self-deletion).
+             */
+            purgedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /**
+         * @description Admin-context job row (Screen 26) — every status is visible, including
+         *     DRAFT and PENDING_REVIEW which no employer-facing or public list returns.
+         */
+        AdminJobRow: {
+            /** Format: uuid */
+            id: string;
+            /** @example JB-2026-00042 */
+            humanId: string;
+            title: string;
+            /** Format: uuid */
+            companyId: string;
+            companyName: string;
+            status: components["schemas"]["JobStatus"];
+            /** @description ADMIN-SET (decision 3) — drives the S2-F1 badge + S2-B6 filter. */
+            isFeatured: boolean;
+            /** @description ADMIN-SET (decision 3) — drives the S2-F1 badge + S2-B6 filter. */
+            isUrgent: boolean;
+            applicantCount?: number;
+            /** Format: date-time */
+            publishedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /**
+         * @description An INTERNAL admin note on an application (Screen 26).
+         *
+         *     **Internal-only — never surfaced to the candidate or the employer.**
+         *     Notes are not part of `Application`, `ApplicationDetail`,
+         *     `ApplicationCard`, `ApplicantCard`, or the candidate-facing
+         *     `ApplicationTimelineEntry` — the timeline mapper already excludes them
+         *     and must continue to. Adding a note to any non-admin surface is a
+         *     contract violation.
+         */
+        NoteEntry: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            authorUserId: string;
+            authorRole: components["schemas"]["UserRole"];
+            body: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
     };
-    responses: never;
+    responses: {
+        /** @description The caller's role does not hold the permission this endpoint requires. */
+        AdminForbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "type": "about:blank",
+                 *       "title": "Forbidden",
+                 *       "status": 403,
+                 *       "detail": "You do not have permission to perform this action.",
+                 *       "code": "FORBIDDEN",
+                 *       "meta": {
+                 *         "requiredPermission": "logs.export"
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+    };
     parameters: {
         /** @description Opaque keyset cursor for cursor-paginated feeds */
         CursorParam: string;
@@ -5050,26 +5750,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    title: string;
-                    market: components["schemas"]["JobMarket"];
-                    location: string;
-                    description?: string;
-                    /** Format: uuid */
-                    categoryId?: string;
-                    salaryMin?: number;
-                    salaryMax?: number;
-                    /** @example AED */
-                    salaryCurrency: string;
-                    accommodation: boolean;
-                    healthInsurance: boolean;
-                    transportation: boolean;
-                    workConditions?: string;
-                    requirements?: string[];
-                    experienceRequiredYears?: number;
-                    vacancies?: number;
-                    genderPreference?: components["schemas"]["GenderPreference"];
-                };
+                "application/json": components["schemas"]["JobCreateRequest"];
             };
         };
         responses: {
@@ -6367,21 +7048,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Dashboard KPIs */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
+                    "application/json": {
+                        data: components["schemas"]["AdminDashboard"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+        };
+    };
+    getAdminEmployerCertificateUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Short-expiry signed URL grant (issuance audited) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DocumentUrlGrant"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Company not found, or no certificate on file (indistinguishable) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };
@@ -6394,8 +7103,11 @@ export interface operations {
                 page?: components["parameters"]["PageParam"];
                 /** @description Items per page for offset-paginated admin tables (default 20, max 100) */
                 pageSize?: components["parameters"]["PageSizeParam"];
-                /** @description Sort expression in the format `field:asc` or `field:desc`. Allowed fields are whitelisted per endpoint. */
-                sort?: components["parameters"]["SortParam"];
+                /** @description Matches name, email, or phone. */
+                search?: string;
+                status?: components["schemas"]["UserStatus"];
+                /** @description Filter on the candidate's own profileVisible toggle. */
+                visibility?: boolean;
             };
             header?: never;
             path?: never;
@@ -6403,8 +7115,95 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Candidate page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCandidateCard"][];
+                        meta: components["schemas"]["OffsetMeta"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+        };
+    };
+    postAdminCandidateSuspend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Suspended */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCandidateCard"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Candidate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAdminCandidateReactivate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reactivated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCandidateCard"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Candidate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Candidate is purged — irreversible */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6412,10 +7211,133 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "This candidate has been purged and cannot be reactivated.",
+                     *       "code": "CANDIDATE_PURGED"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getAdminCandidateDocumentUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                type: components["schemas"]["DocumentType"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Short-expiry signed URL grant (issuance audited) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DocumentUrlGrant"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Candidate not found, purged, or this document type not uploaded — all indistinguishable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAdminCandidatePurge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Written to the audit row. Mandatory. */
+                    reason: string;
+                    /**
+                     * @description Must be exactly true — the anti-mis-click gate.
+                     * @constant
+                     */
+                    confirm: true;
+                };
+            };
+        };
+        responses: {
+            /** @description Purge accepted — anonymization runs immediately */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /**
+                             * Format: date-time
+                             * @description Now — the admin purge has no grace period.
+                             */
+                            purgeScheduledFor: string;
+                        };
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Candidate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Already purged, or a purge is already pending */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "This candidate has already been purged.",
+                     *       "code": "CANDIDATE_ALREADY_PURGED"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Missing confirmation or reason */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unprocessable Entity",
+                     *       "status": 422,
+                     *       "detail": "Purge requires an explicit confirmation and a reason.",
+                     *       "code": "PURGE_NOT_CONFIRMED"
                      *     }
                      */
                     "application/json": components["schemas"]["Error"];
@@ -6430,8 +7352,10 @@ export interface operations {
                 page?: components["parameters"]["PageParam"];
                 /** @description Items per page for offset-paginated admin tables (default 20, max 100) */
                 pageSize?: components["parameters"]["PageSizeParam"];
-                /** @description Sort expression in the format `field:asc` or `field:desc`. Allowed fields are whitelisted per endpoint. */
-                sort?: components["parameters"]["SortParam"];
+                status?: components["schemas"]["JobStatus"];
+                employerId?: string;
+                /** @description Matches job title or company name. */
+                search?: string;
             };
             header?: never;
             path?: never;
@@ -6439,27 +7363,72 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Job page */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminJobRow"][];
+                        meta: components["schemas"]["OffsetMeta"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+        };
+    };
+    postAdminJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
                     /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
+                     * Format: uuid
+                     * @description The company this job is created for.
                      */
+                    employerId: string;
+                } & components["schemas"]["JobCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Job created (DRAFT unless publish was requested and passed the gates) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Job"];
+                    };
+                };
+            };
+            /** @description Missing `jobs.post_admin`, or the target employer is not APPROVED */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description `WORKER_PROTECTION_VIOLATION` or `JOB_QUOTA_EXCEEDED` — the target employer's publish gates, applied to the admin's request unchanged. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };
         };
     };
-    patchAdminJobById: {
+    postAdminJobReview: {
         parameters: {
             query?: never;
             header?: never;
@@ -6468,14 +7437,40 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
-                "application/json": Record<string, never>;
+                "application/json": {
+                    /** @enum {string} */
+                    decision: "APPROVE" | "REJECT";
+                    /** @description Required when decision = REJECT; shown to the employer. */
+                    reason?: string;
+                };
             };
         };
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Review resolved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminJobRow"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Job is not in PENDING_REVIEW */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6483,12 +7478,157 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "This job is not awaiting review.",
+                     *       "code": "JOB_NOT_PENDING_REVIEW"
                      *     }
                      */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description REJECT without a reason */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unprocessable Entity",
+                     *       "status": 422,
+                     *       "detail": "A reason is required when rejecting a job.",
+                     *       "code": "REVIEW_REASON_REQUIRED"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAdminJobPause: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paused */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminJobRow"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Illegal transition from the job's current status */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAdminJobArchive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archived */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminJobRow"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Illegal transition from the job's current status */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    patchAdminJobFlags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    featured?: boolean;
+                    urgent?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Flags updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminJobRow"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };
@@ -6609,19 +7749,148 @@ export interface operations {
             };
         };
     };
-    getAdminRolePermissions: {
+    getAdminApplicationNotes: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                role: components["schemas"]["UserRole"];
+                id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Notes, oldest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["NoteEntry"][];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAdminApplicationNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    body: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Note created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["NoteEntry"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deleteAdminApplicationNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                noteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Note not found on this application */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAdminApplicationResendWhatsapp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Resend enqueued (the worker owns the external send) */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** Format: date-time */
+                            resentAt: string;
+                        };
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Application is not SELECTED */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6629,10 +7898,28 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Unprocessable Entity",
+                     *       "status": 422,
+                     *       "detail": "Only SELECTED applications can have the WhatsApp resent.",
+                     *       "code": "APPLICATION_NOT_SELECTED"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Resend cap for this application exceeded (3 / 24h) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Too Many Requests",
+                     *       "status": 429,
+                     *       "detail": "This application has reached its resend limit. Try again later.",
+                     *       "code": "RATE_LIMITED"
                      *     }
                      */
                     "application/json": components["schemas"]["Error"];
@@ -6640,23 +7927,60 @@ export interface operations {
             };
         };
     };
-    patchAdminRolePermissions: {
+    getAdminRolesMatrix: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                role: components["schemas"]["UserRole"];
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody?: {
+        requestBody?: never;
+        responses: {
+            /** @description The matrix */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RbacMatrix"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+        };
+    };
+    patchAdminRolesMatrix: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
             content: {
-                "application/json": Record<string, never>;
+                "application/json": {
+                    role: components["schemas"]["UserRole"];
+                    permission: components["schemas"]["PermissionKey"];
+                    enabled: boolean;
+                };
             };
         };
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Cell updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RbacCell"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Unknown role/permission pair */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6664,10 +7988,28 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Not found",
+                     *       "status": 404,
+                     *       "detail": "No such role/permission cell.",
+                     *       "code": "PERMISSION_NOT_FOUND"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The cell is locked and can never be changed */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Locked",
+                     *       "status": 423,
+                     *       "detail": "This permission is locked and cannot be changed.",
+                     *       "code": "PERMISSION_CELL_LOCKED"
                      *     }
                      */
                     "application/json": components["schemas"]["Error"];
@@ -6678,12 +8020,21 @@ export interface operations {
     getAdminLogs: {
         parameters: {
             query?: {
-                /** @description 1-based page number for offset-paginated admin tables */
-                page?: components["parameters"]["PageParam"];
-                /** @description Items per page for offset-paginated admin tables (default 20, max 100) */
-                pageSize?: components["parameters"]["PageSizeParam"];
-                /** @description Sort expression in the format `field:asc` or `field:desc`. Allowed fields are whitelisted per endpoint. */
-                sort?: components["parameters"]["SortParam"];
+                /** @description Opaque keyset cursor for cursor-paginated feeds */
+                cursor?: components["parameters"]["CursorParam"];
+                /** @description Page size for cursor-paginated feeds (default 20, max 100) */
+                limit?: components["parameters"]["LimitParam"];
+                /** @description The B2 taxonomy chip (Auth, Jobs, Payments, …). */
+                module?: string;
+                action?: string;
+                actorId?: string;
+                status?: components["schemas"]["AuditStatus"];
+                /** @description Inclusive lower bound on createdAt. */
+                from?: string;
+                /** @description Inclusive upper bound on createdAt. */
+                to?: string;
+                /** @description Free-text match on action / targetId. */
+                q?: string;
             };
             header?: never;
             path?: never;
@@ -6691,8 +8042,57 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description A page of audit rows, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AuditLogEntry"][];
+                        /** @description The last row's id; null when the feed is exhausted. */
+                        nextCursor: string | null;
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+        };
+    };
+    getAdminLogsExport: {
+        parameters: {
+            query?: {
+                module?: string;
+                action?: string;
+                actorId?: string;
+                status?: components["schemas"]["AuditStatus"];
+                from?: string;
+                to?: string;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV export (the export action is itself audited) */
+            200: {
+                headers: {
+                    /** @example attachment; filename="audit-log-2026-07-12.csv" */
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example id,createdAt,module,action,actorUserId,actorRole,targetType,targetId,status
+                     *     1048576,2026-07-12T09:14:02Z,Payments,subscription.activated,,SUPER_ADMIN,Subscription,7a8b…,SUCCESS
+                     */
+                    "text/csv": string;
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description The export exceeds the row cap or the date-range cap */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6700,10 +8100,14 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Unprocessable Entity",
+                     *       "status": 422,
+                     *       "detail": "This export is too large. Narrow the date range or filters.",
+                     *       "code": "EXPORT_TOO_LARGE",
+                     *       "meta": {
+                     *         "maxRows": 10000,
+                     *         "maxRangeDays": 90
+                     *       }
                      *     }
                      */
                     "application/json": components["schemas"]["Error"];

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: SkillIndiaConnect API
-  version: 0.5.0
+  version: 0.6.0
   description: |
     Production blue-collar recruitment platform connecting skilled workers in India
     with employers in the Gulf and locally.
@@ -156,6 +156,26 @@ components:
         type: string
         maxLength: 128
 
+  responses:
+    # S6 — the single RBAC denial shape for every admin endpoint. `meta` names the
+    # permission the caller lacked, so the console can say WHICH grant is missing
+    # instead of a bare "forbidden".
+    AdminForbidden:
+      description: >
+        The caller's role does not hold the permission this endpoint requires.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: about:blank
+            title: Forbidden
+            status: 403
+            detail: You do not have permission to perform this action.
+            code: FORBIDDEN
+            meta:
+              requiredPermission: logs.export
+
   schemas:
     # ── Error envelope (RFC 7807-style) ────────────────────────────────────────
     Error:
@@ -200,7 +220,12 @@ components:
     # ── Domain enums ────────────────────────────────────────────────────────────
     UserRole:
       type: string
-      enum: [CANDIDATE, EMPLOYER, ADMIN, SUPER_ADMIN]
+      enum: [CANDIDATE, EMPLOYER, SUPER_ADMIN, ADMIN, MODERATOR, SUPPORT]
+      description: >
+        MODERATOR and SUPPORT are admin-side roles that exist in the database and
+        the seeded RBAC matrix from S2 but were missing from this enum until S6
+        made them addressable (they are matrix columns on Screen 27, and audit
+        rows carry them as `actorRole`).
 
     UserStatus:
       type: string
@@ -247,9 +272,14 @@ components:
     # ── Job enums (S2) ──────────────────────────────────────────────────────────
     JobStatus:
       type: string
-      enum: [DRAFT, ACTIVE, PAUSED, ARCHIVED]
+      enum: [DRAFT, PENDING_REVIEW, ACTIVE, PAUSED, ARCHIVED]
       description: >
         DRAFT — visible only to the owning employer, not in public search.
+        PENDING_REVIEW — published while the `jobs.require_admin_approval`
+        setting is ON, so it awaits admin resolution and is NOT yet live. It
+        exists in the database from S2-B5 but was only addressable on the ADMIN
+        surface, which S6 adds (`POST /admin/jobs/{id}/review`). No employer or
+        public list returns it.
         ACTIVE — live in public search; candidates can save and apply (S4).
         PAUSED — hidden from public search; can be resumed to ACTIVE.
         ARCHIVED — permanent, read-only; cannot be un-archived.
@@ -1772,6 +1802,384 @@ components:
           type: integer
           description: Seconds until the signed URL stops working (short — e.g. 300).
           example: 300
+
+    JobCreateRequest:
+      type: object
+      required:
+        [
+          title,
+          market,
+          location,
+          salaryCurrency,
+          accommodation,
+          healthInsurance,
+          transportation,
+        ]
+      properties:
+        title:
+          type: string
+        market:
+          $ref: '#/components/schemas/JobMarket'
+        location:
+          type: string
+        description:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+        salaryMin:
+          type: integer
+          minimum: 0
+        salaryMax:
+          type: integer
+          minimum: 0
+        salaryCurrency:
+          type: string
+          example: AED
+        accommodation:
+          type: boolean
+        healthInsurance:
+          type: boolean
+        transportation:
+          type: boolean
+        workConditions:
+          type: string
+        requirements:
+          type: array
+          items:
+            type: string
+        experienceRequiredYears:
+          type: integer
+          minimum: 0
+        vacancies:
+          type: integer
+          minimum: 1
+        genderPreference:
+          $ref: '#/components/schemas/GenderPreference'
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # S6 — ADMIN CONSOLE
+    #
+    # The admin console is EN-ONLY (locked decision 2): i18n keys still exist so
+    # it can be translated later, but no HI/AR fixtures and no RTL obligations
+    # apply to admin screens.
+    #
+    # RBAC: every admin endpoint declares the PermissionKey it requires. Denial
+    # is 403 FORBIDDEN (`meta.requiredPermission`). Permissions are DATA
+    # (role_permissions rows), not hardcoded roles — a role's effective set is
+    # what the matrix says, so "SUPER_ADMIN-effective" below means "seeded ON for
+    # SUPER_ADMIN and locked OFF for everyone else", not a role check in code.
+    # ══════════════════════════════════════════════════════════════════════════
+
+    OffsetMeta:
+      type: object
+      required: [page, pageSize, total, totalPages]
+      description: The standard offset-pagination envelope used by every admin table.
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+
+    AuditStatus:
+      type: string
+      enum: [SUCCESS, FAILED, BLOCKED, DELIVERED, ERROR]
+      description: Outcome recorded on an audit row.
+
+    PermissionKey:
+      type: string
+      description: |
+        The RBAC permission keys (Screen 27). The first 20 are the S2-seeded set;
+        the last 5 are ADDED BY S6 (`logs.export`, `roles.view`, `roles.manage`,
+        `candidates.view_documents`, `jobs.moderate`) and must be seeded by
+        S6a-B2 into `permission.constants.ts` + the seed matrix.
+
+        Deliberately NOT forked into new near-duplicates: candidate purge reuses
+        `candidates.delete` (already SUPER_ADMIN-effective / locked-off
+        elsewhere), suspend/reactivate reuse `candidates.edit`, and on-behalf job
+        creation reuses `jobs.post_admin`.
+      enum:
+        - candidates.view
+        - candidates.edit
+        - candidates.delete
+        - candidates.onboard_manual
+        - candidates.export
+        - employers.view
+        - employers.approve_reject
+        - employers.suspend
+        - employers.delete
+        - jobs.view
+        - jobs.post_admin
+        - jobs.archive
+        - applications.manage
+        - applications.change_status
+        - applications.notes
+        - reports.view
+        - logs.view
+        - billing.manage
+        - subscriptions.manage
+        - admin_users.manage
+        - logs.export
+        - roles.view
+        - roles.manage
+        - candidates.view_documents
+        - jobs.moderate
+
+    AuditLogEntry:
+      type: object
+      required: [id, createdAt, module, action, status, meta]
+      description: |
+        One audit row (Screen 29). `meta` is ALREADY REDACTED at write time by
+        the S2-B2 denylist — no raw PII (passport numbers, phones, emails,
+        tokens, OTPs, document keys/URLs) ever reaches this surface, so the
+        client may render it verbatim. Audit rows are append-only and are never
+        cascade-deleted.
+      properties:
+        id:
+          type: string
+          description: >
+            The BigInt primary key rendered as a STRING (it exceeds JS's safe
+            integer range). This is also the keyset cursor.
+          example: '1048576'
+        createdAt:
+          type: string
+          format: date-time
+        module:
+          type: string
+          description: The B2 taxonomy — drives Screen 29's filter chips.
+          example: Payments
+        action:
+          type: string
+          description: Dot-namespaced action.
+          example: subscription.activated
+        actorUserId:
+          type: [string, 'null']
+          format: uuid
+          description: Null for system-driven events (cron sweeps, webhooks).
+        actorRole:
+          oneOf:
+            - $ref: '#/components/schemas/UserRole'
+            - type: 'null'
+          description: Null for system-driven events.
+        targetType:
+          type: [string, 'null']
+          example: Subscription
+        targetId:
+          type: [string, 'null']
+        status:
+          $ref: '#/components/schemas/AuditStatus'
+        meta:
+          type: object
+          additionalProperties: true
+          description: Redaction-safe context (counts, ids, codes) — never raw PII.
+
+    AdminDashboard:
+      type: object
+      required:
+        [counts, revenueThisMonthSubunits, currency, pendingEmployerReviews, pendingJobReviews]
+      description: |
+        Admin overview KPIs. All figures are LIVE aggregates over the existing
+        tables (no honest-zeros remain at S6): candidate/employer/job/application
+        counts come from the same sources as the employer dashboard, and revenue
+        sums PAID orders in the current calendar month.
+      properties:
+        counts:
+          type: object
+          required: [candidates, employers, jobs, applications]
+          properties:
+            candidates:
+              type: integer
+              description: Non-purged candidate profiles.
+            employers:
+              type: object
+              description: Company counts keyed by CompanyStatus.
+              additionalProperties:
+                type: integer
+              example: { PENDING: 4, APPROVED: 37, REJECTED: 2, SUSPENDED: 1 }
+            jobs:
+              type: object
+              description: Job counts keyed by JobStatus.
+              additionalProperties:
+                type: integer
+              example: { DRAFT: 5, PENDING_REVIEW: 3, ACTIVE: 22, PAUSED: 4, ARCHIVED: 11 }
+            applications:
+              type: object
+              description: Application counts keyed by ApplicationStatus.
+              additionalProperties:
+                type: integer
+              example: { PENDING: 40, SHORTLISTED: 12, SELECTED: 5, REJECTED: 9 }
+        revenueThisMonthSubunits:
+          type: integer
+          minimum: 0
+          description: Sum of PAID order totals this calendar month, integer subunits.
+        currency:
+          type: string
+          example: INR
+        pendingEmployerReviews:
+          type: integer
+          description: Companies awaiting approval — the Screen-24 work queue depth.
+        pendingJobReviews:
+          type: integer
+          description: Jobs in PENDING_REVIEW — the Screen-26 work queue depth.
+
+    RbacCell:
+      type: object
+      required: [role, permission, enabled, locked]
+      description: |
+        One cell of the Screen-27 matrix. `locked = true` means IMMUTABLE — the
+        entire SUPER_ADMIN column plus the seeded locked set (e.g.
+        `billing.manage` for non-super roles). A PATCH targeting a locked cell is
+        rejected 423 `PERMISSION_CELL_LOCKED` and writes nothing.
+      properties:
+        role:
+          $ref: '#/components/schemas/UserRole'
+        permission:
+          $ref: '#/components/schemas/PermissionKey'
+        enabled:
+          type: boolean
+        locked:
+          type: boolean
+
+    RbacMatrix:
+      type: object
+      required: [roles, permissions, cells]
+      description: |
+        The full permission matrix. `roles` carries ONLY the admin-side roles —
+        CANDIDATE and EMPLOYER have no rows (they are not admin-console roles and
+        are never rendered as columns).
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRole'
+          example: [SUPER_ADMIN, ADMIN, MODERATOR, SUPPORT]
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionKey'
+        cells:
+          type: array
+          items:
+            $ref: '#/components/schemas/RbacCell'
+
+    AdminCandidateCard:
+      type: object
+      required: [id, userId, fullName, status, profileVisible, completionPct, createdAt]
+      description: |
+        Admin-context candidate row (Screen 25) — FULLER than the employer view
+        (contact details and deletion state are included, since admins are the
+        DPDP data controllers) but STILL carries NO document keys or URLs.
+        Document CONTENT is a separate, per-issuance-audited grant
+        (`GET /admin/candidates/{id}/documents/{type}/url`).
+
+        A PURGED candidate is a tombstone: `fullName` is "Deleted user",
+        contact fields are null, `documents` is empty, and `purgedAt` is set.
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        phone:
+          type: [string, 'null']
+          description: Admin context — the candidate's showPhone toggle does NOT hide it.
+        email:
+          type: [string, 'null']
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        profileVisible:
+          type: boolean
+          description: The candidate's own browse-pool visibility toggle.
+        completionPct:
+          type: integer
+        documents:
+          type: array
+          description: Upload STATUS only — never a key or URL.
+          items:
+            $ref: '#/components/schemas/CandidateDocumentStatus'
+        deletionDueAt:
+          type: [string, 'null']
+          format: date-time
+          description: Set when the candidate requested their own 30-day self-deletion.
+        purgedAt:
+          type: [string, 'null']
+          format: date-time
+          description: Set once anonymized (admin purge OR the elapsed self-deletion).
+        createdAt:
+          type: string
+          format: date-time
+
+    AdminJobRow:
+      type: object
+      required: [id, humanId, title, companyId, companyName, status, isFeatured, isUrgent, createdAt]
+      description: |
+        Admin-context job row (Screen 26) — every status is visible, including
+        DRAFT and PENDING_REVIEW which no employer-facing or public list returns.
+      properties:
+        id:
+          type: string
+          format: uuid
+        humanId:
+          type: string
+          example: JB-2026-00042
+        title:
+          type: string
+        companyId:
+          type: string
+          format: uuid
+        companyName:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+        isFeatured:
+          type: boolean
+          description: ADMIN-SET (decision 3) — drives the S2-F1 badge + S2-B6 filter.
+        isUrgent:
+          type: boolean
+          description: ADMIN-SET (decision 3) — drives the S2-F1 badge + S2-B6 filter.
+        applicantCount:
+          type: integer
+        publishedAt:
+          type: [string, 'null']
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    NoteEntry:
+      type: object
+      required: [id, authorUserId, authorRole, body, createdAt]
+      description: |
+        An INTERNAL admin note on an application (Screen 26).
+
+        **Internal-only — never surfaced to the candidate or the employer.**
+        Notes are not part of `Application`, `ApplicationDetail`,
+        `ApplicationCard`, `ApplicantCard`, or the candidate-facing
+        `ApplicationTimelineEntry` — the timeline mapper already excludes them
+        and must continue to. Adding a note to any non-admin surface is a
+        contract violation.
+      properties:
+        id:
+          type: string
+          format: uuid
+        authorUserId:
+          type: string
+          format: uuid
+        authorRole:
+          $ref: '#/components/schemas/UserRole'
+        body:
+          type: string
+          maxLength: 2000
+        createdAt:
+          type: string
+          format: date-time
 
 # ─── Paths ───────────────────────────────────────────────────────────────────
 
@@ -4152,58 +4560,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                [
-                  title,
-                  market,
-                  location,
-                  salaryCurrency,
-                  accommodation,
-                  healthInsurance,
-                  transportation,
-                ]
-              properties:
-                title:
-                  type: string
-                market:
-                  $ref: '#/components/schemas/JobMarket'
-                location:
-                  type: string
-                description:
-                  type: string
-                categoryId:
-                  type: string
-                  format: uuid
-                salaryMin:
-                  type: integer
-                  minimum: 0
-                salaryMax:
-                  type: integer
-                  minimum: 0
-                salaryCurrency:
-                  type: string
-                  example: AED
-                accommodation:
-                  type: boolean
-                healthInsurance:
-                  type: boolean
-                transportation:
-                  type: boolean
-                workConditions:
-                  type: string
-                requirements:
-                  type: array
-                  items:
-                    type: string
-                experienceRequiredYears:
-                  type: integer
-                  minimum: 0
-                vacancies:
-                  type: integer
-                  minimum: 1
-                genderPreference:
-                  $ref: '#/components/schemas/GenderPreference'
+              $ref: '#/components/schemas/JobCreateRequest'
       responses:
         '201':
           description: Job created (DRAFT)
@@ -5671,80 +6028,144 @@ paths:
                 $ref: '#/components/schemas/Error'
 
   # ── Admin: full moderation (Sprint 6) ─────────────────────────────────────────
+  # ══════════════════════════════════════════════════════════════════════════
+  # S6 — ADMIN CONSOLE (EN-only). Every endpoint declares its RBAC PermissionKey;
+  # denial is 403 FORBIDDEN with `meta.requiredPermission`.
+  # ══════════════════════════════════════════════════════════════════════════
+
   /admin/dashboard:
     get:
       operationId: getAdminDashboard
       tags: [admin]
-      summary: '[S6] Admin overview dashboard'
-      description: '**Sprint 6 — not yet implemented.**'
+      summary: Admin overview dashboard (S6)
+      description: |
+        **RBAC: `reports.view`.**
+
+        Live platform KPIs — candidate/employer/job/application counts, this
+        month's PAID-order revenue, and the two work-queue depths that drive the
+        Screen-24 / Screen-26 badges. Every figure is a live aggregate over
+        existing tables; nothing here is an honest-zero placeholder.
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Dashboard KPIs
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminDashboard'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+
+  /admin/employers/{id}/certificate/url:
+    get:
+      operationId: getAdminEmployerCertificateUrl
+      tags: [admin]
+      summary: Signed URL for an employer's registration certificate (S6)
+      description: |
+        **RBAC: `employers.view`.**
+
+        S2-B4's admin employer list carries only the certificate REFERENCE; an
+        admin must actually READ the document to approve or reject a company.
+        This mints a SHORT-EXPIRY signed R2 GET URL for it.
+
+        **Every issuance is audited** (`document.viewed`: actor, company, when).
+        The object key and the signed URL itself are NEVER written to the audit
+        meta — only the fact of the grant.
+
+        404 when the company does not exist OR has no certificate uploaded —
+        indistinguishable.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Short-expiry signed URL grant (issuance audited)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DocumentUrlGrant'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Company not found, or no certificate on file (indistinguishable)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
 
   /admin/candidates:
     get:
       operationId: getAdminCandidates
       tags: [admin]
-      summary: '[S6] List all candidates (admin)'
-      description: '**Sprint 6 — not yet implemented.**'
+      summary: List candidates (admin) — Screen 25 (S6)
+      description: |
+        **RBAC: `candidates.view`.**
+
+        Offset-paginated admin candidate table. The admin card is FULLER than the
+        employer view (contact details and deletion state are included — admins
+        are the DPDP data controllers) but still carries **no document keys or
+        URLs**; document CONTENT is a separate, per-issuance-audited grant.
+
+        Purged candidates appear as tombstones (`fullName` = "Deleted user",
+        contacts null, `purgedAt` set) — they are not hidden, so the audit trail
+        stays navigable.
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PageSizeParam'
-        - $ref: '#/components/parameters/SortParam'
+        - name: search
+          in: query
+          description: Matches name, email, or phone.
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserStatus'
+        - name: visibility
+          in: query
+          description: Filter on the candidate's own profileVisible toggle.
+          schema:
+            type: boolean
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Candidate page
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminCandidateCard'
+                  meta:
+                    $ref: '#/components/schemas/OffsetMeta'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
 
-  /admin/jobs:
-    get:
-      operationId: getAdminJobs
+  /admin/candidates/{id}/suspend:
+    post:
+      operationId: postAdminCandidateSuspend
       tags: [admin]
-      summary: '[S6] List all job postings (admin)'
-      description: '**Sprint 6 — not yet implemented.**'
-      parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/PageSizeParam'
-        - $ref: '#/components/parameters/SortParam'
-      responses:
-        '501':
-          description: Not implemented
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
+      summary: Suspend a candidate account (S6)
+      description: |
+        **RBAC: `candidates.edit`.**
 
-  /admin/jobs/{id}:
-    patch:
-      operationId: patchAdminJobById
-      tags: [admin]
-      summary: '[S6] Moderate a job posting'
-      description: '**Sprint 6 — not yet implemented.**'
+        Sets the user to SUSPENDED (they can no longer log in or apply). A
+        `reason` is MANDATORY and is written to the audit row. Reversible via
+        `/reactivate` — this is NOT the purge.
       parameters:
         - name: id
           in: path
@@ -5753,24 +6174,567 @@ paths:
             type: string
             format: uuid
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               type: object
+              required: [reason]
+              additionalProperties: false
+              properties:
+                reason:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Suspended
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminCandidateCard'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Candidate not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/candidates/{id}/reactivate:
+    post:
+      operationId: postAdminCandidateReactivate
+      tags: [admin]
+      summary: Reactivate a suspended candidate (S6)
+      description: |
+        **RBAC: `candidates.edit`.** Returns a SUSPENDED user to ACTIVE. Audited.
+        A PURGED candidate can never be reactivated (409) — the purge is
+        irreversible.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Reactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminCandidateCard'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Candidate not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Candidate is purged — irreversible
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
+                title: Conflict
+                status: 409
+                detail: This candidate has been purged and cannot be reactivated.
+                code: CANDIDATE_PURGED
 
+  /admin/candidates/{id}/documents/{type}/url:
+    get:
+      operationId: getAdminCandidateDocumentUrl
+      tags: [admin]
+      summary: Signed URL for a candidate document (admin) — S6
+      description: |
+        **RBAC: `candidates.view_documents`** (locked decision 5 — admins may
+        read candidate DOCUMENTS, not just employer certificates).
+
+        Mints a SHORT-EXPIRY signed R2 GET URL. **Every issuance is audited**
+        (`document.viewed`: actor, candidate, document TYPE, when) — the object
+        key and the signed URL are never in the audit meta. This is the DPDP
+        who-saw-whose-passport trail, and it is the reason this permission is a
+        separate key rather than being folded into `candidates.view`.
+
+        **404 discipline (differs from the employer gate — read carefully):**
+        an admin is NOT subject to `profileVisible`, so a hidden candidate is
+        still readable. The single 404 covers: candidate does not exist, the
+        candidate is PURGED (documents are gone), or this document type was
+        never uploaded. Those three are indistinguishable.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DocumentType'
+      responses:
+        '200':
+          description: Short-expiry signed URL grant (issuance audited)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DocumentUrlGrant'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: >
+            Candidate not found, purged, or this document type not uploaded —
+            all indistinguishable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/candidates/{id}/purge:
+    post:
+      operationId: postAdminCandidatePurge
+      tags: [admin]
+      summary: Purge (anonymize) a candidate — IRREVERSIBLE (S6)
+      description: |
+        **RBAC: `candidates.delete`** (SUPER_ADMIN-effective: seeded ON+locked for
+        SUPER_ADMIN, locked OFF for ADMIN/MODERATOR/SUPPORT). Deliberately reuses
+        the existing key rather than forking a new `candidates.purge`.
+
+        **Immediate and IRREVERSIBLE.** On success the purge worker anonymizes
+        the profile in place: name → "Deleted user", contact fields nulled,
+        documents deleted from R2, photo/video removed. `purgedAt` is set. The
+        user row is TOMBSTONED, not row-deleted, so financial records and audit
+        rows (which are never cascade-deleted) keep their referential integrity —
+        applications survive with a null-candidate tombstone, which is exactly the
+        S4 null-candidate applicant-card path.
+
+        **Relationship to self-deletion:** a candidate's own account deletion sets
+        `deletionDueAt = now + 30 days` and the SAME purge worker anonymizes them
+        when it elapses. This endpoint is the ADMIN trigger for that identical
+        worker — the difference is the trigger and the timing (immediate, no
+        30-day grace), not the effect.
+
+        **Confirmation is mandatory:** `confirm` must be exactly `true` and a
+        `reason` must be supplied. A body missing either → 422
+        `PURGE_NOT_CONFIRMED`; a mis-click must never anonymize a human being.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason, confirm]
+              additionalProperties: false
+              properties:
+                reason:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                  description: Written to the audit row. Mandatory.
+                confirm:
+                  type: boolean
+                  const: true
+                  description: Must be exactly true — the anti-mis-click gate.
+      responses:
+        '202':
+          description: Purge accepted — anonymization runs immediately
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [purgeScheduledFor]
+                    properties:
+                      purgeScheduledFor:
+                        type: string
+                        format: date-time
+                        description: Now — the admin purge has no grace period.
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Candidate not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Already purged, or a purge is already pending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Conflict
+                status: 409
+                detail: This candidate has already been purged.
+                code: CANDIDATE_ALREADY_PURGED
+        '422':
+          description: Missing confirmation or reason
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Unprocessable Entity
+                status: 422
+                detail: Purge requires an explicit confirmation and a reason.
+                code: PURGE_NOT_CONFIRMED
+
+  /admin/jobs:
+    get:
+      operationId: getAdminJobs
+      tags: [admin]
+      summary: List all job postings (admin) — Screen 26 (S6)
+      description: |
+        **RBAC: `jobs.view`.**
+
+        Offset-paginated. Unlike every employer-facing or public list, this
+        returns EVERY status — including DRAFT and PENDING_REVIEW, which is what
+        makes the moderation queue possible.
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/JobStatus'
+        - name: employerId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: search
+          in: query
+          description: Matches job title or company name.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job page
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminJobRow'
+                  meta:
+                    $ref: '#/components/schemas/OffsetMeta'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+    post:
+      operationId: postAdminJob
+      tags: [admin]
+      summary: Create a job ON BEHALF of an employer (S6)
+      description: |
+        **RBAC: `jobs.post_admin`** (locked decision 4 — reuses the existing key
+        rather than forking `jobs.create_onbehalf`).
+
+        Minimal on-behalf posting: the standard job-create shape plus the
+        `employerId` it is being created FOR. The job belongs to that employer.
+
+        **The publish gates STILL apply, unchanged.** An admin cannot launder a
+        job past them: on publish, the S2-B5 ladder runs against the TARGET
+        employer exactly as it would for the employer themselves —
+        `EMPLOYER_NOT_APPROVED` (403), `WORKER_PROTECTION_VIOLATION` (422), then
+        `JOB_QUOTA_EXCEEDED` (422) against that employer's plan. Creating a DRAFT
+        is always allowed; publishing a protection-violating or over-quota job on
+        someone's behalf is not.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - type: object
+                  required: [employerId]
+                  properties:
+                    employerId:
+                      type: string
+                      format: uuid
+                      description: The company this job is created for.
+                - $ref: '#/components/schemas/JobCreateRequest'
+      responses:
+        '201':
+          description: Job created (DRAFT unless publish was requested and passed the gates)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Job'
+        '403':
+          description: Missing `jobs.post_admin`, or the target employer is not APPROVED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: >
+            `WORKER_PROTECTION_VIOLATION` or `JOB_QUOTA_EXCEEDED` — the target
+            employer's publish gates, applied to the admin's request unchanged.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/jobs/{id}/review:
+    post:
+      operationId: postAdminJobReview
+      tags: [admin]
+      summary: Resolve a PENDING_REVIEW job (S6)
+      description: |
+        **RBAC: `jobs.moderate`.**
+
+        The resolution half of the S2-B5 seam: when the
+        `jobs.require_admin_approval` setting is ON, publishing puts a job into
+        PENDING_REVIEW and it stops there. This endpoint resolves it.
+
+        - `APPROVE` → the job goes ACTIVE (`publishedAt` set). The worker-
+          protection and quota gates were already enforced at publish time.
+        - `REJECT` → the job returns to DRAFT with the `reason` recorded and
+          surfaced to the employer, so they can fix and resubmit.
+
+        `reason` is required for REJECT. Both outcomes are audited. 409 if the
+        job is not in PENDING_REVIEW — there is nothing to resolve.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              additionalProperties: false
+              properties:
+                decision:
+                  type: string
+                  enum: [APPROVE, REJECT]
+                reason:
+                  type: string
+                  maxLength: 500
+                  description: Required when decision = REJECT; shown to the employer.
+      responses:
+        '200':
+          description: Review resolved
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminJobRow'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Job is not in PENDING_REVIEW
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Conflict
+                status: 409
+                detail: This job is not awaiting review.
+                code: JOB_NOT_PENDING_REVIEW
+        '422':
+          description: REJECT without a reason
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Unprocessable Entity
+                status: 422
+                detail: A reason is required when rejecting a job.
+                code: REVIEW_REASON_REQUIRED
+
+  /admin/jobs/{id}/pause:
+    post:
+      operationId: postAdminJobPause
+      tags: [admin]
+      summary: Pause any job (admin) — S6
+      description: |
+        **RBAC: `jobs.moderate`.** Admins may act on ANY employer's job (the
+        employer-facing pause is scoped to their own). ACTIVE → PAUSED. Audited;
+        emits the same `job.paused` event, so the search cache invalidates.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Paused
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminJobRow'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Illegal transition from the job's current status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/jobs/{id}/archive:
+    post:
+      operationId: postAdminJobArchive
+      tags: [admin]
+      summary: Archive any job (admin) — S6
+      description: |
+        **RBAC: `jobs.moderate`.** ACTIVE or PAUSED → ARCHIVED, on any employer's
+        job. Terminal. Audited; emits `job.archived`.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Archived
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminJobRow'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Illegal transition from the job's current status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/jobs/{id}/flags:
+    patch:
+      operationId: patchAdminJobFlags
+      tags: [admin]
+      summary: Set the Featured / Urgent flags (S6)
+      description: |
+        **RBAC: `jobs.moderate`.**
+
+        Featured and Urgent are **ADMIN-SET ONLY** (locked decision 3) — an
+        employer can never set them on their own job, which is what keeps them
+        meaningful. They drive the S2-F1 job-card badges and the S2-B6 search
+        filters (`?badge=featured|urgent`).
+
+        Omitted fields are left unchanged. Audited.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              minProperties: 1
+              properties:
+                featured:
+                  type: boolean
+                urgent:
+                  type: boolean
+      responses:
+        '200':
+          description: Flags updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminJobRow'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /admin/applications:
     get:
       operationId: getAdminApplications
@@ -5901,81 +6865,461 @@ paths:
                 detail: A corrective status change requires a reason.
                 code: OVERRIDE_REASON_REQUIRED
 
-  /admin/roles/{role}/permissions:
+  /admin/applications/{id}/notes:
     get:
-      operationId: getAdminRolePermissions
+      operationId: getAdminApplicationNotes
       tags: [admin]
-      summary: '[S6] Get permissions for a role'
-      description: '**Sprint 6 — not yet implemented.**'
+      summary: List internal notes on an application (S6)
+      description: |
+        **RBAC: `applications.notes`.**
+
+        **INTERNAL ONLY.** Notes exist for the admin/support team and are NEVER
+        surfaced to the candidate or the employer — they are absent from
+        `Application`, `ApplicationDetail`, `ApplicationCard`, `ApplicantCard`,
+        and the candidate-facing status timeline. The timeline mapper already
+        excludes them; adding them to any non-admin surface is a contract
+        violation, not a feature.
       parameters:
-        - name: role
+        - name: id
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/UserRole'
+            type: string
+            format: uuid
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Notes, oldest first
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NoteEntry'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Application not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
-    patch:
-      operationId: patchAdminRolePermissions
+    post:
+      operationId: postAdminApplicationNote
       tags: [admin]
-      summary: '[S6] Update permissions for a role (Super-Admin only)'
-      description: '**Sprint 6 — not yet implemented.**'
+      summary: Add an internal note to an application (S6)
+      description: '**RBAC: `applications.notes`.** Internal-only (see GET). Audited.'
       parameters:
-        - name: role
+        - name: id
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/UserRole'
+            type: string
+            format: uuid
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               type: object
+              required: [body]
+              additionalProperties: false
+              properties:
+                body:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
       responses:
-        '501':
-          description: Not implemented
+        '201':
+          description: Note created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/NoteEntry'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/applications/{id}/notes/{noteId}:
+    delete:
+      operationId: deleteAdminApplicationNote
+      tags: [admin]
+      summary: Delete an internal note (S6)
+      description: '**RBAC: `applications.notes`.** Audited.'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: noteId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Note not found on this application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/applications/{id}/resend-whatsapp:
+    post:
+      operationId: postAdminApplicationResendWhatsapp
+      tags: [admin]
+      summary: Manually resend the "Selected" WhatsApp (S6)
+      description: |
+        **RBAC: `applications.change_status`.**
+
+        The support escape hatch for the once-per-application WhatsApp guard.
+        S4-B2 fires `wa.selected` exactly ONCE per application (guarded by
+        `selectedNotifiedAt`); when a candidate genuinely never received it,
+        support needs a way to send it again. This is the `bypassGuard` seam:
+        it re-sends `wa.selected` DESPITE `selectedNotifiedAt` being set.
+
+        **Valid only for SELECTED applications** — resending a "you've been
+        selected" message to someone who wasn't is the exact harm the guard
+        exists to prevent, so a non-SELECTED application is 422
+        `APPLICATION_NOT_SELECTED`.
+
+        **Rate-limited: 3 resends per application per 24h** (and the standard
+        authed limit applies). Exceeding it → 429. Every resend is audited with
+        the acting admin — this bypass is never anonymous.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '202':
+          description: Resend enqueued (the worker owns the external send)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [resentAt]
+                    properties:
+                      resentAt:
+                        type: string
+                        format: date-time
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Application is not SELECTED
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
+                title: Unprocessable Entity
+                status: 422
+                detail: Only SELECTED applications can have the WhatsApp resent.
+                code: APPLICATION_NOT_SELECTED
+        '429':
+          description: Resend cap for this application exceeded (3 / 24h)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Too Many Requests
+                status: 429
+                detail: This application has reached its resend limit. Try again later.
+                code: RATE_LIMITED
+
+  /admin/roles/matrix:
+    get:
+      operationId: getAdminRolesMatrix
+      tags: [admin]
+      summary: The RBAC permission matrix — Screen 27 (S6)
+      description: |
+        **RBAC: `roles.view`.**
+
+        The full role × permission grid. `locked` cells are IMMUTABLE: the entire
+        SUPER_ADMIN column plus the seeded locked set (e.g. `billing.manage` for
+        non-super roles). The FE renders locked cells as disabled — and the
+        server enforces it anyway (423), because a disabled checkbox is not a
+        security control.
+
+        Only admin-side roles are columns; CANDIDATE and EMPLOYER have no rows.
+      responses:
+        '200':
+          description: The matrix
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RbacMatrix'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+    patch:
+      operationId: patchAdminRolesMatrix
+      tags: [admin]
+      summary: Toggle one permission cell (S6)
+      description: |
+        **RBAC: `roles.manage`** (SUPER_ADMIN-effective — seeded ON+locked for
+        SUPER_ADMIN, locked OFF for everyone else).
+
+        Flips exactly ONE cell. A locked cell → **423 `PERMISSION_CELL_LOCKED`**
+        and NO write occurs (the guard is server-side, not merely a disabled
+        checkbox).
+
+        **Cache note (mechanism, not a client concern):** a successful write
+        INVALIDATES the permission cache for the affected role, so the next
+        request by any user of that role re-reads the matrix. The client does not
+        need to do anything — it just refetches the matrix to re-render.
+        Every change is audited (who flipped which cell, from what to what).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role, permission, enabled]
+              additionalProperties: false
+              properties:
+                role:
+                  $ref: '#/components/schemas/UserRole'
+                permission:
+                  $ref: '#/components/schemas/PermissionKey'
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: Cell updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RbacCell'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Unknown role/permission pair
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Not found
+                status: 404
+                detail: No such role/permission cell.
+                code: PERMISSION_NOT_FOUND
+        '423':
+          description: The cell is locked and can never be changed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Locked
+                status: 423
+                detail: This permission is locked and cannot be changed.
+                code: PERMISSION_CELL_LOCKED
 
   /admin/logs:
     get:
       operationId: getAdminLogs
       tags: [admin]
-      summary: '[S6] Get audit logs'
-      description: '**Sprint 6 — not yet implemented.** Audit logs are never cascade-deleted.'
+      summary: Query the audit log — Screen 29 (S6)
+      description: |
+        **RBAC: `logs.view`.**
+
+        KEYSET-paginated over the BigInt primary key, newest first (an offset
+        scan over an append-only table this large degrades badly). `nextCursor`
+        is the last row's `id`; pass it back as `?cursor=`. Audit rows are
+        append-only and are NEVER cascade-deleted.
+
+        `meta` on every row is ALREADY REDACTED at write time (S2-B2's denylist),
+        so no raw PII — passport numbers, phones, emails, tokens, OTPs, document
+        keys or URLs — can reach this screen. The client renders it verbatim.
+
+        **The query itself is audited** — reading the audit log is an audited
+        event. Watching the watchers is the point.
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/PageSizeParam'
-        - $ref: '#/components/parameters/SortParam'
+        - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: module
+          in: query
+          description: The B2 taxonomy chip (Auth, Jobs, Payments, …).
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: actorId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/AuditStatus'
+        - name: from
+          in: query
+          description: Inclusive lower bound on createdAt.
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: Inclusive upper bound on createdAt.
+          schema:
+            type: string
+            format: date-time
+        - name: q
+          in: query
+          description: Free-text match on action / targetId.
+          schema:
+            type: string
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: A page of audit rows, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, nextCursor]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLogEntry'
+                  nextCursor:
+                    type: [string, 'null']
+                    description: The last row's id; null when the feed is exhausted.
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+
+  /admin/logs/export:
+    get:
+      operationId: getAdminLogsExport
+      tags: [admin]
+      summary: Export the audit log as CSV (S6)
+      description: |
+        **RBAC: `logs.export`** — a SEPARATE, higher-privilege key than
+        `logs.view`. Reading a page on screen and walking out with the whole
+        table are different acts, and the matrix must be able to grant one
+        without the other.
+
+        Same filters as `GET /admin/logs`. Returns `text/csv` with a
+        `Content-Disposition: attachment` header.
+
+        **Bounded — the cap is part of the contract:** at most **10,000 rows** per
+        export, and the date range may not exceed **90 days**. A request that
+        would exceed either → 422 `EXPORT_TOO_LARGE` (`meta.maxRows`,
+        `meta.maxRangeDays`) telling the caller to narrow the filters. An
+        unbounded export of an append-only audit table is a memory incident
+        waiting to happen.
+
+        **The export writes its own audit row** (`logs.exported`: who, which
+        filters, how many rows) — an export is exactly the kind of event the log
+        exists to record.
+      parameters:
+        - name: module
+          in: query
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: actorId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/AuditStatus'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: CSV export (the export action is itself audited)
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              example: attachment; filename="audit-log-2026-07-12.csv"
+          content:
+            text/csv:
+              schema:
+                type: string
+              example: |
+                id,createdAt,module,action,actorUserId,actorRole,targetType,targetId,status
+                1048576,2026-07-12T09:14:02Z,Payments,subscription.activated,,SUPER_ADMIN,Subscription,7a8b…,SUCCESS
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '422':
+          description: The export exceeds the row cap or the date-range cap
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
+                title: Unprocessable Entity
+                status: 422
+                detail: This export is too large. Narrow the date range or filters.
+                code: EXPORT_TOO_LARGE
+                meta:
+                  maxRows: 10000
+                  maxRangeDays: 90

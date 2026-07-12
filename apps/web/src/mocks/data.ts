@@ -31,6 +31,14 @@ type Invoice = components['schemas']['Invoice'];
 type CheckoutSession = components['schemas']['CheckoutSession'];
 type Order = components['schemas']['Order'];
 type OrderStatus = components['schemas']['OrderStatus'];
+// S6: Admin console
+type PermissionKey = components['schemas']['PermissionKey'];
+type RbacCell = components['schemas']['RbacCell'];
+type AuditLogEntry = components['schemas']['AuditLogEntry'];
+type NoteEntry = components['schemas']['NoteEntry'];
+type UserRole = components['schemas']['UserRole'];
+/** The admin-side roles — the matrix's columns (CANDIDATE/EMPLOYER never appear). */
+type AdminRole = Extract<UserRole, 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR' | 'SUPPORT'>;
 
 // ─── Fixed mock constants ────────────────────────────────────────────────────
 
@@ -83,13 +91,71 @@ export const MANDATORY_DOC_TYPES: DocumentType[] = ['PASSPORT', 'EXPERIENCE_CERT
 // S4: Profile-completion threshold (mirrors the PROFILE_COMPLETION_THRESHOLD setting).
 export const APPLY_COMPLETION_THRESHOLD = 70;
 
+// ─── S6: Admin console fixtures (EN-only — no HI/AR, no RTL for admin) ───────
+
+// One user per admin role. The RBAC-accurate mocks enforce each endpoint's
+// PermissionKey against the seeded matrix below, so the console is built against
+// REAL denials: a MODERATOR hitting logs.export / roles.manage / candidates.delete
+// gets a genuine 403, exactly as the API will answer.
+export const SUPER_ADMIN_USER_ID = 'mock-user-superadmin';
+export const SUPER_ADMIN_EMAIL = 'superadmin@example.com';
+export const ADMIN_USER_ID = 'mock-user-admin-1';
+export const ADMIN_EMAIL = 'admin@example.com';
+export const MODERATOR_USER_ID = 'mock-user-moderator';
+export const MODERATOR_EMAIL = 'moderator@example.com';
+export const SUPPORT_USER_ID = 'mock-user-support';
+export const SUPPORT_EMAIL = 'support@example.com';
+
+/** The S6 permission set: the 20 S2-seeded keys + the 5 the admin console adds. */
+export const ALL_PERMISSION_KEYS: PermissionKey[] = [
+  'candidates.view',
+  'candidates.edit',
+  'candidates.delete',
+  'candidates.onboard_manual',
+  'candidates.export',
+  'employers.view',
+  'employers.approve_reject',
+  'employers.suspend',
+  'employers.delete',
+  'jobs.view',
+  'jobs.post_admin',
+  'jobs.archive',
+  'applications.manage',
+  'applications.change_status',
+  'applications.notes',
+  'reports.view',
+  'logs.view',
+  'billing.manage',
+  'subscriptions.manage',
+  'admin_users.manage',
+  // Added by S6 (must be seeded into permission.constants.ts + the seed matrix
+  // by S6a-B2 — the contract declares them, the backend catches up):
+  'logs.export',
+  'roles.view',
+  'roles.manage',
+  'candidates.view_documents',
+  'jobs.moderate',
+];
+
+/** Admin-side roles only — CANDIDATE/EMPLOYER are never matrix columns. */
+export const ADMIN_ROLES: AdminRole[] = ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'];
+
+/** Rate cap for the manual "Selected" WhatsApp resend (per application, per 24h). */
+export const RESEND_WHATSAPP_CAP = 3;
+/** Bounds on the audit-log CSV export (the contract's documented caps). */
+export const LOGS_EXPORT_MAX_ROWS = 10_000;
+export const LOGS_EXPORT_MAX_RANGE_DAYS = 90;
+
+/** The candidate the purge flow is exercised against (tombstoned on purge). */
+export const PURGEABLE_CANDIDATE_USER_ID = 'mock-user-candidate-purgeable';
+
 // ─── In-memory stores ────────────────────────────────────────────────────────
 
 export interface MockUser {
   id: string;
   email: string;
   passwordHash: string;
-  role: 'CANDIDATE' | 'EMPLOYER' | 'ADMIN' | 'SUPER_ADMIN';
+  role: 'CANDIDATE' | 'EMPLOYER' | 'ADMIN' | 'SUPER_ADMIN' | 'MODERATOR' | 'SUPPORT';
   status: 'ACTIVE' | 'SUSPENDED' | 'PENDING_DELETION';
 }
 
@@ -223,6 +289,252 @@ const NOW = new Date().toISOString();
 const PAST_DATE = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
 const daysFromNow = (n: number) => new Date(Date.now() + n * 24 * 60 * 60 * 1000).toISOString();
+const hoursAgo = (n: number) => new Date(Date.now() - n * 60 * 60 * 1000).toISOString();
+
+// ─── S6: the RBAC seed matrix ────────────────────────────────────────────────
+// A FAITHFUL copy of apps/api/prisma/seed.ts's matrix. If these drift, the admin
+// console gets built against denials the real API won't produce — the whole
+// point of RBAC-accurate mocks. The 5 S6-added keys are seeded here the way
+// S6a-B2 must seed them for real.
+
+const ON = { enabled: true, locked: false };
+const OFF = { enabled: false, locked: false };
+const LOCKED_OFF = { enabled: false, locked: true };
+
+/** role → permission → {enabled, locked}. SUPER_ADMIN is all-on, all-locked. */
+const SEED_MATRIX: Record<
+  AdminRole,
+  Partial<Record<PermissionKey, { enabled: boolean; locked: boolean }>>
+> = {
+  SUPER_ADMIN: Object.fromEntries(
+    ALL_PERMISSION_KEYS.map((k) => [k, { enabled: true, locked: true }]),
+  ) as Record<PermissionKey, { enabled: boolean; locked: boolean }>,
+  ADMIN: {
+    'candidates.view': ON,
+    'candidates.edit': ON,
+    'candidates.delete': OFF, // purge — NOT granted to ADMIN by default
+    'candidates.onboard_manual': ON,
+    'candidates.export': ON,
+    'candidates.view_documents': ON,
+    'employers.view': ON,
+    'employers.approve_reject': ON,
+    'employers.suspend': ON,
+    'employers.delete': OFF,
+    'jobs.view': ON,
+    'jobs.post_admin': ON,
+    'jobs.archive': ON,
+    'jobs.moderate': ON,
+    'applications.manage': ON,
+    'applications.change_status': ON,
+    'applications.notes': ON,
+    'reports.view': ON,
+    'logs.view': ON,
+    'logs.export': ON,
+    'roles.view': ON,
+    'roles.manage': LOCKED_OFF, // matrix writes are SUPER_ADMIN-effective
+    'billing.manage': LOCKED_OFF,
+    'subscriptions.manage': LOCKED_OFF,
+    'admin_users.manage': LOCKED_OFF,
+  },
+  MODERATOR: {
+    'candidates.view': ON,
+    'candidates.edit': OFF,
+    'candidates.delete': OFF,
+    'candidates.onboard_manual': OFF,
+    'candidates.export': OFF,
+    'candidates.view_documents': OFF, // moderators do NOT read passports
+    'employers.view': ON,
+    'employers.approve_reject': ON,
+    'employers.suspend': OFF,
+    'employers.delete': OFF,
+    'jobs.view': ON,
+    'jobs.post_admin': OFF,
+    'jobs.archive': ON,
+    'jobs.moderate': ON, // moderation IS the moderator's job
+    'applications.manage': OFF,
+    'applications.change_status': OFF,
+    'applications.notes': ON,
+    'reports.view': ON,
+    'logs.view': ON,
+    'logs.export': OFF, // may READ the log on screen, may not walk out with it
+    'roles.view': OFF,
+    'roles.manage': LOCKED_OFF,
+    'billing.manage': LOCKED_OFF,
+    'subscriptions.manage': LOCKED_OFF,
+    'admin_users.manage': LOCKED_OFF,
+  },
+  SUPPORT: {
+    'candidates.view': ON,
+    'candidates.edit': OFF,
+    'candidates.delete': LOCKED_OFF,
+    'candidates.onboard_manual': OFF,
+    'candidates.export': OFF,
+    'candidates.view_documents': OFF,
+    'employers.view': ON,
+    'employers.approve_reject': OFF,
+    'employers.suspend': OFF,
+    'employers.delete': LOCKED_OFF,
+    'jobs.view': ON,
+    'jobs.post_admin': OFF,
+    'jobs.archive': OFF,
+    'jobs.moderate': OFF,
+    'applications.manage': OFF,
+    'applications.change_status': ON, // support runs the manual WhatsApp resend
+    'applications.notes': ON,
+    'reports.view': ON,
+    'logs.view': OFF,
+    'logs.export': OFF,
+    'roles.view': OFF,
+    'roles.manage': LOCKED_OFF,
+    'billing.manage': LOCKED_OFF,
+    'subscriptions.manage': LOCKED_OFF,
+    'admin_users.manage': LOCKED_OFF,
+  },
+};
+
+function buildSeedMatrix(): RbacCell[] {
+  const cells: RbacCell[] = [];
+  for (const role of ADMIN_ROLES) {
+    for (const permission of ALL_PERMISSION_KEYS) {
+      const cell = SEED_MATRIX[role][permission] ?? OFF;
+      cells.push({ role, permission, enabled: cell.enabled, locked: cell.locked });
+    }
+  }
+  return cells;
+}
+
+/**
+ * THE mock RBAC check — every admin handler runs it. Mirrors the API's
+ * permission service: a role holds a permission iff its matrix cell is enabled.
+ * CANDIDATE/EMPLOYER hold nothing (no rows).
+ */
+export function roleHasPermission(role: string, permission: PermissionKey): boolean {
+  const cell = db.rolePermissions.find((c) => c.role === role && c.permission === permission);
+  return cell?.enabled === true;
+}
+
+// ─── S6: seeded audit rows (Screen 29) ───────────────────────────────────────
+// Spread across modules / actions / statuses so the filter chips and keyset
+// paging are exercisable. `meta` carries ONLY redaction-safe values.
+
+function buildSeedAuditLogs(): AuditLogEntry[] {
+  const rows: Array<Omit<AuditLogEntry, 'id'>> = [
+    {
+      createdAt: hoursAgo(1),
+      module: 'Payments',
+      action: 'subscription.activated',
+      actorUserId: null,
+      actorRole: 'SUPER_ADMIN',
+      targetType: 'Subscription',
+      targetId: 'sub-mock-1',
+      status: 'SUCCESS',
+      meta: { planCode: 'PRO_MONTHLY', companyId: 'mock-company-pro' },
+    },
+    {
+      createdAt: hoursAgo(3),
+      module: 'Payments',
+      action: 'webhook.received',
+      actorUserId: null,
+      actorRole: 'SUPER_ADMIN',
+      targetType: 'Webhook',
+      targetId: 'evt-mock-1',
+      status: 'SUCCESS',
+      meta: { provider: 'razorpay', eventType: 'payment.captured' },
+    },
+    {
+      createdAt: hoursAgo(6),
+      module: 'Jobs',
+      action: 'job.publish.blocked',
+      actorUserId: 'mock-user-employer-1',
+      actorRole: 'EMPLOYER',
+      targetType: 'Job',
+      targetId: 'job-2',
+      status: 'BLOCKED',
+      meta: { failedRules: ['accommodation'], companyId: 'mock-company-1' },
+    },
+    {
+      createdAt: hoursAgo(9),
+      module: 'Employer',
+      action: 'document.viewed',
+      actorUserId: 'mock-user-admin-1',
+      actorRole: 'ADMIN',
+      targetType: 'CandidateDocument',
+      targetId: 'mock-user-candidate-1',
+      // The DPDP trail: the TYPE, never the key or the signed URL.
+      status: 'SUCCESS',
+      meta: { documentType: 'PASSPORT', companyId: 'mock-company-pro' },
+    },
+    {
+      createdAt: daysAgo(1),
+      module: 'Applications',
+      action: 'application.admin_override',
+      actorUserId: 'mock-user-admin-1',
+      actorRole: 'ADMIN',
+      targetType: 'Application',
+      targetId: 'app-3',
+      status: 'SUCCESS',
+      meta: { from: 'REJECTED', to: 'SELECTED' },
+    },
+    {
+      createdAt: daysAgo(2),
+      module: 'Auth',
+      action: 'auth.login.failed',
+      actorUserId: null,
+      actorRole: null,
+      targetType: 'User',
+      targetId: null,
+      status: 'FAILED',
+      meta: { reason: 'invalid_credentials' },
+    },
+    {
+      createdAt: daysAgo(3),
+      module: 'Settings',
+      action: 'settings.update',
+      actorUserId: SUPER_ADMIN_USER_ID,
+      actorRole: 'SUPER_ADMIN',
+      targetType: 'Setting',
+      targetId: 'REQUIRE_ACCOMMODATION',
+      status: 'SUCCESS',
+      meta: { from: false, to: true, isCoreRule: true },
+    },
+    {
+      createdAt: daysAgo(4),
+      module: 'Notifications',
+      action: 'notification.delivered',
+      actorUserId: null,
+      actorRole: null,
+      targetType: 'WhatsappMessage',
+      targetId: 'wa-mock-1',
+      status: 'DELIVERED',
+      meta: { template: 'wa.selected', applicationId: 'app-1' },
+    },
+    {
+      createdAt: daysAgo(5),
+      module: 'Candidate',
+      action: 'passport_expiry.run',
+      actorUserId: null,
+      actorRole: null,
+      targetType: null,
+      targetId: null,
+      status: 'SUCCESS',
+      meta: { window60: 2, window30: 1, window7: 0, window0: 0 },
+    },
+    {
+      createdAt: daysAgo(6),
+      module: 'Errors',
+      action: 'worker.job.failed',
+      actorUserId: null,
+      actorRole: null,
+      targetType: 'Job',
+      targetId: 'bull-job-77',
+      status: 'ERROR',
+      meta: { queue: 'notification', attempts: 3 },
+    },
+  ];
+  // Newest first; ids descend so the keyset cursor is monotonic.
+  let id = 1_000_100;
+  return rows.map((r) => ({ ...r, id: String(id--) }) as AuditLogEntry);
+}
 
 export const db = {
   users: new Map<string, MockUser>([
@@ -263,6 +575,50 @@ export const db = {
         email: 'admin@example.com',
         passwordHash: 'hashed-password',
         role: 'ADMIN',
+        status: 'ACTIVE',
+      },
+    ],
+    // ── S6: one fixture per admin role, so the console's RBAC gating is built
+    // against REAL per-role denials (a permissive mock ships buttons a
+    // MODERATOR can't actually use).
+    [
+      SUPER_ADMIN_USER_ID,
+      {
+        id: SUPER_ADMIN_USER_ID,
+        email: SUPER_ADMIN_EMAIL,
+        passwordHash: 'hashed-password',
+        role: 'SUPER_ADMIN',
+        status: 'ACTIVE',
+      },
+    ],
+    [
+      MODERATOR_USER_ID,
+      {
+        id: MODERATOR_USER_ID,
+        email: MODERATOR_EMAIL,
+        passwordHash: 'hashed-password',
+        role: 'MODERATOR',
+        status: 'ACTIVE',
+      },
+    ],
+    [
+      SUPPORT_USER_ID,
+      {
+        id: SUPPORT_USER_ID,
+        email: SUPPORT_EMAIL,
+        passwordHash: 'hashed-password',
+        role: 'SUPPORT',
+        status: 'ACTIVE',
+      },
+    ],
+    // S6: the purge target (tombstoned in place by the purge handler).
+    [
+      PURGEABLE_CANDIDATE_USER_ID,
+      {
+        id: PURGEABLE_CANDIDATE_USER_ID,
+        email: 'purgeable@example.com',
+        passwordHash: 'hashed-password',
+        role: 'CANDIDATE',
         status: 'ACTIVE',
       },
     ],
@@ -401,6 +757,40 @@ export const db = {
   // mock-user-candidate-hidden = Hidden User (profileVisible=false — NEVER in browse)
 
   candidates: new Map<string, MockCandidate>([
+    // S6: the purge fixture. Starts as an ordinary, fully-populated candidate;
+    // POST /admin/candidates/{id}/purge tombstones them IN PLACE (name →
+    // "Deleted user", contacts nulled, documents emptied, purgedAt set) so the
+    // console can render the deletion state AND the S4 null-candidate applicant
+    // path becomes exercisable.
+    [
+      PURGEABLE_CANDIDATE_USER_ID,
+      {
+        userId: PURGEABLE_CANDIDATE_USER_ID,
+        profile: buildProfile(PURGEABLE_CANDIDATE_USER_ID, 'purgeable@example.com', {
+          fullName: 'Vikram Singh',
+          phone: '+919812345678',
+          phoneVerifiedAt: new Date().toISOString(),
+          completionPct: 80,
+          documents: [
+            {
+              id: 'doc-purge-1',
+              type: 'PASSPORT',
+              key: 'uploads/doc-purge-1/passport.pdf',
+              uploadedAt: daysAgo(20),
+              expiryDate: daysFromNow(400),
+            } as CandidateDocument,
+          ],
+        }),
+        resumeSettings: {
+          language: 'en',
+          showPhone: true,
+          showReligion: false,
+          showFatherName: false,
+          showPassportNumber: false,
+        },
+        lastRenderedAt: null,
+      },
+    ],
     [
       'mock-user-candidate-1',
       {
@@ -1257,6 +1647,49 @@ export const db = {
         archivedAt: null,
       } satisfies MockJob,
     ],
+    // S6: the moderation-queue fixture. PENDING_REVIEW exists ONLY on the admin
+    // surface (no employer or public list returns it) — approve → ACTIVE,
+    // reject → back to DRAFT with the reason.
+    [
+      'job-pending-review',
+      {
+        id: 'job-pending-review',
+        title: 'Site Supervisor (Awaiting Review)',
+        status: 'PENDING_REVIEW',
+        market: 'GULF',
+        location: 'Doha, Qatar',
+        description:
+          'Supervise a residential build crew. Submitted for admin approval because jobs.require_admin_approval is ON.',
+        categoryId: 'cat-construction',
+        salaryMin: 2000,
+        salaryMax: 2600,
+        salaryCurrency: 'QAR',
+        accommodation: true,
+        healthInsurance: true,
+        transportation: true,
+        workConditions: '9 hours/day, 6 days/week.',
+        requirements: ['5+ years supervision', 'Valid passport'],
+        experienceRequiredYears: 5,
+        vacancies: 2,
+        genderPreference: 'ANY',
+        companyId: 'mock-company-1',
+        companyName: 'Gulf Builders Arabia',
+        createdAt: daysAgo(2),
+        publishedAt: null,
+        archivedAt: null,
+      } satisfies MockJob,
+    ],
+  ]),
+
+  // S6: admin-only job metadata. `Job` carries no humanId / Featured / Urgent,
+  // but the admin row does — and Featured/Urgent are ADMIN-SET ONLY (decision 3):
+  // an employer can never set them, which is exactly what keeps them meaningful.
+  // PATCH /admin/jobs/{id}/flags mutates this store; the badges + search filters
+  // read it.
+  jobAdminMeta: new Map<string, { humanId: string; isFeatured: boolean; isUrgent: boolean }>([
+    ['job-1', { humanId: 'JB-2026-00001', isFeatured: true, isUrgent: false }],
+    ['job-2', { humanId: 'JB-2026-00002', isFeatured: false, isUrgent: true }],
+    ['job-pending-review', { humanId: 'JB-2026-00007', isFeatured: false, isUrgent: false }],
   ]),
 
   // ── S3: Hiring preferences (userId → preferences) ─────────────────────────
@@ -1834,6 +2267,52 @@ export const db = {
     nextInvoiceSeq: 43,
     nextOrderSeq: 109,
   },
+
+  // ── S6: Admin console stores ────────────────────────────────────────────────
+
+  // The Screen-27 RBAC matrix, mirroring the API seed EXACTLY (prisma/seed.ts):
+  // SUPER_ADMIN = every key enabled AND locked; the billing/subscriptions/
+  // admin_users keys are locked-OFF for every other role; the rest vary. The
+  // handlers enforce these cells, so a MODERATOR really is denied.
+  rolePermissions: buildSeedMatrix(),
+
+  // Screen-29 fixtures: spread across modules, actions and statuses so the
+  // filter chips + keyset paging have something to bite on. `meta` is already
+  // redaction-safe (counts/ids/codes only) — exactly as the API writes it.
+  auditLogs: buildSeedAuditLogs(),
+
+  // Internal admin notes, keyed by applicationId. NEVER served to candidate or
+  // employer surfaces (contract: NoteEntry is admin-only).
+  applicationNotes: new Map<string, NoteEntry[]>([
+    [
+      'app-3',
+      [
+        {
+          id: 'note-1',
+          authorUserId: 'mock-user-admin-1',
+          authorRole: 'ADMIN',
+          body: 'Candidate called support — confirmed they never received the WhatsApp.',
+          createdAt: daysAgo(2),
+        },
+      ],
+    ],
+  ]),
+
+  // Timestamps of manual "Selected" WhatsApp resends, keyed by applicationId —
+  // drives the 3-per-24h cap (429 beyond it).
+  whatsappResends: new Map<string, string[]>(),
+
+  // Candidate deletion lifecycle, keyed by candidate PROFILE id. Deliberately a
+  // mock-side store rather than fields on CandidateProfile: purge state is an
+  // ADMIN-context concern (AdminCandidateCard carries it) and has no business on
+  // the candidate-facing schema.
+  //   deletionDueAt — the candidate's own 30-day self-deletion request.
+  //   purgedAt      — anonymized (admin purge OR the elapsed self-deletion; SAME
+  //                   worker, different trigger).
+  candidateLifecycle: new Map<string, { deletionDueAt: string | null; purgedAt: string | null }>(),
+
+  // Audit-log id counter (the BigInt PK, rendered as a string on the wire).
+  nextAuditLogId: 1_000_100,
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
