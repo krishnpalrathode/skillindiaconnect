@@ -36,9 +36,12 @@ async function main(): Promise<void> {
     throw new Error('Refusing to run seed in production.');
   }
 
-  // 20 seeded in S2 + 2 added by S6a-B1 (logs.export, candidates.view_documents).
-  if (ALL_PERMS.length !== 22) {
-    throw new Error(`Expected 22 permission keys, got ${ALL_PERMS.length}.`);
+  // 20 seeded in S2 + 2 added by S6a-B1 (logs.export, candidates.view_documents)
+  // + 3 added by S6a-B2 (jobs.moderate, roles.view, roles.manage).
+  // This assertion is the tripwire that stops a key being DECLARED in code but
+  // never granted to anyone — a permission with no matrix rows is a dead grant.
+  if (ALL_PERMS.length !== 25) {
+    throw new Error(`Expected 25 permission keys, got ${ALL_PERMS.length}.`);
   }
   const permSet = new Set(ALL_PERMS);
 
@@ -175,8 +178,13 @@ async function main(): Promise<void> {
     });
   }
 
-  // ── 5. ROLE-PERMISSION MATRIX (Screen 27, exactly the 20 keys) ───────────────
-  // SUPER_ADMIN: all enabled + locked. CANDIDATE/EMPLOYER: NO rows seeded.
+  // ── 5. ROLE-PERMISSION MATRIX (Screen 27, all 25 keys × 4 admin roles) ───────
+  // SUPER_ADMIN: all enabled + locked. CANDIDATE/EMPLOYER: NO rows seeded — they
+  // are not admin-console roles and are never matrix columns.
+  //
+  // The grid must be COMPLETE (every role × every key). S6a-B2's GET synthesises
+  // a missing cell as enabled:false so the FE never renders a hole, but PATCHing
+  // one 404s — a synthesised cell means this seed did not run after a key landed.
   const on = { enabled: true, locked: false };
   const off = { enabled: false, locked: false };
   const lockedOff = { enabled: false, locked: true };
@@ -198,6 +206,7 @@ async function main(): Promise<void> {
       'jobs.view': on,
       'jobs.post_admin': on,
       'jobs.archive': on,
+      'jobs.moderate': on,
       'applications.manage': on,
       'applications.change_status': on,
       'applications.notes': on,
@@ -208,6 +217,11 @@ async function main(): Promise<void> {
       'billing.manage': lockedOff,
       'subscriptions.manage': lockedOff,
       'admin_users.manage': lockedOff,
+      // S6a-B2: ADMIN can SEE the matrix but never CHANGE it. roles.manage is
+      // SUPER_ADMIN-effective — locked OFF here, so no amount of console
+      // clicking can escalate an ADMIN into a role administrator.
+      'roles.view': on,
+      'roles.manage': lockedOff,
     },
     MODERATOR: {
       'candidates.view': on,
@@ -224,6 +238,8 @@ async function main(): Promise<void> {
       'jobs.view': on,
       'jobs.post_admin': off,
       'jobs.archive': on,
+      // A moderator's job IS moderating: approve/reject PENDING_REVIEW postings.
+      'jobs.moderate': on,
       'applications.manage': off,
       'applications.change_status': off,
       'applications.notes': on,
@@ -235,6 +251,10 @@ async function main(): Promise<void> {
       'billing.manage': lockedOff,
       'subscriptions.manage': lockedOff,
       'admin_users.manage': lockedOff,
+      // Not locked, just off — a normal, flippable cell (the one S6a-B2's
+      // cache-invalidation test grants and revokes at runtime).
+      'roles.view': off,
+      'roles.manage': lockedOff,
     },
     SUPPORT: {
       'candidates.view': on,
@@ -250,6 +270,7 @@ async function main(): Promise<void> {
       'jobs.view': on,
       'jobs.post_admin': off,
       'jobs.archive': off,
+      'jobs.moderate': off,
       'applications.manage': off,
       'applications.change_status': off,
       'applications.notes': off,
@@ -259,6 +280,8 @@ async function main(): Promise<void> {
       'billing.manage': lockedOff,
       'subscriptions.manage': lockedOff,
       'admin_users.manage': lockedOff,
+      'roles.view': off,
+      'roles.manage': lockedOff,
     },
   };
 

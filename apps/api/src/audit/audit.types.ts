@@ -83,6 +83,10 @@ export const AUDIT_ACTIONS = {
   // Audit-trail read side (S6a-B1). The export records ITSELF — bulk extraction
   // of the trail is exactly the kind of event the trail exists to record.
   AUDIT_EXPORTED: 'audit.exported',
+  // RBAC matrix (S6a-B2). Who flipped which cell, from what to what. Written
+  // TRANSACTIONALLY with the grant — a permission change without an audit row is
+  // the one event this trail may never miss.
+  RBAC_PERMISSION_CHANGED: 'rbac.permission.changed',
 } as const;
 
 export type AuditActionName = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

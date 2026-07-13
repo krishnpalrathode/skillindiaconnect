@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpException } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { PermissionService } from './permission.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
@@ -106,60 +105,31 @@ describe('PermissionService', () => {
     });
   });
 
-  describe('setPermission', () => {
-    it('throws 423 PERMISSION_LOCKED and makes no DB writes when the row is locked', async () => {
-      prismaMock.rolePermission.findUnique.mockResolvedValue({
-        id: '1',
-        role: ROLE,
-        permissionKey: KEY,
-        enabled: true,
-        isLocked: true,
-        updatedAt: new Date(),
-      });
+  /**
+   * S6a-B2 moved the WRITE path out of this service (see the note at the foot of
+   * permission.service.ts) — RbacMatrixService is now the only writer. What stays
+   * here is the cache and its invalidation, which the writer calls post-commit.
+   */
+  describe('invalidateRoleCache', () => {
+    it('deletes exactly the key getPermissionsForRole populates — same role, same format', async () => {
+      // Populate, capturing the key the READ path actually writes.
+      prismaMock.rolePermission.findMany.mockResolvedValue([{ permissionKey: KEY }]);
+      await service.getPermissionsForRole(ROLE);
+      const writtenKey = redisMock.setex.mock.calls[0]![0] as string;
 
-      await expect(service.setPermission(ROLE, KEY, false, 'actor-id')).rejects.toThrow(
-        HttpException,
-      );
-      await expect(service.setPermission(ROLE, KEY, false, 'actor-id')).rejects.toMatchObject({
-        status: 423,
-      });
-      expect(prismaMock.rolePermission.update).not.toHaveBeenCalled();
-      expect(redisMock.del).not.toHaveBeenCalled();
+      await service.invalidateRoleCache(ROLE);
+
+      // If these two ever diverge, invalidation silently no-ops and a revoked
+      // permission keeps working for the full 300s TTL. Pinning them together is
+      // the point of having ONE cache-key function.
+      expect(redisMock.del).toHaveBeenCalledWith(writtenKey);
     });
 
-    it('updates enabled, invalidates the cache, and writes an audit log for an unlocked row', async () => {
-      prismaMock.rolePermission.findUnique.mockResolvedValue({
-        id: '1',
-        role: ROLE,
-        permissionKey: KEY,
-        enabled: true,
-        isLocked: false,
-        updatedAt: new Date(),
-      });
-      prismaMock.rolePermission.update.mockResolvedValue({});
-
-      await service.setPermission(ROLE, KEY, false, 'actor-id');
-
-      expect(prismaMock.rolePermission.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { enabled: false } }),
-      );
-      expect(redisMock.del).toHaveBeenCalledWith(`rbac:perms:${ROLE}`);
-      expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            actorUserId: 'actor-id',
-            action: 'PERMISSION_UPDATE',
-            module: 'auth',
-          }),
-        }),
-      );
-    });
-
-    it('throws NotFoundException when the row does not exist', async () => {
-      prismaMock.rolePermission.findUnique.mockResolvedValue(null);
-      await expect(service.setPermission(ROLE, KEY, true, 'actor-id')).rejects.toMatchObject({
-        status: 404,
-      });
+    it('is scoped to the one role — it does not flush other roles', async () => {
+      await service.invalidateRoleCache(UserRole.MODERATOR);
+      expect(redisMock.del).toHaveBeenCalledTimes(1);
+      expect(redisMock.del).toHaveBeenCalledWith(`rbac:perms:${UserRole.MODERATOR}`);
+      expect(redisMock.del).not.toHaveBeenCalledWith(`rbac:perms:${UserRole.ADMIN}`);
     });
   });
 });

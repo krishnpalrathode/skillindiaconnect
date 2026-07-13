@@ -7979,7 +7979,12 @@ export interface operations {
                 };
             };
             403: components["responses"]["AdminForbidden"];
-            /** @description Unknown role/permission pair */
+            /**
+             * @description The role/permission pair is valid but has no seeded cell. PATCH flips
+             *     EXISTING cells — it never creates them, because a permission key is a
+             *     code + seed change, not a runtime one. In practice this means the DB
+             *     was not re-seeded after a new key landed.
+             */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -7997,7 +8002,41 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description The cell is locked and can never be changed */
+            /**
+             * @description The change is structurally valid but would leave the platform
+             *     unadministrable, so it is refused (S6a-B2):
+             *
+             *     - `SELF_LOCKOUT_FORBIDDEN` — the caller tried to revoke `roles.manage`
+             *       from their OWN role. They would be locked out of the very screen
+             *       they are standing on, with no way back in.
+             *     - `LAST_MANAGER_FORBIDDEN` — the change would strip `roles.manage`
+             *       from the LAST role holding it, freezing the matrix permanently.
+             *
+             *     Nothing is written on either rejection.
+             */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unprocessable Entity",
+                     *       "status": 422,
+                     *       "detail": "You cannot revoke your own ability to manage roles.",
+                     *       "code": "SELF_LOCKOUT_FORBIDDEN"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /**
+             * @description The cell is locked and can NEVER be changed — the entire SUPER_ADMIN
+             *     column (last-administrator protection, enforced in code so no DB state
+             *     can unlock it) plus the seeded locked set. Nothing is written and
+             *     nothing is audited.
+             */
             423: {
                 headers: {
                     [name: string]: unknown;
