@@ -1552,15 +1552,26 @@ const adminGetEmployers = http.get(`${BASE}/admin/employers`, ({ request }) => {
   return HttpResponse.json(result);
 });
 
+// ADDED IN S6a-F2 with its contract entry: the review detail fetches ONE company.
+const adminGetEmployer = http.get(`${BASE}/admin/employers/:id`, ({ request, params }) => {
+  const gate = requirePermission(request, 'employers.view');
+  if (gate.error) return gate.error;
+
+  const id = params['id'] as string;
+  const company = [...db.employers.values()].find((c) => c.id === id);
+  if (!company) return errorResponse(404, 'COMPANY_NOT_FOUND', 'Not found', 'Company not found.');
+
+  return HttpResponse.json({ data: company });
+});
+
 const adminApproveEmployer = http.post(
   `${BASE}/admin/employers/:id/approve`,
   ({ request, params }) => {
-    const user = getAuthUser(request);
-    if (!user)
-      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
-    if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
-      return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Admin access required.');
-    }
+    // DRIFT CORRECTED (S6a-F2): was a role check; the real controller gates on
+    // employers.approve_reject — which a MODERATOR HOLDS. The old mock denied
+    // what the server allows, hiding the moderator's actual job from the UI.
+    const gate = requirePermission(request, 'employers.approve_reject');
+    if (gate.error) return gate.error;
 
     const id = params['id'] as string;
     const entry = [...db.employers.entries()].find(([, c]) => c.id === id);
@@ -1578,12 +1589,8 @@ const adminApproveEmployer = http.post(
 const adminRejectEmployer = http.post(
   `${BASE}/admin/employers/:id/reject`,
   async ({ request, params }) => {
-    const user = getAuthUser(request);
-    if (!user)
-      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
-    if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
-      return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Admin access required.');
-    }
+    const gate = requirePermission(request, 'employers.approve_reject');
+    if (gate.error) return gate.error;
 
     const id = params['id'] as string;
     const entry = [...db.employers.entries()].find(([, c]) => c.id === id);
@@ -1610,12 +1617,11 @@ const adminRejectEmployer = http.post(
 const adminSuspendEmployer = http.post(
   `${BASE}/admin/employers/:id/suspend`,
   ({ request, params }) => {
-    const user = getAuthUser(request);
-    if (!user)
-      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
-    if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
-      return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Admin access required.');
-    }
+    // employers.suspend — a SEPARATE, higher grant than approve_reject
+    // (MODERATOR holds approve/reject but NOT this; the UI's missing Suspend
+    // button for moderators is proven against this exact denial).
+    const gate = requirePermission(request, 'employers.suspend');
+    if (gate.error) return gate.error;
 
     const id = params['id'] as string;
     const entry = [...db.employers.entries()].find(([, c]) => c.id === id);
@@ -1630,6 +1636,38 @@ const adminSuspendEmployer = http.post(
         job.status = 'PAUSED';
       }
     });
+
+    return HttpResponse.json({ data: company });
+  },
+);
+
+// ADDED IN S6a-F2 alongside its contract entry: the endpoint has existed since
+// S2-B4 but was never frozen or mocked. SUSPENDED → APPROVED only; the paused
+// jobs are NOT auto-resumed (a suspension is not erased by ending it — the
+// employer resumes each job manually).
+const adminReactivateEmployer = http.post(
+  `${BASE}/admin/employers/:id/reactivate`,
+  ({ request, params }) => {
+    const gate = requirePermission(request, 'employers.approve_reject');
+    if (gate.error) return gate.error;
+
+    const id = params['id'] as string;
+    const entry = [...db.employers.entries()].find(([, c]) => c.id === id);
+    if (!entry) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Employer not found.');
+
+    const company = entry[1];
+    if (company.status !== 'SUSPENDED') {
+      return errorResponse(
+        409,
+        'ILLEGAL_TRANSITION',
+        'Conflict',
+        'Only a SUSPENDED company can be reactivated.',
+      );
+    }
+
+    company.status = 'APPROVED';
+    company.approvedAt = new Date().toISOString();
+    // Deliberately NOT resuming jobs — mirrors EmployerApprovalService.reactivate.
 
     return HttpResponse.json({ data: company });
   },
@@ -1657,6 +1695,11 @@ const adminPatchSettings = http.patch(`${BASE}/admin/settings`, async ({ request
 
   const body = (await request.json()) as { updates: { key: string; value: unknown }[] };
 
+  // VALIDATE-ALL-FIRST, exactly like the real SettingsService: every entry is
+  // checked (existence + core-rule gate + declared type) before ANY write. A
+  // single failure rejects the whole batch with no side effects — a batch that
+  // half-applies is worse than one that fails.
+  const resolved: Array<{ setting: (typeof db.settings)[number]; value: unknown }> = [];
   for (const update of body.updates) {
     const setting = db.settings.find((s) => s.key === update.key);
     if (!setting) {
@@ -1675,9 +1718,28 @@ const adminPatchSettings = http.patch(`${BASE}/admin/settings`, async ({ request
         'Only SUPER_ADMIN may modify worker-protection core rules.',
       );
     }
-    setting.value = update.value;
+    // Type check against the CURRENT value's runtime type (the real API checks
+    // the per-key declared type; the current value always carries it).
+    const sameType = Array.isArray(setting.value)
+      ? Array.isArray(update.value) &&
+        (update.value as unknown[]).every((v) => typeof v === 'string')
+      : typeof update.value === typeof setting.value;
+    if (!sameType) {
+      return errorResponse(
+        422,
+        'VALIDATION_ERROR',
+        'Validation failed',
+        `Invalid value type for ${update.key}.`,
+      );
+    }
+    resolved.push({ setting, value: update.value });
+  }
+
+  for (const { setting, value } of resolved) {
+    setting.value = value as (typeof setting)['value'];
+    setting.version = (setting.version ?? 1) + 1;
     setting.updatedAt = new Date().toISOString();
-    setting.updatedBy = user.id;
+    setting.updatedById = user.id;
   }
 
   return HttpResponse.json({ data: db.settings });
@@ -2536,7 +2598,8 @@ const billingCheckout = http.post(`${BASE}/billing/checkout`, async ({ request }
   // client can never force a gateway:
   //   LOCAL   → Razorpay domestic, GST added (the authoritative split)
   //   FOREIGN → Razorpay International; Stripe only when STRIPE_ENABLED is on
-  const stripeEnabled = db.settings.find((s) => s.key === 'STRIPE_ENABLED')?.value === true;
+  const stripeEnabled =
+    db.settings.find((s) => s.key === 'payments.stripe_enabled')?.value === true;
   const isLocal = company.type === 'LOCAL';
   const gateway: components['schemas']['PaymentGateway'] =
     !isLocal && stripeEnabled ? 'STRIPE' : 'RAZORPAY';
@@ -3740,9 +3803,11 @@ export const handlers = [
   unsaveJob,
   // S2: Admin
   adminGetEmployers,
+  adminGetEmployer,
   adminApproveEmployer,
   adminRejectEmployer,
   adminSuspendEmployer,
+  adminReactivateEmployer,
   adminGetSettings,
   adminPatchSettings,
   // S5: Billing (webhooks deliberately absent — see the billing section comment)

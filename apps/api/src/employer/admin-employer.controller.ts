@@ -35,6 +35,21 @@ export class AdminEmployerController {
     return result;
   }
 
+  /**
+   * ADDED IN S6a-F2. The review-detail screen (Screen 24) needs ONE company by
+   * id, and until now no admin endpoint returned it — only the paginated list.
+   * The alternative (the client walking list pages to find an id) is a hack that
+   * outlives its excuse. Reuses the existing public getCompanyById; same RBAC
+   * key as the list, because reading one row is not a wider grant than reading
+   * the table.
+   */
+  @Get(':id')
+  @RequirePermissions(Permission.EMPLOYERS_VIEW)
+  async getOne(@Param('id') id: string) {
+    const company = await this.employerService.getCompanyById(id);
+    return { data: company };
+  }
+
   @Post(':id/approve')
   @RequirePermissions(Permission.EMPLOYERS_APPROVE_REJECT)
   async approve(

@@ -1303,6 +1303,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/employers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One employer company by id (admin review detail)
+         * @description **RBAC: `employers.view`** (same key as the list — reading one row is not a wider grant than reading the table). ADDED IN S6a-F2: Screen 24's review detail needs a single company, and no admin endpoint returned one.
+         */
+        get: operations["getAdminEmployer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/employers/{id}/approve": {
         parameters: {
             query?: never;
@@ -1354,9 +1374,29 @@ export interface paths {
         put?: never;
         /**
          * Suspend an employer company (admin)
-         * @description Sets the employer's company status to SUSPENDED. All their ACTIVE jobs are paused automatically. Requires `employers.approve_reject` permission.
+         * @description Sets the employer's company status to SUSPENDED. All their ACTIVE jobs are paused automatically. Requires `employers.suspend` permission — a SEPARATE, higher grant than `employers.approve_reject` (MODERATOR holds approve/reject but not this; corrected in S6a-F2, the description previously named the wrong key).
          */
         post: operations["postAdminEmployerSuspend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/employers/{id}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reactivate a suspended employer (admin)
+         * @description SUSPENDED → APPROVED only. Requires `employers.approve_reject`. ADDED IN S6a-F2: the endpoint has existed since S2-B4 (AdminEmployerController) but was never frozen into the contract. The employer's paused jobs are NOT auto-resumed — the employer resumes them manually (a suspension is not erased by ending it).
+         */
+        post: operations["postAdminEmployerReactivate"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1372,7 +1412,7 @@ export interface paths {
         };
         /**
          * Get platform settings (admin)
-         * @description Returns all platform settings grouped by SettingGroup (matches the tabs on Screen 28). Requires admin bearer token.
+         * @description **RBAC: `settings.view`.** Returns ALL platform settings as a flat list ordered by key. The client groups them into Screen 28's tabs by key prefix (worker_protection.* / jobs.* / candidates.* / payments.*).
          */
         get: operations["getAdminSettings"];
         put?: never;
@@ -1382,11 +1422,14 @@ export interface paths {
         head?: never;
         /**
          * Update platform settings (admin; core rules require SUPER_ADMIN)
-         * @description Updates one or more settings by key. Settings where `isCoreRule = true`
-         *     (WORKER_PROTECTION group) require SUPER_ADMIN — ADMIN callers receive
-         *     403 CORE_RULE_FORBIDDEN for those keys.
+         * @description **RBAC: `settings.manage`.** Updates one or more settings by key.
+         *     Settings where `isCoreRule = true` (the worker_protection.* trio) require
+         *     SUPER_ADMIN regardless of settings.manage — other callers receive 403
+         *     CORE_RULE_FORBIDDEN for those keys.
          *
-         *     Send only the keys to update; other settings remain unchanged.
+         *     Batch-atomic, validate-all-first: every entry is checked (type + core-rule
+         *     gate) before ANY write; a single failure rejects the whole batch with no
+         *     side effects. Send only the keys to update.
          */
         patch: operations["patchAdminSettings"];
         trace?: never;
@@ -2438,11 +2481,6 @@ export interface components {
          * @enum {string}
          */
         NotificationType: "APPLICATION_SELECTED" | "APPLICATION_SHORTLISTED" | "APPLICATION_REJECTED" | "NEW_JOB_MATCH" | "PROFILE_REMINDER" | "JOB_CLOSING_SOON" | "PASSPORT_EXPIRY" | "PROFILE_VIEWED" | "EMPLOYER_APPROVED" | "EMPLOYER_REJECTED" | "EMPLOYER_SUSPENDED" | "SUBSCRIPTION_PURCHASED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "CANDIDATE_MATCHES" | "RESUME_SENT";
-        /**
-         * @description Maps to the tabs on the Admin Settings screen (Screen 28). WORKER_PROTECTION settings are core rules — only SUPER_ADMIN may update them.
-         * @enum {string}
-         */
-        SettingGroup: "WORKER_PROTECTION" | "COMPLETION" | "APPLICATION" | "PLATFORM";
         UserSummary: {
             /** Format: uuid */
             id: string;
@@ -2749,25 +2787,42 @@ export interface components {
             createdAt: string;
         };
         /**
-         * @description Platform configuration setting. Settings where `isCoreRule = true` (the
-         *     WORKER_PROTECTION group) may only be updated by SUPER_ADMIN — ADMIN callers
-         *     receive 403 `CORE_RULE_FORBIDDEN` for those keys.
+         * @description Platform configuration setting — EXACTLY the persisted row, no
+         *     presentation metadata.
+         *
+         *     CORRECTED IN S6a-F2: this schema was frozen (S6-0) with `group`, `label`
+         *     and `description` fields and SCREAMING_CASE keys (`REQUIRE_ACCOMMODATION`)
+         *     that the real API has never returned — S2-B1 deliberately keeps labels and
+         *     grouping OUT of the server, because they are localizable UI copy. The real
+         *     wire shape is the flat row below, with dot-prefixed keys
+         *     (`worker_protection.accommodation_required`, `jobs.auto_archive_days`,
+         *     `candidates.min_completion_pct`, `payments.gst_rate_pct`, …).
+         *
+         *     The client derives everything presentational:
+         *     - GROUPING (Screen 28's tabs) from the key prefix — `worker_protection.*`
+         *       / `jobs.*` / `candidates.*` / `payments.*`.
+         *     - LABELS and descriptions from its own i18n bundle, keyed by setting key.
+         *     - The EDITOR TYPE from the runtime type of `value` (boolean → toggle,
+         *       number → numeric field, array → list editor).
+         *
+         *     `isCoreRule = true` (the worker-protection trio) may only be updated by
+         *     SUPER_ADMIN — other callers receive 403 `CORE_RULE_FORBIDDEN` per key.
          */
         Setting: {
-            /** @description Machine-readable unique key (e.g. REQUIRE_ACCOMMODATION) */
+            /** Format: uuid */
+            id?: string;
+            /** @description Machine-readable unique key (e.g. worker_protection.accommodation_required) */
             key: string;
-            group: components["schemas"]["SettingGroup"];
-            /** @description Human-readable label for the admin UI */
-            label: string;
-            description?: string;
-            /** @description The current value. Type varies by key: boolean for flags, integer for numeric limits, string for text settings. */
+            /** @description The current value. Type varies by key: boolean for flags, number for numeric limits, string[] for lists (e.g. candidates.mandatory_documents). */
             value: unknown;
             /** @description If true, only SUPER_ADMIN may update this setting */
             isCoreRule: boolean;
+            /** @description Bumped on every write (optimistic-concurrency seam) */
+            version?: number;
             /** Format: date-time */
-            updatedAt?: string | null;
-            /** @description User ID of the last updater */
-            updatedBy?: string | null;
+            updatedAt: string;
+            /** @description User ID of the last updater (null when never edited) */
+            updatedById?: string | null;
         };
         /**
          * @description Employer profile completeness checklist — computed per-request from current
@@ -6356,6 +6411,40 @@ export interface operations {
             };
         };
     };
+    getAdminEmployer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The company */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Company"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Company not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     postAdminEmployerApprove: {
         parameters: {
             query?: never;
@@ -6462,6 +6551,48 @@ export interface operations {
             };
             /** @description Employer not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAdminEmployerReactivate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Employer reactivated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Company"];
+                    };
+                };
+            };
+            /** @description Employer not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Company is not currently SUSPENDED */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -323,12 +323,8 @@ components:
         ]
 
     # ── Settings enums (S2) ─────────────────────────────────────────────────────
-    SettingGroup:
-      type: string
-      enum: [WORKER_PROTECTION, COMPLETION, APPLICATION, PLATFORM]
-      description: >
-        Maps to the tabs on the Admin Settings screen (Screen 28).
-        WORKER_PROTECTION settings are core rules — only SUPER_ADMIN may update them.
+    # (SettingGroup removed in S6a-F2 — grouping is a CLIENT concern derived from
+    # the setting key's prefix; the server never returned a group field.)
 
     # ── Shared objects ──────────────────────────────────────────────────────────
     UserSummary:
@@ -910,35 +906,51 @@ components:
     # ── Settings schemas (S2) ───────────────────────────────────────────────────
     Setting:
       type: object
-      required: [key, group, label, value, isCoreRule]
+      required: [key, value, isCoreRule, updatedAt]
       description: |
-        Platform configuration setting. Settings where `isCoreRule = true` (the
-        WORKER_PROTECTION group) may only be updated by SUPER_ADMIN — ADMIN callers
-        receive 403 `CORE_RULE_FORBIDDEN` for those keys.
+        Platform configuration setting — EXACTLY the persisted row, no
+        presentation metadata.
+
+        CORRECTED IN S6a-F2: this schema was frozen (S6-0) with `group`, `label`
+        and `description` fields and SCREAMING_CASE keys (`REQUIRE_ACCOMMODATION`)
+        that the real API has never returned — S2-B1 deliberately keeps labels and
+        grouping OUT of the server, because they are localizable UI copy. The real
+        wire shape is the flat row below, with dot-prefixed keys
+        (`worker_protection.accommodation_required`, `jobs.auto_archive_days`,
+        `candidates.min_completion_pct`, `payments.gst_rate_pct`, …).
+
+        The client derives everything presentational:
+        - GROUPING (Screen 28's tabs) from the key prefix — `worker_protection.*`
+          / `jobs.*` / `candidates.*` / `payments.*`.
+        - LABELS and descriptions from its own i18n bundle, keyed by setting key.
+        - The EDITOR TYPE from the runtime type of `value` (boolean → toggle,
+          number → numeric field, array → list editor).
+
+        `isCoreRule = true` (the worker-protection trio) may only be updated by
+        SUPER_ADMIN — other callers receive 403 `CORE_RULE_FORBIDDEN` per key.
       properties:
+        id:
+          type: string
+          format: uuid
         key:
           type: string
-          description: Machine-readable unique key (e.g. REQUIRE_ACCOMMODATION)
-        group:
-          $ref: '#/components/schemas/SettingGroup'
-        label:
-          type: string
-          description: Human-readable label for the admin UI
-        description:
-          type: string
+          description: Machine-readable unique key (e.g. worker_protection.accommodation_required)
         value:
           description: >
-            The current value. Type varies by key: boolean for flags, integer
-            for numeric limits, string for text settings.
+            The current value. Type varies by key: boolean for flags, number for
+            numeric limits, string[] for lists (e.g. candidates.mandatory_documents).
         isCoreRule:
           type: boolean
           description: If true, only SUPER_ADMIN may update this setting
+        version:
+          type: integer
+          description: Bumped on every write (optimistic-concurrency seam)
         updatedAt:
-          type: [string, 'null']
+          type: string
           format: date-time
-        updatedBy:
+        updatedById:
           type: [string, 'null']
-          description: User ID of the last updater
+          description: User ID of the last updater (null when never edited)
 
     # ── Employer profile schemas (S3) ──────────────────────────────────────────
     ProfileChecklist:
@@ -5140,6 +5152,42 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /admin/employers/{id}:
+    get:
+      operationId: getAdminEmployer
+      tags: [admin]
+      summary: One employer company by id (admin review detail)
+      description: >
+        **RBAC: `employers.view`** (same key as the list — reading one row is not
+        a wider grant than reading the table). ADDED IN S6a-F2: Screen 24's
+        review detail needs a single company, and no admin endpoint returned one.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The company
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Company'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Company not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /admin/employers/{id}/approve:
     post:
       operationId: postAdminEmployerApprove
@@ -5231,7 +5279,10 @@ paths:
       summary: Suspend an employer company (admin)
       description: >
         Sets the employer's company status to SUSPENDED. All their ACTIVE jobs
-        are paused automatically. Requires `employers.approve_reject` permission.
+        are paused automatically. Requires `employers.suspend` permission — a
+        SEPARATE, higher grant than `employers.approve_reject` (MODERATOR holds
+        approve/reject but not this; corrected in S6a-F2, the description
+        previously named the wrong key).
       parameters:
         - name: id
           in: path
@@ -5257,14 +5308,57 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /admin/employers/{id}/reactivate:
+    post:
+      operationId: postAdminEmployerReactivate
+      tags: [admin]
+      summary: Reactivate a suspended employer (admin)
+      description: >
+        SUSPENDED → APPROVED only. Requires `employers.approve_reject`.
+        ADDED IN S6a-F2: the endpoint has existed since S2-B4
+        (AdminEmployerController) but was never frozen into the contract.
+        The employer's paused jobs are NOT auto-resumed — the employer resumes
+        them manually (a suspension is not erased by ending it).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Employer reactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Company'
+        '404':
+          description: Employer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Company is not currently SUSPENDED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /admin/settings:
     get:
       operationId: getAdminSettings
       tags: [admin]
       summary: Get platform settings (admin)
       description: >
-        Returns all platform settings grouped by SettingGroup (matches the tabs
-        on Screen 28). Requires admin bearer token.
+        **RBAC: `settings.view`.** Returns ALL platform settings as a flat list
+        ordered by key. The client groups them into Screen 28's tabs by key
+        prefix (worker_protection.* / jobs.* / candidates.* / payments.*).
       responses:
         '200':
           description: All platform settings
@@ -5289,11 +5383,14 @@ paths:
       tags: [admin]
       summary: Update platform settings (admin; core rules require SUPER_ADMIN)
       description: |
-        Updates one or more settings by key. Settings where `isCoreRule = true`
-        (WORKER_PROTECTION group) require SUPER_ADMIN — ADMIN callers receive
-        403 CORE_RULE_FORBIDDEN for those keys.
+        **RBAC: `settings.manage`.** Updates one or more settings by key.
+        Settings where `isCoreRule = true` (the worker_protection.* trio) require
+        SUPER_ADMIN regardless of settings.manage — other callers receive 403
+        CORE_RULE_FORBIDDEN for those keys.
 
-        Send only the keys to update; other settings remain unchanged.
+        Batch-atomic, validate-all-first: every entry is checked (type + core-rule
+        gate) before ANY write; a single failure rejects the whole batch with no
+        side effects. Send only the keys to update.
       requestBody:
         required: true
         content:

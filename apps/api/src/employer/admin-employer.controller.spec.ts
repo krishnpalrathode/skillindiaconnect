@@ -14,6 +14,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
   ConflictException,
   ForbiddenException,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -74,6 +75,7 @@ describe('AdminEmployerController — RBAC unit tests', () => {
 
     employerMock = {
       adminList: jest.fn().mockResolvedValue({ data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } }),
+      getCompanyById: jest.fn().mockResolvedValue(makeCompany(CompanyStatus.PENDING)),
     } as unknown as jest.Mocked<EmployerService>;
 
     permServiceMock = { getPermissionsForRole: jest.fn() };
@@ -161,6 +163,29 @@ describe('AdminEmployerController — RBAC unit tests', () => {
       AdminEmployerController.prototype.list,
     );
     expect(metadata).toEqual([Permission.EMPLOYERS_VIEW]);
+  });
+
+  // ── getOne (S6a-F2: the review detail's single-company read) ─────────────
+
+  it('getOne: returns the company wrapped in { data }', async () => {
+    const result = await controller.getOne('comp-1');
+    expect(employerMock.getCompanyById).toHaveBeenCalledWith('comp-1');
+    expect(result.data.id).toBe('comp-1');
+  });
+
+  it('getOne: EMPLOYERS_VIEW guard metadata is set (same key as the list — one row is not a wider grant than the table)', () => {
+    const metadata = Reflect.getMetadata(
+      'requiredPermissions',
+      AdminEmployerController.prototype.getOne,
+    );
+    expect(metadata).toEqual([Permission.EMPLOYERS_VIEW]);
+  });
+
+  it('getOne: 404 propagates from the service for an unknown id', async () => {
+    employerMock.getCompanyById.mockRejectedValueOnce(
+      new NotFoundException({ code: 'COMPANY_NOT_FOUND' }),
+    );
+    await expect(controller.getOne('nope')).rejects.toMatchObject({ status: 404 });
   });
 
   // ── Illegal transition propagates from service ────────────────────────────

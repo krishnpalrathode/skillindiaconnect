@@ -102,23 +102,26 @@ test.describe('SUPER_ADMIN — full nav', () => {
     });
   });
 
-  const routes: Array<[string, string]> = [
-    ['Employers', '/admin/employers'],
-    ['Candidates', '/admin/candidates'],
-    ['Jobs', '/admin/jobs'],
-    ['Applications', '/admin/applications'],
-    ['Audit log', '/admin/logs'],
-    ['Roles & permissions', '/admin/roles'],
-    ['Settings', '/admin/settings'],
+  // [nav label, path, the route's h1]. The heading diverges from the label once
+  // a unit replaces the placeholder with the real screen (S6a-F2 did Employers
+  // and Settings); the remaining placeholders still title themselves by label.
+  const routes: Array<[string, string, RegExp]> = [
+    ['Employers', '/admin/employers', /employer management/i],
+    ['Candidates', '/admin/candidates', /candidates/i],
+    ['Jobs', '/admin/jobs', /jobs/i],
+    ['Applications', '/admin/applications', /applications/i],
+    ['Audit log', '/admin/logs', /audit log/i],
+    ['Roles & permissions', '/admin/roles', /roles & permissions/i],
+    ['Settings', '/admin/settings', /platform settings/i],
   ];
 
-  for (const [label, path] of routes) {
+  for (const [label, path, heading] of routes) {
     test(`nav → ${label} reaches its route`, async ({ page }) => {
       const nav = page.getByRole('navigation', { name: /admin navigation/i });
       await nav.getByRole('link', { name: label }).click();
       await page.waitForURL((u) => u.pathname.includes(path), { timeout: 10_000 });
-      // The placeholder heading proves the route resolved and the server allowed it.
-      await expect(page.getByRole('heading', { name: label })).toBeVisible({ timeout: 10_000 });
+      // The route's h1 proves it resolved and the server allowed it.
+      await expect(page.getByRole('heading', { name: heading })).toBeVisible({ timeout: 10_000 });
     });
   }
 });

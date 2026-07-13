@@ -1304,6 +1304,222 @@
       "requires": "Requires",
       "retry": "Try again"
     },
+    "employers": {
+      "title": "Employer management",
+      "statusFilterLabel": "Filter by status",
+      "statusTab": {
+        "PENDING": "Pending review",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "SUSPENDED": "Suspended",
+        "ALL": "All"
+      },
+      "status": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "SUSPENDED": "Suspended"
+      },
+      "type": { "LOCAL": "Local", "FOREIGN": "Foreign" },
+      "typeFilterLabel": "Type",
+      "typeAll": "All types",
+      "typeLocal": "Local",
+      "typeForeign": "Foreign",
+      "searchLabel": "Search companies",
+      "searchPlaceholder": "Search by company name…",
+      "searchButton": "Search",
+      "tableCaption": "Employer companies awaiting or past review",
+      "col": {
+        "company": "Company",
+        "type": "Type",
+        "registrationNumber": "Registration no.",
+        "submitted": "Submitted",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "review": "Review",
+      "reviewAria": "Review {name}",
+      "empty": {
+        "PENDING": "No employers waiting for review — the queue is clear.",
+        "APPROVED": "No approved employers match these filters.",
+        "REJECTED": "No rejected employers match these filters.",
+        "SUSPENDED": "No suspended employers.",
+        "ALL": "No employers match these filters."
+      },
+      "paginationLabel": "Employer list pages",
+      "prevPage": "Previous",
+      "nextPage": "Next",
+      "pageOf": "Page {page} of {total}",
+      "loadFailed": "Couldn't load employers.",
+      "notFound": "This company doesn't exist (it may have been removed).",
+      "retry": "Try again",
+      "actionFailed": "The action failed. Please try again.",
+      "backToQueue": "Back to employer queue",
+      "factsHeading": "Company details",
+      "fact": {
+        "registrationNumber": "Registration number",
+        "type": "Type",
+        "industry": "Industry",
+        "phone": "Phone",
+        "location": "Location",
+        "employeeRange": "Company size",
+        "website": "Website",
+        "submitted": "Submitted",
+        "description": "Description"
+      },
+      "rejectionReasonLabel": "Rejection reason (visible to the employer)",
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "suspend": "Suspend",
+        "reactivate": "Reactivate"
+      },
+      "toast": {
+        "approved": "Company approved. They can now post jobs.",
+        "rejected": "Company rejected. The reason has been shared with them.",
+        "suspended": "Company suspended. All their active jobs are now paused.",
+        "reactivated": "Company reactivated. Their jobs remain paused until they resume them."
+      },
+      "certificate": {
+        "heading": "Registration certificate",
+        "openInNewTab": "Open in new tab",
+        "imageAlt": "The company's registration certificate document",
+        "iframeTitle": "Registration certificate document",
+        "noneTitle": "No certificate uploaded",
+        "noneBody": "This company hasn't uploaded a registration certificate. You can still approve or reject — but you'd be doing it without the document.",
+        "expiredOrFailed": "The document link expired or failed to load. Links are short-lived by design — get a fresh one.",
+        "refreshLink": "Refresh link"
+      },
+      "approveDialog": {
+        "title": "Approve {name}?",
+        "body": "The company will be able to post jobs to candidates the moment you approve.",
+        "confirm": "Approve company",
+        "cancel": "Cancel"
+      },
+      "rejectDialog": {
+        "title": "Reject {name}?",
+        "visibility": "This reason is shown to the employer on their dashboard and emailed to them. Write it for a person to read.",
+        "reasonLabel": "Reason for rejection",
+        "reasonPlaceholder": "e.g. The registration certificate doesn't match the company name. Please re-upload a certificate in the registered name.",
+        "reasonRequired": "A reason is required — the employer needs to know what to fix.",
+        "confirm": "Reject company",
+        "cancel": "Cancel"
+      },
+      "suspendDialog": {
+        "title": "Suspend {name}?",
+        "consequence": "This will pause ALL of this employer's active jobs immediately. Candidates will no longer see them.",
+        "consequenceWithCount": "This will pause all {count} of this employer's active jobs immediately. Candidates will no longer see them.",
+        "body": "The employer keeps access to their account but cannot publish until reactivated.",
+        "confirm": "Suspend company",
+        "cancel": "Cancel"
+      },
+      "reactivateDialog": {
+        "title": "Reactivate {name}?",
+        "body": "The company returns to Approved and can publish again.",
+        "jobsStayPaused": "Their previously paused jobs stay paused — the employer resumes each one manually.",
+        "confirm": "Reactivate company",
+        "cancel": "Cancel"
+      }
+    },
+    "settings": {
+      "title": "Platform settings",
+      "tabsLabel": "Setting groups",
+      "groups": {
+        "worker_protection": "Worker protection",
+        "jobs": "Jobs",
+        "candidates": "Candidates",
+        "payments": "Payments",
+        "other": "Other"
+      },
+      "save": "Save",
+      "discard": "Discard",
+      "saved": "Saved.",
+      "saveFailed": "Couldn't save this setting.",
+      "loadFailed": "Couldn't load settings.",
+      "retry": "Try again",
+      "addItem": "Add",
+      "addItemLabel": "Add an item",
+      "addItemPlaceholder": "Add item…",
+      "removeItemAria": "Remove {item}",
+      "coreRule": {
+        "superAdminOnly": "Super Admin only",
+        "forbidden": "Only a Super Admin can change worker-protection rules. Your change was not saved.",
+        "confirmTitle": "Turn off \"{label}\"?",
+        "weakensProtection": "This weakens worker protection on the platform.",
+        "effectImmediate": "This takes effect immediately: the next job publish attempt is checked against the new rule.",
+        "confirmButton": "Turn it off",
+        "cancelButton": "Keep it on"
+      },
+      "keys": {
+        "worker_protection": {
+          "accommodation_required": {
+            "label": "Require accommodation",
+            "description": "A job cannot publish unless it guarantees worker accommodation.",
+            "offConsequence": "Jobs will be publishable without guaranteed accommodation."
+          },
+          "health_insurance_required": {
+            "label": "Require health insurance",
+            "description": "A job cannot publish unless it guarantees health insurance.",
+            "offConsequence": "Jobs will be publishable without guaranteed health insurance."
+          },
+          "transportation_required": {
+            "label": "Require transportation",
+            "description": "A job cannot publish unless it guarantees worker transportation.",
+            "offConsequence": "Jobs will be publishable without guaranteed transportation."
+          }
+        },
+        "jobs": {
+          "auto_archive_days": {
+            "label": "Auto-archive after (days)",
+            "description": "Active jobs are automatically archived after this many days."
+          },
+          "require_admin_approval": {
+            "label": "Require admin approval for jobs",
+            "description": "New jobs enter a review queue instead of publishing directly."
+          },
+          "free_max_active_jobs": {
+            "label": "Free plan active job limit",
+            "description": "Maximum simultaneous active jobs for Free plan employers."
+          },
+          "allow_local": {
+            "label": "Allow local (India) jobs",
+            "description": "Employers may post jobs located in India."
+          },
+          "allow_foreign": {
+            "label": "Allow foreign (Gulf) jobs",
+            "description": "Employers may post jobs located abroad."
+          }
+        },
+        "candidates": {
+          "mandatory_documents": {
+            "label": "Mandatory documents",
+            "description": "Documents a candidate must upload before they can apply."
+          },
+          "min_completion_pct": {
+            "label": "Apply gate threshold (%)",
+            "description": "Minimum profile completion percentage required to apply."
+          },
+          "video_max_minutes": {
+            "label": "Intro video max length (minutes)",
+            "description": "Upper limit on candidate introduction video duration."
+          },
+          "video_max_mb": {
+            "label": "Intro video max size (MB)",
+            "description": "Upper limit on candidate introduction video file size."
+          }
+        },
+        "payments": {
+          "gst_rate_pct": {
+            "label": "GST rate (%)",
+            "description": "GST applied to local (India) checkout totals."
+          },
+          "stripe_enabled": {
+            "label": "Stripe for foreign checkout",
+            "description": "Route foreign-company checkout through Stripe instead of Razorpay International."
+          }
+        }
+      }
+    },
     "dashboard": {
       "title": "Dashboard",
       "queuesHeading": "Waiting for you",
