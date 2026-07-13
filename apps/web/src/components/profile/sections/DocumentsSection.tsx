@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { FileText, Video } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Badge } from '@/components/ui/badge';
+import { Field } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import { EditableSection } from '@/components/profile/EditableSection';
 import { DocumentValidity } from '@/components/common/DocumentValidity';
 import { FileUpload } from '@/components/upload/FileUpload';
@@ -77,6 +79,15 @@ export function DocumentsSection({
     return (profile.documents ?? []).find((d) => d.type === type);
   }
 
+  // The API rejects a PASSPORT confirm without a FUTURE expiryDate (422
+  // INVALID_PASSPORT_EXPIRY), so the date must be collected here — it cannot be
+  // inferred from the existing document, whose expiry may itself be in the past.
+  const today = new Date().toISOString().slice(0, 10);
+  const existingPassportExpiry = getDoc('PASSPORT')?.expiryDate?.slice(0, 10) ?? '';
+  const [passportExpiry, setPassportExpiry] = useState(
+    existingPassportExpiry > today ? existingPassportExpiry : '',
+  );
+
   function handleUploadDone(_type: DocType) {
     return async (_key: string) => {
       try {
@@ -128,9 +139,11 @@ export function DocumentsSection({
       {DOC_TYPES.map(({ type, labelKey, hintKey, maxMb }) => {
         const existingDoc = getDoc(type);
         const label = t(labelKey as 'passport' | 'experienceCert' | 'educationalCert');
-        const hint = tUpload(
-          hintKey as 'passportHint' | 'experienceCertHint' | 'educationalCertHint',
-        );
+        const isPassport = type === 'PASSPORT';
+        const needsExpiry = isPassport && !passportExpiry;
+        const hint = needsExpiry
+          ? tUpload('passportExpiryRequired')
+          : tUpload(hintKey as 'passportHint' | 'experienceCertHint' | 'educationalCertHint');
         return (
           <div key={type} className="flex flex-col gap-2">
             {existingDoc && (
@@ -149,12 +162,23 @@ export function DocumentsSection({
                 </div>
               </div>
             )}
+            {isPassport && (
+              <Field id="profile-passport-expiry" label={tUpload('passportExpiryLabel')} required>
+                <Input
+                  type="date"
+                  value={passportExpiry}
+                  min={today}
+                  onChange={(e) => setPassportExpiry(e.target.value)}
+                />
+              </Field>
+            )}
             <FileUpload
               docType={type}
               label={existingDoc ? t('reupload') : label}
               hint={hint}
               maxMb={maxMb}
-              expiryDate={existingDoc?.expiryDate}
+              expiryDate={isPassport ? passportExpiry || undefined : undefined}
+              disabled={needsExpiry}
               onDone={handleUploadDone(type)}
             />
           </div>

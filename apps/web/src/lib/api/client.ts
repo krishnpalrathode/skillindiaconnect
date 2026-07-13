@@ -42,10 +42,15 @@ export class ApiRequestError extends Error {
 // When MSW mocking is enabled the service worker intercepts same-origin requests.
 // MSW handlers register with relative paths (/api/v1), which resolve to localhost:3000.
 // Sending to http://localhost:3001 would miss the service worker entirely.
+//
+// Dot access is required: webpack's DefinePlugin only inlines `process.env.FOO`.
+// `process.env['FOO']` is never substituted — it survives into the browser bundle
+// as a lookup on Next's empty `process` shim and always reads undefined, which
+// silently degrades this base to a relative '/api/v1' pointed at the web origin.
 const API_BASE =
-  process.env['NEXT_PUBLIC_API_MOCKING'] === 'enabled'
+  process.env.NEXT_PUBLIC_API_MOCKING === 'enabled'
     ? '/api/v1'
-    : `${process.env['NEXT_PUBLIC_API_URL'] ?? ''}/api/v1`;
+    : `${process.env.NEXT_PUBLIC_API_URL ?? ''}/api/v1`;
 
 async function rawFetch(path: string, init: RequestInit): Promise<Response> {
   const headers: Record<string, string> = {
