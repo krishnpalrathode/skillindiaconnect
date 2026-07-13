@@ -3049,16 +3049,48 @@ const adminPatchRolesMatrix = http.patch(`${BASE}/admin/roles/matrix`, async ({ 
     );
   }
 
+  // The two guardrails S6a-B2 enforces, ADDED IN S6a-F3 so the UI is built
+  // against the real answers (checked in the API's order: locked, then these):
+  //
+  // Self-lockout: the caller must not revoke their own ability to manage roles.
+  if (!body.enabled && body.permission === 'roles.manage' && gate.user.role === body.role) {
+    return errorResponse(
+      422,
+      'SELF_LOCKOUT_FORBIDDEN',
+      'Unprocessable',
+      'You cannot revoke your own ability to manage roles.',
+    );
+  }
+  // Last manager: never let the final roles.manage holder lose it.
+  if (!body.enabled && body.permission === 'roles.manage') {
+    const remaining = db.rolePermissions.filter(
+      (c) => c.permission === 'roles.manage' && c.enabled && c.role !== body.role,
+    );
+    if (remaining.length === 0) {
+      return errorResponse(
+        422,
+        'LAST_MANAGER_FORBIDDEN',
+        'Unprocessable',
+        'At least one role must retain the ability to manage roles.',
+      );
+    }
+  }
+
+  // No-op writes return 200 with no audit row — a trail of non-events is noise.
+  if (cell.enabled === body.enabled) {
+    return HttpResponse.json({ data: cell });
+  }
+
   const from = cell.enabled;
   cell.enabled = body.enabled;
 
   writeAudit({
     module: 'Admin',
-    action: 'permission.updated',
+    action: 'rbac.permission.changed',
     actorUserId: gate.user.id,
     actorRole: gate.user.role,
     targetType: 'RolePermission',
-    targetId: `${body.role}:${body.permission}`,
+    targetId: `${body.role}/${body.permission}`,
     status: 'SUCCESS',
     meta: { role: body.role, permission: body.permission, from, to: body.enabled },
   });
