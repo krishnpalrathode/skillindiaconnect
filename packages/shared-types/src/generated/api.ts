@@ -1734,6 +1734,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/me/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The caller's own effective permissions (S6a-F1)
+         * @description **RBAC: none beyond an admin-side role** — this is self-introspection, and
+         *     asking "what am I allowed to do?" cannot itself require a grant (a role
+         *     with no permissions must still be able to discover that, or the console
+         *     cannot render at all). Authenticated + role in
+         *     {SUPER_ADMIN, ADMIN, MODERATOR, SUPPORT}; anyone else gets 403.
+         *
+         *     **Why this endpoint exists.** The admin console's navigation is driven by
+         *     the caller's EFFECTIVE PERMISSION SET, never by their role. Screen 27 lets
+         *     a Super Admin grant or revoke permissions at RUNTIME — so if the client
+         *     inferred capability from the role name, a freshly-granted permission would
+         *     change what a role CAN do without changing what it SEES, and the two would
+         *     silently drift. The client must therefore ask the server what it holds; it
+         *     may never derive it locally.
+         *
+         *     The set returned is exactly what `PermissionsGuard` will enforce on the
+         *     next request — same source (`role_permissions`), same role-scoped cache.
+         *     After a Screen-27 write the affected role's cache is invalidated, so a
+         *     refetch here reflects the change immediately.
+         *
+         *     This is UX INPUT ONLY. Hiding a nav item is a courtesy; the 403 on the
+         *     endpoint is the control. A forced URL must still be refused server-side.
+         */
+        get: operations["getAdminMePermissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/dashboard": {
         parameters: {
             query?: never;
@@ -3242,9 +3282,16 @@ export interface components {
         AuditStatus: "SUCCESS" | "FAILED" | "BLOCKED" | "DELIVERED" | "ERROR";
         /**
          * @description The RBAC permission keys (Screen 27). The first 20 are the S2-seeded set;
-         *     the last 5 are ADDED BY S6 (`logs.export`, `roles.view`, `roles.manage`,
-         *     `candidates.view_documents`, `jobs.moderate`) and must be seeded by
-         *     S6a-B2 into `permission.constants.ts` + the seed matrix.
+         *     5 were added by S6 (`logs.export`, `roles.view`, `roles.manage`,
+         *     `candidates.view_documents`, `jobs.moderate`) and seeded by S6a-B2; and 2
+         *     more (`settings.view`, `settings.manage`) by S6a-F1.
+         *
+         *     The settings pair retires a placeholder: S2-B1 gated `/admin/settings` on
+         *     `logs.view` because no settings key existed yet, and said so in its own
+         *     docblock. That meant a MODERATOR — who holds `logs.view` — could WRITE
+         *     platform settings (auto-archive window, mandatory documents, completion
+         *     threshold) merely because they were allowed to read the audit log. Read
+         *     and write are now separate keys, and neither is granted to MODERATOR.
          *
          *     Deliberately NOT forked into new near-duplicates: candidate purge reuses
          *     `candidates.delete` (already SUPER_ADMIN-effective / locked-off
@@ -3252,7 +3299,7 @@ export interface components {
          *     creation reuses `jobs.post_admin`.
          * @enum {string}
          */
-        PermissionKey: "candidates.view" | "candidates.edit" | "candidates.delete" | "candidates.onboard_manual" | "candidates.export" | "employers.view" | "employers.approve_reject" | "employers.suspend" | "employers.delete" | "jobs.view" | "jobs.post_admin" | "jobs.archive" | "applications.manage" | "applications.change_status" | "applications.notes" | "reports.view" | "logs.view" | "billing.manage" | "subscriptions.manage" | "admin_users.manage" | "logs.export" | "roles.view" | "roles.manage" | "candidates.view_documents" | "jobs.moderate";
+        PermissionKey: "candidates.view" | "candidates.edit" | "candidates.delete" | "candidates.onboard_manual" | "candidates.export" | "employers.view" | "employers.approve_reject" | "employers.suspend" | "employers.delete" | "jobs.view" | "jobs.post_admin" | "jobs.archive" | "applications.manage" | "applications.change_status" | "applications.notes" | "reports.view" | "logs.view" | "billing.manage" | "subscriptions.manage" | "admin_users.manage" | "logs.export" | "roles.view" | "roles.manage" | "settings.view" | "settings.manage" | "candidates.view_documents" | "jobs.moderate";
         /**
          * @description One audit row (Screen 29). `meta` is ALREADY REDACTED at write time by
          *     the S2-B2 denylist — no raw PII (passport numbers, phones, emails,
@@ -3380,6 +3427,31 @@ export interface components {
             roles: components["schemas"]["UserRole"][];
             permissions: components["schemas"]["PermissionKey"][];
             cells: components["schemas"]["RbacCell"][];
+        };
+        /**
+         * @description The caller's own identity and EFFECTIVE permission set — the source the
+         *     admin console's navigation and in-screen affordances render from.
+         *
+         *     `permissions` is the flat list of keys the caller currently HOLDS (enabled
+         *     cells only). Locked-ness is irrelevant here: a locked-OFF cell is simply
+         *     absent, because the caller does not hold it. Screen 27 is where lock state
+         *     matters; this endpoint answers only "what can I do right now?".
+         *
+         *     Consumers MUST treat this as UX input, never as an authorization decision.
+         */
+        AdminMe: {
+            role: components["schemas"]["UserRole"];
+            /**
+             * @description Keys the caller holds. May be empty (a role granted nothing).
+             * @example [
+             *       "candidates.view",
+             *       "employers.view",
+             *       "jobs.view",
+             *       "logs.view",
+             *       "reports.view"
+             *     ]
+             */
+            permissions: components["schemas"]["PermissionKey"][];
         };
         /**
          * @description Admin-context candidate row (Screen 25) — FULLER than the employer view
@@ -7037,6 +7109,29 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+        };
+    };
+    getAdminMePermissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The caller's role and effective permissions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminMe"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
         };
     };
     getAdminDashboard: {

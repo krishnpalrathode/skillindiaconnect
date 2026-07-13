@@ -9,6 +9,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { PermissionService } from './rbac/permission.service';
 import { RbacMatrixController } from './rbac/rbac-matrix.controller';
 import { RbacMatrixService } from './rbac/rbac-matrix.service';
+import { AdminMeController } from './rbac/admin-me.controller';
 import { OtpService } from './otp/otp.service';
 import { OtpController } from './otp/otp.controller';
 import { WhatsappModule } from '../notifications/channels/whatsapp.module';
@@ -28,7 +29,7 @@ import { CandidateModule } from '../candidate/candidate.module';
   // is THIS module's table (Rule 4). AuthModule is imported by the API root only —
   // the worker root never loads it — so adding a controller here cannot leak an
   // HTTP surface into the worker process.
-  controllers: [AuthController, OtpController, RbacMatrixController],
+  controllers: [AuthController, OtpController, RbacMatrixController, AdminMeController],
   providers: [
     AuthService,
     PasswordService,

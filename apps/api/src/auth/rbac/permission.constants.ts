@@ -38,6 +38,19 @@ export const Permission = {
   // shipped matrix only a SUPER_ADMIN can alter permissions at all.
   ROLES_VIEW: 'roles.view',
   ROLES_MANAGE: 'roles.manage',
+  // S6a-F1: platform settings get their OWN keys at last. S2-B1 shipped the
+  // settings endpoints gated on `logs.view` as an explicit placeholder — its own
+  // docblock said "replace with settings.read / settings.write when Screen-27
+  // perms land". They have landed, and the placeholder had become wrong: a
+  // MODERATOR holds logs.view, so they could read AND WRITE platform settings
+  // (auto-archive window, mandatory documents, completion threshold) purely
+  // because they were allowed to look at the audit log. Two unrelated capabilities
+  // sharing one key is how that happens.
+  //
+  // Core rules (worker-protection toggles) remain SUPER_ADMIN-gated inside
+  // SettingsService regardless of this key — that gate is separate and unchanged.
+  SETTINGS_VIEW: 'settings.view',
+  SETTINGS_MANAGE: 'settings.manage',
 } as const;
 
 export type PermissionKey = (typeof Permission)[keyof typeof Permission];

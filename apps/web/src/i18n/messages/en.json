@@ -1272,6 +1272,56 @@
       "error": "Something went wrong. Please try again."
     }
   },
+  "admin": {
+    "brand": "Admin Console",
+    "logout": "Log out",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "permissionsLoadFailed": "Couldn't load your permissions, so the console can't be shown safely.",
+    "roleBadgeLabel": "Signed in as {role}",
+    "placeholder": "This screen is built in {unit}. The route and its permission check are live — the screen itself is next.",
+    "nav": {
+      "ariaLabel": "Admin navigation",
+      "toggle": "Toggle navigation",
+      "dashboard": "Dashboard",
+      "employers": "Employers",
+      "candidates": "Candidates",
+      "jobs": "Jobs",
+      "applications": "Applications",
+      "logs": "Audit log",
+      "roles": "Roles & permissions",
+      "settings": "Settings"
+    },
+    "guard": {
+      "checking": "Checking access…",
+      "notAuthorizedTitle": "This area is for administrators",
+      "notAuthorizedBody": "You're signed in, but your account doesn't have access to the admin console. You haven't been signed out — this just isn't your area of the app.",
+      "backHome": "Go back to your dashboard"
+    },
+    "forbidden": {
+      "title": "You don't have permission for this",
+      "body": "Your role doesn't include access to this screen. If you think it should, ask a Super Admin to grant it in Roles & permissions.",
+      "requires": "Requires",
+      "retry": "Try again"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "queuesHeading": "Waiting for you",
+      "kpisHeading": "Platform overview",
+      "pendingEmployerReviews": "Employers awaiting review",
+      "pendingJobReviews": "Jobs awaiting review",
+      "queueEmpty": "Nothing waiting",
+      "candidates": "Candidates",
+      "employers": "Employers",
+      "jobs": "Jobs",
+      "revenueThisMonth": "Revenue this month",
+      "employersByStatus": "Employers by status",
+      "jobsByStatus": "Jobs by status",
+      "applicationsByStatus": "Applications by status",
+      "loadFailed": "Couldn't load the dashboard.",
+      "retry": "Try again"
+    }
+  },
   "billing": {
     "pageTitle": "Plans & billing",
     "pageSubtitle": "Choose a plan to unlock unlimited job posts and candidate document access.",

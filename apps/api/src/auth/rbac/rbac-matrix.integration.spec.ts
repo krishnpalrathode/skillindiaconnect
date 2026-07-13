@@ -45,6 +45,7 @@ import { PermissionService } from './permission.service';
 import { PermissionsGuard } from './permissions.guard';
 import { RbacMatrixController } from './rbac-matrix.controller';
 import { RbacMatrixService } from './rbac-matrix.service';
+import { AdminMeController } from './admin-me.controller';
 
 jest.setTimeout(240_000);
 
@@ -162,7 +163,7 @@ beforeAll(async () => {
     });
 
     const moduleRef = await Test.createTestingModule({
-      controllers: [RbacMatrixController, AuditQueryController],
+      controllers: [RbacMatrixController, AuditQueryController, AdminMeController],
       providers: [
         RbacMatrixService,
         PermissionService,
@@ -231,7 +232,7 @@ describe('GET /admin/roles/matrix', () => {
     };
 
     expect(roles).toEqual(['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT']);
-    expect(permissions).toHaveLength(25);
+    expect(permissions).toHaveLength(27);
     // Rectangular — no holes. The FE renders a grid; a missing cell is a gap in it.
     expect(cells).toHaveLength(roles.length * permissions.length);
     expect(new Set(cells.map((c) => `${c.role} ${c.permission}`)).size).toBe(cells.length);
@@ -251,7 +252,7 @@ describe('GET /admin/roles/matrix', () => {
     const res = await get('/admin/roles/matrix', UserRole.SUPER_ADMIN).expect(200);
     const cells = (res.body.data.cells as Cell[]).filter((c) => c.role === UserRole.SUPER_ADMIN);
 
-    expect(cells).toHaveLength(25);
+    expect(cells).toHaveLength(27);
     expect(cells.every((c) => c.locked)).toBe(true);
   });
 
@@ -596,5 +597,78 @@ describe('cache invalidation — the first runtime exercise of 5b\'s path', () =
 
     // ADMIN's actual grants are unchanged, not just its cache entry.
     await get('/admin/roles/matrix', UserRole.ADMIN).expect(200);
+  });
+});
+
+// ─── GET /admin/me/permissions — the console's nav source (S6a-F1) ───────────
+
+describe('GET /admin/me/permissions', () => {
+  // Earlier cache-invalidation tests leave MODERATOR's logs.export flipped ON.
+  // Reset the fixture to its seeded shape so these tests read the intended state.
+  beforeAll(async () => {
+    if (dockerUnavailable) return;
+    await prisma.rolePermission.update({
+      where: {
+        role_permissionKey: {
+          role: UserRole.MODERATOR,
+          permissionKey: Permission.LOGS_EXPORT,
+        },
+      },
+      data: { enabled: false },
+    });
+    await app.get(PermissionService).invalidateRoleCache(UserRole.MODERATOR);
+  });
+
+  it('returns the role and its effective (enabled-only) permission set', async () => {
+    if (dockerUnavailable) return;
+    const res = await get('/admin/me/permissions', UserRole.MODERATOR).expect(200);
+
+    expect(res.body.data.role).toBe(UserRole.MODERATOR);
+    const perms: string[] = res.body.data.permissions;
+    // Holds logs.view (enabled), lacks logs.export (disabled) and roles.view.
+    expect(perms).toContain(Permission.LOGS_VIEW);
+    expect(perms).not.toContain(Permission.LOGS_EXPORT);
+    expect(perms).not.toContain(Permission.ROLES_VIEW);
+  });
+
+  it('is NOT itself permission-gated — a role with few grants still gets its own list', async () => {
+    if (dockerUnavailable) return;
+    // SUPPORT holds no roles.view/logs.view here, yet must still discover what it
+    // has — self-introspection cannot require a grant, or the console can't render.
+    const res = await get('/admin/me/permissions', UserRole.SUPPORT).expect(200);
+    expect(res.body.data.role).toBe(UserRole.SUPPORT);
+    expect(Array.isArray(res.body.data.permissions)).toBe(true);
+  });
+
+  it('the set it returns MATCHES what the guard enforces (same source)', async () => {
+    if (dockerUnavailable) return;
+
+    // Pin MODERATOR to a known shape — earlier cache-invalidation tests flip
+    // logs.export, so we can't rely on the seeded value here. Set it OFF and
+    // invalidate, then assert the nav source and the guard agree on it.
+    await prisma.rolePermission.update({
+      where: {
+        role_permissionKey: {
+          role: UserRole.MODERATOR,
+          permissionKey: Permission.LOGS_EXPORT,
+        },
+      },
+      data: { enabled: false },
+    });
+    await app.get(PermissionService).invalidateRoleCache(UserRole.MODERATOR);
+
+    const me = await get('/admin/me/permissions', UserRole.MODERATOR).expect(200);
+    // Includes logs.view → the logs endpoint (keyed on it) is 200.
+    expect(me.body.data.permissions).toContain(Permission.LOGS_VIEW);
+    await get('/admin/logs', UserRole.MODERATOR).expect(200);
+    // Excludes logs.export → the export endpoint is 403. The nav source and the
+    // guard cannot disagree, because they read the same role_permissions rows.
+    expect(me.body.data.permissions).not.toContain(Permission.LOGS_EXPORT);
+    await get('/admin/logs/export', UserRole.MODERATOR).expect(403);
+  });
+
+  it('a non-admin role (CANDIDATE) is refused with 403', async () => {
+    if (dockerUnavailable) return;
+    await get('/admin/me/permissions', UserRole.CANDIDATE).expect(403);
   });
 });

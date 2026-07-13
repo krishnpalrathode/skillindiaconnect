@@ -135,6 +135,11 @@ export const ALL_PERMISSION_KEYS: PermissionKey[] = [
   'roles.manage',
   'candidates.view_documents',
   'jobs.moderate',
+  // Added by S6a-F1: /admin/settings used to ride on `logs.view`, which a
+  // MODERATOR holds — so they could write platform settings. Read and write are
+  // now separate keys, neither granted to MODERATOR.
+  'settings.view',
+  'settings.manage',
 ];
 
 /** Admin-side roles only — CANDIDATE/EMPLOYER are never matrix columns. */
@@ -332,6 +337,8 @@ const SEED_MATRIX: Record<
     'logs.export': ON,
     'roles.view': ON,
     'roles.manage': LOCKED_OFF, // matrix writes are SUPER_ADMIN-effective
+    'settings.view': ON,
+    'settings.manage': ON, // core rules stay SUPER_ADMIN-gated inside the service
     'billing.manage': LOCKED_OFF,
     'subscriptions.manage': LOCKED_OFF,
     'admin_users.manage': LOCKED_OFF,
@@ -359,6 +366,10 @@ const SEED_MATRIX: Record<
     'logs.export': OFF, // may READ the log on screen, may not walk out with it
     'roles.view': OFF,
     'roles.manage': LOCKED_OFF,
+    // A moderator moderates content; they do not tune the platform. Until S6a-F1
+    // they could, because settings rode on logs.view — which they hold.
+    'settings.view': OFF,
+    'settings.manage': OFF,
     'billing.manage': LOCKED_OFF,
     'subscriptions.manage': LOCKED_OFF,
     'admin_users.manage': LOCKED_OFF,
@@ -378,14 +389,24 @@ const SEED_MATRIX: Record<
     'jobs.post_admin': OFF,
     'jobs.archive': OFF,
     'jobs.moderate': OFF,
+    // DRIFT CORRECTED (S6a-F1). These two were ON here with the note "support
+    // runs the manual WhatsApp resend", but the REAL seed
+    // (apps/api/prisma/seed.ts) has both OFF — and has since S2. The mock was
+    // promising a capability the server denies, which is the exact failure mode
+    // these mocks exist to prevent. Aligned to the server.
+    //
+    // If SUPPORT genuinely should run the resend, that is a SEED change (a
+    // product decision), not a mock change. Flagged, not silently decided.
     'applications.manage': OFF,
-    'applications.change_status': ON, // support runs the manual WhatsApp resend
-    'applications.notes': ON,
+    'applications.change_status': OFF,
+    'applications.notes': OFF,
     'reports.view': ON,
     'logs.view': OFF,
     'logs.export': OFF,
     'roles.view': OFF,
     'roles.manage': LOCKED_OFF,
+    'settings.view': OFF,
+    'settings.manage': OFF,
     'billing.manage': LOCKED_OFF,
     'subscriptions.manage': LOCKED_OFF,
     'admin_users.manage': LOCKED_OFF,

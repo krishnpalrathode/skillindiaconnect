@@ -45,9 +45,9 @@ describe('the matrix registry', () => {
     expect(MATRIX_ROLES).not.toContain(UserRole.EMPLOYER);
   });
 
-  it('carries all 25 keys, unique, and in module-grouped declaration order', () => {
-    expect(ALL_PERMISSION_KEYS).toHaveLength(25);
-    expect(new Set(ALL_PERMISSION_KEYS).size).toBe(25);
+  it('carries all 27 keys, unique, and in module-grouped declaration order', () => {
+    expect(ALL_PERMISSION_KEYS).toHaveLength(27);
+    expect(new Set(ALL_PERMISSION_KEYS).size).toBe(27);
 
     // Row order IS declaration order — the FE renders straight down this list, so
     // a key landing in the wrong group would scatter it across Screen 27's grid.

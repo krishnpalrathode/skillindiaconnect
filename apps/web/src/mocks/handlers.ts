@@ -1529,13 +1529,14 @@ const unsaveJob = http.delete(`${BASE}/jobs/:id/save`, ({ request, params }) => 
 
 // ─── S2: Admin — employer approval ───────────────────────────────────────────
 
+// DRIFT CORRECTED (S6a-F1). This was a ROLE check (`ADMIN || SUPER_ADMIN`) left
+// over from S2, but the real controller gates on Permission.EMPLOYERS_VIEW — which
+// a MODERATOR HOLDS. The mock was denying what the server allows, so the console
+// would have been built believing moderators cannot review employers. Now it runs
+// the same permission gate the API does.
 const adminGetEmployers = http.get(`${BASE}/admin/employers`, ({ request }) => {
-  const user = getAuthUser(request);
-  if (!user)
-    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
-  if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
-    return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Admin access required.');
-  }
+  const gate = requirePermission(request, 'employers.view');
+  if (gate.error) return gate.error;
 
   const url = new URL(request.url);
   const statusFilter = url.searchParams.get('status');
@@ -1636,24 +1637,23 @@ const adminSuspendEmployer = http.post(
 
 // ─── S2: Admin — platform settings ───────────────────────────────────────────
 
+// Gated on the S6a-F1 keys (settings.view / settings.manage), matching the real
+// controller. These replaced S2-B1's `logs.view` placeholder — which a MODERATOR
+// holds, and which therefore let them WRITE platform settings.
 const adminGetSettings = http.get(`${BASE}/admin/settings`, ({ request }) => {
-  const user = getAuthUser(request);
-  if (!user)
-    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
-  if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
-    return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Admin access required.');
-  }
+  const gate = requirePermission(request, 'settings.view');
+  if (gate.error) return gate.error;
 
   return HttpResponse.json({ data: db.settings });
 });
 
 const adminPatchSettings = http.patch(`${BASE}/admin/settings`, async ({ request }) => {
-  const user = getAuthUser(request);
-  if (!user)
-    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
-  if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
-    return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Admin access required.');
-  }
+  const gate = requirePermission(request, 'settings.manage');
+  if (gate.error) return gate.error;
+  // The core-rule gate below is SEPARATE from settings.manage and stays: even an
+  // ADMIN who may edit settings must not flip a worker-protection rule. Same rule
+  // the real SettingsService.set enforces.
+  const user = gate.user;
 
   const body = (await request.json()) as { updates: { key: string; value: unknown }[] };
 
@@ -2370,12 +2370,13 @@ const candidateMeApplicationById = http.get(
 );
 
 // GET /admin/applications — admin table (offset, admin context keeps overrideReason).
+// Gated on applications.manage, matching AdminApplicationsController. (A
+// MODERATOR holds applications.notes but NOT manage — so they cannot reach the
+// list at all. That is a dead grant in the seed and a real question for the
+// backend, but the mock's job is to tell the truth about it, not paper over it.)
 const adminGetApplications = http.get(`${BASE}/admin/applications`, ({ request }) => {
-  const user = getAuthUser(request);
-  if (!user)
-    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
-  if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')
-    return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Admin access required.');
+  const gate = requirePermission(request, 'applications.manage');
+  if (gate.error) return gate.error;
 
   const url = new URL(request.url);
   const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1', 10));
@@ -2860,6 +2861,41 @@ const adminExportLogs = http.get(`${BASE}/admin/logs/export`, ({ request }) => {
       'Content-Disposition': 'attachment; filename="audit-log.csv"',
     },
   });
+});
+
+// ── The console's navigation source (S6a-F1) ─────────────────────────────────
+
+/**
+ * GET /admin/me/permissions — what the CALLER currently holds.
+ *
+ * NO permission gate: self-introspection cannot require a grant, or a role with
+ * nothing could not even discover that. The gate is just "is this an admin role".
+ *
+ * Derived from `db.rolePermissions` — the LIVE store Screen 27 writes to, not a
+ * frozen constant. That is the whole point: flip a cell via PATCH
+ * /admin/roles/matrix and the affected role's permission set here changes on the
+ * next fetch, with no role change and no restart. A nav built on this therefore
+ * tracks the matrix; a nav built on the role name would not.
+ */
+const adminMePermissions = http.get(`${BASE}/admin/me/permissions`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user) {
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+  }
+  if (!(ADMIN_ROLES as string[]).includes(user.role)) {
+    return errorResponse(
+      403,
+      'FORBIDDEN',
+      'Forbidden',
+      'This endpoint is for admin-console roles only.',
+    );
+  }
+
+  const permissions = db.rolePermissions
+    .filter((c) => c.role === user.role && c.enabled)
+    .map((c) => c.permission);
+
+  return HttpResponse.json({ data: { role: user.role, permissions } });
 });
 
 // ── Admin dashboard ──────────────────────────────────────────────────────────
@@ -3717,6 +3753,7 @@ export const handlers = [
   billingOrderById,
   employersCandidateDocumentUrl,
   // S6: Admin console (RBAC-accurate — each enforces its PermissionKey)
+  adminMePermissions,
   adminDashboard,
   adminGetLogs,
   adminExportLogs,

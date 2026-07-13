@@ -36,12 +36,14 @@ async function main(): Promise<void> {
     throw new Error('Refusing to run seed in production.');
   }
 
-  // 20 seeded in S2 + 2 added by S6a-B1 (logs.export, candidates.view_documents)
-  // + 3 added by S6a-B2 (jobs.moderate, roles.view, roles.manage).
+  // 20 seeded in S2 + 2 by S6a-B1 (logs.export, candidates.view_documents)
+  // + 3 by S6a-B2 (jobs.moderate, roles.view, roles.manage)
+  // + 2 by S6a-F1 (settings.view, settings.manage — retiring S2-B1's logs.view
+  //   placeholder, which had let any MODERATOR write platform settings).
   // This assertion is the tripwire that stops a key being DECLARED in code but
   // never granted to anyone — a permission with no matrix rows is a dead grant.
-  if (ALL_PERMS.length !== 25) {
-    throw new Error(`Expected 25 permission keys, got ${ALL_PERMS.length}.`);
+  if (ALL_PERMS.length !== 27) {
+    throw new Error(`Expected 27 permission keys, got ${ALL_PERMS.length}.`);
   }
   const permSet = new Set(ALL_PERMS);
 
@@ -222,6 +224,10 @@ async function main(): Promise<void> {
       // clicking can escalate an ADMIN into a role administrator.
       'roles.view': on,
       'roles.manage': lockedOff,
+      // S6a-F1: ADMIN administers platform settings. Core rules (worker
+      // protection) stay SUPER_ADMIN-gated inside SettingsService regardless.
+      'settings.view': on,
+      'settings.manage': on,
     },
     MODERATOR: {
       'candidates.view': on,
@@ -255,6 +261,10 @@ async function main(): Promise<void> {
       // cache-invalidation test grants and revokes at runtime).
       'roles.view': off,
       'roles.manage': lockedOff,
+      // S6a-F1: a moderator moderates content; they do not tune the platform.
+      // Until now they could, because settings rode on logs.view — which they hold.
+      'settings.view': off,
+      'settings.manage': off,
     },
     SUPPORT: {
       'candidates.view': on,
@@ -282,6 +292,8 @@ async function main(): Promise<void> {
       'admin_users.manage': lockedOff,
       'roles.view': off,
       'roles.manage': lockedOff,
+      'settings.view': off,
+      'settings.manage': off,
     },
   };
 
