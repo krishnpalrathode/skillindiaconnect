@@ -237,8 +237,20 @@ async function seedWorld(p: PrismaClient, expiryDaysFromNow: number) {
   const candidate = await p.candidateProfile.create({
     data: { userId: user.id, fullName: 'Test Candidate', profileVisible: true },
   });
-  const expiryDate = new Date();
-  expiryDate.setDate(expiryDate.getDate() + expiryDaysFromNow);
+  // Build the target date at UTC MIDNIGHT, not "now + n days".
+  //
+  // `expiryDate` is a `@db.Date` column, so Postgres truncates whatever we send
+  // to a calendar date IN UTC. A plain `new Date()` carries the local
+  // time-of-day, and in any timezone AHEAD of UTC (IST is +5:30) a run between
+  // 00:00 and 05:30 local is still *yesterday* in UTC — so "+3 days" would land
+  // one day early and the daysRemaining assertions would fail for that window of
+  // the night only. Anchoring to UTC midnight makes the fixture time-of-day
+  // independent. (Production is unaffected: the app stores a real calendar date,
+  // never a Date carrying a local wall-clock time.)
+  const today = new Date();
+  const expiryDate = new Date(
+    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + expiryDaysFromNow),
+  );
   const doc = await p.candidateDocument.create({
     data: {
       candidateId: candidate.id,
