@@ -2093,6 +2093,36 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/jobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One job, in full, for the moderation detail (S6b-F2)
+         * @description **RBAC: `jobs.view`.**
+         *
+         *     Added in 0.8.1: Screen 26's review detail must render the job **as
+         *     candidates would see it** (description, salary, requirements, and the
+         *     worker-protection benefits) for ANY status — but the public
+         *     `GET /jobs/{id}` is ACTIVE-only by design, so a PENDING_REVIEW job had
+         *     no read surface at all. This is that surface: the full internal `Job`
+         *     shape plus the admin row facts (humanId, flags, views,
+         *     moderationReason) and `companyStatus`, so the panel can flag a
+         *     suspended employer BEFORE the admin attempts an approval instead of
+         *     letting them discover it via the 403.
+         */
+        get: operations["getAdminJob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/jobs/{id}/review": {
         parameters: {
             query?: never;
@@ -2219,6 +2249,38 @@ export interface paths {
          * @description Admin-wide application table (offset-paginated). RBAC: requires an admin role with the applications-read permission. The admin context is the ONLY context that may carry `overrideReason` on an application; candidate and employer contexts never see it.
          */
         get: operations["getAdminApplications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/applications/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One application, in full, for Screen 26's detail (S6b-F2)
+         * @description **RBAC: `applications.manage`.**
+         *
+         *     Added in 0.8.1: the admin detail's defining content is the FULL
+         *     transition record — every timeline entry **including
+         *     `overrideReason`** (which the candidate-facing timeline deliberately
+         *     excludes). That record existed in the database since S4-B2 but had no
+         *     admin read surface; the list returns only the application's current
+         *     state. This endpoint is the record's surface: the admin-context
+         *     application row plus `timeline` with per-entry override reasons.
+         *
+         *     The timeline here is the ONLY serialization that carries
+         *     `overrideReason` per entry. Candidate and employer contexts continue
+         *     to receive the shaped `ApplicationTimelineEntry` without it.
+         */
+        get: operations["getAdminApplication"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3655,6 +3717,51 @@ export interface components {
             body: string;
             /** Format: date-time */
             createdAt: string;
+        };
+        AdminJobDetail: components["schemas"]["Job"] & {
+            /** @example JB-2026-00042 */
+            humanId: string;
+            isFeatured: boolean;
+            isUrgent: boolean;
+            /** @description Lifetime job-detail view count. */
+            views?: number;
+            /** @description The reject reason, when the job was returned to DRAFT. */
+            moderationReason?: string | null;
+            companyStatus: components["schemas"]["CompanyStatus"];
+            hoursPerDay?: number;
+            daysPerWeek?: number;
+            overtime?: boolean;
+            foodAllowance?: boolean;
+            airTicketArrival?: boolean;
+            airTicketDeparture?: boolean;
+            otherAllowance?: string | null;
+            contractPeriodMonths?: number | null;
+        };
+        AdminApplicationRow: components["schemas"]["Application"] & {
+            candidateName?: string | null;
+            jobTitle?: string | null;
+        };
+        /**
+         * @description 0.8.1 — one transition in the ADMIN serialization of an application's
+         *     history. Unlike the candidate-facing `ApplicationTimelineEntry`, this
+         *     carries `overrideReason` — the reason an admin recorded for a
+         *     corrective move is FOR admins and the audit trail, and this is its
+         *     only serialization. Never emitted to candidate or employer contexts.
+         */
+        AdminTimelineEntry: {
+            /** @description Null on the initial (apply) entry. */
+            fromStatus: components["schemas"]["ApplicationStatus"] | null;
+            toStatus: components["schemas"]["ApplicationStatus"];
+            /** @description Null when the transition was system-initiated. */
+            actorRole: components["schemas"]["UserRole"] | null;
+            isAdminOverride: boolean;
+            /** @description Present on admin corrective moves. ADMIN CONTEXT ONLY. */
+            overrideReason?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AdminApplicationDetail: components["schemas"]["AdminApplicationRow"] & {
+            timeline: components["schemas"]["AdminTimelineEntry"][];
         };
     };
     responses: {
@@ -7778,6 +7885,40 @@ export interface operations {
             };
         };
     };
+    getAdminJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The admin job detail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminJobDetail"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     postAdminJobReview: {
         parameters: {
             query?: never;
@@ -8019,6 +8160,8 @@ export interface operations {
                 status?: components["schemas"]["ApplicationStatus"];
                 /** @description Filter to a single job. */
                 jobId?: string;
+                /** @description Matches the application humanId or the candidate's name (0.8.1 — documents what the S4-B3 implementation already supported). */
+                search?: string;
             };
             header?: never;
             path?: never;
@@ -8033,7 +8176,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["Application"][];
+                        data: components["schemas"]["AdminApplicationRow"][];
                         meta: {
                             page: number;
                             pageSize: number;
@@ -8045,6 +8188,40 @@ export interface operations {
             };
             /** @description Missing the applications-read permission */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getAdminApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The admin application detail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminApplicationDetail"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Application not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

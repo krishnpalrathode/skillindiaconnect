@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: SkillIndiaConnect API
-  version: 0.8.0
+  version: 0.8.1
   description: |
     Production blue-collar recruitment platform connecting skilled workers in India
     with employers in the Gulf and locally.
@@ -2265,6 +2265,115 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    AdminJobDetail:
+      allOf:
+        - $ref: '#/components/schemas/Job'
+        - type: object
+          required: [humanId, isFeatured, isUrgent, companyStatus]
+          description: |
+            0.8.1 — the moderation detail (GET /admin/jobs/{id}): the full
+            internal `Job` (so Screen 26 can render the job as candidates
+            would see it, whatever its status) plus the admin row facts and
+            `companyStatus` — the panel flags a suspended employer BEFORE the
+            approve attempt rather than letting the 403 announce it.
+          properties:
+            humanId:
+              type: string
+              example: JB-2026-00042
+            isFeatured:
+              type: boolean
+            isUrgent:
+              type: boolean
+            views:
+              type: integer
+              description: Lifetime job-detail view count.
+            moderationReason:
+              type: [string, 'null']
+              description: The reject reason, when the job was returned to DRAFT.
+            companyStatus:
+              $ref: '#/components/schemas/CompanyStatus'
+            # The structured work-condition / optional-benefit columns the S2-B4
+            # implementation actually stores (the base Job schema's freeform
+            # `workConditions` predates them and is never emitted by the API).
+            hoursPerDay:
+              type: integer
+            daysPerWeek:
+              type: integer
+            overtime:
+              type: boolean
+            foodAllowance:
+              type: boolean
+            airTicketArrival:
+              type: boolean
+            airTicketDeparture:
+              type: boolean
+            otherAllowance:
+              type: [string, 'null']
+            contractPeriodMonths:
+              type: [integer, 'null']
+
+    AdminApplicationRow:
+      allOf:
+        - $ref: '#/components/schemas/Application'
+        - type: object
+          description: |
+            0.8.1 — the admin list row (GET /admin/applications): the
+            admin-context application plus the display denormalizations the
+            S4-B3 implementation already returned (`candidateName`,
+            `jobTitle`). `candidateName` is null for a purged candidate's
+            tombstoned application.
+          properties:
+            candidateName:
+              type: [string, 'null']
+            jobTitle:
+              type: [string, 'null']
+
+    AdminTimelineEntry:
+      type: object
+      required: [fromStatus, toStatus, actorRole, isAdminOverride, createdAt]
+      description: |
+        0.8.1 — one transition in the ADMIN serialization of an application's
+        history. Unlike the candidate-facing `ApplicationTimelineEntry`, this
+        carries `overrideReason` — the reason an admin recorded for a
+        corrective move is FOR admins and the audit trail, and this is its
+        only serialization. Never emitted to candidate or employer contexts.
+      properties:
+        fromStatus:
+          oneOf:
+            - $ref: '#/components/schemas/ApplicationStatus'
+            - type: 'null'
+          description: Null on the initial (apply) entry.
+        toStatus:
+          $ref: '#/components/schemas/ApplicationStatus'
+        actorRole:
+          oneOf:
+            - $ref: '#/components/schemas/UserRole'
+            - type: 'null'
+          description: Null when the transition was system-initiated.
+        isAdminOverride:
+          type: boolean
+        overrideReason:
+          type: [string, 'null']
+          description: Present on admin corrective moves. ADMIN CONTEXT ONLY.
+        createdAt:
+          type: string
+          format: date-time
+
+    AdminApplicationDetail:
+      allOf:
+        - $ref: '#/components/schemas/AdminApplicationRow'
+        - type: object
+          required: [timeline]
+          description: |
+            0.8.1 — the Screen 26 application detail
+            (GET /admin/applications/{id}): the admin row plus the FULL
+            timeline (see `AdminTimelineEntry`).
+          properties:
+            timeline:
+              type: array
+              items:
+                $ref: '#/components/schemas/AdminTimelineEntry'
 
 # ─── Paths ───────────────────────────────────────────────────────────────────
 
@@ -6800,6 +6909,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /admin/jobs/{id}:
+    get:
+      operationId: getAdminJob
+      tags: [admin]
+      summary: One job, in full, for the moderation detail (S6b-F2)
+      description: |
+        **RBAC: `jobs.view`.**
+
+        Added in 0.8.1: Screen 26's review detail must render the job **as
+        candidates would see it** (description, salary, requirements, and the
+        worker-protection benefits) for ANY status — but the public
+        `GET /jobs/{id}` is ACTIVE-only by design, so a PENDING_REVIEW job had
+        no read surface at all. This is that surface: the full internal `Job`
+        shape plus the admin row facts (humanId, flags, views,
+        moderationReason) and `companyStatus`, so the panel can flag a
+        suspended employer BEFORE the admin attempts an approval instead of
+        letting them discover it via the 403.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The admin job detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminJobDetail'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /admin/jobs/{id}/review:
     post:
       operationId: postAdminJobReview
@@ -7093,6 +7246,13 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: search
+          in: query
+          description: >
+            Matches the application humanId or the candidate's name (0.8.1 —
+            documents what the S4-B3 implementation already supported).
+          schema:
+            type: string
       responses:
         '200':
           description: Applications page (admin context)
@@ -7105,7 +7265,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Application'
+                      $ref: '#/components/schemas/AdminApplicationRow'
                   meta:
                     type: object
                     required: [page, pageSize, total, totalPages]
@@ -7120,6 +7280,52 @@ paths:
                         type: integer
         '403':
           description: Missing the applications-read permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/applications/{id}:
+    get:
+      operationId: getAdminApplication
+      tags: [admin]
+      summary: One application, in full, for Screen 26's detail (S6b-F2)
+      description: |
+        **RBAC: `applications.manage`.**
+
+        Added in 0.8.1: the admin detail's defining content is the FULL
+        transition record — every timeline entry **including
+        `overrideReason`** (which the candidate-facing timeline deliberately
+        excludes). That record existed in the database since S4-B2 but had no
+        admin read surface; the list returns only the application's current
+        state. This endpoint is the record's surface: the admin-context
+        application row plus `timeline` with per-entry override reasons.
+
+        The timeline here is the ONLY serialization that carries
+        `overrideReason` per entry. Candidate and employer contexts continue
+        to receive the shaped `ApplicationTimelineEntry` without it.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The admin application detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminApplicationDetail'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Application not found
           content:
             application/json:
               schema:

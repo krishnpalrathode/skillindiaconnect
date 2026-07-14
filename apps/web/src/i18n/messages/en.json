@@ -1777,6 +1777,358 @@
         "generic": "The change failed. The matrix has been reloaded."
       }
     },
+    "jobs": {
+      "title": "Jobs",
+      "subtitle": "Every job on the platform — including drafts and the review queue no public list shows.",
+      "postOnBehalf": "Post a job for an employer",
+      "queue": {
+        "waiting": "{count, plural, one {# job awaiting review} other {# jobs awaiting review}}",
+        "waitingAria": "{count, plural, one {# job awaiting review} other {# jobs awaiting review}} — show the queue",
+        "empty": "No jobs awaiting review",
+        "emptyAria": "No jobs awaiting review",
+        "showQueue": "Show the review queue"
+      },
+      "table": {
+        "statusFilterLabel": "Filter by job status",
+        "statusTab": {
+          "ALL": "All",
+          "PENDING_REVIEW": "Awaiting review",
+          "ACTIVE": "Active",
+          "PAUSED": "Paused",
+          "DRAFT": "Drafts",
+          "ARCHIVED": "Archived"
+        },
+        "flagFilterLabel": "Flags",
+        "flagAny": "Any",
+        "flagFeatured": "Featured only",
+        "flagUrgent": "Urgent only",
+        "searchLabel": "Search jobs",
+        "searchPlaceholder": "Search title or company…",
+        "searchButton": "Search",
+        "clearEmployerFilter": "Clear employer filter",
+        "loadFailed": "Couldn't load jobs.",
+        "retry": "Try again",
+        "empty": {
+          "ALL": "No jobs found.",
+          "PENDING_REVIEW": "The review queue is empty — nothing is waiting for a decision.",
+          "ACTIVE": "No active jobs match.",
+          "PAUSED": "No paused jobs match.",
+          "DRAFT": "No drafts match.",
+          "ARCHIVED": "No archived jobs match."
+        },
+        "tableCaption": "All job postings with status, flags and activity",
+        "col": {
+          "job": "Job",
+          "company": "Company",
+          "market": "Market",
+          "status": "Status",
+          "flags": "Flags",
+          "applicants": "Applicants",
+          "views": "Views",
+          "posted": "Posted"
+        },
+        "detailAria": "Open {title}",
+        "featuredChip": "Featured",
+        "urgentChip": "Urgent",
+        "paginationLabel": "Jobs pages",
+        "prevPage": "Previous",
+        "nextPage": "Next",
+        "pageOf": "Page {page} of {total}"
+      },
+      "panel": {
+        "notFound": "This job doesn't exist.",
+        "loadFailed": "Couldn't load this job.",
+        "retry": "Try again",
+        "featuredChip": "Featured",
+        "urgentChip": "Urgent",
+        "cancel": "Cancel",
+        "employerWarning": {
+          "title": "This employer is {status}",
+          "body": "Approval will be blocked until the employer is approved again — the publish gates re-check the employer's status.",
+          "link": "Open the employer's review page"
+        },
+        "candidateView": "As candidates would see it",
+        "marketGulf": "Gulf",
+        "marketLocal": "India",
+        "vacancies": "{count, plural, one {# vacancy} other {# vacancies}}",
+        "experienceYears": "{count, plural, one {# year experience} other {# years experience}}",
+        "description": "Description",
+        "requirements": "Requirements",
+        "workHours": "{hours} hours/day, {days} days/week",
+        "overtime": "Overtime available",
+        "adminFacts": "Admin facts",
+        "facts": {
+          "employer": "Employer",
+          "employerStatus": "Employer status",
+          "submitted": "Submitted",
+          "applicants": "Applicants",
+          "views": "Views",
+          "lastRejectReason": "Last rejection reason (employer-visible): {reason}"
+        },
+        "protection": {
+          "heading": "Worker protection",
+          "accommodation": "Accommodation",
+          "healthInsurance": "Health insurance",
+          "transportation": "Transportation",
+          "present": "Included",
+          "missing": "Missing"
+        },
+        "lifecycle": {
+          "heading": "Lifecycle",
+          "pause": "Pause job",
+          "archive": "Archive job",
+          "conflict": "Nothing to do — the job is already in that state (or the move isn't legal from its current one).",
+          "failed": "Couldn't change the job's state. Try again.",
+          "pauseDialog": {
+            "title": "Pause \"{title}\"?",
+            "confirm": "Pause job",
+            "body": "The job stops accepting applications and leaves public search until it's resumed."
+          },
+          "archiveDialog": {
+            "title": "Archive \"{title}\"?",
+            "confirm": "Archive job",
+            "body": "Archiving is permanent — the job is removed from public search and can't be reactivated."
+          }
+        },
+        "viewApplications": "View applications ({count})"
+      },
+      "review": {
+        "heading": "Review decision",
+        "gatesNote": "Approval re-runs the publish gates — if the employer was suspended, a protection rule changed, or their plan expired while this sat in review, the approval will be blocked and you'll see why.",
+        "approve": "Approve",
+        "reject": "Reject",
+        "approvedNote": "Approved — the job is now live and visible to candidates.",
+        "rejectedNote": "Rejected — the job returned to the employer's drafts with your reason.",
+        "alreadyResolved": "This job is no longer awaiting review — someone may have resolved it already.",
+        "approveFailedGeneric": "Something went wrong while approving. Try again.",
+        "cancel": "Cancel",
+        "approveDialog": {
+          "title": "Approve \"{title}\"?",
+          "confirm": "Approve and publish",
+          "body": "The job goes live immediately and becomes visible to candidates in search."
+        },
+        "rejectDialog": {
+          "title": "Reject \"{title}\"?",
+          "confirm": "Reject job",
+          "body": "The job returns to the employer's drafts so they can fix it and resubmit.",
+          "reasonLabel": "Reason",
+          "employerVisible": "This reason is shown to the employer — tell them what to fix.",
+          "reasonRequired": "A reason is required to reject a job."
+        }
+      },
+      "gateFailure": {
+        "rules": {
+          "accommodation": "Accommodation required",
+          "healthInsurance": "Health insurance required",
+          "transportation": "Transportation required"
+        },
+        "employer": {
+          "title": "The employer is no longer approved",
+          "body": "{company} was suspended (or lost approval) while this job was in review. You can't approve or publish their jobs until they're reinstated.",
+          "remedy": "Open the employer's review page"
+        },
+        "protection": {
+          "title": "A worker-protection rule blocks this job",
+          "body": "A worker-protection rule ({rules}) was enabled after this job was submitted. It no longer meets the platform's requirements — the employer must add the missing benefit and resubmit.",
+          "remedy": "Reject with a reason",
+          "unknownRule": "unspecified"
+        },
+        "quota": {
+          "title": "This would exceed the employer's plan limit",
+          "body": "{company}'s plan doesn't allow another active job — approving or publishing this would exceed their Free-plan limit.",
+          "remedy": "The remedy is on the employer's side: they upgrade their plan. You can leave the job pending, or reject it with a reason."
+        },
+        "unknown": {
+          "title": "The action was blocked",
+          "body": "The server refused this action. Try again."
+        }
+      },
+      "flags": {
+        "heading": "Featured / Urgent",
+        "effect": "Featured and Urgent jobs show a badge in search results and can be filtered by candidates. Admin-set only — employers can never set these.",
+        "featured": "Featured",
+        "urgent": "Urgent",
+        "failed": "Couldn't update the flags. Try again."
+      },
+      "onBehalf": {
+        "title": "Post a job for an employer",
+        "subtitle": "Creates the job in the employer's name. The same publish rules apply — this is not a bypass.",
+        "employerHeading": "Which employer is this job for?",
+        "employerSubtitle": "Only approved employers can have jobs published for them.",
+        "employerRequired": "Choose an employer first.",
+        "changeEmployer": "Change employer",
+        "employerSearchLabel": "Search approved employers",
+        "employerSearchPlaceholder": "Search company name…",
+        "employerSearchButton": "Search",
+        "employerLoading": "Loading employers…",
+        "employerNoResults": "No approved employers match.",
+        "basicHeading": "Job basics",
+        "titleLabel": "Job title",
+        "marketLabel": "Market",
+        "marketGulf": "Gulf",
+        "marketLocal": "India (Local)",
+        "categoryLabel": "Job category",
+        "categoriesLoading": "Loading categories…",
+        "categoryPlaceholder": "Select a category",
+        "locationLabel": "Location",
+        "requirementsHeading": "Requirements",
+        "draftSurvivedFailure": "The job was still saved as a draft for this employer — nothing was published.",
+        "saveDraft": "Save as draft",
+        "publishNow": "Publish now",
+        "gatesNote": "Publishing runs the same gates as the employer's own publish: approved employer, worker-protection rules, and their plan's job limit.",
+        "publishedNote": "Published — the job is live for {company}.",
+        "draftNote": "Draft created for {company}. They can review and publish it themselves.",
+        "viewJob": "Open the job",
+        "createFailed": "Couldn't create the job. Try again."
+      }
+    },
+    "applications": {
+      "title": "Applications",
+      "subtitle": "Every application on the platform, with the full record — including admin overrides.",
+      "table": {
+        "statusFilterLabel": "Filter by application status",
+        "statusTab": {
+          "ALL": "All",
+          "PENDING": "Pending",
+          "SHORTLISTED": "Shortlisted",
+          "SELECTED": "Selected",
+          "REJECTED": "Rejected"
+        },
+        "searchLabel": "Search applications",
+        "searchPlaceholder": "Search application ID or candidate…",
+        "searchButton": "Search",
+        "clearJobFilter": "Clear job filter",
+        "loadFailed": "Couldn't load applications.",
+        "retry": "Try again",
+        "empty": "No applications match.",
+        "tableCaption": "All applications with candidate, job, status and match score",
+        "col": {
+          "application": "Application",
+          "candidate": "Candidate",
+          "job": "Job",
+          "status": "Status",
+          "match": "Match",
+          "applied": "Applied"
+        },
+        "detailAria": "Open application {id}",
+        "deletedUser": "Deleted user",
+        "status": {
+          "PENDING": "Pending",
+          "SHORTLISTED": "Shortlisted",
+          "SELECTED": "Selected",
+          "REJECTED": "Rejected"
+        },
+        "overrideChip": "Admin override",
+        "paginationLabel": "Applications pages",
+        "prevPage": "Previous",
+        "nextPage": "Next",
+        "pageOf": "Page {page} of {total}"
+      },
+      "detail": {
+        "notFound": "This application doesn't exist.",
+        "loadFailed": "Couldn't load this application.",
+        "retry": "Try again",
+        "deletedUser": "Deleted user",
+        "unknownJob": "Unknown job",
+        "overrideChip": "Admin override",
+        "status": {
+          "PENDING": "Pending",
+          "SHORTLISTED": "Shortlisted",
+          "SELECTED": "Selected",
+          "REJECTED": "Rejected"
+        },
+        "match": {
+          "heading": "Match score",
+          "snapshotNote": "Computed once when the candidate applied — never recomputed.",
+          "category": "Category",
+          "experienceYears": "Experience",
+          "foreignExperience": "Foreign exp.",
+          "documents": "Documents"
+        },
+        "facts": {
+          "heading": "Application",
+          "applied": "Applied",
+          "docs": "Documents at apply",
+          "docsValue": "{complete} of {required} mandatory",
+          "passport": "Passport at apply",
+          "passportValid": "Valid",
+          "passportInvalid": "Invalid",
+          "whatsapp": "Selected WhatsApp",
+          "whatsappSentOn": "Sent {date}",
+          "whatsappNotSent": "Never sent",
+          "coverLetter": "Cover letter"
+        },
+        "timeline": {
+          "heading": "Timeline",
+          "adminViewNote": "The full record — actor roles, override flags and override reasons. Candidates see a shaped version without reasons.",
+          "empty": "No status changes yet.",
+          "transition": "{from} → {to}",
+          "initial": "Applied → {to}",
+          "byline": "{role} · {date}",
+          "system": "System",
+          "overrideFlag": "Admin override",
+          "reason": "Reason (admins and audit log only): {reason}"
+        },
+        "actions": {
+          "heading": "Actions",
+          "override": "Change status…",
+          "resend": "Resend WhatsApp…"
+        }
+      },
+      "override": {
+        "title": "Change {candidate}'s application status",
+        "titleWithTarget": "Change {candidate}'s application from {from} to {to}?",
+        "deletedUser": "Deleted user",
+        "targetLabel": "New status",
+        "targetPlaceholder": "Choose the new status",
+        "statusName": {
+          "PENDING": "Pending",
+          "SHORTLISTED": "Shortlisted",
+          "SELECTED": "Selected",
+          "REJECTED": "Rejected"
+        },
+        "noNewWhatsApp": "This candidate already received the Selected WhatsApp — moving them to Selected again will NOT send a new one (they'll get an email and in-app notification). If they genuinely never received it, use the manual WhatsApp resend after this change.",
+        "reasonLabel": "Reason",
+        "reasonVisibility": "This reason is recorded in the audit log and shown to other admins. The candidate sees only a neutral entry: 'Status updated by SkillIndiaConnect'.",
+        "reasonRequired": "A reason is required for a corrective status change.",
+        "rejectedByServer": "The server declined this change.",
+        "failed": "Couldn't change the status. Try again.",
+        "confirm": "Change status",
+        "cancel": "Cancel"
+      },
+      "notes": {
+        "heading": "Internal notes",
+        "internalOnly": "Internal — never shown to the candidate or employer.",
+        "empty": "No notes yet.",
+        "byline": "{role} · {date}",
+        "deleteAria": "Delete note",
+        "notAuthor": "Only the note's author (or a Super Admin) can delete it.",
+        "deleteFailed": "Couldn't delete the note. Try again.",
+        "addFailed": "Couldn't add the note. Try again.",
+        "addLabel": "Add an internal note",
+        "addPlaceholder": "Add a note for the admin team…",
+        "counter": "{used} / {max}",
+        "add": "Add note"
+      },
+      "resend": {
+        "title": "Resend the Selected WhatsApp to {candidate}?",
+        "deletedUser": "Deleted user",
+        "consequence": "This sends a WhatsApp message to {candidate}'s phone.",
+        "originalDateUnchanged": "The candidate's original notification date won't change — this is recorded as an additional send.",
+        "reasonLabel": "Reason",
+        "reasonAudited": "Recorded in the audit log with your name.",
+        "reasonRequired": "A reason is required to resend the WhatsApp.",
+        "confirm": "Send WhatsApp",
+        "cancel": "Cancel",
+        "outcomeTitle": "Resend result",
+        "done": "Done",
+        "close": "Close",
+        "sentNote": "The WhatsApp to {candidate} was queued for delivery.",
+        "emailFallbackNote": "This candidate can't receive WhatsApp — an email was sent instead.",
+        "limitNote": "You've reached the resend limit for this application today. Try again tomorrow.",
+        "failed": "Couldn't resend. Try again."
+      }
+    },
     "dashboard": {
       "title": "Dashboard",
       "queuesHeading": "Waiting for you",

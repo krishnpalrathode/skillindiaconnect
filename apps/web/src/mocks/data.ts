@@ -1764,6 +1764,71 @@ export const db = {
         archivedAt: null,
       } satisfies MockJob,
     ],
+    // S6b-F2: the NON-COMPLIANT review fixture. Submitted while (the fiction
+    // goes) the health-insurance and transportation rules were OFF; the seeded
+    // settings have them ON — so APPROVING this job fails rung 2 of the re-run
+    // gate ladder with the two rule names in meta.violations. This is the live
+    // gate failure the browser-walk must render.
+    [
+      'job-pending-noncompliant',
+      {
+        id: 'job-pending-noncompliant',
+        title: 'Warehouse Loader (Awaiting Review — non-compliant)',
+        status: 'PENDING_REVIEW',
+        market: 'GULF',
+        location: 'Jebel Ali, UAE',
+        description:
+          'Loading crew for a logistics warehouse. Submitted before the current worker-protection rules were switched on.',
+        categoryId: 'cat-general',
+        salaryMin: 1400,
+        salaryMax: 1700,
+        salaryCurrency: 'AED',
+        accommodation: true,
+        healthInsurance: false,
+        transportation: false,
+        workConditions: '10 hours/day, 6 days/week.',
+        requirements: ['Physically fit', 'Basic English'],
+        experienceRequiredYears: 0,
+        vacancies: 10,
+        genderPreference: 'ANY',
+        companyId: 'mock-company-1',
+        companyName: 'Gulf Builders Arabia',
+        createdAt: daysAgo(3),
+        publishedAt: null,
+        archivedAt: null,
+      } satisfies MockJob,
+    ],
+    // S6b-F2: a pending job whose employer was SUSPENDED while it sat in
+    // review — rung 1 of the re-run ladder (403 EMPLOYER_NOT_APPROVED), and
+    // the review panel's pre-emptive warning fixture.
+    [
+      'job-pending-suspended',
+      {
+        id: 'job-pending-suspended',
+        title: 'Steel Fixer (Awaiting Review — suspended employer)',
+        status: 'PENDING_REVIEW',
+        market: 'GULF',
+        location: 'Dubai, UAE',
+        description: 'Steel fixing crew for a high-rise project.',
+        categoryId: 'cat-construction',
+        salaryMin: 1800,
+        salaryMax: 2200,
+        salaryCurrency: 'AED',
+        accommodation: true,
+        healthInsurance: true,
+        transportation: true,
+        workConditions: '9 hours/day, 6 days/week.',
+        requirements: ['3+ years steel fixing'],
+        experienceRequiredYears: 3,
+        vacancies: 6,
+        genderPreference: 'ANY',
+        companyId: 'mock-company-suspended',
+        companyName: 'Blacklisted Corp',
+        createdAt: daysAgo(4),
+        publishedAt: null,
+        archivedAt: null,
+      } satisfies MockJob,
+    ],
   ]),
 
   // S6: admin-only job metadata. `Job` carries no humanId / Featured / Urgent,
@@ -1778,6 +1843,8 @@ export const db = {
     ['job-1', { humanId: 'JB-2026-00001', isFeatured: true, isUrgent: false }],
     ['job-2', { humanId: 'JB-2026-00002', isFeatured: false, isUrgent: true }],
     ['job-pending-review', { humanId: 'JB-2026-00007', isFeatured: false, isUrgent: false }],
+    ['job-pending-noncompliant', { humanId: 'JB-2026-00008', isFeatured: false, isUrgent: false }],
+    ['job-pending-suspended', { humanId: 'JB-2026-00009', isFeatured: false, isUrgent: false }],
   ]),
 
   // ── S3: Hiring preferences (userId → preferences) ─────────────────────────

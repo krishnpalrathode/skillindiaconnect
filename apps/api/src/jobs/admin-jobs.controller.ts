@@ -41,6 +41,12 @@ export class AdminJobsController {
     return this.adminJobs.list(query);
   }
 
+  @Get(':id')
+  @RequirePermissions(Permission.JOBS_VIEW)
+  async getDetail(@Param('id', ParseUUIDPipe) id: string) {
+    return { data: await this.adminJobs.getDetail(id) };
+  }
+
   @Post(':id/review')
   @HttpCode(HttpStatus.OK) // contract: 200 with the resolved row
   @RequirePermissions(Permission.JOBS_MODERATE)

@@ -50,6 +50,39 @@ export interface AdminJobRowDto {
   createdAt: string;
 }
 
+/**
+ * The contract's AdminJobDetail (0.8.1): the full job for the Screen 26 review
+ * panel — the admin must see the job as candidates would (description, salary,
+ * benefits, requirements), for ANY status, which the ACTIVE-only public detail
+ * cannot serve. `companyStatus` lets the panel flag a suspended employer
+ * BEFORE an approve attempt instead of letting the gate 403 announce it.
+ */
+export interface AdminJobDetailDto extends AdminJobRowDto {
+  location: string;
+  description: string;
+  categoryId: string;
+  salaryMin: number;
+  salaryMax: number;
+  salaryCurrency: string;
+  accommodation: boolean;
+  healthInsurance: boolean;
+  transportation: boolean;
+  foodAllowance: boolean;
+  airTicketArrival: boolean;
+  airTicketDeparture: boolean;
+  otherAllowance: string | null;
+  hoursPerDay: number;
+  daysPerWeek: number;
+  overtime: boolean;
+  contractPeriodMonths: number | null;
+  requirements: string[];
+  experienceRequiredYears: number | null;
+  vacancies: number | null;
+  genderPreference: string | null;
+  companyStatus: string;
+  archivedAt: string | null;
+}
+
 type JobWithCompanyName = Job & { company: { name: string } };
 
 /**
@@ -131,6 +164,45 @@ export class AdminJobsService {
     );
 
     return { data, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } };
+  }
+
+  // ── GET /admin/jobs/{id} — the moderation detail (0.8.1) ───────────────────
+
+  /** The full job (any status) + admin facts + companyStatus for the pre-emptive warning. */
+  async getDetail(jobId: string): Promise<AdminJobDetailDto> {
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      include: { company: { select: { name: true, status: true } } },
+    });
+    if (!job) throw new NotFoundException({ code: 'JOB_NOT_FOUND' });
+
+    const counts = await this.applicationsAggregate.countsPerJob([job.id]);
+    return {
+      ...this.toRow(job, counts.get(job.id)?.applications ?? 0),
+      location: job.location,
+      description: job.description,
+      categoryId: job.categoryId,
+      salaryMin: job.salaryMin,
+      salaryMax: job.salaryMax,
+      salaryCurrency: job.currency,
+      accommodation: job.accommodation,
+      healthInsurance: job.healthInsurance,
+      transportation: job.transportation,
+      foodAllowance: job.foodAllowance,
+      airTicketArrival: job.airTicketArrival,
+      airTicketDeparture: job.airTicketDeparture,
+      otherAllowance: job.otherAllowance ?? null,
+      hoursPerDay: job.hoursPerDay,
+      daysPerWeek: job.daysPerWeek,
+      overtime: job.overtime,
+      contractPeriodMonths: job.contractPeriodMonths ?? null,
+      requirements: job.requirements,
+      experienceRequiredYears: job.experienceRequiredYears ?? null,
+      vacancies: job.vacancies ?? null,
+      genderPreference: job.genderPreference ?? null,
+      companyStatus: job.company.status,
+      archivedAt: job.archivedAt ? job.archivedAt.toISOString() : null,
+    };
   }
 
   // ── POST /admin/jobs/{id}/review — the S2-B5 seam closing ──────────────────

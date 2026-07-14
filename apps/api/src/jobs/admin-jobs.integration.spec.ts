@@ -67,6 +67,8 @@ import { AdminNotesController } from '../applications/admin-notes.controller';
 import { AdminNotesService } from '../applications/admin-notes.service';
 import { AdminResendController } from '../applications/admin-resend.controller';
 import { AdminResendService } from '../applications/admin-resend.service';
+import { AdminApplicationsController } from '../applications/admin-applications.controller';
+import { ApplicationsReadService } from '../applications/applications-read.service';
 import { JobsService } from './jobs.service';
 import { JobLifecycleService } from './job-lifecycle.service';
 import { PublishGuardService } from './publish-guard.service';
@@ -231,6 +233,7 @@ beforeAll(async () => {
         Permission.JOBS_POST_ADMIN,
         Permission.APPLICATIONS_NOTES,
         Permission.APPLICATIONS_CHANGE_STATUS,
+        Permission.APPLICATIONS_MANAGE,
       ].map((permissionKey) => ({
         role: UserRole.SUPER_ADMIN,
         permissionKey,
@@ -241,11 +244,17 @@ beforeAll(async () => {
 
     const moduleRef = await Test.createTestingModule({
       imports: [EventEmitterModule.forRoot()],
-      controllers: [AdminJobsController, AdminNotesController, AdminResendController],
+      controllers: [
+        AdminJobsController,
+        AdminNotesController,
+        AdminResendController,
+        AdminApplicationsController,
+      ],
       providers: [
         AdminJobsService,
         AdminNotesService,
         AdminResendService,
+        ApplicationsReadService,
         JobsService,
         JobLifecycleService,
         PublishGuardService,
@@ -746,5 +755,143 @@ describe('notes + resend endpoints (applications module)', () => {
       .delete(`/admin/applications/${applicationId}/notes/${created.body.data.id}`)
       .set('x-test-role', UserRole.SUPER_ADMIN)
       .expect(204);
+  });
+});
+
+// ─── The 0.8.1 admin read surfaces (S6b-F2) ──────────────────────────────────
+
+describe('GET /admin/jobs/{id} — the moderation detail', () => {
+  it('returns the FULL job for a PENDING_REVIEW job (public detail is ACTIVE-only) + companyStatus', async () => {
+    if (dockerUnavailable) return;
+    const { companyId } = await mkCompany(CompanyStatus.SUSPENDED);
+    const jobId = await mkJob(companyId, JobStatus.PENDING_REVIEW, { healthInsurance: false });
+
+    const res = await get(`/admin/jobs/${jobId}`, UserRole.SUPER_ADMIN).expect(200);
+    const d = res.body.data;
+    // The candidate-eye fields the row never carried:
+    expect(d.description).toBe('x');
+    expect(d.salaryMin).toBe(100);
+    expect(d.salaryCurrency).toBe('AED');
+    expect(d.hoursPerDay).toBe(8);
+    expect(d.accommodation).toBe(true);
+    expect(d.healthInsurance).toBe(false); // the protection-relevant truth
+    // The admin facts + the pre-emptive suspended-employer signal:
+    expect(d.humanId).toMatch(/^JB-/);
+    expect(d.status).toBe('PENDING_REVIEW');
+    expect(d.companyStatus).toBe('SUSPENDED');
+    expect(d.isFeatured).toBe(false);
+  });
+
+  it('RBAC: MODERATOR (no jobs.view here) → 403; unknown id → 404', async () => {
+    if (dockerUnavailable) return;
+    const { companyId } = await mkCompany(CompanyStatus.APPROVED);
+    const jobId = await mkJob(companyId, JobStatus.ACTIVE);
+    await get(`/admin/jobs/${jobId}`, UserRole.MODERATOR).expect(403);
+    await get('/admin/jobs/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', UserRole.SUPER_ADMIN).expect(404);
+  });
+});
+
+describe('GET /admin/applications + /{id} — the override record surface', () => {
+  async function mkOverriddenApplication(): Promise<{
+    applicationId: string;
+    candidateName: string;
+    jobTitle: string;
+  }> {
+    const { companyId } = await mkCompany(CompanyStatus.APPROVED);
+    const jobId = await mkJob(companyId, JobStatus.ACTIVE);
+    const n = ++seq;
+    const candUser = await prisma.user.create({
+      data: { email: `cand-ovr-${n}@example.com`, role: UserRole.CANDIDATE },
+    });
+    const profile = await prisma.candidateProfile.create({
+      data: { userId: candUser.id, fullName: `Overridden Cand ${n}`, whatsappCapable: true },
+    });
+    const application = await prisma.application.create({
+      data: {
+        jobId,
+        candidateId: profile.id,
+        status: 'REJECTED',
+        matchScore: 55,
+        matchBreakdown: {},
+        docsCompleteCount: 1,
+        docsRequiredCount: 1,
+        passportValidAtApply: true,
+      },
+    });
+    // The S4-B2 record: a forward employer move, then an admin corrective move.
+    await prisma.applicationTimelineEntry.create({
+      data: {
+        applicationId: application.id,
+        fromStatus: 'PENDING',
+        toStatus: 'SELECTED',
+        actorRole: UserRole.EMPLOYER,
+        isAdminOverride: false,
+        createdAt: new Date('2026-06-01T10:00:00Z'),
+      },
+    });
+    await prisma.applicationTimelineEntry.create({
+      data: {
+        applicationId: application.id,
+        fromStatus: 'SELECTED',
+        toStatus: 'REJECTED',
+        actorUserId: ACTOR_ID['SUPER_ADMIN'],
+        actorRole: UserRole.SUPER_ADMIN,
+        isAdminOverride: true,
+        overrideReason: 'employer selected the wrong candidate by mistake',
+        createdAt: new Date('2026-06-02T10:00:00Z'),
+      },
+    });
+    const job = await jobRow(jobId);
+    return {
+      applicationId: application.id,
+      candidateName: `Overridden Cand ${n}`,
+      jobTitle: job.title,
+    };
+  }
+
+  it('detail: the FULL timeline carries per-entry overrideReason; the row derives the latest', async () => {
+    if (dockerUnavailable) return;
+    const { applicationId, candidateName, jobTitle } = await mkOverriddenApplication();
+
+    const res = await get(`/admin/applications/${applicationId}`, UserRole.SUPER_ADMIN).expect(200);
+    const d = res.body.data;
+    expect(d.candidateName).toBe(candidateName);
+    expect(d.jobTitle).toBe(jobTitle);
+    expect(d.overrideReason).toBe('employer selected the wrong candidate by mistake');
+
+    expect(d.timeline).toHaveLength(2);
+    // Oldest first; the employer move carries NO reason, the override carries its own.
+    expect(d.timeline[0]).toMatchObject({
+      toStatus: 'SELECTED',
+      actorRole: 'EMPLOYER',
+      isAdminOverride: false,
+      overrideReason: null,
+    });
+    expect(d.timeline[1]).toMatchObject({
+      toStatus: 'REJECTED',
+      actorRole: 'SUPER_ADMIN',
+      isAdminOverride: true,
+      overrideReason: 'employer selected the wrong candidate by mistake',
+    });
+  });
+
+  it('list: the row carries the derived overrideReason (the override indicator)', async () => {
+    if (dockerUnavailable) return;
+    const { applicationId } = await mkOverriddenApplication();
+
+    const res = await get('/admin/applications?pageSize=100', UserRole.SUPER_ADMIN).expect(200);
+    const row = (res.body.data as Array<Record<string, unknown>>).find(
+      (r) => r['id'] === applicationId,
+    );
+    expect(row).toBeDefined();
+    expect(row!['overrideReason']).toBe('employer selected the wrong candidate by mistake');
+    expect(row!['candidateName']).toContain('Overridden Cand');
+  });
+
+  it('RBAC: MODERATOR (no applications.manage) → 403 on both reads', async () => {
+    if (dockerUnavailable) return;
+    const { applicationId } = await mkOverriddenApplication();
+    await get('/admin/applications', UserRole.MODERATOR).expect(403);
+    await get(`/admin/applications/${applicationId}`, UserRole.MODERATOR).expect(403);
   });
 });

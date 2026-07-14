@@ -57,6 +57,9 @@ type PermissionKey = components['schemas']['PermissionKey'];
 type AuditLogEntrySchema = components['schemas']['AuditLogEntry'];
 type AdminCandidateCardSchema = components['schemas']['AdminCandidateCard'];
 type AdminJobRowSchema = components['schemas']['AdminJobRow'];
+type AdminJobDetailSchema = components['schemas']['AdminJobDetail'];
+type AdminApplicationRowSchema = components['schemas']['AdminApplicationRow'];
+type AdminApplicationDetailSchema = components['schemas']['AdminApplicationDetail'];
 type NoteEntrySchema = components['schemas']['NoteEntry'];
 type MockCandidateShape = MockCandidate;
 type MockJobShape = MockJob;
@@ -2431,6 +2434,23 @@ const candidateMeApplicationById = http.get(
   },
 );
 
+// The admin row (contract AdminApplicationRow, 0.8.1): the admin-context
+// application + the display denormalizations. `overrideReason` is DERIVED from
+// the timeline — the record of record — exactly like the real read service.
+function toAdminApplicationRow(app: MockApplication): AdminApplicationRowSchema {
+  const candidate = db.candidates.get(app.candidateId);
+  const job = db.jobs.get(app.jobId);
+  const lastOverride = [...(db.applicationTimeline.get(app.id) ?? [])]
+    .reverse()
+    .find((e) => e.isAdminOverride);
+  return {
+    ...toApplication(app, 'admin'),
+    overrideReason: lastOverride?.overrideReason ?? null,
+    candidateName: candidate?.profile.fullName ?? null,
+    jobTitle: job?.title ?? null,
+  };
+}
+
 // GET /admin/applications — admin table (offset, admin context keeps overrideReason).
 // Gated on applications.manage, matching AdminApplicationsController. (A
 // MODERATOR holds applications.notes but NOT manage — so they cannot reach the
@@ -2445,18 +2465,46 @@ const adminGetApplications = http.get(`${BASE}/admin/applications`, ({ request }
   const pageSize = Math.min(100, parseInt(url.searchParams.get('pageSize') ?? '20', 10));
   const statusFilter = url.searchParams.get('status');
   const jobId = url.searchParams.get('jobId');
+  const search = url.searchParams.get('search')?.toLowerCase();
 
-  let apps = [...db.applications.values()];
-  if (statusFilter) apps = apps.filter((a) => a.status === statusFilter);
-  if (jobId) apps = apps.filter((a) => a.jobId === jobId);
-  apps.sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime());
+  let rows = [...db.applications.values()].map(toAdminApplicationRow);
+  if (statusFilter) rows = rows.filter((a) => a.status === statusFilter);
+  if (jobId) rows = rows.filter((a) => a.jobId === jobId);
+  if (search) {
+    // The 0.8.1-documented behavior: humanId or candidate name.
+    rows = rows.filter(
+      (a) =>
+        a.humanId.toLowerCase().includes(search) ||
+        (a.candidateName ?? '').toLowerCase().includes(search),
+    );
+  }
+  rows.sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime());
 
-  const result = offsetPaginate(
-    apps.map((a) => toApplication(a, 'admin')),
-    page,
-    pageSize,
-  );
-  return HttpResponse.json(result);
+  return HttpResponse.json(offsetPaginate(rows, page, pageSize));
+});
+
+// GET /admin/applications/:id — the Screen 26 detail (0.8.1): the admin row +
+// the FULL timeline with per-entry overrideReason. This is the ONLY
+// serialization of the reason; the candidate's shaped timeline drops it.
+const adminGetApplication = http.get(`${BASE}/admin/applications/:id`, ({ request, params }) => {
+  const gate = requirePermission(request, 'applications.manage');
+  if (gate.error) return gate.error;
+
+  const app = db.applications.get(params['id'] as string);
+  if (!app) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Application not found.');
+
+  const detail: AdminApplicationDetailSchema = {
+    ...toAdminApplicationRow(app),
+    timeline: (db.applicationTimeline.get(app.id) ?? []).map((e) => ({
+      fromStatus: e.fromStatus,
+      toStatus: e.toStatus,
+      actorRole: e.actorRole,
+      isAdminOverride: e.isAdminOverride,
+      overrideReason: e.overrideReason,
+      createdAt: e.createdAt,
+    })),
+  };
+  return HttpResponse.json({ data: detail });
 });
 
 // PATCH /admin/applications/:id/status — corrective override (reason required).
@@ -3493,6 +3541,40 @@ const adminGetJobs = http.get(`${BASE}/admin/jobs`, ({ request }) => {
   return HttpResponse.json(offsetPaginate(rows, page, pageSize));
 });
 
+// GET /admin/jobs/:id — the moderation detail (0.8.1): the FULL job for ANY
+// status (the public detail is ACTIVE-only, so a PENDING_REVIEW job has no
+// other read surface) + companyStatus for the pre-emptive suspended warning.
+const adminGetJobDetail = http.get(`${BASE}/admin/jobs/:id`, ({ request, params }) => {
+  const gate = requirePermission(request, 'jobs.view');
+  if (gate.error) return gate.error;
+
+  const job = db.jobs.get(params['id'] as string);
+  if (!job) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Job not found.');
+
+  const company = [...db.employers.values()].find((c) => c.id === job.companyId);
+  const detail: AdminJobDetailSchema = {
+    ...toAdminJobRow(job),
+    market: job.market ?? 'GULF',
+    location: job.location,
+    description: job.description,
+    categoryId: job.categoryId ?? null,
+    salaryMin: job.salaryMin ?? null,
+    salaryMax: job.salaryMax ?? null,
+    salaryCurrency: job.salaryCurrency,
+    accommodation: job.accommodation,
+    healthInsurance: job.healthInsurance,
+    transportation: job.transportation,
+    requirements: job.requirements ?? [],
+    experienceRequiredYears: job.experienceRequiredYears ?? null,
+    vacancies: job.vacancies ?? null,
+    genderPreference: job.genderPreference ?? 'ANY',
+    workConditions: job.workConditions,
+    companyStatus: company?.status ?? 'APPROVED',
+    archivedAt: job.archivedAt ?? null,
+  };
+  return HttpResponse.json({ data: detail });
+});
+
 const adminReviewJob = http.post(`${BASE}/admin/jobs/:id/review`, async ({ request, params }) => {
   const gate = requirePermission(request, 'jobs.moderate');
   if (gate.error) return gate.error;
@@ -3694,9 +3776,29 @@ const adminCreateJobOnBehalf = http.post(`${BASE}/admin/jobs`, async ({ request 
     return errorResponse(404, 'NOT_FOUND', 'Not found', 'Employer not found.');
   }
 
-  // Creating a DRAFT is always allowed; the publish GATES run only when
-  // `publish: true` — an admin cannot launder a job past them (S6b-B2).
-  if (body.publish === true) {
+  // S6b-B2 parity: the job record is CREATED FIRST (a draft is always allowed),
+  // and the publish gates run against it afterwards — a gate failure leaves an
+  // honest DRAFT behind, exactly like the real AdminJobsService.
+  const id = `job-admin-${Date.now()}`;
+  const publishNow = body.publish === true;
+  const job = {
+    ...(body as object),
+    id,
+    status: 'DRAFT',
+    companyId: company.id,
+    companyName: company.name,
+    createdAt: new Date().toISOString(),
+    publishedAt: null,
+    archivedAt: null,
+  } as MockJobShape;
+  db.jobs.set(id, job);
+  db.jobAdminMeta.set(id, {
+    humanId: `JB-2026-${String(db.jobs.size).padStart(5, '0')}`,
+    isFeatured: false,
+    isUrgent: false,
+  });
+
+  if (publishNow) {
     // Rung 1: the TARGET employer must be approved.
     if (company.status !== 'APPROVED') {
       return errorResponse(
@@ -3723,28 +3825,11 @@ const adminCreateJobOnBehalf = http.post(`${BASE}/admin/jobs`, async ({ request 
         { status: 422 },
       );
     }
+    // Gates passed — the admin IS the reviewer: straight to ACTIVE, never
+    // PENDING_REVIEW.
+    job.status = 'ACTIVE';
+    job.publishedAt = new Date().toISOString();
   }
-
-  const id = `job-admin-${Date.now()}`;
-  const publishNow = body.publish === true;
-  const job = {
-    ...(body as object),
-    id,
-    // The admin IS the reviewer: a gated-and-passing on-behalf publish goes
-    // straight to ACTIVE, never PENDING_REVIEW.
-    status: publishNow ? 'ACTIVE' : 'DRAFT',
-    companyId: company.id,
-    companyName: company.name,
-    createdAt: new Date().toISOString(),
-    publishedAt: publishNow ? new Date().toISOString() : null,
-    archivedAt: null,
-  } as MockJobShape;
-  db.jobs.set(id, job);
-  db.jobAdminMeta.set(id, {
-    humanId: `JB-2026-${String(db.jobs.size).padStart(5, '0')}`,
-    isFeatured: false,
-    isUrgent: false,
-  });
 
   writeAudit({
     module: 'Jobs',
@@ -3994,6 +4079,7 @@ export const handlers = [
   candidateMeApplications,
   candidateMeApplicationById,
   adminGetApplications,
+  adminGetApplication,
   adminPatchApplicationStatus,
   // S2: Jobs — public
   getJobs,
@@ -4041,6 +4127,7 @@ export const handlers = [
   adminCandidateDocumentUrl,
   adminPurgeCandidate,
   adminGetJobs,
+  adminGetJobDetail,
   adminCreateJobOnBehalf,
   adminReviewJob,
   adminPauseJob,

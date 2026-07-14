@@ -73,6 +73,15 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
   const [submitting, setSubmitting] = useState(false);
 
   const certKeyRef = useRef<string | null>(certKey);
+  // The post-success redirect timer must die with the component — a push()
+  // firing after unmount navigates a screen the user already left.
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    },
+    [],
+  );
   useEffect(() => {
     certKeyRef.current = certKey;
   }, [certKey]);
@@ -131,7 +140,10 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
         });
       }
       setSubmitSuccess(t('submitSuccess'));
-      setTimeout(() => router.push(`/${locale}/employer/dashboard`), 1500);
+      redirectTimerRef.current = setTimeout(
+        () => router.push(`/${locale}/employer/dashboard`),
+        1500,
+      );
     } catch (err) {
       if (err instanceof ApiRequestError) {
         if (err.error.code === 'COMPANY_ALREADY_EXISTS' || err.error.status === 409) {
