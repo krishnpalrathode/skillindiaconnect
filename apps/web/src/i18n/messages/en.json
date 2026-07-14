@@ -1304,6 +1304,131 @@
       "requires": "Requires",
       "retry": "Try again"
     },
+    "candidates": {
+      "title": "Candidate management",
+      "subtitle": "Search, review and moderate candidate accounts. Purged accounts remain listed as records.",
+      "statusFilterLabel": "Filter by account state",
+      "statusTab": {
+        "ALL": "All",
+        "ACTIVE": "Active",
+        "SUSPENDED": "Suspended",
+        "PENDING_DELETION": "Pending deletion"
+      },
+      "visibilityFilterLabel": "Visibility",
+      "visibilityAll": "All",
+      "visibilityVisible": "Visible to employers",
+      "visibilityHidden": "Hidden from employers",
+      "searchLabel": "Search candidates by name, phone or email",
+      "searchPlaceholder": "Name, phone or email…",
+      "searchButton": "Search",
+      "loadFailed": "Couldn't load candidates.",
+      "retry": "Try again",
+      "tableCaption": "Candidate accounts with status and actions",
+      "col": {
+        "candidate": "Candidate",
+        "phone": "Phone",
+        "completion": "Completion",
+        "visibility": "Visibility",
+        "status": "Status",
+        "memberSince": "Member since",
+        "actions": "Actions"
+      },
+      "visible": "Visible",
+      "hidden": "Hidden",
+      "autoPurgesIn": "Auto-purges in {days} days",
+      "detail": "View",
+      "detailAria": "View candidate {name}",
+      "empty": {
+        "ALL": "No candidates yet.",
+        "ACTIVE": "No active candidates match.",
+        "SUSPENDED": "No suspended candidates.",
+        "PENDING_DELETION": "No candidates are pending deletion."
+      },
+      "paginationLabel": "Candidate pages",
+      "prevPage": "Previous",
+      "nextPage": "Next",
+      "pageOf": "Page {page} of {total}",
+      "state": {
+        "ACTIVE": "Active",
+        "SUSPENDED": "Suspended",
+        "PENDING_DELETION": "Pending deletion",
+        "PURGED": "Purged"
+      },
+      "deletionState": {
+        "pendingTitle": "This candidate requested deletion — auto-purges in {days} days",
+        "pendingBody": "Their data will be permanently destroyed on {date} unless the request is withdrawn.",
+        "purgedTitle": "This account was purged on {date}",
+        "purgedBody": "Personal data has been permanently destroyed. Their applications remain as anonymous records."
+      },
+      "profile": {
+        "backToList": "All candidates",
+        "loadFailed": "Couldn't load this candidate.",
+        "retry": "Try again",
+        "actionFailed": "Something went wrong. Try again.",
+        "purgeStarted": "Purge started — this account's data is being destroyed.",
+        "visibleToEmployers": "Visible to employers",
+        "hiddenFromEmployers": "Hidden from employers",
+        "memberSince": "Member since {date}",
+        "suspend": "Suspend account",
+        "reactivate": "Reactivate account",
+        "contactHeading": "Contact",
+        "phone": "Phone",
+        "email": "Email",
+        "adminViewNote": "Admin view — you can see contact details this candidate has hidden from employers. Document access is logged.",
+        "profileHeading": "Profile",
+        "completion": "Profile completion",
+        "applications": "Applications",
+        "skills": "Skills",
+        "experienceHeading": "Work experience",
+        "experienceNone": "No work experience added.",
+        "experiencePurged": "Experience records were destroyed when this account was purged.",
+        "experienceYears": "{years}y {months}m",
+        "dangerZoneHeading": "Danger zone — permanently erase this person's data",
+        "dangerZoneBody": "Purging anonymizes this account and destroys all personal data and documents. It cannot be undone.",
+        "purgeButton": "Purge this account…"
+      },
+      "documents": {
+        "heading": "Documents",
+        "viewsLogged": "Document views are logged.",
+        "emptyNone": "No documents uploaded.",
+        "emptyPurged": "Documents were destroyed when this account was purged.",
+        "type": {
+          "PASSPORT": "Passport",
+          "EXPERIENCE_CERT": "Experience certificate",
+          "EDUCATIONAL_CERT": "Educational certificate",
+          "WORKING_VIDEO": "Working video"
+        },
+        "passportValid": "Valid",
+        "passportExpired": "Expired",
+        "view": "View",
+        "viewAria": "View {type} (opens in a new tab; access is logged)",
+        "refreshLink": "Refresh link"
+      },
+      "suspendDialog": {
+        "title": "Suspend {name}?",
+        "consequence": "This candidate will be unable to log in and will not appear to employers until reactivated.",
+        "reasonLabel": "Reason for suspension",
+        "reasonPlaceholder": "e.g. Multiple employers reported forged experience certificates.",
+        "reasonRequired": "A reason is required — it goes into the audit trail.",
+        "confirm": "Suspend account",
+        "cancel": "Cancel"
+      },
+      "purgeDialog": {
+        "title": "Permanently purge {name}?",
+        "destroysTitle": "This permanently destroys:",
+        "destroysBody": "Name, phone, email, date of birth, photo, work history, and all uploaded documents (passport, certificates). Files are removed from storage.",
+        "survivesTitle": "What remains:",
+        "survivesBody": "Their applications remain as anonymous records, so employers keep their hiring history. The audit log records that this account existed and was purged.",
+        "irreversible": "This cannot be undone.",
+        "reasonLabel": "Reason for purging",
+        "reasonPlaceholder": "e.g. Data-erasure request verified via support ticket #1234.",
+        "typeToConfirmLabel": "Type the candidate's full name to confirm",
+        "typeToConfirmHint": "Type exactly: {name}",
+        "requirements": "Purge stays disabled until you type the candidate's full name exactly and give a reason.",
+        "confirm": "Purge permanently",
+        "cancel": "Cancel"
+      }
+    },
     "employers": {
       "title": "Employer management",
       "statusFilterLabel": "Filter by status",
@@ -1320,7 +1445,10 @@
         "REJECTED": "Rejected",
         "SUSPENDED": "Suspended"
       },
-      "type": { "LOCAL": "Local", "FOREIGN": "Foreign" },
+      "type": {
+        "LOCAL": "Local",
+        "FOREIGN": "Foreign"
+      },
       "typeFilterLabel": "Type",
       "typeAll": "All types",
       "typeLocal": "Local",

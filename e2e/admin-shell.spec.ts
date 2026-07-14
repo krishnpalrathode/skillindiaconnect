@@ -107,7 +107,8 @@ test.describe('SUPER_ADMIN — full nav', () => {
   // and Settings); the remaining placeholders still title themselves by label.
   const routes: Array<[string, string, RegExp]> = [
     ['Employers', '/admin/employers', /employer management/i],
-    ['Candidates', '/admin/candidates', /candidates/i],
+    // S6b-F1 replaced the placeholder with the real Screen 25.
+    ['Candidates', '/admin/candidates', /candidate management/i],
     ['Jobs', '/admin/jobs', /jobs/i],
     ['Applications', '/admin/applications', /applications/i],
     ['Audit log', '/admin/logs', /audit log/i],

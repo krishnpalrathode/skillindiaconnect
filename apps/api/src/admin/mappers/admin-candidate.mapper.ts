@@ -25,7 +25,8 @@ export interface AdminCandidateCardDto {
   status: string;
   profileVisible: boolean;
   completionPct: number;
-  documents: { type: string; uploaded: boolean; expiryDate: string | null }[];
+  /** The contract's CandidateDocumentStatus: STATUS only — never a key or URL. */
+  documents: { type: string; uploaded: boolean; passportValid?: boolean }[];
   deletionDueAt: string | null;
   purgedAt: string | null;
   createdAt: string;
@@ -60,7 +61,10 @@ export function toAdminCandidateCard(source: AdminCandidateSource): AdminCandida
     documents: source.documents.map((d) => ({
       type: d.type,
       uploaded: true,
-      expiryDate: d.expiryDate ? d.expiryDate.toISOString() : null,
+      // The contract's shape carries VALIDITY, not the raw expiry date.
+      ...(d.type === 'PASSPORT' && d.expiryDate
+        ? { passportValid: d.expiryDate.getTime() > Date.now() }
+        : {}),
     })),
     deletionDueAt: source.user.deletionDueAt ? source.user.deletionDueAt.toISOString() : null,
     purgedAt: source.user.purgedAt ? source.user.purgedAt.toISOString() : null,

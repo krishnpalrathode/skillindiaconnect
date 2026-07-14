@@ -643,6 +643,28 @@ export const db = {
         status: 'ACTIVE',
       },
     ],
+    // S6b-F1: one fixture per remaining account state, so Screen 25's filters
+    // and the deletion countdown render against real data.
+    [
+      'mock-user-candidate-suspended',
+      {
+        id: 'mock-user-candidate-suspended',
+        email: 'suspended@example.com',
+        passwordHash: 'hashed-password',
+        role: 'CANDIDATE',
+        status: 'SUSPENDED',
+      },
+    ],
+    [
+      'mock-user-candidate-pendingdel',
+      {
+        id: 'mock-user-candidate-pendingdel',
+        email: 'leaving@example.com',
+        passwordHash: 'hashed-password',
+        role: 'CANDIDATE',
+        status: 'PENDING_DELETION',
+      },
+    ],
     [
       'mock-user-employer-pending',
       {
@@ -801,6 +823,48 @@ export const db = {
               expiryDate: daysFromNow(400),
             } as CandidateDocument,
           ],
+        }),
+        resumeSettings: {
+          language: 'en',
+          showPhone: true,
+          showReligion: false,
+          showFatherName: false,
+          showPassportNumber: false,
+        },
+        lastRenderedAt: null,
+      },
+    ],
+    // S6b-F1: the SUSPENDED fixture (user status above) — Screen 25's
+    // suspended tab + the reactivate path.
+    [
+      'mock-user-candidate-suspended',
+      {
+        userId: 'mock-user-candidate-suspended',
+        profile: buildProfile('mock-user-candidate-suspended', 'suspended@example.com', {
+          fullName: 'Deepak Verma',
+          phone: '+919811112222',
+          completionPct: 55,
+        }),
+        resumeSettings: {
+          language: 'en',
+          showPhone: true,
+          showReligion: false,
+          showFatherName: false,
+          showPassportNumber: false,
+        },
+        lastRenderedAt: null,
+      },
+    ],
+    // S6b-F1: the PENDING_DELETION fixture — the countdown row (lifecycle map
+    // carries deletionDueAt 12 days out).
+    [
+      'mock-user-candidate-pendingdel',
+      {
+        userId: 'mock-user-candidate-pendingdel',
+        profile: buildProfile('mock-user-candidate-pendingdel', 'leaving@example.com', {
+          fullName: 'Sunita Devi',
+          phone: '+919833334444',
+          completionPct: 70,
         }),
         resumeSettings: {
           language: 'en',
@@ -2391,7 +2455,10 @@ export const db = {
   //   deletionDueAt — the candidate's own 30-day self-deletion request.
   //   purgedAt      — anonymized (admin purge OR the elapsed self-deletion; SAME
   //                   worker, different trigger).
-  candidateLifecycle: new Map<string, { deletionDueAt: string | null; purgedAt: string | null }>(),
+  candidateLifecycle: new Map<string, { deletionDueAt: string | null; purgedAt: string | null }>([
+    // S6b-F1: the pending-deletion fixture's running clock (12 days out).
+    ['mock-user-candidate-pendingdel', { deletionDueAt: daysFromNow(12), purgedAt: null }],
+  ]),
 
   // Audit-log id counter (the BigInt PK, rendered as a string on the wire).
   nextAuditLogId: 1_000_100,

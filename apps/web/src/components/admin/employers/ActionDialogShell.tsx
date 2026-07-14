@@ -20,6 +20,7 @@ export function ActionDialogShell({
   onClose,
   cancelLabel,
   children,
+  role = 'dialog',
 }: {
   titleId: string;
   title: string;
@@ -31,6 +32,8 @@ export function ActionDialogShell({
   onClose: () => void;
   cancelLabel: string;
   children?: React.ReactNode;
+  /** S6b-F1: destructive dialogs (the purge) announce as alertdialog. */
+  role?: 'dialog' | 'alertdialog';
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -73,7 +76,7 @@ export function ActionDialogShell({
       <div className="absolute inset-0 bg-neutral-900/50" aria-hidden="true" onClick={onClose} />
       <div
         ref={panelRef}
-        role="dialog"
+        role={role}
         aria-modal="true"
         aria-labelledby={titleId}
         className="relative z-10 w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"

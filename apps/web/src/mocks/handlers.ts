@@ -3151,11 +3151,14 @@ function toAdminCandidateCard(c: MockCandidateShape): AdminCandidateCardSchema {
     profileVisible: p.profileVisible ?? true,
     completionPct: p.completionPct ?? 0,
     // Upload STATUS only — the admin card carries no keys or URLs; content is a
-    // separate, per-issuance-audited grant.
+    // separate, per-issuance-audited grant. The contract's shape carries
+    // passport VALIDITY, not the raw expiry date.
     documents: (p.documents ?? []).map((d) => ({
       type: d.type,
       uploaded: true,
-      expiryDate: d.expiryDate ?? null,
+      ...(d.type === 'PASSPORT' && d.expiryDate
+        ? { passportValid: new Date(d.expiryDate).getTime() > Date.now() }
+        : {}),
     })),
     deletionDueAt: life.deletionDueAt,
     purgedAt: life.purgedAt,
