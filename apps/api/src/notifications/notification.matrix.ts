@@ -39,6 +39,22 @@ export const NOTIFICATION_MATRIX: Record<NotificationType, MatrixEntry> = {
     whatsapp: false,
     email: true,
   },
+  // ── Job moderation outcomes (S6b-B2 — employer-facing) ───────────────────────
+  JOB_APPROVED: {
+    inApp: true,
+    whatsapp: false,
+    email: true,
+  },
+  JOB_REJECTED: {
+    inApp: true,
+    whatsapp: false,
+    email: true,
+  },
+  JOB_POSTED_ONBEHALF: {
+    inApp: true,
+    whatsapp: false,
+    email: true,
+  },
   // ── Job discovery ─────────────────────────────────────────────────────────────
   NEW_JOB_MATCH: {
     inApp: true,

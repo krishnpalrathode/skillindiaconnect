@@ -2110,10 +2110,21 @@ export interface paths {
          *     `jobs.require_admin_approval` setting is ON, publishing puts a job into
          *     PENDING_REVIEW and it stops there. This endpoint resolves it.
          *
-         *     - `APPROVE` → the job goes ACTIVE (`publishedAt` set). The worker-
-         *       protection and quota gates were already enforced at publish time.
-         *     - `REJECT` → the job returns to DRAFT with the `reason` recorded and
-         *       surfaced to the employer, so they can fix and resubmit.
+         *     - `APPROVE` → **RE-RUNS the full publish gate ladder** (corrected in
+         *       S6b-B2 — an earlier revision claimed the gates "were already enforced
+         *       at publish time", but a job can sit in review for days while the
+         *       employer is suspended, a worker-protection rule is switched back ON,
+         *       or their plan expires; the admin must not be able to click past the
+         *       platform's safety gate). Gate failures return their own codes:
+         *       `EMPLOYER_NOT_APPROVED` (403), `WORKER_PROTECTION_VIOLATION` (422),
+         *       `JOB_QUOTA_EXCEEDED` (422). On pass the job goes ACTIVE with the same
+         *       post-publish work as a direct publish (`publishedAt`, auto-archive
+         *       schedule, search-cache invalidation) and the employer is notified
+         *       (JOB_APPROVED: email + in-app).
+         *     - `REJECT` → the job returns to DRAFT with the `reason` recorded
+         *       (`moderationReason`, employer-visible) and the employer notified
+         *       (JOB_REJECTED: email + in-app, reason included), so they can fix and
+         *       resubmit.
          *
          *     `reason` is required for REJECT. Both outcomes are audited. 409 if the
          *     job is not in PENDING_REVIEW — there is nothing to resolve.
@@ -2137,8 +2148,9 @@ export interface paths {
         /**
          * Pause any job (admin) — S6
          * @description **RBAC: `jobs.moderate`.** Admins may act on ANY employer's job (the
-         *     employer-facing pause is scoped to their own). ACTIVE → PAUSED. Audited;
-         *     emits the same `job.paused` event, so the search cache invalidates.
+         *     employer-facing pause is scoped to their own). ACTIVE → PAUSED. Audited
+         *     (with the optional reason); emits the same `job.paused` event, so the
+         *     search cache invalidates.
          */
         post: operations["postAdminJobPause"];
         delete?: never;
@@ -2159,7 +2171,7 @@ export interface paths {
         /**
          * Archive any job (admin) — S6
          * @description **RBAC: `jobs.moderate`.** ACTIVE or PAUSED → ARCHIVED, on any employer's
-         *     job. Terminal. Audited; emits `job.archived`.
+         *     job. Terminal. Audited (with the optional reason); emits `job.archived`.
          */
         post: operations["postAdminJobArchive"];
         delete?: never;
@@ -2314,6 +2326,15 @@ export interface paths {
          *     **Rate-limited: 3 resends per application per 24h** (and the standard
          *     authed limit applies). Exceeding it → 429. Every resend is audited with
          *     the acting admin — this bypass is never anonymous.
+         *
+         *     **A `reason` is MANDATORY** (added in S6b-B2 — consistent with every
+         *     other admin corrective action: reject, suspend, override, purge). It is
+         *     written to the audit row; a phone number never is.
+         *
+         *     `selectedNotifiedAt` is NOT overwritten — it records when the FIRST
+         *     automated notification fired (the guard), and the candidate's receipt
+         *     stays truthful about that moment. The resend itself is recorded as a
+         *     new `whatsapp_messages` row by the worker.
          */
         post: operations["postAdminApplicationResendWhatsapp"];
         delete?: never;
@@ -2512,7 +2533,7 @@ export interface components {
          * @description Must match the Prisma `NotificationType` enum (the DB source of truth). PROFILE_VIEWED fires when an employer views a candidate's full profile (deduplicated per company per rolling 24 h window). Data payload: `{ companyName: string }`. PASSPORT_EXPIRY fires when a passport is within the reminder window. Data payload: `{ expiryDate: string, daysRemaining: integer }`.
          * @enum {string}
          */
-        NotificationType: "APPLICATION_SELECTED" | "APPLICATION_SHORTLISTED" | "APPLICATION_REJECTED" | "NEW_JOB_MATCH" | "PROFILE_REMINDER" | "JOB_CLOSING_SOON" | "PASSPORT_EXPIRY" | "PROFILE_VIEWED" | "EMPLOYER_APPROVED" | "EMPLOYER_REJECTED" | "EMPLOYER_SUSPENDED" | "SUBSCRIPTION_PURCHASED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "CANDIDATE_MATCHES" | "RESUME_SENT";
+        NotificationType: "APPLICATION_SELECTED" | "APPLICATION_SHORTLISTED" | "APPLICATION_REJECTED" | "NEW_JOB_MATCH" | "PROFILE_REMINDER" | "JOB_CLOSING_SOON" | "PASSPORT_EXPIRY" | "PROFILE_VIEWED" | "EMPLOYER_APPROVED" | "EMPLOYER_REJECTED" | "EMPLOYER_SUSPENDED" | "SUBSCRIPTION_PURCHASED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "CANDIDATE_MATCHES" | "RESUME_SENT" | "JOB_APPROVED" | "JOB_REJECTED" | "JOB_POSTED_ONBEHALF";
         UserSummary: {
             /** Format: uuid */
             id: string;
@@ -3587,8 +3608,15 @@ export interface components {
         /**
          * @description Admin-context job row (Screen 26) — every status is visible, including
          *     DRAFT and PENDING_REVIEW which no employer-facing or public list returns.
+         *     S6b-B2 added `market`, `views` and `moderationReason` (the reject reason,
+         *     also employer-visible on their own job row).
          */
         AdminJobRow: {
+            market?: components["schemas"]["JobMarket"];
+            /** @description Lifetime job-detail view count. */
+            views?: number;
+            /** @description Set when an admin REJECTed the job in review; cleared on approve. Employer-visible by design — it tells them what to fix. */
+            moderationReason?: string | null;
             /** Format: uuid */
             id: string;
             /** @example JB-2026-00042 */
@@ -7672,6 +7700,10 @@ export interface operations {
                 employerId?: string;
                 /** @description Matches job title or company name. */
                 search?: string;
+                /** @description Filter on the admin-set Featured flag (S6b-B2). */
+                featured?: boolean;
+                /** @description Filter on the admin-set Urgent flag (S6b-B2). */
+                urgent?: boolean;
             };
             header?: never;
             path?: never;
@@ -7709,6 +7741,8 @@ export interface operations {
                      * @description The company this job is created for.
                      */
                     employerId: string;
+                    /** @description S6b-B2: when true, the job is published immediately — AFTER the full gate ladder passes against the target employer. The admin is the reviewer, so a passing on-behalf publish goes straight to ACTIVE (never PENDING_REVIEW). Omitted/false → DRAFT. */
+                    publish?: boolean;
                 } & components["schemas"]["JobCreateRequest"];
             };
         };
@@ -7775,7 +7809,15 @@ export interface operations {
                     };
                 };
             };
-            403: components["responses"]["AdminForbidden"];
+            /** @description Missing `jobs.moderate` — or, on APPROVE, `EMPLOYER_NOT_APPROVED` (the employer was suspended/rejected while the job sat in review). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
             /** @description Job not found */
             404: {
                 headers: {
@@ -7803,7 +7845,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description REJECT without a reason */
+            /** @description REJECT without a reason (`REVIEW_REASON_REQUIRED`) — or, on APPROVE, a re-run publish gate failing: `WORKER_PROTECTION_VIOLATION` (a rule switched ON during review) or `JOB_QUOTA_EXCEEDED` (the employer's plan expired during review). */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -7832,7 +7874,14 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description Optional — written to the audit row (S6b-B2). */
+                    reason?: string;
+                };
+            };
+        };
         responses: {
             /** @description Paused */
             200: {
@@ -7875,7 +7924,14 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description Optional — written to the audit row (S6b-B2). */
+                    reason?: string;
+                };
+            };
+        };
         responses: {
             /** @description Archived */
             200: {
@@ -8179,7 +8235,13 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+            };
+        };
         responses: {
             /** @description Resend enqueued (the worker owns the external send) */
             202: {
@@ -8191,6 +8253,11 @@ export interface operations {
                         data: {
                             /** Format: date-time */
                             resentAt: string;
+                            /**
+                             * @description The honest enqueue-time answer: `whatsapp` when the candidate is WhatsApp-capable; `email_fallback` when the S2-B3 downgrade means only email/in-app will go out. Delivery status lands in the message log.
+                             * @enum {string}
+                             */
+                            channel: "whatsapp" | "email_fallback";
                         };
                     };
                 };

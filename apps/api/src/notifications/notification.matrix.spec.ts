@@ -112,6 +112,19 @@ describe('NOTIFICATION_MATRIX — Phase-1 §6 locked spec', () => {
     expect(e.email).toBe(true);
   });
 
+  // ── JOB MODERATION outcomes (S6b-B2) ──────────────────────────────────────
+
+  it.each([
+    NotificationType.JOB_APPROVED,
+    NotificationType.JOB_REJECTED,
+    NotificationType.JOB_POSTED_ONBEHALF,
+  ])('%s → whatsapp ✗ · email ✓ · inApp ✓', (type) => {
+    const e = NOTIFICATION_MATRIX[type];
+    expect(e.inApp).toBe(true);
+    expect(e.whatsapp).toBe(false);
+    expect(e.email).toBe(true);
+  });
+
   // ── CANDIDATE_MATCHES ─────────────────────────────────────────────────────
 
   it('CANDIDATE_MATCHES → inApp ✓ · email ✓ (WhatsApp opt-in when template approved)', () => {

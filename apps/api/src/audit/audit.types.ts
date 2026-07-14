@@ -98,6 +98,17 @@ export const AUDIT_ACTIONS = {
   // never a name, phone, email, or object key. The audit row must not preserve
   // the PII the purge just destroyed.
   ACCOUNT_PURGED: 'account.purged',
+  // Admin job moderation (S6b-B2).
+  JOB_REVIEW_APPROVED: 'job.review.approved',
+  JOB_REVIEW_REJECTED: 'job.review.rejected',
+  JOB_FLAGS_CHANGED: 'job.flags.changed',
+  JOB_CREATED_ONBEHALF: 'job.created_onbehalf',
+  // Application notes (S6b-B2) — the audit records THAT a note was added or
+  // deleted, never its content (notes may contain judgments/PII by nature).
+  APPLICATION_NOTE_ADDED: 'application.note.added',
+  APPLICATION_NOTE_DELETED: 'application.note.deleted',
+  // The manual WhatsApp resend (S6b-B2) — actor + reason, never a phone number.
+  APPLICATION_WHATSAPP_RESENT: 'application.whatsapp.resent',
 } as const;
 
 export type AuditActionName = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

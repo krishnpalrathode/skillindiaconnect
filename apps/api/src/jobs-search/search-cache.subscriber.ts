@@ -13,6 +13,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import {
   JOB_EVENTS,
   JobArchivedPayload,
+  JobFlagsChangedPayload,
   JobPausedPayload,
   JobPublishedPayload,
 } from '../jobs/jobs.events';
@@ -37,6 +38,14 @@ export class SearchCacheSubscriber {
   @OnEvent(JOB_EVENTS.ARCHIVED)
   async onJobArchived(payload: JobArchivedPayload): Promise<void> {
     await this.invalidate(payload.jobId, JOB_EVENTS.ARCHIVED);
+  }
+
+  // S6b-B2: Featured/Urgent drive the `?badge=` filter and the job-card badges —
+  // both served from this cache, so a flag change invalidates exactly like a
+  // state change (the SAME mechanism, one more listener; never a second path).
+  @OnEvent(JOB_EVENTS.FLAGS_CHANGED)
+  async onJobFlagsChanged(payload: JobFlagsChangedPayload): Promise<void> {
+    await this.invalidate(payload.jobId, JOB_EVENTS.FLAGS_CHANGED);
   }
 
   private async invalidate(jobId: string, event: string): Promise<void> {

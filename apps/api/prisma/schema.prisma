@@ -141,6 +141,12 @@ enum NotificationType {
   SUBSCRIPTION_EXPIRING
   SUBSCRIPTION_EXPIRED
   CANDIDATE_MATCHES
+  // S6b-B2: job moderation outcomes (employer-facing; email + in-app, no WhatsApp)
+  JOB_APPROVED
+  JOB_REJECTED
+  // S6b-B2: "an admin posted a job on your behalf" — a silent job appearing in
+  // the employer's dashboard would be confusing (decision 4)
+  JOB_POSTED_ONBEHALF
   RESUME_SENT
 }
 
@@ -497,6 +503,12 @@ model Job {
   autoArchiveAt   DateTime?
   viewsCount      Int       @default(0)
   postedByAdminId String?
+  // S6b-B2 moderation trail: set by POST /admin/jobs/{id}/review. The reason is
+  // EMPLOYER-VISIBLE (shown on their job row so they can fix and resubmit);
+  // cleared on approve, set on reject.
+  moderationReason String?  @db.VarChar(500)
+  moderatedById    String?
+  moderatedAt      DateTime?
   searchVector    Unsupported("tsvector")? @default(dbgenerated("(setweight(to_tsvector('english'::regconfig, COALESCE(title, ''::text)), 'A'::\"char\") || setweight(to_tsvector('english'::regconfig, COALESCE(description, ''::text)), 'B'::\"char\"))"))
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -582,9 +594,14 @@ model ApplicationNote {
   id            String   @id @default(uuid())
   applicationId String
   authorId      String
-  body          String
+  // S6b-B2: denormalized at write from the actor context — the contract's
+  // NoteEntry carries authorRole, and joining users for it would cross a module
+  // boundary. Nullable only for migration safety; every write sets it.
+  authorRole    UserRole?
+  body          String   @db.VarChar(2000)
   createdAt     DateTime @default(now())
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  @@index([applicationId, createdAt])
   @@map("application_notes")
 }
 

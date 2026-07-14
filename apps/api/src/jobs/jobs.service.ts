@@ -6,7 +6,7 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { JobMarket, JobStatus, UserRole } from '@prisma/client';
+import { JobMarket, JobStatus, Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { EmployerService } from '../employer/employer.service';
 import { ApplicationsAggregateService } from '../applications/applications-aggregate.service';
@@ -85,9 +85,61 @@ export class JobsService {
   async create(dto: CreateJobDto, userId: string, actorRole: UserRole): Promise<JobData> {
     const company = await this.employerService.getCompanyForEmployerUser(userId);
 
-    const job = await this.prisma.job.create({
+    const job = await this.createJobRecord(company.id, dto);
+
+    await this.auditService.log({
+      actorUserId: userId,
+      actorRole,
+      action: AUDIT_ACTIONS.JOB_CREATED,
+      module: AUDIT_MODULES.JOBS,
+      targetType: 'Job',
+      targetId: job.id,
+      status: AuditStatus.SUCCESS,
+      meta: { companyId: company.id },
+    });
+
+    return job;
+  }
+
+  /**
+   * S6b-B2: on-behalf creation (decision 4, minimal). SAME insert path as the
+   * employer's own create — same validation shape, same DB-assigned humanId,
+   * same generated searchVector — plus `postedByAdminId`. The job BELONGS to
+   * the target company; the admin is only recorded as its poster. Always lands
+   * as DRAFT here; publishing is a separate, fully-gated step in the admin
+   * service (an admin cannot launder a job past the publish gates).
+   */
+  async createOnBehalf(
+    companyId: string,
+    dto: CreateJobDto,
+    adminUserId: string,
+    actorRole: UserRole,
+  ): Promise<JobData> {
+    const job = await this.createJobRecord(companyId, dto, adminUserId);
+
+    await this.auditService.log({
+      actorUserId: adminUserId,
+      actorRole,
+      action: AUDIT_ACTIONS.JOB_CREATED_ONBEHALF,
+      module: AUDIT_MODULES.JOBS,
+      targetType: 'Job',
+      targetId: job.id,
+      status: AuditStatus.SUCCESS,
+      meta: { companyId, postedByAdminId: adminUserId },
+    });
+
+    return job;
+  }
+
+  /** The single job-insert path — employer create and admin on-behalf share it. */
+  private async createJobRecord(
+    companyId: string,
+    dto: CreateJobDto,
+    postedByAdminId?: string,
+  ): Promise<JobData> {
+    return this.prisma.job.create({
       data: {
-        companyId: company.id,
+        companyId,
         title: dto.title,
         employmentType: dto.employmentType,
         market: dto.market,
@@ -116,23 +168,11 @@ export class JobsService {
         isFeatured: dto.isFeatured ?? false,
         isUrgent: dto.isUrgent ?? false,
         status: JobStatus.DRAFT,
+        ...(postedByAdminId !== undefined && { postedByAdminId }),
         // humanId: DB-assigned via job_human_seq — NEVER set here
         // searchVector: DB-generated tsvector — NEVER set here
       },
     });
-
-    await this.auditService.log({
-      actorUserId: userId,
-      actorRole,
-      action: AUDIT_ACTIONS.JOB_CREATED,
-      module: AUDIT_MODULES.JOBS,
-      targetType: 'Job',
-      targetId: job.id,
-      status: AuditStatus.SUCCESS,
-      meta: { companyId: company.id },
-    });
-
-    return job;
   }
 
   // ── Read ───────────────────────────────────────────────────────────────────
@@ -318,6 +358,39 @@ export class JobsService {
       const payload: JobPublishedPayload = { jobId, companyId: company.id };
       this.eventEmitter.emit(JOB_EVENTS.PUBLISHED, payload);
     }
+
+    return updated;
+  }
+
+  /**
+   * S6b-B2: the post-publish ACTIVATION bookkeeping, shared by the two ADMIN
+   * paths (review-approve and on-behalf publish). Mirrors publish()'s ACTIVE
+   * branch exactly: publishedAt, autoArchiveAt from Settings, and the
+   * `job.published` event (→ S2-B6 search-cache invalidation).
+   *
+   * DOES NOT RUN THE GATES — the caller must have passed
+   * PublishGuardService.assertPublishable first; this method is only the
+   * bookkeeping after a gate-approved decision. It also does not audit: the
+   * admin paths write their own review/on-behalf audit actions.
+   */
+  async activateJob(
+    jobId: string,
+    extraData: Prisma.JobUncheckedUpdateInput = {},
+  ): Promise<JobData> {
+    const autoArchiveDays = await this.settingsService.get(SETTING_KEYS.AUTO_ARCHIVE_DAYS);
+    const now = new Date();
+    const updated = await this.prisma.job.update({
+      where: { id: jobId },
+      data: {
+        status: JobStatus.ACTIVE,
+        publishedAt: now,
+        autoArchiveAt: new Date(now.getTime() + autoArchiveDays * 24 * 60 * 60 * 1000),
+        ...extraData,
+      },
+    });
+
+    const payload: JobPublishedPayload = { jobId, companyId: updated.companyId };
+    this.eventEmitter.emit(JOB_EVENTS.PUBLISHED, payload);
 
     return updated;
   }

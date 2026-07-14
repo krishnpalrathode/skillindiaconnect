@@ -135,6 +135,25 @@ export const notificationMeta: Record<NotificationType, NotificationMeta> = {
     colorClass: 'text-error-fg',
     bgClass: 'bg-error-bg',
   },
+  // S6b-B2: job moderation outcomes + on-behalf posting (employer-facing).
+  JOB_APPROVED: {
+    Icon: CheckCircle2,
+    colorClass: 'text-success-fg',
+    bgClass: 'bg-success-bg',
+    routeFn: toJob,
+  },
+  JOB_REJECTED: {
+    Icon: XCircle,
+    colorClass: 'text-error-fg',
+    bgClass: 'bg-error-bg',
+    routeFn: toJob,
+  },
+  JOB_POSTED_ONBEHALF: {
+    Icon: Briefcase,
+    colorClass: 'text-info-fg',
+    bgClass: 'bg-info-bg',
+    routeFn: toJob,
+  },
 };
 
 /** Fallback for any type not in the map (defensive against future enum additions). */

@@ -92,6 +92,22 @@ export class CandidateReadService {
     return profile?.userId ?? null;
   }
 
+  /**
+   * S6b-B2 (manual WhatsApp resend): the candidate's notification target —
+   * owning userId plus WhatsApp capability, so the caller can report HONESTLY
+   * whether a WhatsApp will be attempted or the S2-B3 fallback (email) will
+   * run. Returns null for a nonexistent/tombstoned candidate.
+   */
+  async getNotificationTarget(
+    candidateId: string,
+  ): Promise<{ userId: string; whatsappCapable: boolean } | null> {
+    const profile = await this.prisma.candidateProfile.findUnique({
+      where: { id: candidateId },
+      select: { userId: true, whatsappCapable: true },
+    });
+    return profile;
+  }
+
   /** Resolve a candidate profile id from its owning userId (S4-B3 candidate reads). */
   async getCandidateIdForUser(userId: string): Promise<string | null> {
     const profile = await this.prisma.candidateProfile.findUnique({

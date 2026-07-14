@@ -1707,7 +1707,10 @@ export const db = {
   // an employer can never set them, which is exactly what keeps them meaningful.
   // PATCH /admin/jobs/{id}/flags mutates this store; the badges + search filters
   // read it.
-  jobAdminMeta: new Map<string, { humanId: string; isFeatured: boolean; isUrgent: boolean }>([
+  jobAdminMeta: new Map<
+    string,
+    { humanId: string; isFeatured: boolean; isUrgent: boolean; moderationReason?: string | null }
+  >([
     ['job-1', { humanId: 'JB-2026-00001', isFeatured: true, isUrgent: false }],
     ['job-2', { humanId: 'JB-2026-00002', isFeatured: false, isUrgent: true }],
     ['job-pending-review', { humanId: 'JB-2026-00007', isFeatured: false, isUrgent: false }],

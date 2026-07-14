@@ -3450,10 +3450,13 @@ function toAdminJobRow(job: MockJobShape): AdminJobRowSchema {
     title: job.title,
     companyId: job.companyId,
     companyName: job.companyName,
+    market: (job as { market?: string }).market ?? 'GULF',
     status: job.status,
     isFeatured: meta.isFeatured,
     isUrgent: meta.isUrgent,
     applicantCount,
+    views: (job as { views?: number }).views ?? 0,
+    moderationReason: meta.moderationReason ?? null,
     publishedAt: job.publishedAt ?? null,
     createdAt: job.createdAt,
   } as AdminJobRowSchema;
@@ -3472,9 +3475,14 @@ const adminGetJobs = http.get(`${BASE}/admin/jobs`, ({ request }) => {
 
   // EVERY status — including DRAFT and PENDING_REVIEW, which no employer-facing
   // or public list returns. That is what makes the moderation queue possible.
+  const featured = url.searchParams.get('featured');
+  const urgent = url.searchParams.get('urgent');
+
   let rows = [...db.jobs.values()].map(toAdminJobRow);
   if (status) rows = rows.filter((r) => r.status === status);
   if (employerId) rows = rows.filter((r) => r.companyId === employerId);
+  if (featured != null) rows = rows.filter((r) => r.isFeatured === (featured === 'true'));
+  if (urgent != null) rows = rows.filter((r) => r.isUrgent === (urgent === 'true'));
   if (search) {
     rows = rows.filter((r) => `${r.title} ${r.companyName}`.toLowerCase().includes(search));
   }
@@ -3508,13 +3516,60 @@ const adminReviewJob = http.post(`${BASE}/admin/jobs/:id/review`, async ({ reque
     );
   }
 
+  const meta = db.jobAdminMeta.get(job.id) ?? {
+    humanId: `JB-2026-${job.id}`,
+    isFeatured: false,
+    isUrgent: false,
+  };
+
   if (body.decision === 'APPROVE') {
+    // S6b-B2: approval RE-RUNS the publish gate ladder — the world may have
+    // moved while the job sat in review. Rung 1: the employer must still be
+    // APPROVED (they can be suspended mid-review).
+    const company = [...db.employers.values()].find((c) => c.id === job.companyId);
+    if (company && company.status !== 'APPROVED') {
+      return errorResponse(
+        403,
+        'EMPLOYER_NOT_APPROVED',
+        'Forbidden',
+        'The employer is no longer approved.',
+      );
+    }
+    // Rung 2: worker protection, re-read from the live settings (a rule can be
+    // switched back ON during review). Rung 3 (quota) is not simulated here.
+    const requiredKeys = [
+      'worker_protection.accommodation_required',
+      'worker_protection.health_insurance_required',
+      'worker_protection.transportation_required',
+    ] as const;
+    const fields = ['accommodation', 'healthInsurance', 'transportation'] as const;
+    const violations = fields.filter((field, i) => {
+      const rule = db.settings.find((s) => s.key === requiredKeys[i]);
+      return rule?.value === true && (job as Record<string, unknown>)[field] === false;
+    });
+    if (violations.length > 0) {
+      return HttpResponse.json(
+        {
+          type: 'about:blank',
+          title: 'Unprocessable Entity',
+          status: 422,
+          detail: 'Worker protection rules must all be met.',
+          code: 'WORKER_PROTECTION_VIOLATION',
+          meta: { violations },
+        } satisfies ErrorSchema,
+        { status: 422 },
+      );
+    }
+
     job.status = 'ACTIVE';
     job.publishedAt = new Date().toISOString();
+    meta.moderationReason = null;
   } else {
     // Back to DRAFT with the reason, so the employer can fix and resubmit.
     job.status = 'DRAFT';
+    meta.moderationReason = body.reason ?? null;
   }
+  db.jobAdminMeta.set(job.id, meta);
 
   writeAudit({
     module: 'Jobs',
@@ -3589,6 +3644,14 @@ const adminPatchJobFlags = http.patch(
     if (!job) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Job not found.');
 
     const body = (await request.json()) as { featured?: boolean; urgent?: boolean };
+    if (body.featured === undefined && body.urgent === undefined) {
+      return errorResponse(
+        422,
+        'VALIDATION_ERROR',
+        'Validation failed',
+        'Provide at least one of: featured, urgent.',
+      );
+    }
     const meta = db.jobAdminMeta.get(job.id) ?? {
       humanId: `JB-2026-${job.id}`,
       isFeatured: false,
@@ -3602,7 +3665,7 @@ const adminPatchJobFlags = http.patch(
 
     writeAudit({
       module: 'Jobs',
-      action: 'job.flags.updated',
+      action: 'job.flags.changed',
       actorUserId: gate.user.id,
       actorRole: gate.user.role,
       targetType: 'Job',
@@ -3619,49 +3682,58 @@ const adminCreateJobOnBehalf = http.post(`${BASE}/admin/jobs`, async ({ request 
   const gate = requirePermission(request, 'jobs.post_admin');
   if (gate.error) return gate.error;
 
-  const body = (await request.json()) as Record<string, unknown> & { employerId?: string };
+  const body = (await request.json()) as Record<string, unknown> & {
+    employerId?: string;
+    publish?: boolean;
+  };
   const company = [...db.employers.values()].find((c) => c.id === body.employerId);
   if (!company) {
     return errorResponse(404, 'NOT_FOUND', 'Not found', 'Employer not found.');
   }
 
-  // The publish gates STILL apply — an admin cannot launder a job past them.
-  // Rung 1: the TARGET employer must be approved.
-  if (company.status !== 'APPROVED') {
-    return errorResponse(
-      403,
-      'EMPLOYER_NOT_APPROVED',
-      'Forbidden',
-      'The target employer is not approved.',
+  // Creating a DRAFT is always allowed; the publish GATES run only when
+  // `publish: true` — an admin cannot launder a job past them (S6b-B2).
+  if (body.publish === true) {
+    // Rung 1: the TARGET employer must be approved.
+    if (company.status !== 'APPROVED') {
+      return errorResponse(
+        403,
+        'EMPLOYER_NOT_APPROVED',
+        'Forbidden',
+        'The target employer is not approved.',
+      );
+    }
+    // Rung 2: worker protection, evaluated against the admin's own payload.
+    const violations = (['accommodation', 'healthInsurance', 'transportation'] as const).filter(
+      (k) => body[k] === false,
     );
-  }
-  // Rung 2: worker protection, evaluated against the admin's own payload.
-  const violations = (['accommodation', 'healthInsurance', 'transportation'] as const).filter(
-    (k) => body[k] === false,
-  );
-  if (violations.length > 0) {
-    return HttpResponse.json(
-      {
-        type: 'about:blank',
-        title: 'Unprocessable Entity',
-        status: 422,
-        detail: 'Worker protection rules must all be met.',
-        code: 'WORKER_PROTECTION_VIOLATION',
-        meta: { violations },
-      } satisfies ErrorSchema,
-      { status: 422 },
-    );
+    if (violations.length > 0) {
+      return HttpResponse.json(
+        {
+          type: 'about:blank',
+          title: 'Unprocessable Entity',
+          status: 422,
+          detail: 'Worker protection rules must all be met.',
+          code: 'WORKER_PROTECTION_VIOLATION',
+          meta: { violations },
+        } satisfies ErrorSchema,
+        { status: 422 },
+      );
+    }
   }
 
   const id = `job-admin-${Date.now()}`;
+  const publishNow = body.publish === true;
   const job = {
     ...(body as object),
     id,
-    status: 'DRAFT',
+    // The admin IS the reviewer: a gated-and-passing on-behalf publish goes
+    // straight to ACTIVE, never PENDING_REVIEW.
+    status: publishNow ? 'ACTIVE' : 'DRAFT',
     companyId: company.id,
     companyName: company.name,
     createdAt: new Date().toISOString(),
-    publishedAt: null,
+    publishedAt: publishNow ? new Date().toISOString() : null,
     archivedAt: null,
   } as MockJobShape;
   db.jobs.set(id, job);
@@ -3673,13 +3745,13 @@ const adminCreateJobOnBehalf = http.post(`${BASE}/admin/jobs`, async ({ request 
 
   writeAudit({
     module: 'Jobs',
-    action: 'job.created',
+    action: 'job.created_onbehalf',
     actorUserId: gate.user.id,
     actorRole: gate.user.role,
     targetType: 'Job',
     targetId: id,
     status: 'SUCCESS',
-    meta: { onBehalfOf: company.id },
+    meta: { companyId: company.id, postedByAdminId: gate.user.id },
   });
 
   return HttpResponse.json({ data: job }, { status: 201 });
@@ -3712,12 +3784,8 @@ const adminPostNote = http.post(
 
     const body = (await request.json()) as { body?: string };
     if (!body.body?.trim()) {
-      return errorResponse(
-        422,
-        'VALIDATION_ERROR',
-        'Validation failed',
-        'A note body is required.',
-      );
+      // DTO validation is 400 VALIDATION_ERROR in the real API (global pipe).
+      return errorResponse(400, 'VALIDATION_ERROR', 'Bad Request', 'A note body is required.');
     }
 
     const note = {
@@ -3749,6 +3817,16 @@ const adminDeleteNote = http.delete(
     if (idx === -1) {
       return errorResponse(404, 'NOT_FOUND', 'Not found', 'Note not found.');
     }
+    // S6b-B2 rule: the author may delete their own note; SUPER_ADMIN any note.
+    const note = notes[idx]!;
+    if (note.authorUserId !== gate.user.id && gate.user.role !== 'SUPER_ADMIN') {
+      return errorResponse(
+        403,
+        'NOT_NOTE_AUTHOR',
+        'Forbidden',
+        'Only the author can delete this note.',
+      );
+    }
     notes.splice(idx, 1);
     db.applicationNotes.set(appId, notes);
     return new HttpResponse(null, { status: 204 });
@@ -3757,7 +3835,7 @@ const adminDeleteNote = http.delete(
 
 const adminResendWhatsapp = http.post(
   `${BASE}/admin/applications/:id/resend-whatsapp`,
-  ({ request, params }) => {
+  async ({ request, params }) => {
     const gate = requirePermission(request, 'applications.change_status');
     if (gate.error) return gate.error;
 
@@ -3765,6 +3843,19 @@ const adminResendWhatsapp = http.post(
     const application = db.applications.get(appId);
     if (!application) {
       return errorResponse(404, 'NOT_FOUND', 'Not found', 'Application not found.');
+    }
+
+    // S6b-B2: a reason is MANDATORY — consistent with every admin corrective
+    // action (reject, suspend, override, purge).
+    const body = (await request.json().catch(() => ({}))) as { reason?: string };
+    if (!body.reason?.trim()) {
+      // DTO validation is 400 VALIDATION_ERROR in the real API (global pipe).
+      return errorResponse(
+        400,
+        'VALIDATION_ERROR',
+        'Bad Request',
+        'A reason is required to resend the WhatsApp.',
+      );
     }
 
     // The bypassGuard seam is SELECTED-only: resending "you've been selected" to
@@ -3795,7 +3886,16 @@ const adminResendWhatsapp = http.post(
     recent.push(resentAt);
     db.whatsappResends.set(appId, recent);
 
-    // The bypass is never anonymous — the acting admin is on the audit row.
+    // The honest enqueue-time channel: whatsappCapable=false → the S2-B3
+    // downgrade means only email/in-app actually goes out.
+    const candidate = [...db.candidates.values()].find(
+      (c) => c.userId === application.candidateId || c.profile.id === application.candidateId,
+    );
+    const whatsappCapable =
+      (candidate?.profile as { whatsappCapable?: boolean } | undefined)?.whatsappCapable ?? true;
+
+    // The bypass is never anonymous — the acting admin is on the audit row
+    // (reason included; a phone number never is).
     writeAudit({
       module: 'Applications',
       action: 'application.whatsapp.resent',
@@ -3804,10 +3904,13 @@ const adminResendWhatsapp = http.post(
       targetType: 'Application',
       targetId: appId,
       status: 'SUCCESS',
-      meta: { template: 'wa.selected', attempt: recent.length },
+      meta: { reason: body.reason, whatsappCapable, attempt: recent.length },
     });
 
-    return HttpResponse.json({ data: { resentAt } }, { status: 202 });
+    return HttpResponse.json(
+      { data: { resentAt, channel: whatsappCapable ? 'whatsapp' : 'email_fallback' } },
+      { status: 202 },
+    );
   },
 );
 
