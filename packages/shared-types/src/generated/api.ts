@@ -1902,6 +1902,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/candidates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Candidate detail (admin) — Screen 25 (S6)
+         * @description **RBAC: `candidates.view`** — reading one candidate is not a wider grant
+         *     than reading the table (same reasoning as `/admin/employers/{id}`).
+         *
+         *     ADDED IN S6b-B1: the review panel needs ONE candidate by id and no admin
+         *     endpoint returned it. Admins are NOT subject to `profileVisible`, and a
+         *     PURGED candidate IS returned — as the tombstone the purge left behind.
+         */
+        get: operations["getAdminCandidate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/candidates/{id}/suspend": {
         parameters: {
             query?: never;
@@ -1915,9 +1940,14 @@ export interface paths {
          * Suspend a candidate account (S6)
          * @description **RBAC: `candidates.edit`.**
          *
-         *     Sets the user to SUSPENDED (they can no longer log in or apply). A
-         *     `reason` is MANDATORY and is written to the audit row. Reversible via
-         *     `/reactivate` — this is NOT the purge.
+         *     Sets the user to SUSPENDED (they can no longer log in or apply; their
+         *     refresh sessions are revoked and they leave the employer browse pool
+         *     immediately). A `reason` is MANDATORY and is written to the audit row.
+         *     Reversible via `/reactivate` — this is NOT the purge.
+         *
+         *     Only an ACTIVE candidate can be suspended (S6b-B1 guard): suspending a
+         *     PENDING_DELETION user would silently cancel a DPDP erasure → 409
+         *     `CANDIDATE_NOT_ACTIVE`; a purged tombstone → 409 `CANDIDATE_PURGED`.
          */
         post: operations["postAdminCandidateSuspend"];
         delete?: never;
@@ -1938,8 +1968,10 @@ export interface paths {
         /**
          * Reactivate a suspended candidate (S6)
          * @description **RBAC: `candidates.edit`.** Returns a SUSPENDED user to ACTIVE. Audited.
-         *     A PURGED candidate can never be reactivated (409) — the purge is
-         *     irreversible.
+         *     A PURGED candidate can never be reactivated (409 `CANDIDATE_PURGED`) —
+         *     the purge is irreversible. A user who is not SUSPENDED (S6b-B1 guard:
+         *     reactivation is not a deletion-cancel path) → 409
+         *     `CANDIDATE_NOT_SUSPENDED`.
          */
         post: operations["postAdminCandidateReactivate"];
         delete?: never;
@@ -3545,6 +3577,12 @@ export interface components {
             purgedAt?: string | null;
             /** Format: date-time */
             createdAt: string;
+        };
+        AdminCandidateDetail: components["schemas"]["AdminCandidateCard"] & {
+            experiences: components["schemas"]["WorkExperience"][];
+            skills: components["schemas"]["CandidateSkill"][];
+            /** @description Total applications ever submitted — survives the purge (the applications are tombstoned, not deleted). */
+            applicationCount: number;
         };
         /**
          * @description Admin-context job row (Screen 26) — every status is visible, including
@@ -7356,6 +7394,40 @@ export interface operations {
             403: components["responses"]["AdminForbidden"];
         };
     };
+    getAdminCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Candidate detail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCandidateDetail"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+            /** @description Candidate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     postAdminCandidateSuspend: {
         parameters: {
             query?: never;
@@ -7391,6 +7463,24 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not suspendable — not ACTIVE, or already purged */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Only an active candidate can be suspended.",
+                     *       "code": "CANDIDATE_NOT_ACTIVE"
+                     *     }
+                     */
                     "application/json": components["schemas"]["Error"];
                 };
             };

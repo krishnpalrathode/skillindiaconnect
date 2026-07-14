@@ -87,6 +87,17 @@ export const AUDIT_ACTIONS = {
   // TRANSACTIONALLY with the grant — a permission change without an audit row is
   // the one event this trail may never miss.
   RBAC_PERMISSION_CHANGED: 'rbac.permission.changed',
+  // Admin candidate management (S6b-B1).
+  CANDIDATE_SUSPENDED: 'candidate.suspended',
+  CANDIDATE_REACTIVATED: 'candidate.reactivated',
+  // The admin PURGE REQUEST — written transactionally with the state change that
+  // schedules it. Separate from ACCOUNT_PURGED (the completion) on purpose: the
+  // request records who asked and why; the completion records what was destroyed.
+  ADMIN_CANDIDATE_PURGE_REQUESTED: 'admin.candidate.purge_requested',
+  // The purge COMPLETION (S6b-B1, DPDP erasure). Meta carries COUNTS ONLY —
+  // never a name, phone, email, or object key. The audit row must not preserve
+  // the PII the purge just destroyed.
+  ACCOUNT_PURGED: 'account.purged',
 } as const;
 
 export type AuditActionName = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

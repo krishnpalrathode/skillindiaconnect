@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: SkillIndiaConnect API
-  version: 0.6.0
+  version: 0.7.0
   description: |
     Production blue-collar recruitment platform connecting skilled workers in India
     with employers in the Gulf and locally.
@@ -2159,6 +2159,32 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    AdminCandidateDetail:
+      allOf:
+        - $ref: '#/components/schemas/AdminCandidateCard'
+        - type: object
+          required: [experiences, skills, applicationCount]
+          description: |
+            ADDED IN S6b-B1. The single-candidate admin view (Screen 25's review
+            panel): the card plus experiences, skills and the application count.
+            Same privacy rule as the card — document STATUS only, never keys or
+            URLs. For a PURGED candidate, `experiences` and `skills` are empty
+            (the purge deletes those rows) and the card fields are the tombstone.
+          properties:
+            experiences:
+              type: array
+              items:
+                $ref: '#/components/schemas/WorkExperience'
+            skills:
+              type: array
+              items:
+                $ref: '#/components/schemas/CandidateSkill'
+            applicationCount:
+              type: integer
+              description: >
+                Total applications ever submitted — survives the purge (the
+                applications are tombstoned, not deleted).
 
     AdminJobRow:
       type: object
@@ -6325,6 +6351,45 @@ paths:
         '403':
           $ref: '#/components/responses/AdminForbidden'
 
+  /admin/candidates/{id}:
+    get:
+      operationId: getAdminCandidate
+      tags: [admin]
+      summary: Candidate detail (admin) — Screen 25 (S6)
+      description: |
+        **RBAC: `candidates.view`** — reading one candidate is not a wider grant
+        than reading the table (same reasoning as `/admin/employers/{id}`).
+
+        ADDED IN S6b-B1: the review panel needs ONE candidate by id and no admin
+        endpoint returned it. Admins are NOT subject to `profileVisible`, and a
+        PURGED candidate IS returned — as the tombstone the purge left behind.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Candidate detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminCandidateDetail'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Candidate not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /admin/candidates/{id}/suspend:
     post:
       operationId: postAdminCandidateSuspend
@@ -6333,9 +6398,14 @@ paths:
       description: |
         **RBAC: `candidates.edit`.**
 
-        Sets the user to SUSPENDED (they can no longer log in or apply). A
-        `reason` is MANDATORY and is written to the audit row. Reversible via
-        `/reactivate` — this is NOT the purge.
+        Sets the user to SUSPENDED (they can no longer log in or apply; their
+        refresh sessions are revoked and they leave the employer browse pool
+        immediately). A `reason` is MANDATORY and is written to the audit row.
+        Reversible via `/reactivate` — this is NOT the purge.
+
+        Only an ACTIVE candidate can be suspended (S6b-B1 guard): suspending a
+        PENDING_DELETION user would silently cancel a DPDP erasure → 409
+        `CANDIDATE_NOT_ACTIVE`; a purged tombstone → 409 `CANDIDATE_PURGED`.
       parameters:
         - name: id
           in: path
@@ -6375,6 +6445,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '409':
+          description: Not suspendable — not ACTIVE, or already purged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Conflict
+                status: 409
+                detail: Only an active candidate can be suspended.
+                code: CANDIDATE_NOT_ACTIVE
 
   /admin/candidates/{id}/reactivate:
     post:
@@ -6383,8 +6465,10 @@ paths:
       summary: Reactivate a suspended candidate (S6)
       description: |
         **RBAC: `candidates.edit`.** Returns a SUSPENDED user to ACTIVE. Audited.
-        A PURGED candidate can never be reactivated (409) — the purge is
-        irreversible.
+        A PURGED candidate can never be reactivated (409 `CANDIDATE_PURGED`) —
+        the purge is irreversible. A user who is not SUSPENDED (S6b-B1 guard:
+        reactivation is not a deletion-cancel path) → 409
+        `CANDIDATE_NOT_SUSPENDED`.
       parameters:
         - name: id
           in: path

@@ -184,6 +184,82 @@ export class CandidateReadService {
     return { total, active };
   }
 
+  // ── S6b-B1: Admin-context reads (Screen 25's data) ───────────────────────
+
+  /**
+   * Offset-paginated admin candidate list. The admin card is FULLER than the
+   * employer view — contact details and deletion state included (admins are the
+   * DPDP data controllers) — but NO r2Key/fileName/URL is ever selected here:
+   * document CONTENT flows only through the per-issuance-audited signed-URL
+   * grant (S6a-B1). Purged candidates appear as tombstones (the anonymized
+   * values are simply what the rows now hold) — not hidden, so the trail stays
+   * navigable.
+   */
+  async adminListCandidates(query: {
+    page: number;
+    pageSize: number;
+    search?: string;
+    status?: UserStatus;
+    visibility?: boolean;
+  }): Promise<{ rows: AdminCandidateSource[]; total: number }> {
+    const where: Prisma.CandidateProfileWhereInput = {
+      user: {
+        role: UserRole.CANDIDATE,
+        ...(query.status && { status: query.status }),
+      },
+      ...(query.visibility !== undefined && { profileVisible: query.visibility }),
+      ...(query.search && {
+        OR: [
+          { fullName: { contains: query.search, mode: 'insensitive' } },
+          { phone: { contains: query.search } },
+          { user: { email: { contains: query.search, mode: 'insensitive' } } },
+        ],
+      }),
+    };
+
+    const [rows, total] = await Promise.all([
+      this.prisma.candidateProfile.findMany({
+        where,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        skip: (query.page - 1) * query.pageSize,
+        take: query.pageSize,
+        select: ADMIN_CANDIDATE_SELECT,
+      }),
+      this.prisma.candidateProfile.count({ where }),
+    ]);
+    return { rows: rows as AdminCandidateSource[], total };
+  }
+
+  /**
+   * Single-candidate admin view (detail screen): the card source plus
+   * experiences and skills. Admins are NOT subject to profileVisible, and
+   * purged tombstones ARE returned. Document STATUS only — no keys.
+   */
+  async getAdminCandidateView(candidateId: string): Promise<AdminCandidateDetailSource | null> {
+    const row = await this.prisma.candidateProfile.findUnique({
+      where: { id: candidateId },
+      select: {
+        ...ADMIN_CANDIDATE_SELECT,
+        experiences: {
+          select: {
+            id: true,
+            type: true,
+            country: true,
+            companyName: true,
+            role: true,
+            years: true,
+            months: true,
+            startDate: true,
+            endDate: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+        skills: { select: { id: true, name: true }, orderBy: { name: 'asc' } },
+      },
+    });
+    return row as AdminCandidateDetailSource | null;
+  }
+
   /** Batched candidate display names by id (S4-B3 summaries + admin list). */
   async getNamesByIds(ids: string[]): Promise<Map<string, string>> {
     if (ids.length === 0) return new Map();
@@ -198,10 +274,16 @@ export class CandidateReadService {
 
   /**
    * Returns a candidate's full profile for the employer viewer, or null if the
-   * candidate is invisible (profileVisible=false), pending deletion, or nonexistent.
+   * candidate is invisible (profileVisible=false), not ACTIVE (suspended,
+   * pending deletion, purged), or nonexistent.
    *
-   * Anti-enumeration: null is returned for ALL three cases — the caller maps this
+   * Anti-enumeration: null is returned for ALL cases — the caller maps this
    * to a 404 that is byte-identical for invisible vs nonexistent candidates.
+   *
+   * S6b-B1: the account-state gate tightened from `not: PENDING_DELETION` to
+   * `status: ACTIVE` — a SUSPENDED candidate was previously still visible in
+   * employer surfaces, which made suspension cosmetic. ACTIVE-only covers
+   * suspended, pending-deletion and purged in one rule.
    *
    * Only documents' type + expiryDate are selected — NO r2Key, NO fileName, NO URLs.
    * The employer context exposes document STATUS only (S3-0 decision 2).
@@ -213,7 +295,7 @@ export class CandidateReadService {
       where: {
         id,
         profileVisible: true,
-        user: { status: { not: UserStatus.PENDING_DELETION } },
+        user: { status: UserStatus.ACTIVE },
       },
       select: {
         id: true,
@@ -286,7 +368,9 @@ export class CandidateReadService {
         type,
         candidate: {
           profileVisible: true,
-          user: { status: { not: UserStatus.PENDING_DELETION } },
+          // S6b-B1: ACTIVE-only (was `not: PENDING_DELETION`) — a suspended
+          // candidate's passport must not be reachable by employers.
+          user: { status: UserStatus.ACTIVE },
         },
       },
       select: { r2Key: true },
@@ -328,7 +412,8 @@ export class CandidateReadService {
   /**
    * Browse visible candidates for the employer feed.
    *
-   * - Only profileVisible=true, non-PENDING_DELETION candidates appear.
+   * - Only profileVisible=true candidates of ACTIVE users appear (S6b-B1:
+   *   tightened from `not: PENDING_DELETION` — suspension now hides too).
    * - Filters: category (jobCategoryId), hasForeignExperience, availability, text q.
    * - minExperienceYears is applied in-memory (Prisma cannot SUM related years in WHERE).
    *   We fetch limit*5 records from DB before in-memory filtering; this works well
@@ -359,7 +444,7 @@ export class CandidateReadService {
 
     const where: Prisma.CandidateProfileWhereInput = {
       profileVisible: true,
-      user: { status: { not: UserStatus.PENDING_DELETION } },
+      user: { status: UserStatus.ACTIVE },
       ...(filters.category && { jobCategoryId: filters.category }),
       ...(filters.availability !== undefined && { isAvailable: filters.availability }),
       ...(filters.hasForeignExperience === true && {
@@ -438,6 +523,58 @@ export class CandidateReadService {
 
     return { data, nextCursor };
   }
+}
+
+// ── S6b-B1: admin-read select + source shapes ────────────────────────────────
+
+/**
+ * The admin card's field set — deliberately a single shared constant so the
+ * list and the detail can never drift. NOTE what is ABSENT: r2Key, fileName,
+ * mimeType, photoKey, videoR2Key — the admin table carries document STATUS
+ * only; content is the audited signed-URL grant.
+ */
+const ADMIN_CANDIDATE_SELECT = {
+  id: true,
+  userId: true,
+  fullName: true,
+  phone: true,
+  profileVisible: true,
+  completionPct: true,
+  createdAt: true,
+  user: { select: { email: true, status: true, deletionDueAt: true, purgedAt: true } },
+  documents: { select: { type: true, expiryDate: true } },
+} as const;
+
+export interface AdminCandidateSource {
+  id: string;
+  userId: string;
+  fullName: string;
+  phone: string | null;
+  profileVisible: boolean;
+  completionPct: number;
+  createdAt: Date;
+  user: {
+    email: string;
+    status: UserStatus;
+    deletionDueAt: Date | null;
+    purgedAt: Date | null;
+  };
+  documents: { type: DocumentType; expiryDate: Date | null }[];
+}
+
+export interface AdminCandidateDetailSource extends AdminCandidateSource {
+  experiences: {
+    id: string;
+    type: ExperienceType;
+    country: string;
+    companyName: string;
+    role: string;
+    years: number;
+    months: number;
+    startDate: Date | null;
+    endDate: Date | null;
+  }[];
+  skills: { id: string; name: string }[];
 }
 
 // ── Return-type interfaces (exported for Employer module mappers) ────────────

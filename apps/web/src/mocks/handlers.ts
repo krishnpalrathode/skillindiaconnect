@@ -3186,6 +3186,30 @@ const adminGetCandidates = http.get(`${BASE}/admin/candidates`, ({ request }) =>
   return HttpResponse.json(offsetPaginate(rows, page, pageSize));
 });
 
+// ADDED IN S6b-B1 (contract 0.7.0): the review panel's single-candidate view.
+// Card + experiences + skills + applicationCount. Purged tombstones ARE
+// returned; admins are not subject to profileVisible.
+const adminGetCandidate = http.get(`${BASE}/admin/candidates/:id`, ({ request, params }) => {
+  const gate = requirePermission(request, 'candidates.view');
+  if (gate.error) return gate.error;
+
+  const candidate = [...db.candidates.values()].find((c) => c.profile.id === params['id']);
+  if (!candidate) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Candidate not found.');
+
+  const applicationCount = [...db.applications.values()].filter(
+    (a) => a.candidateId === candidate.userId || a.candidateId === candidate.profile.id,
+  ).length;
+
+  return HttpResponse.json({
+    data: {
+      ...toAdminCandidateCard(candidate),
+      experiences: candidate.profile.experiences ?? [],
+      skills: candidate.profile.skills ?? [],
+      applicationCount,
+    },
+  });
+});
+
 const adminSuspendCandidate = http.post(
   `${BASE}/admin/candidates/:id/suspend`,
   async ({ request, params }) => {
@@ -3197,15 +3221,31 @@ const adminSuspendCandidate = http.post(
 
     const body = (await request.json()) as { reason?: string };
     if (!body.reason?.trim()) {
+      // 400 like the REAL global ValidationPipe (S6b-B1 drift fix — DTO
+      // validation failures are BadRequest, not 422; 422s are reserved for
+      // semantic codes like PURGE_NOT_CONFIRMED).
       return errorResponse(
-        422,
+        400,
         'VALIDATION_ERROR',
         'Validation failed',
         'A reason is required to suspend a candidate.',
       );
     }
 
+    // S6b-B1 guards: a purged tombstone can never be suspended, and suspending
+    // a PENDING_DELETION user would silently cancel a DPDP erasure.
+    if (db.candidateLifecycle.get(candidate.profile.id)?.purgedAt) {
+      return errorResponse(409, 'CANDIDATE_PURGED', 'Conflict', 'This candidate has been purged.');
+    }
     const user = db.users.get(candidate.userId);
+    if (user && user.status !== 'ACTIVE') {
+      return errorResponse(
+        409,
+        'CANDIDATE_NOT_ACTIVE',
+        'Conflict',
+        'Only an active candidate can be suspended.',
+      );
+    }
     if (user) user.status = 'SUSPENDED';
 
     writeAudit({
@@ -3242,7 +3282,17 @@ const adminReactivateCandidate = http.post(
       );
     }
 
+    // S6b-B1 guard: reactivation is SUSPENDED → ACTIVE only — it is not a
+    // deletion-cancel path.
     const user = db.users.get(candidate.userId);
+    if (user && user.status !== 'SUSPENDED') {
+      return errorResponse(
+        409,
+        'CANDIDATE_NOT_SUSPENDED',
+        'Conflict',
+        'Only a suspended candidate can be reactivated.',
+      );
+    }
     if (user) user.status = 'ACTIVE';
 
     writeAudit({
@@ -3336,6 +3386,7 @@ const adminPurgeCandidate = http.post(
     // referencing this candidate now exercises the S4 null-candidate path.
     const now = new Date().toISOString();
     const p = candidate.profile;
+    const docCount = p.documents?.length ?? 0; // captured BEFORE the erasure
     p.fullName = 'Deleted user';
     p.phone = undefined;
     p.email = `purged-${candidate.userId}@deleted.invalid`;
@@ -3349,15 +3400,35 @@ const adminPurgeCandidate = http.post(
       user.email = `purged-${candidate.userId}@deleted.invalid`;
     }
 
+    // S6b-B1: the REAL pipeline writes TWO rows — the admin's REQUEST
+    // (transactional with the state change) and the worker's COMPLETION
+    // (counts only, never PII). The mock purge is synchronous, so both land
+    // here back-to-back under the real action names.
     writeAudit({
       module: 'Candidate',
-      action: 'candidate.purged',
+      action: 'admin.candidate.purge_requested',
       actorUserId: gate.user.id,
       actorRole: gate.user.role,
-      targetType: 'CandidateProfile',
-      targetId: p.id,
+      targetType: 'User',
+      targetId: candidate.userId,
       status: 'SUCCESS',
-      meta: { reason: body.reason },
+      meta: { reason: body.reason, candidateId: p.id, trigger: 'admin' },
+    });
+    writeAudit({
+      module: 'Candidate',
+      action: 'account.purged',
+      actorUserId: gate.user.id,
+      actorRole: gate.user.role,
+      targetType: 'User',
+      targetId: candidate.userId,
+      status: 'SUCCESS',
+      // COUNTS ONLY — the audit row must not preserve what the purge destroyed.
+      meta: {
+        trigger: 'admin',
+        reason: body.reason,
+        documentsDeleted: docCount,
+        objectsDestroyed: docCount,
+      },
     });
 
     return HttpResponse.json({ data: { purgeScheduledFor: now } }, { status: 202 });
@@ -3858,6 +3929,7 @@ export const handlers = [
   adminPatchRolesMatrix,
   adminEmployerCertificateUrl,
   adminGetCandidates,
+  adminGetCandidate,
   adminSuspendCandidate,
   adminReactivateCandidate,
   adminCandidateDocumentUrl,

@@ -6,6 +6,7 @@ import {
   GetObjectCommand,
   HeadObjectCommand,
   DeleteObjectCommand,
+  DeleteObjectsCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -74,8 +75,30 @@ export class StorageService {
     }
   }
 
-  /** Exposed for the future purge worker — not called in request paths. */
+  /** Exposed for the purge worker — not called in request paths. */
   async deleteObject(key: string): Promise<void> {
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
+  }
+
+  /**
+   * Batch delete (S6b-B1 purge worker). Chunks at the S3 API's 1000-key limit.
+   * THROWS if the provider reports any per-key failure — the caller (a BullMQ
+   * job) relies on that throw to retry; a swallowed error here would leave a
+   * passport scan in the bucket while the DB claims erasure. Error messages
+   * carry counts, never keys.
+   */
+  async deleteObjects(keys: string[]): Promise<void> {
+    for (let i = 0; i < keys.length; i += 1000) {
+      const chunk = keys.slice(i, i + 1000);
+      const result = await this.client.send(
+        new DeleteObjectsCommand({
+          Bucket: this.bucket,
+          Delete: { Objects: chunk.map((Key) => ({ Key })), Quiet: true },
+        }),
+      );
+      if (result.Errors && result.Errors.length > 0) {
+        throw new Error(`R2 batch delete failed for ${result.Errors.length} object(s)`);
+      }
+    }
   }
 }

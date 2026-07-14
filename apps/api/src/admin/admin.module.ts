@@ -4,10 +4,13 @@ import { EmployerModule } from '../employer/employer.module';
 import { JobsModule } from '../jobs/jobs.module';
 import { ApplicationsModule } from '../applications/applications.module';
 import { SubscriptionReadModule } from '../payments/subscription-read.module';
+import { AccountModule } from '../account/account.module';
 import { AdminDashboardController } from './admin-dashboard.controller';
 import { AdminDashboardService } from './admin-dashboard.service';
 import { AdminDocumentsController } from './admin-documents.controller';
 import { AdminDocumentsService } from './admin-documents.service';
+import { AdminCandidatesController } from './admin-candidates.controller';
+import { AdminCandidatesService } from './admin-candidates.service';
 
 /**
  * The admin module (S6a-B1) — a THIN ORCHESTRATION LAYER that OWNS NO TABLES.
@@ -41,8 +44,11 @@ import { AdminDocumentsService } from './admin-documents.service';
     forwardRef(() => JobsModule),
     forwardRef(() => ApplicationsModule),
     SubscriptionReadModule,
+    // S6b-B1: user-lifecycle writes (suspend/reactivate/purge-mark) go through
+    // AccountService — the account module owns the users lifecycle columns.
+    AccountModule,
   ],
-  controllers: [AdminDashboardController, AdminDocumentsController],
-  providers: [AdminDashboardService, AdminDocumentsService],
+  controllers: [AdminDashboardController, AdminDocumentsController, AdminCandidatesController],
+  providers: [AdminDashboardService, AdminDocumentsService, AdminCandidatesService],
 })
 export class AdminModule {}

@@ -195,6 +195,11 @@ model User {
   lastLoginAt      DateTime?
   termsAcceptedAt  DateTime?
   deletionDueAt    DateTime?
+  // S6b-B1: the purge tombstone marker. Set once by the purge worker when the
+  // account has been anonymized in place — status stays PENDING_DELETION (the
+  // contract's UserStatus enum is frozen without a PURGED value); purgedAt IS
+  // the terminal state, and it is never cleared. Idempotency key for the worker.
+  purgedAt         DateTime?
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
   candidateProfile CandidateProfile?
