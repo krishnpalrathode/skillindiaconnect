@@ -8,7 +8,10 @@ const replaceMock = vi.fn();
 vi.mock('next/navigation', () => ({
   useParams: () => ({ locale: 'en' }),
   useRouter: () => ({ push: vi.fn(), replace: replaceMock, refresh: vi.fn() }),
-  usePathname: () => '/en/admin/dashboard',
+  // A DEEP link, deliberately not the dashboard — the guard must send `next`
+  // back to where the visitor was aiming (S6 pass finding: it used to hardcode
+  // the dashboard and lose every admin deep link through a login round-trip).
+  usePathname: () => '/en/admin/settings',
   useSearchParams: () => new URLSearchParams(),
 }));
 
@@ -48,7 +51,7 @@ describe('AdminRouteGuard', () => {
     expect(screen.getByText('admin content')).toBeInTheDocument();
   });
 
-  it('an anonymous visitor is redirected to login with a next back to the console', async () => {
+  it('an anonymous visitor is redirected to login with a next back to WHERE THEY WERE AIMING', async () => {
     mockAuth = { user: null, isLoading: false };
     render(
       <AdminRouteGuard>
@@ -56,7 +59,9 @@ describe('AdminRouteGuard', () => {
       </AdminRouteGuard>,
     );
     await waitFor(() =>
-      expect(replaceMock).toHaveBeenCalledWith('/en/login?next=/en/admin/dashboard'),
+      expect(replaceMock).toHaveBeenCalledWith(
+        `/en/login?next=${encodeURIComponent('/en/admin/settings')}`,
+      ),
     );
     expect(screen.queryByText('admin content')).not.toBeInTheDocument();
   });

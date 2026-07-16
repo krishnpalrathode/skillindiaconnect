@@ -187,12 +187,14 @@ export class CandidateReadService {
 
   /**
    * S6a-B1 (admin dashboard): platform-wide candidate counts. Two grouped
-   * queries at most — never a per-row walk. `active` excludes PENDING_DELETION
-   * users (they are on their way out and shouldn't inflate the headline number).
+   * queries at most — never a per-row walk. `total` counts NON-PURGED profiles
+   * (the contract's dashboard figure — a purged tombstone is a record, not a
+   * person on the platform); `active` further excludes SUSPENDED and
+   * PENDING_DELETION users (on their way out, shouldn't inflate the headline).
    */
   async countCandidates(): Promise<{ total: number; active: number }> {
     const [total, active] = await Promise.all([
-      this.prisma.candidateProfile.count(),
+      this.prisma.candidateProfile.count({ where: { user: { purgedAt: null } } }),
       this.prisma.candidateProfile.count({
         where: { user: { status: UserStatus.ACTIVE } },
       }),

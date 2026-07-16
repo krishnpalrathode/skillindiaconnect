@@ -300,9 +300,9 @@ describe('CompanyOnboardingForm — initial registration', () => {
 
   it('shows "Submit for approval" button (not resubmit) for initial mode', () => {
     render(
-      <WithIntl>
+      <WithAll>
         <CompanyOnboardingForm company={null} />
-      </WithIntl>,
+      </WithAll>,
     );
     expect(screen.getByRole('button', { name: /submit for approval/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /resubmit/i })).toBeNull();
@@ -311,9 +311,9 @@ describe('CompanyOnboardingForm — initial registration', () => {
   it('blocks submit and shows required-field errors when form is empty', async () => {
     const user = userEvent.setup();
     render(
-      <WithIntl>
+      <WithAll>
         <CompanyOnboardingForm company={null} />
-      </WithIntl>,
+      </WithAll>,
     );
 
     await user.click(screen.getByRole('button', { name: /submit for approval/i }));
@@ -330,9 +330,9 @@ describe('CompanyOnboardingForm — initial registration', () => {
     const user = userEvent.setup();
     // mockCertState is 'idle' (no key) by default
     render(
-      <WithIntl>
+      <WithAll>
         <CompanyOnboardingForm company={null} />
-      </WithIntl>,
+      </WithAll>,
     );
 
     await user.click(screen.getByRole('radio', { name: /local company/i }));
@@ -361,9 +361,9 @@ describe('CompanyOnboardingForm — initial registration', () => {
     };
 
     render(
-      <WithIntl>
+      <WithAll>
         <CompanyOnboardingForm company={null} />
-      </WithIntl>,
+      </WithAll>,
     );
 
     await user.click(screen.getByRole('radio', { name: /local company/i }));
@@ -392,9 +392,9 @@ describe('CompanyOnboardingForm — initial registration', () => {
     loginAsEmployer(EMPLOYER_PENDING_USER_ID);
 
     render(
-      <WithIntl>
+      <WithAll>
         <CompanyOnboardingForm company={null} />
-      </WithIntl>,
+      </WithAll>,
     );
 
     await user.click(screen.getByRole('radio', { name: /local company/i }));
@@ -430,9 +430,9 @@ describe('CompanyOnboardingForm — resubmit', () => {
 
   it('shows "Resubmit for approval" button label', () => {
     render(
-      <WithIntl>
+      <WithAll>
         <CompanyOnboardingForm company={rejectedCompany} />
-      </WithIntl>,
+      </WithAll>,
     );
     expect(screen.getByRole('button', { name: /resubmit for approval/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^submit for approval$/i })).toBeNull();
@@ -440,9 +440,9 @@ describe('CompanyOnboardingForm — resubmit', () => {
 
   it('pre-fills company name, phone, and location from the rejected company', () => {
     render(
-      <WithIntl>
+      <WithAll>
         <CompanyOnboardingForm company={rejectedCompany} />
-      </WithIntl>,
+      </WithAll>,
     );
     expect(screen.getByDisplayValue('Apex Manpower Solutions')).toBeInTheDocument();
     expect(screen.getByDisplayValue('+919876500000')).toBeInTheDocument();
@@ -451,9 +451,9 @@ describe('CompanyOnboardingForm — resubmit', () => {
 
   it('pre-selects LOCAL radio for a LOCAL company', () => {
     render(
-      <WithIntl>
+      <WithAll>
         <CompanyOnboardingForm company={rejectedCompany} />
-      </WithIntl>,
+      </WithAll>,
     );
     expect(screen.getByRole('radio', { name: /local company/i })).toBeChecked();
   });
@@ -485,9 +485,9 @@ describe('CompanyOnboardingForm — resubmit', () => {
     );
 
     render(
-      <WithIntl>
+      <WithAll>
         <CompanyOnboardingForm company={rejectedCompany} />
-      </WithIntl>,
+      </WithAll>,
     );
 
     // Form is pre-filled; submit without changing fields

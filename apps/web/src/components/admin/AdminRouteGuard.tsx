@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/lib/auth/auth-context';
 import { Spinner } from '@/components/ui/spinner';
@@ -33,6 +33,7 @@ const ADMIN_ROLES = ['SUPER_ADMIN', 'ADMIN', 'MODERATOR'] as const;
 export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const params = useParams<{ locale: string }>();
   const locale = params?.locale ?? 'en';
   const t = useTranslations('admin.guard');
@@ -42,10 +43,13 @@ export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
     if (!user) {
-      router.replace(`/${locale}/login?next=/${locale}/admin/dashboard`);
+      // `next` is WHERE THEY WERE AIMING — hardcoding the dashboard here loses
+      // every admin deep link through a login round-trip (S6 pass finding).
+      const next = pathname ?? `/${locale}/admin/dashboard`;
+      router.replace(`/${locale}/login?next=${encodeURIComponent(next)}`);
     }
     // A wrong-role user is NOT redirected — see the not-authorized panel below.
-  }, [user, isLoading, router, locale]);
+  }, [user, isLoading, router, locale, pathname]);
 
   if (isLoading || !user) {
     return (

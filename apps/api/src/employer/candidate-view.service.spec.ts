@@ -30,6 +30,7 @@ const makeCompany = (overrides: Partial<{ status: CompanyStatus }> = {}) => ({
   description: null,
   website: null,
   rejectionReason: null,
+  registrationCertKey: null,
   approvedAt: new Date(),
   reviewedById: null,
   suspendedAt: null,

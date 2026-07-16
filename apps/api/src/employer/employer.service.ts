@@ -16,12 +16,33 @@ import { ConfirmCertDto } from './dto/confirm-cert.dto';
 
 const CERT_MIMES = ['application/pdf', 'image/jpeg', 'image/png'];
 
+/**
+ * The wire Company (contract `Company`): the entity plus the DERIVED
+ * `registrationCertKey` — certificates live in company_documents rows, but the
+ * contract exposes the newest one's key on the company itself. The S2-F3
+ * resubmit form PREFILLS its certificate state from this field; without it,
+ * every rejected employer was forced to re-upload a certificate they already
+ * had before the form would let them resubmit (caught by the S6 happy-path
+ * pass, B5).
+ */
+export type CompanyResponse = Company & { registrationCertKey: string | null };
+
 @Injectable()
 export class EmployerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
   ) {}
+
+  /** Attach the newest certificate key — one indexed lookup, never a join fan-out. */
+  private async withCertKey(company: Company): Promise<CompanyResponse> {
+    const latest = await this.prisma.companyDocument.findFirst({
+      where: { companyId: company.id },
+      orderBy: { uploadedAt: 'desc' },
+      select: { r2Key: true },
+    });
+    return { ...company, registrationCertKey: latest?.r2Key ?? null };
+  }
 
   // ── Registration ───────────────────────────────────────────────────────────
 
@@ -58,7 +79,7 @@ export class EmployerService {
 
   // ── Company reads ──────────────────────────────────────────────────────────
 
-  async getCompanyForEmployerUser(userId: string): Promise<Company> {
+  async getCompanyForEmployerUser(userId: string): Promise<CompanyResponse> {
     const link = await this.prisma.employerUser.findUnique({
       where: { userId },
       include: { company: true },
@@ -66,20 +87,20 @@ export class EmployerService {
     if (!link) {
       throw new NotFoundException({ code: 'COMPANY_NOT_FOUND' });
     }
-    return link.company;
+    return this.withCertKey(link.company);
   }
 
-  async getCompanyById(companyId: string): Promise<Company> {
+  async getCompanyById(companyId: string): Promise<CompanyResponse> {
     const company = await this.prisma.company.findUnique({ where: { id: companyId } });
     if (!company) {
       throw new NotFoundException({ code: 'COMPANY_NOT_FOUND' });
     }
-    return company;
+    return this.withCertKey(company);
   }
 
   // ── Company update ─────────────────────────────────────────────────────────
 
-  async updateCompany(userId: string, dto: UpdateCompanyDto): Promise<Company> {
+  async updateCompany(userId: string, dto: UpdateCompanyDto): Promise<CompanyResponse> {
     const company = await this.getCompanyForEmployerUser(userId);
 
     const updated = await this.prisma.company.update({
@@ -101,13 +122,14 @@ export class EmployerService {
 
     // REJECTED → PENDING re-submission when the employer edits their company.
     if (company.status === CompanyStatus.REJECTED) {
-      return this.prisma.company.update({
+      const resubmitted = await this.prisma.company.update({
         where: { id: company.id },
         data: { status: CompanyStatus.PENDING, rejectionReason: null },
       });
+      return this.withCertKey(resubmitted);
     }
 
-    return updated;
+    return this.withCertKey(updated);
   }
 
   // ── Certificate upload (presign → PUT → confirm) ──────────────────────────

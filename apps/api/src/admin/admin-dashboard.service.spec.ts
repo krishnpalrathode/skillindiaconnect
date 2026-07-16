@@ -258,10 +258,13 @@ describe('AdminDashboardService', () => {
     });
   });
 
-  gatedIt('candidate counts: total includes PENDING_DELETION, active does not', async () => {
+  gatedIt('candidate count is the contract INTEGER: non-purged profiles (PENDING_DELETION still counted)', async () => {
     const d = await service.getDashboard();
-    expect(d.counts.candidates.total).toBe(5); // 3 seeded + 2 applicants
-    expect(d.counts.candidates.active).toBe(4); // the PENDING_DELETION one is excluded
+    // The contract's counts.candidates is a NUMBER — the web dashboard renders
+    // it directly, so an object here is a rendering crash (caught live in the
+    // S6 happy-path pass). PENDING_DELETION profiles still count (not purged
+    // yet); a purged tombstone would not.
+    expect(d.counts.candidates).toBe(5); // 3 seeded + 2 applicants
   });
 
   gatedIt('revenue sums THIS month only — last month is excluded (the boundary case)', async () => {

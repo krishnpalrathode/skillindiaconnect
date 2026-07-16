@@ -1033,6 +1033,28 @@ async function main(): Promise<void> {
     ],
   });
 
+  // The seed writes role_permissions DIRECTLY, bypassing RbacMatrixService's
+  // post-commit invalidation — so a RUNNING api/worker keeps serving the old
+  // grants from Redis for up to the 300s TTL (a re-seeded permission "doesn't
+  // work" for five confusing minutes). Best-effort flush; the seed must still
+  // succeed when Redis is down or REDIS_URL is unset.
+  if (process.env.REDIS_URL) {
+    try {
+      const { Redis } = await import('ioredis');
+      const redis = new Redis(process.env.REDIS_URL, { lazyConnect: true });
+      await redis.connect();
+      const keys = await redis.keys('rbac:perms:*');
+      if (keys.length > 0) await redis.del(...keys);
+      redis.disconnect();
+      console.log(`RBAC cache flushed (${keys.length} role keys)`);
+    } catch (err) {
+      console.warn(
+        'RBAC cache flush skipped (Redis unavailable) — a running API may serve stale grants for up to 300s:',
+        err instanceof Error ? err.message : String(err),
+      );
+    }
+  }
+
   console.log('Seed complete ✓');
 }
 

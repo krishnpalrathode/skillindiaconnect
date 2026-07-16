@@ -7,7 +7,8 @@ import { SubscriptionReadService } from '../payments/subscription-read.service';
 
 export interface AdminDashboardDto {
   counts: {
-    candidates: { total: number; active: number };
+    /** Non-purged candidate profiles — the contract's INTEGER figure. */
+    candidates: number;
     employers: Record<string, number>;
     jobs: Record<string, number>;
     applications: Record<string, number>;
@@ -61,7 +62,10 @@ export class AdminDashboardService {
       ]);
 
     return {
-      counts: { candidates, employers, jobs, applications },
+      // The contract's `counts.candidates` is an INTEGER (non-purged profiles)
+      // — the S6 happy-path pass caught the {total, active} object crashing the
+      // web dashboard, which renders the contract shape.
+      counts: { candidates: candidates.total, employers, jobs, applications },
       revenueThisMonthSubunits,
       currency: PLATFORM_CURRENCY,
       // The two work-queue depths are DERIVED from the maps above — issuing
