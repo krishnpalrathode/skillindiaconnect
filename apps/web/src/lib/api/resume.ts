@@ -3,6 +3,15 @@ import { apiFetch } from '@/lib/api/client';
 
 type ResumeSettings = components['schemas']['ResumeSettings'];
 type ResumeGeneration = components['schemas']['ResumeGeneration'];
+type ResumeDeliveryResult = components['schemas']['ResumeDeliveryResult'];
+
+/** The editable subset of `ResumeSettings` (S7-F2 toggles + language). */
+export type ResumeSettingsPatch = Partial<
+  Pick<
+    ResumeSettings,
+    'language' | 'showPhone' | 'showReligion' | 'showFatherName' | 'showPassportNumber'
+  >
+>;
 
 /**
  * The `GET /candidates/me/resume` read — the current Resume Settings, the last
@@ -54,4 +63,44 @@ export function getResumeStatus(): Promise<ResumeGeneration> {
  */
 export function getResumeDownloadUrl(): Promise<{ url: string; expiresInSeconds: number }> {
   return apiFetch<{ url: string; expiresInSeconds: number }>('/candidates/me/resume/download');
+}
+
+/**
+ * `PATCH /candidates/me/resume/settings` — update the resume toggles/language and
+ * get back the FULL resulting settings. Settings apply at GENERATION: this does
+ * NOT alter an already-generated PDF (the caller prompts "regenerate to apply").
+ * `language` is English-only at MVP — the API 400s any other value.
+ */
+export function patchResumeSettings(body: ResumeSettingsPatch): Promise<ResumeSettings> {
+  return apiFetch<ResumeSettings>('/candidates/me/resume/settings', {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
+}
+
+/**
+ * `POST /candidates/me/resume/send-whatsapp` — enqueue the resume to the
+ * candidate's OWN verified number. The honest B2 contract, three outcomes:
+ *   - 202 `{ delivered: 'WHATSAPP' }`       — queued to WhatsApp.
+ *   - 202 `{ delivered: 'EMAIL_FALLBACK' }` — NOT whatsapp-capable → emailed to
+ *     self instead (a 202, NOT an error — but the UI must say so plainly).
+ *   - 422 `RESUME_NOT_READY`                — no READY resume yet (generate first).
+ *   - 429 `RESUME_SEND_LIMIT_EXCEEDED`      — today's 5-send cap reached.
+ * The non-202s throw `ApiRequestError`; the caller maps `error.code` to copy.
+ */
+export function sendResumeWhatsApp(): Promise<ResumeDeliveryResult> {
+  return apiFetch<ResumeDeliveryResult>('/candidates/me/resume/send-whatsapp', {
+    method: 'POST',
+  });
+}
+
+/**
+ * `POST /candidates/me/resume/send-email` — email the resume to the candidate's
+ * OWN account email (never an arbitrary address). 202 `{ delivered: 'EMAIL' }`;
+ * 422 `RESUME_NOT_READY` handled like the WhatsApp path. No dedicated cap.
+ */
+export function emailResume(): Promise<ResumeDeliveryResult> {
+  return apiFetch<ResumeDeliveryResult>('/candidates/me/resume/send-email', {
+    method: 'POST',
+  });
 }

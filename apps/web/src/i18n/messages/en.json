@@ -2,6 +2,31 @@
   "resume": {
     "downloadPdf": "Download PDF",
     "regenerate": "Regenerate",
+    "regeneratePrompt": "You changed your resume settings — regenerate your resume to apply them to the downloaded PDF.",
+    "settings": {
+      "title": "Resume settings",
+      "showPhone": "Show phone number on your resume",
+      "showFatherName": "Show father's name on your resume",
+      "showReligion": "Show religion on your resume",
+      "showPassportNumber": "Show passport number on your resume",
+      "religionNote": "Off by default — your resume may be shared widely.",
+      "passportNote": "Off by default — your resume may be shared widely.",
+      "language": "Resume language",
+      "languageEnglish": "English",
+      "languageComingSoon": "More languages coming soon.",
+      "saveError": "Couldn't save that change. Please try again."
+    },
+    "delivery": {
+      "title": "Send your resume",
+      "whatsappButton": "Send to WhatsApp",
+      "emailButton": "Email to myself",
+      "waSent": "Sent to your WhatsApp — forward it to any employer.",
+      "emailFallback": "You can't receive WhatsApp, so we emailed your resume to you instead.",
+      "emailed": "Emailed to you.",
+      "notReady": "Generate your resume first, then send it.",
+      "limit": "You've reached today's limit (5 sends). Try again tomorrow.",
+      "error": "Something went wrong. Please try again."
+    },
     "loading": "Loading your resume…",
     "completionTitle": "Profile completion",
     "previewUnavailable": "Preview is unavailable right now.",
