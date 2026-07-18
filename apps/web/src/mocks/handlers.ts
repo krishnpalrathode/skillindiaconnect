@@ -38,6 +38,12 @@ import {
   MOCK_FAIL_IDEMPOTENCY_PREFIX,
   MOCK_GATEWAY_DOWN_IDEMPOTENCY_PREFIX,
   type MockOrder,
+  // S7-0: Resume builder
+  buildResumeView,
+  RESUME_GENERATION_POLL_THRESHOLD,
+  RESUME_FAIL_USER_ID,
+  RESUME_SEND_CAP,
+  type MockResumeGeneration,
   // S6: Admin console
   roleHasPermission,
   ALL_PERMISSION_KEYS,
@@ -797,8 +803,15 @@ const resumeGet = http.get(`${BASE}/candidates/me/resume`, ({ request }) => {
   if (!candidate)
     return errorResponse(404, 'NOT_FOUND', 'Not found', 'Candidate profile not found.');
 
+  // S7-0: `current` folds the optional /current endpoint into this read —
+  // the latest generation (any status) or null when never generated.
+  const gen = db.resumeGenerations.get(user.id);
   return HttpResponse.json({
-    data: { settings: candidate.resumeSettings, lastRenderedAt: candidate.lastRenderedAt },
+    data: {
+      settings: candidate.resumeSettings,
+      lastRenderedAt: candidate.lastRenderedAt,
+      current: gen ? toResumeGeneration(user.id, gen) : null,
+    },
   });
 });
 
@@ -814,36 +827,117 @@ const resumeSettingsPatch = http.patch(
       return errorResponse(404, 'NOT_FOUND', 'Not found', 'Candidate profile not found.');
 
     const body = (await request.json()) as Partial<components['schemas']['ResumeSettings']>;
+    // English-only at MVP — the contract's language enum is [en].
+    if (body.language !== undefined && body.language !== 'en') {
+      return errorResponse(
+        400,
+        'VALIDATION_ERROR',
+        'Bad Request',
+        'Only English resumes are available right now.',
+      );
+    }
     Object.assign(candidate.resumeSettings, body);
 
+    // NOTE: settings apply at GENERATION — an existing generation's snapshot
+    // (db.resumeGenerations) is deliberately NOT touched here.
     return HttpResponse.json({ data: candidate.resumeSettings });
   },
 );
 
+// S7-0: builds the wire ResumeGeneration from the mock lifecycle record —
+// READY carries the signed url + the VIEW rendered from the settings SNAPSHOT
+// (settings apply at GENERATION; later PATCHes don't alter this record).
+function toResumeGeneration(userId: string, gen: MockResumeGeneration) {
+  const candidate = db.candidates.get(userId);
+  const base = { generationId: gen.generationId, status: gen.status };
+  if (gen.status === 'READY' && candidate) {
+    return {
+      ...base,
+      resumeId: gen.resumeId,
+      downloadUrl: `https://mock-r2.example.com/resumes/${userId}/${gen.generationId}.pdf?sig=mock`,
+      expiresInSeconds: 300,
+      generatedAt: gen.generatedAt,
+      view: buildResumeView(candidate, gen.settingsSnapshot),
+    };
+  }
+  if (gen.status === 'FAILED') {
+    return { ...base, failureReason: gen.failureReason ?? 'Rendering failed. Try again.' };
+  }
+  return base;
+}
+
+// POST /generate — 202, PENDING. Only ENQUEUES: the flip to READY happens in
+// the STATUS handler after RESUME_GENERATION_POLL_THRESHOLD polls, NEVER
+// instantly, so the FE must build the polling UX (the payments-timing lesson).
 const resumeGenerate = http.post(`${BASE}/candidates/me/resume/generate`, ({ request }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
-
   const candidate = db.candidates.get(user.id);
-  if (candidate) candidate.lastRenderedAt = new Date().toISOString();
+  if (!candidate)
+    return errorResponse(404, 'NOT_FOUND', 'Not found', 'Candidate profile not found.');
 
-  return HttpResponse.json({ data: { generationId: `gen-${Date.now()}` } }, { status: 202 });
+  const generationId = `gen-${Date.now()}`;
+  db.resumeGenerations.set(user.id, {
+    generationId,
+    status: 'PENDING',
+    pollCount: 0,
+    // The SNAPSHOT — a settings PATCH after this moment affects the NEXT
+    // generation, not this one.
+    settingsSnapshot: { ...candidate.resumeSettings },
+  });
+  return HttpResponse.json({ data: { generationId, status: 'PENDING' } }, { status: 202 });
 });
 
+// GET /status — THE POLL TARGET. PENDING for the first
+// RESUME_GENERATION_POLL_THRESHOLD polls, then READY (or FAILED for the
+// designated failure fixture).
+const resumeStatus = http.get(`${BASE}/candidates/me/resume/status`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+  const gen = db.resumeGenerations.get(user.id);
+  if (!gen)
+    return errorResponse(404, 'RESUME_NOT_FOUND', 'Not Found', 'No resume has been generated yet.');
+
+  if (gen.status === 'PENDING') {
+    gen.pollCount += 1;
+    if (gen.pollCount >= RESUME_GENERATION_POLL_THRESHOLD) {
+      if (user.id === RESUME_FAIL_USER_ID) {
+        gen.status = 'FAILED';
+        gen.failureReason = 'Rendering failed. Try generating again.';
+      } else {
+        gen.status = 'READY';
+        gen.resumeId = `resume-${user.id}`;
+        gen.generatedAt = new Date().toISOString();
+        const candidate = db.candidates.get(user.id);
+        if (candidate) candidate.lastRenderedAt = gen.generatedAt;
+      }
+    }
+  }
+  return HttpResponse.json({ data: toResumeGeneration(user.id, gen) });
+});
+
+// GET /download — re-mints the signed url for the latest READY resume (the
+// expired-link refresh affordance). 404 RESUME_NOT_FOUND otherwise.
 const resumeDownload = http.get(`${BASE}/candidates/me/resume/download`, ({ request }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+  const gen = db.resumeGenerations.get(user.id);
+  if (!gen || gen.status !== 'READY')
+    return errorResponse(404, 'RESUME_NOT_FOUND', 'Not Found', 'No resume has been generated yet.');
 
   return HttpResponse.json({
     data: {
-      url: `https://mock-r2.example.com/resumes/${user.id}/resume.pdf?sig=mock`,
+      url: `https://mock-r2.example.com/resumes/${user.id}/${gen.generationId}.pdf?sig=mock`,
       expiresInSeconds: 300,
     },
   });
 });
 
+// POST /send-whatsapp — READY required (422), 5/day cap (429), and the
+// whatsappCapable=false fixture DEGRADES to EMAIL_FALLBACK (202, not an error).
 const resumeSendWhatsapp = http.post(
   `${BASE}/candidates/me/resume/send-whatsapp`,
   ({ request }) => {
@@ -851,25 +945,53 @@ const resumeSendWhatsapp = http.post(
     if (!user)
       return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
 
-    if (user.id === NOT_WHATSAPP_CAPABLE_USER_ID) {
+    const gen = db.resumeGenerations.get(user.id);
+    if (!gen || gen.status !== 'READY') {
       return errorResponse(
-        409,
-        'WHATSAPP_NOT_CAPABLE',
-        'WhatsApp not capable',
-        'This account is not linked to a WhatsApp number. Please use email delivery.',
+        422,
+        'RESUME_NOT_READY',
+        'Unprocessable Entity',
+        'Generate your resume before sending it.',
       );
     }
 
-    return HttpResponse.json({ data: { sent: true } }, { status: 202 });
+    const sends = db.resumeSends.get(user.id) ?? [];
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const recent = sends.filter((t) => new Date(t).getTime() > dayAgo);
+    if (recent.length >= RESUME_SEND_CAP) {
+      return errorResponse(
+        429,
+        'RESUME_SEND_LIMIT_EXCEEDED',
+        'Too Many Requests',
+        "You've reached today's resume send limit. Try again tomorrow.",
+      );
+    }
+    recent.push(new Date().toISOString());
+    db.resumeSends.set(user.id, recent);
+
+    // The honest degradation: no WhatsApp → the resume still arrives, by email.
+    const delivered = user.id === NOT_WHATSAPP_CAPABLE_USER_ID ? 'EMAIL_FALLBACK' : 'WHATSAPP';
+    return HttpResponse.json({ data: { delivered } }, { status: 202 });
   },
 );
 
+// POST /send-email — own address only; READY required; NO dedicated cap
+// (deliberate — only the global authed limit applies on the real API).
 const resumeSendEmail = http.post(`${BASE}/candidates/me/resume/send-email`, ({ request }) => {
   const user = getAuthUser(request);
   if (!user)
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
 
-  return HttpResponse.json({ data: { sent: true } }, { status: 202 });
+  const gen = db.resumeGenerations.get(user.id);
+  if (!gen || gen.status !== 'READY') {
+    return errorResponse(
+      422,
+      'RESUME_NOT_READY',
+      'Unprocessable Entity',
+      'Generate your resume before sending it.',
+    );
+  }
+  return HttpResponse.json({ data: { delivered: 'EMAIL' } }, { status: 202 });
 });
 
 // ─── S2: Employer handlers ────────────────────────────────────────────────────
@@ -4048,6 +4170,7 @@ export const handlers = [
   resumeGet,
   resumeSettingsPatch,
   resumeGenerate,
+  resumeStatus,
   resumeDownload,
   resumeSendWhatsapp,
   resumeSendEmail,

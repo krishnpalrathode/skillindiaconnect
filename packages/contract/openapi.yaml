@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: SkillIndiaConnect API
-  version: 0.8.1
+  version: 0.9.0
   description: |
     Production blue-collar recruitment platform connecting skilled workers in India
     with employers in the Gulf and locally.
@@ -28,6 +28,17 @@ info:
     decisions: (1) candidates with profileVisible=false return 404 identical to
     nonexistent; (2) employer context exposes document status/validity ONLY — no
     keys or URLs; (3) profileChecklist is computed per-request, no stored percentage.
+
+    **S7 additions (Sprint 7 / CR-001, frozen in S7-0):** the resume builder —
+    settings CRUD, ASYNC PDF generation (202 trigger + status poll, the S5
+    payments discipline), the RESUME-VIEW as a THIRD viewer context whose
+    omissions are driven by Resume Settings (not the profile privacy toggles;
+    passport number may appear here by the candidate's own choice though the
+    employer context never carries it), and delivery (WhatsApp-to-own-number
+    with email degradation + 5/day cap; email-to-self, uncapped). Locked OUT:
+    the public slug page (dormant column stays dormant, no public endpoint),
+    video portfolio, hi/ar rendering (language enum is en-only until a
+    translated template ships).
 
     **S5 additions (Sprint 5):** Billing — plans, checkout, orders, subscription
     status, invoices, payment webhooks, and the Pro document-URL gate. Locked
@@ -320,6 +331,7 @@ components:
           SUBSCRIPTION_EXPIRED,
           CANDIDATE_MATCHES,
           RESUME_SENT,
+          RESUME_READY,
           JOB_APPROVED,
           JOB_REJECTED,
           JOB_POSTED_ONBEHALF,
@@ -557,27 +569,203 @@ components:
 
     ResumeSettings:
       type: object
-      description: >
-        Resume PDF rendering settings. Hidden fields (showPassportNumber = false,
-        showReligion = false) must be ABSENT FROM THE PDF BYTES, not merely hidden
-        in preview. Enforced at PDF generation time (Sprint 7).
+      required: [language, showPhone, showReligion, showFatherName, showPassportNumber]
+      description: |
+        Resume PDF rendering settings (CR-001, frozen in S7-0).
+
+        **These drive the RESUME-VIEW — the product's THIRD viewer context**
+        (after candidate-self and employer-context). Its omissions are decided
+        by THESE toggles, NOT the profile privacy toggles: a candidate may show
+        their passport number on their own resume (their document, their
+        choice) even though the employer context NEVER carries it. The two
+        contexts are distinct by design — this is not a privacy regression.
+
+        **Settings apply at GENERATION TIME.** A PATCH after a PDF was
+        generated does NOT alter the stored PDF — the candidate regenerates to
+        apply the change. Hidden fields (toggle = false) must be ABSENT FROM
+        THE PDF BYTES, not merely hidden in a preview.
+
+        Defaults for a candidate who never opened the settings:
+        showPhone ON, showFatherName ON (confirmed against the S1 data design —
+        candidate_resumes.showFatherName defaults true; the pre-S7 draft of
+        this schema said false and was corrected at freeze), showReligion OFF,
+        showPassportNumber OFF.
       properties:
         language:
           type: string
+          enum: [en]
           default: en
-          example: en
+          description: >
+            The PDF's language (CR-001's `resumeLanguage`). ENGLISH-ONLY at
+            MVP: the enum deliberately lists ONLY `en` — hi/ar rendering is
+            deferred, and their values will be ADDED to this enum when a
+            translated template ships. Representing the constraint in the enum
+            (rather than accepting hi/ar and failing later) means a client
+            cannot request a language the renderer doesn't have.
         showPhone:
           type: boolean
           default: true
+          description: false → `ResumeView.phone` is omitted from the PDF.
         showReligion:
           type: boolean
           default: false
+          description: false (the default) → `ResumeView.religion` is omitted.
         showFatherName:
           type: boolean
-          default: false
+          default: true
+          description: false → `ResumeView.fatherName` is omitted.
         showPassportNumber:
           type: boolean
           default: false
+          description: >
+            false (the default) → `ResumeView.passportNumber` is omitted.
+            Passport EXPIRY/validity is part of the documents summary and is
+            not governed by this toggle — only the number itself is.
+
+    ResumeGeneration:
+      type: object
+      required: [generationId, status]
+      description: |
+        One asynchronous PDF generation (S7-0). Generation is WORKER-SIDE and
+        takes seconds — the client POLLS `GET /candidates/me/resume/status`
+        until READY (the same pending→confirmed discipline as S5 payments;
+        there is no synchronous render).
+
+        READY carries a SHORT-EXPIRY signed R2 GET url. The stored PDF is a
+        SNAPSHOT of the profile + settings at generation time: changing
+        settings after READY does not alter it — regenerate to apply.
+      properties:
+        generationId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, READY, FAILED]
+        resumeId:
+          type: string
+          format: uuid
+          description: Present once READY — the stored resume this render belongs to.
+        downloadUrl:
+          type: string
+          format: uri
+          description: Present once READY — a short-expiry signed R2 GET url.
+        expiresInSeconds:
+          type: integer
+          example: 300
+          description: Present once READY — the signed url's remaining validity.
+        generatedAt:
+          type: string
+          format: date-time
+          description: Present once READY.
+        failureReason:
+          type: string
+          description: Present when FAILED — human-readable; retry by regenerating.
+        view:
+          $ref: '#/components/schemas/ResumeView'
+          description: >
+            Present once READY — the exact field set the PDF was rendered
+            from (the settings snapshot applied). The F1 preview renders this;
+            the B1 template consumes the same shape — one source of truth for
+            what the PDF contains.
+
+    ResumeView:
+      type: object
+      required: [fullName, email, experiences, skills, generatedAt, settingsApplied]
+      description: |
+        **The THIRD viewer context** (S7-0): exactly the field set the resume
+        PDF renders. Omissions are driven by `ResumeSettings` — captured at
+        generation time — never by the profile privacy toggles:
+
+        - `showPhone: false`          → `phone` ABSENT
+        - `showReligion: false`       → `religion` ABSENT (default off)
+        - `showFatherName: false`     → `fatherName` ABSENT
+        - `showPassportNumber: false` → `passportNumber` ABSENT (default off)
+
+        Everything else renders unconditionally when the profile has it.
+        `passportNumber` MAY appear here (the candidate's own document, their
+        explicit opt-in) even though the employer context never carries it —
+        distinct contexts, distinct rules. Do NOT reuse the employer-context
+        mapper for this shape.
+
+        Out of scope, locked at this freeze: the public slug page (the dormant
+        `publicSlug` column stays dormant — no public endpoint exists), the
+        video portfolio section (renders only when a video exists — Phase 2),
+        and hi/ar rendering (see `ResumeSettings.language`).
+      properties:
+        fullName:
+          type: string
+        photoUrl:
+          type: [string, 'null']
+          description: Short-expiry signed url for the profile photo, when uploaded.
+        email:
+          type: string
+          format: email
+          description: Always included — the candidate's own account email.
+        phone:
+          type: string
+          description: "OMITTED when `showPhone: false`."
+        fatherName:
+          type: string
+          description: "OMITTED when `showFatherName: false`."
+        religion:
+          type: string
+          description: "OMITTED when `showReligion: false` (the default)."
+        passportNumber:
+          type: string
+          description: >
+            OMITTED when `showPassportNumber: false` (the default). Never
+            present in any employer-context schema regardless of this toggle.
+        dob:
+          type: [string, 'null']
+          format: date
+        maritalStatus:
+          type: [string, 'null']
+        nationality:
+          type: [string, 'null']
+        currentLocation:
+          type: [string, 'null']
+        languages:
+          type: array
+          items:
+            type: string
+        jobCategory:
+          type: [string, 'null']
+          description: Display name of the candidate's job category.
+        experiences:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkExperience'
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/CandidateSkill'
+        documents:
+          type: array
+          description: >
+            Status-only documents summary (type + validity) — the same
+            discipline as the employer context; keys/urls never appear.
+          items:
+            $ref: '#/components/schemas/CandidateDocumentStatus'
+        generatedAt:
+          type: string
+          format: date-time
+        settingsApplied:
+          $ref: '#/components/schemas/ResumeSettings'
+
+    ResumeDeliveryResult:
+      type: object
+      required: [delivered]
+      description: |
+        The honest enqueue-time answer for a resume delivery (S7-0).
+        `WHATSAPP` — the document send was enqueued to the candidate's OWN
+        verified number. `EMAIL_FALLBACK` — the candidate is not
+        WhatsApp-capable, so the send DEGRADED to email-to-self (a 202, not an
+        error: the resume still reaches them). `EMAIL` — the email-to-self
+        endpoint's normal outcome.
+      properties:
+        delivered:
+          type: string
+          enum: [WHATSAPP, EMAIL_FALLBACK, EMAIL]
 
     # ── Employer schemas (S2) ───────────────────────────────────────────────────
     Company:
@@ -3600,12 +3788,24 @@ paths:
                         type: string
                         format: date-time
 
-  # ── Resume ────────────────────────────────────────────────────────────────────
+  # ── Resume (CR-001 — frozen in S7-0) ─────────────────────────────────────────
+  # Settings CRUD, ASYNC generation (trigger + poll), and delivery. All routes
+  # bearerAuth, CANDIDATE role. Out of scope, locked at this freeze: the public
+  # slug page (no public endpoint; the dormant column stays dormant), video
+  # portfolio endpoints, hi/ar rendering (ResumeSettings.language is en-only).
   /candidates/me/resume:
     get:
       operationId: getCandidateMeResume
       tags: [resume]
-      summary: Get resume settings and last-rendered timestamp
+      summary: Resume settings + the CURRENT generation summary
+      description: |
+        The "current" read Screen 12/Step 4 renders from: the candidate's
+        settings (defaults applied when they never set them — religion and
+        passport-number OFF, phone and father's-name ON) and, when a resume has
+        ever been generated, the latest generation's summary ("last generated
+        {date}"). This IS the optional `/resume/current` endpoint from the
+        CR-001 sketch — folded into the existing read rather than added beside
+        it.
       responses:
         '200':
           description: Resume info
@@ -3624,21 +3824,48 @@ paths:
                       lastRenderedAt:
                         type: [string, 'null']
                         format: date-time
+                      current:
+                        oneOf:
+                          - $ref: '#/components/schemas/ResumeGeneration'
+                          - type: 'null'
+                        description: The latest generation, when one exists.
 
   /candidates/me/resume/settings:
     patch:
       operationId: patchCandidateMeResumeSettings
       tags: [resume]
-      summary: Update resume rendering settings
+      summary: Update resume rendering settings (PARTIAL)
+      description: |
+        Body is a PARTIAL `ResumeSettings` — omitted toggles keep their value.
+
+        **Settings apply at GENERATION time.** A change made after a PDF was
+        generated does NOT alter the stored PDF (the S7-B1 byte-extraction
+        tests depend on that snapshot semantics) — the candidate REGENERATES
+        for the change to take effect. `language` accepts only `en` at MVP
+        (enum-enforced).
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ResumeSettings'
+              type: object
+              additionalProperties: false
+              description: Partial ResumeSettings — any subset of its fields.
+              properties:
+                language:
+                  type: string
+                  enum: [en]
+                showPhone:
+                  type: boolean
+                showReligion:
+                  type: boolean
+                showFatherName:
+                  type: boolean
+                showPassportNumber:
+                  type: boolean
       responses:
         '200':
-          description: Settings updated
+          description: Settings updated (the FULL resulting settings)
           content:
             application/json:
               schema:
@@ -3652,10 +3879,19 @@ paths:
     post:
       operationId: postCandidateMeResumeGenerate
       tags: [resume]
-      summary: Enqueue a resume PDF generation
+      summary: Enqueue an ASYNC resume PDF generation
+      description: |
+        **202 — this only ENQUEUES.** The WORKER renders the PDF (Puppeteer,
+        S7-B1); rendering takes seconds. The client POLLS
+        `GET /candidates/me/resume/status` until READY — the same
+        pending→confirmed discipline as S5 payments. There is no synchronous
+        render and no completed URL in this response.
+
+        The PDF snapshots the profile AND the settings AS OF THIS MOMENT —
+        later edits to either require a new generation.
       responses:
         '202':
-          description: Generation enqueued
+          description: Generation enqueued (status starts PENDING)
           content:
             application/json:
               schema:
@@ -3664,17 +3900,63 @@ paths:
                 properties:
                   data:
                     type: object
-                    required: [generationId]
+                    required: [generationId, status]
                     properties:
                       generationId:
                         type: string
                         format: uuid
+                      status:
+                        type: string
+                        enum: [PENDING]
+
+  /candidates/me/resume/status:
+    get:
+      operationId: getCandidateMeResumeStatus
+      tags: [resume]
+      summary: THE POLL TARGET — the latest generation's status
+      description: |
+        Returns the candidate's LATEST generation. PENDING while the worker
+        renders; READY carries a SHORT-EXPIRY signed R2 GET url (re-mint via
+        `GET /candidates/me/resume/download` if it expires before the click);
+        FAILED carries a human-readable `failureReason` — retry by
+        regenerating.
+
+        A settings change AFTER a generation went READY does NOT retroactively
+        alter the stored PDF — `settingsApplied` on the rendered view is the
+        snapshot that PDF was built from.
+      responses:
+        '200':
+          description: The latest generation
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ResumeGeneration'
+        '404':
+          description: No generation was ever triggered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Not Found
+                status: 404
+                detail: No resume has been generated yet.
+                code: RESUME_NOT_FOUND
 
   /candidates/me/resume/download:
     get:
       operationId: getCandidateMeResumeDownload
       tags: [resume]
-      summary: Get a signed download URL for the candidate's resume PDF
+      summary: Re-mint a signed download URL for the latest READY resume
+      description: >
+        The refresh affordance for an expired signed url (~5 min expiry is the
+        system working, not breaking). 404 `RESUME_NOT_FOUND` when no READY
+        resume exists.
       responses:
         '200':
           description: Signed download URL
@@ -3695,7 +3977,7 @@ paths:
                         type: integer
                         example: 300
         '404':
-          description: No resume generated yet
+          description: No READY resume yet
           content:
             application/json:
               schema:
@@ -3705,13 +3987,26 @@ paths:
     post:
       operationId: postCandidateMeResumeSendWhatsapp
       tags: [resume]
-      summary: Send resume PDF via WhatsApp to the candidate
+      summary: Send the latest resume PDF to the candidate's OWN WhatsApp
       description: |
-        Rate-limited: 5 sends / day / candidate.
-        **409 WHATSAPP_NOT_CAPABLE** — candidate's `whatsappCapable = false`.
+        Sends the latest READY resume as a WhatsApp DOCUMENT to the
+        candidate's OWN verified number — no destination field exists or is
+        accepted. The API enqueues; the WORKER owns the send. Audited
+        server-side.
+
+        - **Requires a READY resume** → 422 `RESUME_NOT_READY` when none (or
+          the latest generation is PENDING/FAILED).
+        - **`whatsappCapable: false` DEGRADES, it does not fail**: the send
+          falls back to email-to-self and the 202 says so —
+          `{ delivered: "EMAIL_FALLBACK" }` (S7-0 replaced the pre-freeze
+          draft's 409 `WHATSAPP_NOT_CAPABLE`; a candidate without WhatsApp
+          still gets their resume, and the honest answer is a success with the
+          real channel, not an error).
+        - **Rate-limited 5 sends/day/candidate** (CR-001) → 429
+          `RESUME_SEND_LIMIT_EXCEEDED`.
       responses:
         '202':
-          description: Send enqueued
+          description: Delivery enqueued — the real channel stated
           content:
             application/json:
               schema:
@@ -3719,38 +4014,47 @@ paths:
                 required: [data]
                 properties:
                   data:
-                    type: object
-                    required: [sent]
-                    properties:
-                      sent:
-                        type: boolean
-        '409':
-          description: Candidate is not WhatsApp capable
+                    $ref: '#/components/schemas/ResumeDeliveryResult'
+        '422':
+          description: No READY resume to send
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 type: about:blank
-                title: WhatsApp not capable
-                status: 409
-                detail: This account is not linked to a WhatsApp number. Please use email delivery.
-                code: WHATSAPP_NOT_CAPABLE
+                title: Unprocessable Entity
+                status: 422
+                detail: Generate your resume before sending it.
+                code: RESUME_NOT_READY
         '429':
           description: Daily send limit reached (5/day)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Too Many Requests
+                status: 429
+                detail: You've reached today's resume send limit. Try again tomorrow.
+                code: RESUME_SEND_LIMIT_EXCEEDED
 
   /candidates/me/resume/send-email:
     post:
       operationId: postCandidateMeResumeSendEmail
       tags: [resume]
-      summary: Send resume PDF via email to the candidate
+      summary: Email the latest resume PDF to the candidate's own address
       description: |
-        Sends to the candidate's own registered account email ONLY — no `to`
-        field is accepted. Rate-limited: 5 sends / day.
+        Sends ONLY to the candidate's registered account email — no `to` field
+        exists or is accepted (the hard rule: "email to myself" can never
+        become "email to an arbitrary address"). Requires a READY resume →
+        422 `RESUME_NOT_READY`.
+
+        NO dedicated daily cap (stated deliberately — email-to-self is cheap
+        and self-limiting); only the global authenticated rate limit applies.
+        The pre-freeze draft's 5/day on this endpoint moved to the WhatsApp
+        send where the cost lives.
       responses:
         '202':
           description: Email enqueued
@@ -3761,13 +4065,9 @@ paths:
                 required: [data]
                 properties:
                   data:
-                    type: object
-                    required: [sent]
-                    properties:
-                      sent:
-                        type: boolean
-        '429':
-          description: Daily send limit reached
+                    $ref: '#/components/schemas/ResumeDeliveryResult'
+        '422':
+          description: No READY resume to send
           content:
             application/json:
               schema:

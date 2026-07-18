@@ -81,6 +81,14 @@ export const notificationMeta: Record<NotificationType, NotificationMeta> = {
     bgClass: 'bg-primary-50',
     routeFn: toApplication,
   },
+  // S7-0: the async render finished — action → the profile's resume section
+  // (Step 4), where the download lives.
+  RESUME_READY: {
+    Icon: Send,
+    colorClass: 'text-success-fg',
+    bgClass: 'bg-success-bg',
+    routeFn: toProfile,
+  },
   // ── Profile ───────────────────────────────────────────────────────────────
   PROFILE_REMINDER: {
     Icon: UserCheck,

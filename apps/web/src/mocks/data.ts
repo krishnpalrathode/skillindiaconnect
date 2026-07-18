@@ -5,6 +5,7 @@ type WorkExperience = components['schemas']['WorkExperience'];
 type CandidateSkill = components['schemas']['CandidateSkill'];
 type CandidateDocument = components['schemas']['CandidateDocument'];
 type ResumeSettings = components['schemas']['ResumeSettings'];
+type ResumeView = components['schemas']['ResumeView'];
 type Company = components['schemas']['Company'];
 type Job = components['schemas']['Job'];
 type JobCard = components['schemas']['JobCard'];
@@ -147,6 +148,28 @@ export const ADMIN_ROLES: AdminRole[] = ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'S
 
 /** Rate cap for the manual "Selected" WhatsApp resend (per application, per 24h). */
 export const RESEND_WHATSAPP_CAP = 3;
+
+// ── S7-0: resume generation lifecycle ────────────────────────────────────────
+// A generation flips out of PENDING only after this many STATUS POLLS — the
+// deliberate delay that forces F1 to build the polling UX (payments lesson).
+export const RESUME_GENERATION_POLL_THRESHOLD = 3;
+// CR-001: resume WhatsApp sends per candidate per day.
+export const RESUME_SEND_CAP = 5;
+// The designated FAILURE fixture: this user's generations flip to FAILED at
+// the threshold instead of READY, so the failure UX is buildable on mocks.
+export const RESUME_FAIL_USER_ID = 'mock-user-candidate-pendingdel';
+
+export interface MockResumeGeneration {
+  generationId: string;
+  status: 'PENDING' | 'READY' | 'FAILED';
+  /** Status polls seen so far — the delayed-flip counter. */
+  pollCount: number;
+  resumeId?: string;
+  generatedAt?: string;
+  failureReason?: string;
+  /** The settings SNAPSHOT captured at generate time (they apply at generation). */
+  settingsSnapshot: ResumeSettings;
+}
 /** Bounds on the audit-log CSV export (the contract's documented caps). */
 export const LOGS_EXPORT_MAX_ROWS = 10_000;
 export const LOGS_EXPORT_MAX_RANGE_DAYS = 90;
@@ -828,7 +851,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -849,7 +872,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -870,7 +893,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -916,7 +939,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -943,7 +966,7 @@ export const db = {
           language: 'en',
           showPhone: false,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -997,7 +1020,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -1017,7 +1040,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -1101,7 +1124,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -1138,7 +1161,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -1169,7 +1192,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -1207,7 +1230,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -2527,11 +2550,67 @@ export const db = {
     ['mock-user-candidate-pendingdel', { deletionDueAt: daysFromNow(12), purgedAt: null }],
   ]),
 
+  // ── S7-0: resume generation lifecycle (keyed by userId) ────────────────────
+  // The DELAYED pending→ready flip lives in the STATUS handler: a generation
+  // stays PENDING until it has been POLLED RESUME_GENERATION_POLL_THRESHOLD
+  // times — never instant — so F1 is FORCED to build the polling UX (the
+  // S5 payments-timing lesson, reused). RESUME_FAIL_USER_ID's generations
+  // flip to FAILED instead, so the failure UX is buildable too.
+  resumeGenerations: new Map<string, MockResumeGeneration>(),
+
+  // Timestamps of resume WhatsApp sends, keyed by userId — drives the CR-001
+  // 5/day cap (429 RESUME_SEND_LIMIT_EXCEEDED beyond it).
+  resumeSends: new Map<string, string[]>(),
+
   // Audit-log id counter (the BigInt PK, rendered as a string on the wire).
   nextAuditLogId: 1_000_100,
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * S7-0: the RESUME-VIEW — the THIRD viewer context. Omissions come from the
+ * generation's SETTINGS SNAPSHOT, never the profile privacy toggles:
+ *   showPhone=false → phone absent · showFatherName=false → fatherName absent
+ *   showReligion=false → religion absent · showPassportNumber=false → number absent
+ * Passport NUMBER appearing here (toggle ON) is correct and is NOT a privacy
+ * regression — a different context with different rules than the employer view.
+ * The number has no profile field yet (B1 owns storage); the mock synthesizes
+ * a deterministic placeholder so the omission behavior is real either way.
+ */
+export function buildResumeView(candidate: MockCandidate, settings: ResumeSettings): ResumeView {
+  const p = candidate.profile;
+  const view: ResumeView = {
+    fullName: p.fullName ?? '',
+    email: p.email ?? '',
+    photoUrl: null,
+    dob: p.dob ?? null,
+    maritalStatus: p.maritalStatus ?? null,
+    nationality: p.nationality ?? null,
+    currentLocation: p.currentLocation ?? null,
+    languages: p.languages ?? [],
+    jobCategory: p.jobCategoryId ?? null,
+    experiences: p.experiences ?? [],
+    skills: p.skills ?? [],
+    documents: (p.documents ?? []).map((d) => ({
+      type: d.type,
+      uploaded: true,
+      ...(d.type === 'PASSPORT'
+        ? { passportValid: d.expiryDate ? new Date(d.expiryDate) > new Date() : false }
+        : {}),
+    })),
+    generatedAt: new Date().toISOString(),
+    settingsApplied: { ...settings },
+  };
+  if (settings.showPhone && p.phone) view.phone = p.phone;
+  if (settings.showFatherName && p.fatherName) view.fatherName = p.fatherName;
+  if (settings.showReligion && p.religion) view.religion = p.religion;
+  const hasPassport = (p.documents ?? []).some((d) => d.type === 'PASSPORT');
+  if (settings.showPassportNumber && hasPassport) {
+    view.passportNumber = `MOCK-PP-${candidate.userId.slice(-4).toUpperCase()}`;
+  }
+  return view;
+}
 
 export function buildProfile(
   id: string,

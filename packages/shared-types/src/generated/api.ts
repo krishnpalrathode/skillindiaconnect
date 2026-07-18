@@ -596,7 +596,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get resume settings and last-rendered timestamp */
+        /**
+         * Resume settings + the CURRENT generation summary
+         * @description The "current" read Screen 12/Step 4 renders from: the candidate's
+         *     settings (defaults applied when they never set them — religion and
+         *     passport-number OFF, phone and father's-name ON) and, when a resume has
+         *     ever been generated, the latest generation's summary ("last generated
+         *     {date}"). This IS the optional `/resume/current` endpoint from the
+         *     CR-001 sketch — folded into the existing read rather than added beside
+         *     it.
+         */
         get: operations["getCandidateMeResume"];
         put?: never;
         post?: never;
@@ -619,7 +628,16 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Update resume rendering settings */
+        /**
+         * Update resume rendering settings (PARTIAL)
+         * @description Body is a PARTIAL `ResumeSettings` — omitted toggles keep their value.
+         *
+         *     **Settings apply at GENERATION time.** A change made after a PDF was
+         *     generated does NOT alter the stored PDF (the S7-B1 byte-extraction
+         *     tests depend on that snapshot semantics) — the candidate REGENERATES
+         *     for the change to take effect. `language` accepts only `en` at MVP
+         *     (enum-enforced).
+         */
         patch: operations["patchCandidateMeResumeSettings"];
         trace?: never;
     };
@@ -632,8 +650,46 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Enqueue a resume PDF generation */
+        /**
+         * Enqueue an ASYNC resume PDF generation
+         * @description **202 — this only ENQUEUES.** The WORKER renders the PDF (Puppeteer,
+         *     S7-B1); rendering takes seconds. The client POLLS
+         *     `GET /candidates/me/resume/status` until READY — the same
+         *     pending→confirmed discipline as S5 payments. There is no synchronous
+         *     render and no completed URL in this response.
+         *
+         *     The PDF snapshots the profile AND the settings AS OF THIS MOMENT —
+         *     later edits to either require a new generation.
+         */
         post: operations["postCandidateMeResumeGenerate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/candidates/me/resume/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * THE POLL TARGET — the latest generation's status
+         * @description Returns the candidate's LATEST generation. PENDING while the worker
+         *     renders; READY carries a SHORT-EXPIRY signed R2 GET url (re-mint via
+         *     `GET /candidates/me/resume/download` if it expires before the click);
+         *     FAILED carries a human-readable `failureReason` — retry by
+         *     regenerating.
+         *
+         *     A settings change AFTER a generation went READY does NOT retroactively
+         *     alter the stored PDF — `settingsApplied` on the rendered view is the
+         *     snapshot that PDF was built from.
+         */
+        get: operations["getCandidateMeResumeStatus"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -647,7 +703,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a signed download URL for the candidate's resume PDF */
+        /**
+         * Re-mint a signed download URL for the latest READY resume
+         * @description The refresh affordance for an expired signed url (~5 min expiry is the system working, not breaking). 404 `RESUME_NOT_FOUND` when no READY resume exists.
+         */
         get: operations["getCandidateMeResumeDownload"];
         put?: never;
         post?: never;
@@ -667,9 +726,22 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Send resume PDF via WhatsApp to the candidate
-         * @description Rate-limited: 5 sends / day / candidate.
-         *     **409 WHATSAPP_NOT_CAPABLE** — candidate's `whatsappCapable = false`.
+         * Send the latest resume PDF to the candidate's OWN WhatsApp
+         * @description Sends the latest READY resume as a WhatsApp DOCUMENT to the
+         *     candidate's OWN verified number — no destination field exists or is
+         *     accepted. The API enqueues; the WORKER owns the send. Audited
+         *     server-side.
+         *
+         *     - **Requires a READY resume** → 422 `RESUME_NOT_READY` when none (or
+         *       the latest generation is PENDING/FAILED).
+         *     - **`whatsappCapable: false` DEGRADES, it does not fail**: the send
+         *       falls back to email-to-self and the 202 says so —
+         *       `{ delivered: "EMAIL_FALLBACK" }` (S7-0 replaced the pre-freeze
+         *       draft's 409 `WHATSAPP_NOT_CAPABLE`; a candidate without WhatsApp
+         *       still gets their resume, and the honest answer is a success with the
+         *       real channel, not an error).
+         *     - **Rate-limited 5 sends/day/candidate** (CR-001) → 429
+         *       `RESUME_SEND_LIMIT_EXCEEDED`.
          */
         post: operations["postCandidateMeResumeSendWhatsapp"];
         delete?: never;
@@ -688,9 +760,16 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Send resume PDF via email to the candidate
-         * @description Sends to the candidate's own registered account email ONLY — no `to`
-         *     field is accepted. Rate-limited: 5 sends / day.
+         * Email the latest resume PDF to the candidate's own address
+         * @description Sends ONLY to the candidate's registered account email — no `to` field
+         *     exists or is accepted (the hard rule: "email to myself" can never
+         *     become "email to an arbitrary address"). Requires a READY resume →
+         *     422 `RESUME_NOT_READY`.
+         *
+         *     NO dedicated daily cap (stated deliberately — email-to-self is cheap
+         *     and self-limiting); only the global authenticated rate limit applies.
+         *     The pre-freeze draft's 5/day on this endpoint moved to the WhatsApp
+         *     send where the cost lives.
          */
         post: operations["postCandidateMeResumeSendEmail"];
         delete?: never;
@@ -2595,7 +2674,7 @@ export interface components {
          * @description Must match the Prisma `NotificationType` enum (the DB source of truth). PROFILE_VIEWED fires when an employer views a candidate's full profile (deduplicated per company per rolling 24 h window). Data payload: `{ companyName: string }`. PASSPORT_EXPIRY fires when a passport is within the reminder window. Data payload: `{ expiryDate: string, daysRemaining: integer }`.
          * @enum {string}
          */
-        NotificationType: "APPLICATION_SELECTED" | "APPLICATION_SHORTLISTED" | "APPLICATION_REJECTED" | "NEW_JOB_MATCH" | "PROFILE_REMINDER" | "JOB_CLOSING_SOON" | "PASSPORT_EXPIRY" | "PROFILE_VIEWED" | "EMPLOYER_APPROVED" | "EMPLOYER_REJECTED" | "EMPLOYER_SUSPENDED" | "SUBSCRIPTION_PURCHASED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "CANDIDATE_MATCHES" | "RESUME_SENT" | "JOB_APPROVED" | "JOB_REJECTED" | "JOB_POSTED_ONBEHALF";
+        NotificationType: "APPLICATION_SELECTED" | "APPLICATION_SHORTLISTED" | "APPLICATION_REJECTED" | "NEW_JOB_MATCH" | "PROFILE_REMINDER" | "JOB_CLOSING_SOON" | "PASSPORT_EXPIRY" | "PROFILE_VIEWED" | "EMPLOYER_APPROVED" | "EMPLOYER_REJECTED" | "EMPLOYER_SUSPENDED" | "SUBSCRIPTION_PURCHASED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "CANDIDATE_MATCHES" | "RESUME_SENT" | "RESUME_READY" | "JOB_APPROVED" | "JOB_REJECTED" | "JOB_POSTED_ONBEHALF";
         UserSummary: {
             /** Format: uuid */
             id: string;
@@ -2713,21 +2792,160 @@ export interface components {
             /** @description Human-readable list of items blocking the apply gate */
             missingForApply: string[];
         };
-        /** @description Resume PDF rendering settings. Hidden fields (showPassportNumber = false, showReligion = false) must be ABSENT FROM THE PDF BYTES, not merely hidden in preview. Enforced at PDF generation time (Sprint 7). */
+        /**
+         * @description Resume PDF rendering settings (CR-001, frozen in S7-0).
+         *
+         *     **These drive the RESUME-VIEW — the product's THIRD viewer context**
+         *     (after candidate-self and employer-context). Its omissions are decided
+         *     by THESE toggles, NOT the profile privacy toggles: a candidate may show
+         *     their passport number on their own resume (their document, their
+         *     choice) even though the employer context NEVER carries it. The two
+         *     contexts are distinct by design — this is not a privacy regression.
+         *
+         *     **Settings apply at GENERATION TIME.** A PATCH after a PDF was
+         *     generated does NOT alter the stored PDF — the candidate regenerates to
+         *     apply the change. Hidden fields (toggle = false) must be ABSENT FROM
+         *     THE PDF BYTES, not merely hidden in a preview.
+         *
+         *     Defaults for a candidate who never opened the settings:
+         *     showPhone ON, showFatherName ON (confirmed against the S1 data design —
+         *     candidate_resumes.showFatherName defaults true; the pre-S7 draft of
+         *     this schema said false and was corrected at freeze), showReligion OFF,
+         *     showPassportNumber OFF.
+         */
         ResumeSettings: {
             /**
+             * @description The PDF's language (CR-001's `resumeLanguage`). ENGLISH-ONLY at MVP: the enum deliberately lists ONLY `en` — hi/ar rendering is deferred, and their values will be ADDED to this enum when a translated template ships. Representing the constraint in the enum (rather than accepting hi/ar and failing later) means a client cannot request a language the renderer doesn't have.
              * @default en
-             * @example en
+             * @enum {string}
              */
-            language: string;
-            /** @default true */
+            language: "en";
+            /**
+             * @description false → `ResumeView.phone` is omitted from the PDF.
+             * @default true
+             */
             showPhone: boolean;
-            /** @default false */
+            /**
+             * @description false (the default) → `ResumeView.religion` is omitted.
+             * @default false
+             */
             showReligion: boolean;
-            /** @default false */
+            /**
+             * @description false → `ResumeView.fatherName` is omitted.
+             * @default true
+             */
             showFatherName: boolean;
-            /** @default false */
+            /**
+             * @description false (the default) → `ResumeView.passportNumber` is omitted. Passport EXPIRY/validity is part of the documents summary and is not governed by this toggle — only the number itself is.
+             * @default false
+             */
             showPassportNumber: boolean;
+        };
+        /**
+         * @description One asynchronous PDF generation (S7-0). Generation is WORKER-SIDE and
+         *     takes seconds — the client POLLS `GET /candidates/me/resume/status`
+         *     until READY (the same pending→confirmed discipline as S5 payments;
+         *     there is no synchronous render).
+         *
+         *     READY carries a SHORT-EXPIRY signed R2 GET url. The stored PDF is a
+         *     SNAPSHOT of the profile + settings at generation time: changing
+         *     settings after READY does not alter it — regenerate to apply.
+         */
+        ResumeGeneration: {
+            /** Format: uuid */
+            generationId: string;
+            /** @enum {string} */
+            status: "PENDING" | "READY" | "FAILED";
+            /**
+             * Format: uuid
+             * @description Present once READY — the stored resume this render belongs to.
+             */
+            resumeId?: string;
+            /**
+             * Format: uri
+             * @description Present once READY — a short-expiry signed R2 GET url.
+             */
+            downloadUrl?: string;
+            /**
+             * @description Present once READY — the signed url's remaining validity.
+             * @example 300
+             */
+            expiresInSeconds?: number;
+            /**
+             * Format: date-time
+             * @description Present once READY.
+             */
+            generatedAt?: string;
+            /** @description Present when FAILED — human-readable; retry by regenerating. */
+            failureReason?: string;
+            /** @description Present once READY — the exact field set the PDF was rendered from (the settings snapshot applied). The F1 preview renders this; the B1 template consumes the same shape — one source of truth for what the PDF contains. */
+            view?: components["schemas"]["ResumeView"];
+        };
+        /**
+         * @description **The THIRD viewer context** (S7-0): exactly the field set the resume
+         *     PDF renders. Omissions are driven by `ResumeSettings` — captured at
+         *     generation time — never by the profile privacy toggles:
+         *
+         *     - `showPhone: false`          → `phone` ABSENT
+         *     - `showReligion: false`       → `religion` ABSENT (default off)
+         *     - `showFatherName: false`     → `fatherName` ABSENT
+         *     - `showPassportNumber: false` → `passportNumber` ABSENT (default off)
+         *
+         *     Everything else renders unconditionally when the profile has it.
+         *     `passportNumber` MAY appear here (the candidate's own document, their
+         *     explicit opt-in) even though the employer context never carries it —
+         *     distinct contexts, distinct rules. Do NOT reuse the employer-context
+         *     mapper for this shape.
+         *
+         *     Out of scope, locked at this freeze: the public slug page (the dormant
+         *     `publicSlug` column stays dormant — no public endpoint exists), the
+         *     video portfolio section (renders only when a video exists — Phase 2),
+         *     and hi/ar rendering (see `ResumeSettings.language`).
+         */
+        ResumeView: {
+            fullName: string;
+            /** @description Short-expiry signed url for the profile photo, when uploaded. */
+            photoUrl?: string | null;
+            /**
+             * Format: email
+             * @description Always included — the candidate's own account email.
+             */
+            email: string;
+            /** @description OMITTED when `showPhone: false`. */
+            phone?: string;
+            /** @description OMITTED when `showFatherName: false`. */
+            fatherName?: string;
+            /** @description OMITTED when `showReligion: false` (the default). */
+            religion?: string;
+            /** @description OMITTED when `showPassportNumber: false` (the default). Never present in any employer-context schema regardless of this toggle. */
+            passportNumber?: string;
+            /** Format: date */
+            dob?: string | null;
+            maritalStatus?: string | null;
+            nationality?: string | null;
+            currentLocation?: string | null;
+            languages?: string[];
+            /** @description Display name of the candidate's job category. */
+            jobCategory?: string | null;
+            experiences: components["schemas"]["WorkExperience"][];
+            skills: components["schemas"]["CandidateSkill"][];
+            /** @description Status-only documents summary (type + validity) — the same discipline as the employer context; keys/urls never appear. */
+            documents?: components["schemas"]["CandidateDocumentStatus"][];
+            /** Format: date-time */
+            generatedAt: string;
+            settingsApplied: components["schemas"]["ResumeSettings"];
+        };
+        /**
+         * @description The honest enqueue-time answer for a resume delivery (S7-0).
+         *     `WHATSAPP` — the document send was enqueued to the candidate's OWN
+         *     verified number. `EMAIL_FALLBACK` — the candidate is not
+         *     WhatsApp-capable, so the send DEGRADED to email-to-self (a 202, not an
+         *     error: the resume still reaches them). `EMAIL` — the email-to-self
+         *     endpoint's normal outcome.
+         */
+        ResumeDeliveryResult: {
+            /** @enum {string} */
+            delivered: "WHATSAPP" | "EMAIL_FALLBACK" | "EMAIL";
         };
         /**
          * @description Employer company profile. Returned to the owning employer and to admins.
@@ -4997,6 +5215,8 @@ export interface operations {
                             settings: components["schemas"]["ResumeSettings"];
                             /** Format: date-time */
                             lastRenderedAt?: string | null;
+                            /** @description The latest generation, when one exists. */
+                            current?: components["schemas"]["ResumeGeneration"] | null;
                         };
                     };
                 };
@@ -5012,11 +5232,18 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ResumeSettings"];
+                "application/json": {
+                    /** @enum {string} */
+                    language?: "en";
+                    showPhone?: boolean;
+                    showReligion?: boolean;
+                    showFatherName?: boolean;
+                    showPassportNumber?: boolean;
+                };
             };
         };
         responses: {
-            /** @description Settings updated */
+            /** @description Settings updated (the FULL resulting settings) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -5038,7 +5265,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Generation enqueued */
+            /** @description Generation enqueued (status starts PENDING) */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -5048,8 +5275,50 @@ export interface operations {
                         data: {
                             /** Format: uuid */
                             generationId: string;
+                            /** @enum {string} */
+                            status: "PENDING";
                         };
                     };
+                };
+            };
+        };
+    };
+    getCandidateMeResumeStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The latest generation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ResumeGeneration"];
+                    };
+                };
+            };
+            /** @description No generation was ever triggered */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "No resume has been generated yet.",
+                     *       "code": "RESUME_NOT_FOUND"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
                 };
             };
         };
@@ -5079,7 +5348,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description No resume generated yet */
+            /** @description No READY resume yet */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -5099,21 +5368,19 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Send enqueued */
+            /** @description Delivery enqueued — the real channel stated */
             202: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data: {
-                            sent: boolean;
-                        };
+                        data: components["schemas"]["ResumeDeliveryResult"];
                     };
                 };
             };
-            /** @description Candidate is not WhatsApp capable */
-            409: {
+            /** @description No READY resume to send */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5121,10 +5388,10 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "WhatsApp not capable",
-                     *       "status": 409,
-                     *       "detail": "This account is not linked to a WhatsApp number. Please use email delivery.",
-                     *       "code": "WHATSAPP_NOT_CAPABLE"
+                     *       "title": "Unprocessable Entity",
+                     *       "status": 422,
+                     *       "detail": "Generate your resume before sending it.",
+                     *       "code": "RESUME_NOT_READY"
                      *     }
                      */
                     "application/json": components["schemas"]["Error"];
@@ -5136,6 +5403,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Too Many Requests",
+                     *       "status": 429,
+                     *       "detail": "You've reached today's resume send limit. Try again tomorrow.",
+                     *       "code": "RESUME_SEND_LIMIT_EXCEEDED"
+                     *     }
+                     */
                     "application/json": components["schemas"]["Error"];
                 };
             };
@@ -5157,14 +5433,12 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data: {
-                            sent: boolean;
-                        };
+                        data: components["schemas"]["ResumeDeliveryResult"];
                     };
                 };
             };
-            /** @description Daily send limit reached */
-            429: {
+            /** @description No READY resume to send */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
