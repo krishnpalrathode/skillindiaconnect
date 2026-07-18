@@ -32,7 +32,17 @@
     "load:chromium": "pnpm --filter ./apps/api exec tsx ../../load/chromium-pool-burst.ts",
     "load:search": "pnpm --filter ./apps/api exec tsx ../../load/search-load.ts",
     "load:webhook": "pnpm --filter ./apps/api exec tsx ../../load/webhook-load.ts",
-    "load:apply": "pnpm --filter ./apps/api exec tsx ../../load/apply-load.ts"
+    "load:apply": "pnpm --filter ./apps/api exec tsx ../../load/apply-load.ts",
+    "security:inventory": "pnpm --filter ./apps/api exec tsx ../../security/probes/endpoint-inventory.ts",
+    "security:authz": "pnpm --filter ./apps/api exec tsx ../../security/probes/authz-sweep.ts",
+    "security:typecheck": "tsc -p security/probes/tsconfig.json --noEmit",
+    "security:idor": "pnpm --filter ./apps/api exec tsx ../../security/probes/idor-sweep.ts",
+    "security:privacy": "pnpm --filter ./apps/api exec tsx ../../security/probes/privacy-probes.ts",
+    "security:injection": "pnpm --filter ./apps/api exec tsx ../../security/probes/injection-probes.ts",
+    "security:webhook": "pnpm --filter ./apps/api exec tsx ../../security/probes/webhook-probes.ts",
+    "security:authconfig": "pnpm --filter ./apps/api exec tsx ../../security/probes/auth-config-probes.ts",
+    "security:all": "pnpm security:authz && pnpm security:idor && pnpm security:privacy && pnpm security:injection && pnpm security:webhook && pnpm security:authconfig",
+    "security:matrix": "pnpm --filter ./apps/api exec tsx ../../security/probes/render-authz-matrix.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.0",

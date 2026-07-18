@@ -104,9 +104,28 @@ function documentsSection(view: ResumeViewDto): string {
 }
 
 export function renderResumeHtml(view: ResumeViewDto): string {
-  const photo = view.photoDataUri
-    ? `<img class="photo" src="${view.photoDataUri}" alt="" />`
-    : '';
+  // SEC-004 (S8-H2): the photo data-URI is the ONE value that lands in an
+  // ATTRIBUTE rather than in text, and it was interpolated raw. A URI
+  // containing a double-quote closes src="" and the rest becomes attributes —
+  // e.g. `data:image/png" onload="alert(1)` yields a live onload handler
+  // executing inside the Chromium render context.
+  //
+  // Not reachable at MVP: photoDataUri is built server-side as
+  // `data:${mime};base64,…` from an R2 fetch, and no endpoint ships that lets a
+  // candidate set their photo (so `mime` is not attacker-controlled today).
+  // It is a landmine rather than a live hole — and the guard belongs here
+  // regardless, because the moment a photo-upload route lands, the upstream
+  // `contentType.startsWith('image/')` check would happily pass
+  // `image/png" onload="…`.
+  //
+  // Two independent guards, since either alone would do but both are cheap:
+  //   1. shape-validate that it really is a data: image URI, and
+  //   2. esc() it, so a quote can never terminate the attribute.
+  const safePhotoUri =
+    view.photoDataUri && /^data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]*$/.test(view.photoDataUri)
+      ? view.photoDataUri
+      : null;
+  const photo = safePhotoUri ? `<img class="photo" src="${esc(safePhotoUri)}" alt="" />` : '';
   // Phase 2 (B6): a video section renders here ONLY when a video exists.
   const video = view.hasVideo
     ? `<section><h2>Video Portfolio</h2><p>A video introduction is available on SkillIndiaConnect.</p></section>`

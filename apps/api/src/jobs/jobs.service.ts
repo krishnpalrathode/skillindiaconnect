@@ -1,10 +1,4 @@
-import {
-  ForbiddenException,
-  Inject,
-  Injectable,
-  NotFoundException,
-  forwardRef,
-} from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JobMarket, JobStatus, Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
@@ -474,10 +468,25 @@ export class JobsService {
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
+  /**
+   * SEC-001 (S8-H2) — a job belonging to ANOTHER company is reported exactly as
+   * a job that does not exist: 404 `JOB_NOT_FOUND`.
+   *
+   * This used to throw 403 `JOB_NOT_OWNED`, which was an enumeration oracle. The
+   * two responses differed, so an authenticated employer could walk uuids and
+   * partition them into "exists on this platform" (403) vs "does not exist"
+   * (404) — leaking the existence, and via `/publish` etc. the lifecycle state,
+   * of every competitor's job including unpublished DRAFTS. No data was
+   * returned and no write landed, but existence itself is the leak, and the
+   * conventions are explicit: "not yours / hidden" is a 404, never a 403.
+   *
+   * 403 is reserved for "you lack a permission on a resource whose existence is
+   * fine to reveal" — an RBAC denial. Ownership failure is not that.
+   */
   private async assertOwnership(companyId: string, userId: string): Promise<void> {
     const link = await this.prisma.employerUser.findUnique({ where: { userId } });
     if (!link || link.companyId !== companyId) {
-      throw new ForbiddenException({ code: 'JOB_NOT_OWNED' });
+      throw new NotFoundException({ code: 'JOB_NOT_FOUND' });
     }
   }
 
@@ -486,6 +495,7 @@ export class JobsService {
       where: { id: jobId },
       select: { companyId: true },
     });
+    // Both branches yield the identical 404 — see assertOwnership (SEC-001).
     if (!job) throw new NotFoundException({ code: 'JOB_NOT_FOUND' });
     await this.assertOwnership(job.companyId, userId);
   }
