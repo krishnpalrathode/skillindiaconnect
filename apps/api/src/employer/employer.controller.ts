@@ -9,6 +9,7 @@ import {
 import { UserRole } from '@prisma/client';
 import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user.decorator';
 import { EmployerService } from './employer.service';
+import { EmployerDashboardService } from './employer-dashboard.service';
 import { RegisterCompanyDto } from './dto/register-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { PresignCertDto } from './dto/presign-cert.dto';
@@ -20,6 +21,7 @@ import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types'
 export class EmployerController {
   constructor(
     private readonly employerService: EmployerService,
+    private readonly dashboardService: EmployerDashboardService,
     private readonly audit: AuditService,
   ) {}
 
@@ -42,14 +44,14 @@ export class EmployerController {
       meta: { companyName: company.name },
     });
 
-    return { data: company };
+    return { data: await this.withCertKey(company) };
   }
 
   @Get('me/company')
   async getMyCompany(@CurrentUser() user: CurrentUserPayload) {
     this.assertEmployerRole(user.role);
     const company = await this.employerService.getCompanyForEmployerUser(user.userId);
-    return { data: company };
+    return { data: await this.withCertKey(company) };
   }
 
   @Patch('me/company')
@@ -59,7 +61,7 @@ export class EmployerController {
   ) {
     this.assertEmployerRole(user.role);
     const company = await this.employerService.updateCompany(user.userId, dto);
-    return { data: company };
+    return { data: await this.withCertKey(company) };
   }
 
   @Post('me/company/documents/presign')
@@ -85,13 +87,24 @@ export class EmployerController {
   @Get('me/dashboard')
   async getDashboard(@CurrentUser() user: CurrentUserPayload) {
     this.assertEmployerRole(user.role);
-    const dashboard = await this.employerService.getDashboard(user.userId);
-    return { data: dashboard };
+    return { data: await this.dashboardService.getDashboard(user.userId) };
   }
 
   private assertEmployerRole(role: UserRole): void {
     if (role !== UserRole.EMPLOYER) {
       throw new ForbiddenException({ code: 'FORBIDDEN' });
     }
+  }
+
+  /**
+   * Contract's Company carries `registrationCertKey` (the latest uploaded
+   * certificate); the column lives on company_documents, so company
+   * responses attach it here. Screen 14's resubmit prefill reads it.
+   */
+  private async withCertKey<T extends { id: string }>(company: T) {
+    return {
+      ...company,
+      registrationCertKey: await this.employerService.getRegistrationCertKey(company.id),
+    };
   }
 }

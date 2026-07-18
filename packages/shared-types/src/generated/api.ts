@@ -540,6 +540,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/candidates/me/profile-views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get profile view analytics for the authenticated candidate (S3)
+         * @description Returns total views, views in the last 30 days, and up to 20 most recent
+         *     individual view events (company name + timestamp).
+         *
+         *     Profile views are recorded when an employer calls
+         *     `GET /employers/candidates/:id` — deduplicated per (company, candidate)
+         *     per rolling 24-hour window.
+         */
+        get: operations["getCandidateMeProfileViews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/account": {
         parameters: {
             query?: never;
@@ -773,11 +798,16 @@ export interface paths {
         };
         /**
          * Get the employer's dashboard summary (Screen 15)
-         * @description Returns KPIs (active jobs, total applications, shortlisted, selected)
-         *     and the most recent jobs and applicants.
+         * @description Returns the dashboard shape: KPIs (active jobs, totalApplications,
+         *     shortlisted, totalJobViews, hiredThisMonth), recent active jobs,
+         *     `recentApplicants`, and the computed `profileChecklist`.
          *
-         *     `recentApplicants` uses employer-context viewer-aware DTO masking:
-         *     phone and religion are omitted based on candidate privacy toggles.
+         *     As of Sprint 4, `totalApplications` / `shortlisted` are live counts and
+         *     `recentApplicants` is populated with employer-context `ApplicantSummary`
+         *     rows (no phone/religion/dob). An empty array now means no applicants yet.
+         *
+         *     `profileChecklist` is computed per-request — never stored as a percentage.
+         *     Use its `hint` field to show the next actionable item to the employer.
          *
          *     **403 EMPLOYER_NOT_APPROVED** if the company status is not APPROVED.
          */
@@ -799,6 +829,199 @@ export interface paths {
         };
         /** List the employer's job postings — offset-paginated (Screen 17) */
         get: operations["getEmployersMeJobs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employers/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the employer's full profile (S3)
+         * @description Returns company details, hiring preferences, contact persons, logo URL,
+         *     and the computed profile completeness checklist.
+         *
+         *     **403 EMPLOYER_NOT_APPROVED** if company status is not APPROVED.
+         */
+        get: operations["getEmployersMeProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employers/me/profile/hiring-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Upsert hiring preferences (S3)
+         * @description Creates or replaces the employer's hiring preferences. The entire preferences object is replaced (not merged) on each call.
+         */
+        patch: operations["patchEmployersMeProfileHiringPreferences"];
+        trace?: never;
+    };
+    "/employers/me/profile/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a contact person (S3)
+         * @description Adds a display-only contact record to the employer's profile.
+         *     **NOT a login account** — this creates a contact listing only.
+         *
+         *     If `isPrimary: true`, any existing primary contact is auto-demoted to
+         *     non-primary. Only one contact may be primary at a time.
+         */
+        post: operations["postEmployersMeProfileContacts"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employers/me/profile/contacts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a contact person (S3) */
+        delete: operations["deleteEmployersMeProfileContactById"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a contact person (S3)
+         * @description Partial update of a contact record. Setting `isPrimary: true` auto-demotes the existing primary contact.
+         */
+        patch: operations["patchEmployersMeProfileContactById"];
+        trace?: never;
+    };
+    "/employers/me/profile/logo/presign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get a presigned R2 URL to upload the company logo (S3)
+         * @description Issues a short-lived presigned PUT URL for direct R2 upload of the
+         *     company logo. After upload, call
+         *     `POST /employers/me/profile/logo/confirm` with the returned `key`.
+         *
+         *     Accepted: image/jpeg, image/png. Max 2 MB.
+         */
+        post: operations["postEmployersMeProfileLogoPresign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employers/me/profile/logo/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm the uploaded company logo (S3)
+         * @description After PUT to the presigned URL succeeds, call this to record the logo key on the company profile. Returns the updated employer profile.
+         */
+        post: operations["postEmployersMeProfileLogoConfirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employers/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Browse visible candidates (employer, cursor-paginated) (S3)
+         * @description Returns cursor-paginated browse cards for candidates with
+         *     `profileVisible = true`. **Candidates with `profileVisible = false` are
+         *     NEVER returned** — they are excluded at query time.
+         *
+         *     **Whitelisted query parameters only** — arbitrary field access is not
+         *     allowed. Filtering/sorting beyond these parameters is not supported at MVP.
+         *
+         *     Viewing a candidate's full profile (GET /employers/candidates/:id) is a
+         *     separate call that records a profile view.
+         */
+        get: operations["getEmployersCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employers/candidates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * View a candidate's full profile (employer context, S3)
+         * @description Returns the employer-context view of a candidate's profile.
+         *
+         *     **Privacy invariants (enforced at API layer):**
+         *     - `phone` is ABSENT (not null) when `showPhone = false`
+         *     - `religion` is ABSENT (not null) when `showReligion = false`
+         *     - `dob` is NEVER included — only derived `age`
+         *     - `documentsStatus` contains status/validity ONLY — no keys, URLs, content
+         *     - A `profileVisible = false` candidate returns **404** (identical to
+         *       nonexistent — indistinguishable to the caller)
+         *
+         *     **Side effect:** Records a profile view, deduplicated per (company, candidate)
+         *     per rolling 24-hour window. On first view (or after 24 h), appends a
+         *     `PROFILE_VIEWED` in-app notification to the candidate's notification feed
+         *     (fire-and-forget — never blocks the response).
+         */
+        get: operations["getEmployersCandidateById"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1124,26 +1347,6 @@ export interface paths {
         patch: operations["patchAdminSettings"];
         trace?: never;
     };
-    "/employers/candidates/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * [S3] View a candidate profile (employer context)
-         * @description **Sprint 3 — not yet implemented.** Privacy rules apply: phone and religion are omitted based on candidate toggle settings.
-         */
-        get: operations["getEmployersCandidateById"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/jobs/{id}/apply": {
         parameters: {
             query?: never;
@@ -1154,8 +1357,17 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * [S4] Apply to a job (candidate)
-         * @description **Sprint 4 — not yet implemented.** The apply gate enforces profile completion ≥ threshold, all mandatory documents present, and passport not expired. Match score is computed once at apply time and snapshotted.
+         * Apply to a job (candidate)
+         * @description Candidate applies to an ACTIVE job. **Apply-gate error ladder** — checked fail-fast IN THIS EXACT ORDER, each with a distinct code:
+         *     1. `JOB_NOT_ACTIVE` (422) — the job is not ACTIVE (draft/paused/archived). 2. `ALREADY_APPLIED` (409) — this candidate already applied to this job. 3. `PROFILE_INCOMPLETE` (422) — completion below the required threshold;
+         *        `meta: { completionPct: int, threshold: int }`.
+         *     4. `MANDATORY_DOCS_MISSING` (422) — a required document is absent;
+         *        `meta: { missing: DocumentType[] }`.
+         *     5. `PASSPORT_INVALID` (422) — passport expired or missing;
+         *        `meta: { reason: "expired" | "missing" }`.
+         *
+         *     On success (201) the match score is computed ONCE and snapshotted (`matchScore` + `matchBreakdown`), the gate snapshot fields are frozen (`docsCompleteCount` / `docsRequiredCount` / `passportValidAtApply`), the application enters PENDING with a DB-assigned `humanId` (`AP-YYYY-N`).
+         *     **Side effects:** an in-app receipt notification to the candidate, and an in-app new-applicant notification to the employer.
          */
         post: operations["applyToJob"];
         delete?: never;
@@ -1172,8 +1384,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [S4] List applicants for a job (employer)
-         * @description **Sprint 4 — not yet implemented.**
+         * List applicants for a job (employer)
+         * @description Employer lists applicants to their OWN job. Cursor-paginated. Each `ApplicantCard` reuses the S3 employer-context candidate subset, so the privacy omission semantics carry through (phone/religion omitted per the candidate's toggles, no dob, documents status-only). `counts` powers the status column headers on Screen 18.
          */
         get: operations["getJobApplicants"];
         put?: never;
@@ -1198,10 +1410,51 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * [S4] Update application status (employer)
-         * @description **Sprint 4 — not yet implemented.** Employers can only move status FORWARD (PENDING → SHORTLISTED → SELECTED/REJECTED). Backward/corrective moves require ADMIN_OVERRIDE with a mandatory reason. The "Selected" WhatsApp fires once per application (guarded by `selectedNotifiedAt`).
+         * Update application status (employer, forward-only)
+         * @description The owning employer moves an application FORWARD only. **Legal transitions:** PENDING → SHORTLISTED | SELECTED | REJECTED; SHORTLISTED → SELECTED | REJECTED. Any other move (including backward or same-state) → 422 `ILLEGAL_TRANSITION` with `meta: { from, to, allowed[] }`. Corrective/backward moves are ADMIN-ONLY (see PATCH /admin/applications/{id}/status).
+         *     **SELECTED side effect:** the FIRST entry into SELECTED fires ONE WhatsApp (`wa.selected`) + email + in-app, and sets `selectedNotifiedAt`. Re-entry into SELECTED (e.g. after an admin correction) sends email + in-app ONLY — the WhatsApp never fires twice (guarded by `selectedNotifiedAt`).
          */
         patch: operations["patchApplicationStatus"];
+        trace?: never;
+    };
+    "/candidates/me/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the candidate's applications
+         * @description The authenticated candidate's applications, cursor-paginated, newest first. `selectedNotifiedAt` (non-null) drives the "WhatsApp receipt sent" indicator on the card.
+         */
+        get: operations["getCandidateMeApplications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/candidates/me/applications/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get one of the candidate's applications (with timeline)
+         * @description Full candidate-facing application detail including the status `timeline`. Each timeline entry carries the actor's ROLE only (never identity) and `isAdminOverride`. The admin `overrideReason` is DELIBERATELY EXCLUDED from this candidate view — it is admin/audit-facing only.
+         */
+        get: operations["getCandidateMeApplicationById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/billing/plans": {
@@ -1372,8 +1625,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [S6] List all applications (admin)
-         * @description **Sprint 6 — not yet implemented.**
+         * List all applications (admin)
+         * @description Admin-wide application table (offset-paginated). RBAC: requires an admin role with the applications-read permission. The admin context is the ONLY context that may carry `overrideReason` on an application; candidate and employer contexts never see it.
          */
         get: operations["getAdminApplications"];
         put?: never;
@@ -1382,6 +1635,27 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/admin/applications/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Corrective application status move (admin override)
+         * @description Admins may move an application to ANY status (including backward/corrective moves the employer cannot make). A corrective move is an ADMIN_OVERRIDE and REQUIRES a non-empty `overrideReason`; omitting it → 422 `OVERRIDE_REASON_REQUIRED`. The reason is logged to the audit trail and recorded on the timeline entry (`isAdminOverride: true`), but is NEVER serialized into candidate/employer contexts.
+         *     Re-entry into SELECTED still respects the once-per-application WhatsApp guard (`selectedNotifiedAt`): email + in-app only, no second WhatsApp. RBAC: requires the applications-write permission.
+         */
+        patch: operations["patchAdminApplicationStatus"];
         trace?: never;
     };
     "/admin/roles/{role}/permissions": {
@@ -1499,7 +1773,10 @@ export interface components {
         JobMarket: "GULF" | "LOCAL";
         /** @enum {string} */
         GenderPreference: "MALE" | "FEMALE" | "ANY";
-        /** @enum {string} */
+        /**
+         * @description Must match the Prisma `NotificationType` enum (the DB source of truth). PROFILE_VIEWED fires when an employer views a candidate's full profile (deduplicated per company per rolling 24 h window). Data payload: `{ companyName: string }`. PASSPORT_EXPIRY fires when a passport is within the reminder window. Data payload: `{ expiryDate: string, daysRemaining: integer }`.
+         * @enum {string}
+         */
         NotificationType: "APPLICATION_SELECTED" | "APPLICATION_SHORTLISTED" | "APPLICATION_REJECTED" | "NEW_JOB_MATCH" | "PROFILE_REMINDER" | "JOB_CLOSING_SOON" | "PASSPORT_EXPIRY" | "PROFILE_VIEWED" | "EMPLOYER_APPROVED" | "EMPLOYER_REJECTED" | "EMPLOYER_SUSPENDED" | "SUBSCRIPTION_PURCHASED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "CANDIDATE_MATCHES" | "RESUME_SENT";
         /**
          * @description Maps to the tabs on the Admin Settings screen (Screen 28). WORKER_PROTECTION settings are core rules — only SUPER_ADMIN may update them.
@@ -1671,17 +1948,36 @@ export interface components {
             /** Format: date-time */
             approvedAt?: string | null;
         };
+        /** @description Employer dashboard KPIs. As of Sprint 4, `totalApplications` and `shortlisted` are LIVE application counts across the employer's jobs (they were honest zeros in S3). `totalJobViews` and `hiredThisMonth` are S3 KPIs. */
         EmployerDashboardKpi: {
             activeJobs: number;
+            /** @description Total applications across all the employer's jobs (live in S4). */
             totalApplications: number;
+            /** @description Applications in SHORTLISTED status across the employer's jobs (live in S4). */
             shortlisted: number;
-            selected: number;
+            /** @description Total views across all the employer's job postings (S3) */
+            totalJobViews: number;
+            /** @description Candidates marked hired in the current calendar month (S3) */
+            hiredThisMonth: number;
         };
-        /** @description Employer dashboard summary (Screen 15). `recentApplicants` applies viewer-aware DTO masking — phone and religion follow candidate privacy toggles. */
+        /**
+         * @description Employer dashboard summary (Screen 15).
+         *
+         *     As of Sprint 4, `recentApplicants` is LIVE — the most recent applicants
+         *     across the employer's jobs, each an `ApplicantSummary` carrying
+         *     employer-context privacy masking (no phone/religion/dob). It was an honest
+         *     `[]` in S3. An empty array now means genuinely no applicants yet.
+         *
+         *     `profileChecklist` is computed per-request from current company state —
+         *     never stored as a percentage. Use its `hint` field to surface the next
+         *     actionable item to the employer.
+         */
         EmployerDashboard: {
             kpis: components["schemas"]["EmployerDashboardKpi"];
             recentJobs: components["schemas"]["JobCard"][];
-            recentApplicants: components["schemas"]["CandidateProfile"][];
+            /** @description Most recent applicants across the employer's jobs (live in S4). */
+            recentApplicants: components["schemas"]["ApplicantSummary"][];
+            profileChecklist: components["schemas"]["ProfileChecklist"];
         };
         /**
          * @description Full internal job schema — returned to the owning employer and admins only.
@@ -1725,6 +2021,8 @@ export interface components {
             companyId: string;
             /** @description Denormalized for display */
             companyName: string;
+            /** @description Total applications to this job. Live in Sprint 4 — powers the applicant count on the employer's My Jobs list (Screen 17), the entry point to the applicants view (Screen 18). Omitted before S4. */
+            applicantCount?: number;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -1809,6 +2107,313 @@ export interface components {
             updatedAt?: string | null;
             /** @description User ID of the last updater */
             updatedBy?: string | null;
+        };
+        /**
+         * @description Employer profile completeness checklist — computed per-request from current
+         *     company state. No stored percentage; no scoring engine.
+         *     `hint` is the next actionable item (null when all checks pass).
+         */
+        ProfileChecklist: {
+            /** @description Company logo has been uploaded and confirmed */
+            hasLogo: boolean;
+            /** @description Hiring preferences have been saved at least once */
+            hasHiringPreferences: boolean;
+            /** @description At least two contact persons are recorded */
+            hasSecondContact: boolean;
+            /** @description Company description field is non-empty */
+            hasDescription: boolean;
+            /**
+             * @description Next actionable item for the employer; null when all checks pass
+             * @example Add a company logo to build candidate trust
+             */
+            hint: string | null;
+        };
+        /** @description Employer hiring preferences used for candidate browse context */
+        HiringPreferences: {
+            /** @description Category IDs the employer prefers to hire from */
+            preferredCategories?: string[];
+            /** @description Preferred candidate nationalities (e.g. 'Indian', 'Nepali') */
+            preferredNationalities?: string[];
+            /** @description Minimum years of experience preferred */
+            minExperience?: number;
+            /** @description Free-text hiring notes (internal, not shown to candidates) */
+            notes?: string;
+        };
+        /**
+         * @description Display-only contact record for employer profile.
+         *     **NOT a login account** — these are human contacts listed on the company
+         *     profile (e.g., HR Manager, Recruitment Lead) so candidates and admins
+         *     know who to reach. Creating a contact does NOT create a user account.
+         */
+        ContactPerson: {
+            /** Format: uuid */
+            id: string;
+            /** @example Rajesh Mehta */
+            name: string;
+            /** @example HR Manager */
+            role: string;
+            /** @example +971501234567 */
+            phone?: string;
+            /**
+             * Format: email
+             * @example rajesh@gulfbuilders.example.com
+             */
+            email?: string;
+            /** @description Only one contact per company may be primary. Setting a new contact as primary auto-demotes the existing primary. */
+            isPrimary: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description Full employer profile returned by GET /employers/me/profile. Includes company details, hiring preferences, contact persons, logo URL, and the computed profile completeness checklist. */
+        EmployerProfile: {
+            company: components["schemas"]["Company"];
+            /** @description null when not yet saved */
+            hiringPreferences?: components["schemas"]["HiringPreferences"];
+            contacts: components["schemas"]["ContactPerson"][];
+            /**
+             * Format: uri
+             * @description Short-expiry signed R2 URL; null if no logo uploaded
+             */
+            logoUrl?: string | null;
+            profileChecklist: components["schemas"]["ProfileChecklist"];
+        };
+        /**
+         * @description Document status indicator visible in employer context.
+         *     **NEVER includes keys, URLs, or document content.**
+         *     Signed-URL access (for download) is S5 Pro-gated.
+         */
+        CandidateDocumentStatus: {
+            type: components["schemas"]["DocumentType"];
+            /** @description Whether the candidate has uploaded this document type */
+            uploaded: boolean;
+            /** @description PASSPORT type only. true = passport exists and is not expired. Absent for non-PASSPORT types. */
+            passportValid?: boolean;
+        };
+        /**
+         * @description Employer-context view of a candidate profile. Privacy invariants:
+         *     - `phone` is **ABSENT** (not null) when `showPhone = false`
+         *     - `religion` is **ABSENT** (not null) when `showReligion = false`
+         *     - `dob` is NEVER included — only derived `age` (integer years)
+         *     - `documentsStatus` contains status/validity ONLY — no keys, URLs, or content
+         *     - A `profileVisible = false` candidate returns 404 (indistinguishable from
+         *       nonexistent) — NEVER appears here
+         */
+        CandidateEmployerView: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+            /** @description Age in full years derived from dob — never raw dob */
+            age?: number;
+            /**
+             * @description ABSENT when showPhone = false; present when showPhone = true
+             * @example +919876543210
+             */
+            phone?: string;
+            /** @description ABSENT when showReligion = false (default); present when showReligion = true */
+            religion?: string;
+            nationality?: string;
+            currentLocation?: string;
+            /** Format: uuid */
+            jobCategoryId?: string | null;
+            isAvailable: boolean;
+            /** @description Notice period in days */
+            noticePeriod?: number;
+            languages?: string[];
+            experiences?: components["schemas"]["WorkExperience"][];
+            skills?: components["schemas"]["CandidateSkill"][];
+            documentsStatus: components["schemas"]["CandidateDocumentStatus"][];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /**
+         * @description Card-level candidate summary for employer browse (GET /employers/candidates).
+         *     Deliberately minimal — no phone, religion, salary, or documents.
+         *     All `profileVisible = false` candidates are excluded at query time
+         *     (never appear in browse results).
+         */
+        CandidateBrowseCard: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+            nationality?: string;
+            currentLocation?: string;
+            /** Format: uuid */
+            jobCategoryId?: string | null;
+            /** @description Total years of experience across all work entries */
+            experienceYears?: number;
+            /** @description Up to 3 skill names for display (full list on detail view) */
+            skills?: string[];
+            /** @description true if any work experience has type = FOREIGN */
+            hasForeignExperience: boolean;
+            isAvailable: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description Profile view analytics returned to the authenticated candidate */
+        ProfileViewsSummary: {
+            /** @description All-time total profile views */
+            total: number;
+            /** @description Profile views in the last 30 days */
+            last30Days: number;
+            /** @description Most recent individual view events (newest first, max 20) */
+            recentViews: {
+                /** @description Name of the company that viewed the profile */
+                companyName: string;
+                /** Format: date-time */
+                viewedAt: string;
+            }[];
+        };
+        /**
+         * @description Application lifecycle status. There is NO `WITHDRAWN` state at MVP — candidates cannot withdraw an application (deliberately out of scope; a later sprint may add it). Employer transitions are forward-only (PENDING → SHORTLISTED → SELECTED|REJECTED); only admins may move backward/corrective, and only with a mandatory override reason.
+         * @enum {string}
+         */
+        ApplicationStatus: "PENDING" | "SHORTLISTED" | "SELECTED" | "REJECTED";
+        /** @description Per-factor breakdown of `matchScore`, SNAPSHOTTED at apply time and NEVER recomputed on later reads or status changes. The four factor scores sum to `matchScore` (0–100). Max weights: category 40, experienceYears 30, foreignExperience 20, documents 10. */
+        MatchBreakdown: {
+            /** @description 40 when the job category matches the candidate's category, else 0. */
+            category: {
+                score: number;
+                /** @example 40 */
+                max: number;
+            };
+            /** @description Scales with clamped years of experience. */
+            experienceYears: {
+                /** @description Candidate's total years of experience at apply time (unclamped). */
+                raw: number;
+                /** @description `raw` clamped to the scoring ceiling before scoring. */
+                clamped: number;
+                score: number;
+                /** @example 30 */
+                max: number;
+            };
+            /** @description 20 when any work experience has type FOREIGN, else 0. */
+            foreignExperience: {
+                score: number;
+                /** @example 20 */
+                max: number;
+            };
+            /** @description Scales with the count of mandatory documents present at apply. */
+            documents: {
+                score: number;
+                /** @example 10 */
+                max: number;
+            };
+        };
+        /** @description A candidate's application to a job. `matchScore` (0–100) and `matchBreakdown` are computed ONCE at apply time and snapshotted — NEVER recomputed on later reads or status changes. The snapshot fields (`docsCompleteCount` / `docsRequiredCount` / `passportValidAtApply`) freeze the gate state at apply time. `humanId` is DB-assigned in the format `AP-YYYY-N`. */
+        Application: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description DB-assigned human id, format `AP-YYYY-N`.
+             * @example AP-2026-1
+             */
+            humanId: string;
+            /** Format: uuid */
+            jobId: string;
+            /** Format: uuid */
+            candidateId: string;
+            status: components["schemas"]["ApplicationStatus"];
+            /** @description Snapshot at apply time — never recomputed. */
+            matchScore: number;
+            matchBreakdown: components["schemas"]["MatchBreakdown"];
+            coverLetter?: string | null;
+            /** @description Mandatory documents present at apply time (snapshot). */
+            docsCompleteCount: number;
+            /** @description Mandatory documents required at apply time (snapshot). */
+            docsRequiredCount: number;
+            /** @description Passport present and unexpired at apply time (snapshot). */
+            passportValidAtApply: boolean;
+            /**
+             * Format: date-time
+             * @description Set the FIRST time the application enters SELECTED — guards the once-per-application "Selected" WhatsApp. Re-entry to SELECTED does NOT change it (email + in-app only on re-entry).
+             */
+            selectedNotifiedAt?: string | null;
+            /** @description Optional employer feedback surfaced to the candidate on rejection. */
+            rejectionFeedback?: string | null;
+            /** @description Reason for the most recent admin corrective (override) move. ADMIN CONTEXT ONLY — present only in admin serializations; never emitted to candidate or employer contexts. */
+            overrideReason?: string | null;
+            /** Format: date-time */
+            appliedAt: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        /** @description Candidate-facing application list item (GET /candidates/me/applications). */
+        ApplicationCard: {
+            /** Format: uuid */
+            id: string;
+            /** @example AP-2026-1 */
+            humanId: string;
+            /** @description Minimal job subset for the applications list. */
+            job: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+                companyName: string;
+                location: string;
+                market: components["schemas"]["JobMarket"];
+            };
+            status: components["schemas"]["ApplicationStatus"];
+            matchScore: number;
+            /** Format: date-time */
+            appliedAt: string;
+            /**
+             * Format: date-time
+             * @description Non-null drives the "WhatsApp receipt sent" indicator on the card.
+             */
+            selectedNotifiedAt?: string | null;
+            rejectionFeedback?: string | null;
+        };
+        /** @description One status transition in an application's history. Carries the actor's ROLE only — NEVER actor identity. `overrideReason` is admin/audit-facing and is DELIBERATELY EXCLUDED from the candidate-facing timeline (see GET /candidates/me/applications/{id}). */
+        ApplicationTimelineEntry: {
+            fromStatus: components["schemas"]["ApplicationStatus"];
+            toStatus: components["schemas"]["ApplicationStatus"];
+            actorRole: components["schemas"]["UserRole"];
+            /** @description true when an admin made a non-forward-only (corrective) move. */
+            isAdminOverride: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ApplicationDetail: components["schemas"]["ApplicationCard"] & {
+            matchBreakdown: components["schemas"]["MatchBreakdown"];
+            coverLetter: string | null;
+            timeline: components["schemas"]["ApplicationTimelineEntry"][];
+        };
+        ApplicantCard: components["schemas"]["CandidateEmployerView"] & {
+            /** Format: uuid */
+            applicationId: string;
+            /** @example AP-2026-1 */
+            humanId: string;
+            status: components["schemas"]["ApplicationStatus"];
+            matchScore: number;
+            matchBreakdown: components["schemas"]["MatchBreakdown"];
+            coverLetter?: string | null;
+            /** Format: date-time */
+            appliedAt: string;
+            docsCompleteCount?: number;
+            docsRequiredCount?: number;
+            passportValidAtApply?: boolean;
+        };
+        /** @description Per-status applicant counts — powers Screen 18's column headers. */
+        ApplicantCounts: {
+            pending: number;
+            shortlisted: number;
+            selected: number;
+            rejected: number;
+        };
+        /** @description Compact applicant row for the employer dashboard's `recentApplicants`. Employer-context: applies the candidate privacy omission semantics (no phone / religion / dob). */
+        ApplicantSummary: {
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            candidateId: string;
+            candidateName: string;
+            /** Format: uuid */
+            jobId: string;
+            jobTitle: string;
+            status: components["schemas"]["ApplicationStatus"];
+            matchScore: number;
+            /** Format: date-time */
+            appliedAt: string;
         };
     };
     responses: never;
@@ -2944,6 +3549,37 @@ export interface operations {
             };
         };
     };
+    getCandidateMeProfileViews: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Profile view analytics */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProfileViewsSummary"];
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     deleteAccount: {
         parameters: {
             query?: never;
@@ -3191,6 +3827,8 @@ export interface operations {
                      */
                     languagePref?: "en" | "hi" | "ar";
                     description?: string;
+                    /** @description R2 key returned by POST /employers/me/company/documents/presign (which works BEFORE registration) after the direct PUT upload. Ownership- and existence-validated; attached to the new company. */
+                    registrationCertKey?: string;
                 };
             };
         };
@@ -3526,6 +4164,406 @@ export interface operations {
                             totalPages: number;
                         };
                     };
+                };
+            };
+        };
+    };
+    getEmployersMeProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Employer profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EmployerProfile"];
+                    };
+                };
+            };
+            /** @description Company not approved */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description No company profile registered */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    patchEmployersMeProfileHiringPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HiringPreferences"];
+            };
+        };
+        responses: {
+            /** @description Preferences saved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["HiringPreferences"];
+                    };
+                };
+            };
+            /** @description Company not approved */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postEmployersMeProfileContacts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    role: string;
+                    phone?: string;
+                    /** Format: email */
+                    email?: string;
+                    isPrimary: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Contact person created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ContactPerson"];
+                    };
+                };
+            };
+            /** @description Company not approved */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deleteEmployersMeProfileContactById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contact deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Contact not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    patchEmployersMeProfileContactById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    role?: string;
+                    phone?: string;
+                    /** Format: email */
+                    email?: string;
+                    isPrimary?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Contact updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ContactPerson"];
+                    };
+                };
+            };
+            /** @description Contact not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postEmployersMeProfileLogoPresign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @example company-logo.jpg */
+                    fileName: string;
+                    /** @enum {string} */
+                    mimeType: "image/jpeg" | "image/png";
+                    sizeBytes: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Presigned URL ready */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** Format: uri */
+                            uploadUrl: string;
+                            key: string;
+                            /** @example 300 */
+                            expiresInSeconds: number;
+                        };
+                    };
+                };
+            };
+            /** @description Invalid file type or exceeds 2 MB limit */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postEmployersMeProfileLogoConfirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description R2 key returned by the presign endpoint */
+                    key: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Logo confirmed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EmployerProfile"];
+                    };
+                };
+            };
+            /** @description Upload not found (HEAD check failed) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Upload not found",
+                     *       "status": 422,
+                     *       "detail": "The uploaded file was not found in storage. Please try uploading again.",
+                     *       "code": "UPLOAD_NOT_FOUND"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getEmployersCandidates: {
+        parameters: {
+            query?: {
+                /** @description Filter by job category ID */
+                category?: string;
+                /** @description Minimum total years of experience (inclusive) */
+                minExperienceYears?: number;
+                /** @description Filter to candidates with at least one FOREIGN experience entry */
+                hasForeignExperience?: boolean;
+                /** @description Filter by isAvailable flag */
+                availability?: boolean;
+                /** @description Keyword search on fullName, currentLocation, and skills */
+                q?: string;
+                /** @description Opaque keyset cursor for cursor-paginated feeds */
+                cursor?: components["parameters"]["CursorParam"];
+                /** @description Page size for cursor-paginated feeds (default 20, max 100) */
+                limit?: components["parameters"]["LimitParam"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cursor-paginated candidate browse cards */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CandidateBrowseCard"][];
+                        nextCursor: string | null;
+                    };
+                };
+            };
+            /** @description Company not approved */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getEmployersCandidateById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Candidate profile (employer context) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CandidateEmployerView"];
+                    };
+                };
+            };
+            /** @description Company not approved */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Candidate not found or profile is hidden (profileVisible = false) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not found",
+                     *       "status": 404,
+                     *       "detail": "Candidate not found.",
+                     *       "code": "NOT_FOUND"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
                 };
             };
         };
@@ -4339,37 +5377,6 @@ export interface operations {
             };
         };
     };
-    getEmployersCandidateById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Not implemented */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 3.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
     applyToJob: {
         parameters: {
             query?: never;
@@ -4379,10 +5386,54 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    coverLetter?: string;
+                };
+            };
+        };
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Application created (PENDING) with match snapshot */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Application"];
+                    };
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Caller is not a CANDIDATE */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description `ALREADY_APPLIED` — the candidate already applied to this job */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4390,12 +5441,21 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 4.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Already applied",
+                     *       "status": 409,
+                     *       "detail": "You have already applied to this job.",
+                     *       "code": "ALREADY_APPLIED"
                      *     }
                      */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description An apply-gate failure. `code` is one of (checked in order): `JOB_NOT_ACTIVE`, `PROFILE_INCOMPLETE` (meta.completionPct + meta.threshold), `MANDATORY_DOCS_MISSING` (meta.missing[]), `PASSPORT_INVALID` (meta.reason). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };
@@ -4404,10 +5464,14 @@ export interface operations {
     getJobApplicants: {
         parameters: {
             query?: {
-                /** @description 1-based page number for offset-paginated admin tables */
-                page?: components["parameters"]["PageParam"];
-                /** @description Items per page for offset-paginated admin tables (default 20, max 100) */
-                pageSize?: components["parameters"]["PageSizeParam"];
+                /** @description Opaque keyset cursor for cursor-paginated feeds */
+                cursor?: components["parameters"]["CursorParam"];
+                /** @description Page size for cursor-paginated feeds (default 20, max 100) */
+                limit?: components["parameters"]["LimitParam"];
+                /** @description Filter by application status. */
+                status?: components["schemas"]["ApplicationStatus"];
+                /** @description `match` = highest matchScore first; `recent` = newest first. */
+                sort?: "match" | "recent";
             };
             header?: never;
             path: {
@@ -4417,21 +5481,34 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Applicant cards for the job */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 4.",
-                     *       "code": "NOT_IMPLEMENTED"
-                     *     }
-                     */
+                    "application/json": {
+                        data: components["schemas"]["ApplicantCard"][];
+                        nextCursor: string | null;
+                        counts: components["schemas"]["ApplicantCounts"];
+                    };
+                };
+            };
+            /** @description Not the owning employer */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Job not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };
@@ -4446,14 +5523,47 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
-                "application/json": Record<string, never>;
+                "application/json": {
+                    status: components["schemas"]["ApplicationStatus"];
+                    /** @description Optional feedback shown to the candidate on REJECTED. */
+                    rejectionFeedback?: string;
+                };
             };
         };
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Updated application */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Application"];
+                    };
+                };
+            };
+            /** @description Not the owning employer */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description `ILLEGAL_TRANSITION` — the move is not forward-only */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4461,12 +5571,80 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 4.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Illegal transition",
+                     *       "status": 422,
+                     *       "detail": "Employers can only move an application forward.",
+                     *       "code": "ILLEGAL_TRANSITION",
+                     *       "meta": {
+                     *         "from": "SELECTED",
+                     *         "to": "PENDING",
+                     *         "allowed": []
+                     *       }
                      *     }
                      */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getCandidateMeApplications: {
+        parameters: {
+            query?: {
+                /** @description Opaque keyset cursor for cursor-paginated feeds */
+                cursor?: components["parameters"]["CursorParam"];
+                /** @description Page size for cursor-paginated feeds (default 20, max 100) */
+                limit?: components["parameters"]["LimitParam"];
+                /** @description Filter by application status. */
+                status?: components["schemas"]["ApplicationStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Application cards */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ApplicationCard"][];
+                        nextCursor: string | null;
+                    };
+                };
+            };
+        };
+    };
+    getCandidateMeApplicationById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Application detail with timeline */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ApplicationDetail"];
+                    };
+                };
+            };
+            /** @description Application not found (or not the candidate's) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };
@@ -4742,6 +5920,10 @@ export interface operations {
                 pageSize?: components["parameters"]["PageSizeParam"];
                 /** @description Sort expression in the format `field:asc` or `field:desc`. Allowed fields are whitelisted per endpoint. */
                 sort?: components["parameters"]["SortParam"];
+                /** @description Filter by application status. */
+                status?: components["schemas"]["ApplicationStatus"];
+                /** @description Filter to a single job. */
+                jobId?: string;
             };
             header?: never;
             path?: never;
@@ -4749,8 +5931,83 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Not implemented */
-            501: {
+            /** @description Applications page (admin context) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Application"][];
+                        meta: {
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+            /** @description Missing the applications-read permission */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    patchAdminApplicationStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    status: components["schemas"]["ApplicationStatus"];
+                    overrideReason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated application (admin context, includes overrideReason) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Application"];
+                    };
+                };
+            };
+            /** @description Missing the applications-write permission */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description `OVERRIDE_REASON_REQUIRED` — a corrective move needs a reason */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4758,10 +6015,10 @@ export interface operations {
                     /**
                      * @example {
                      *       "type": "about:blank",
-                     *       "title": "Not implemented",
-                     *       "status": 501,
-                     *       "detail": "This endpoint is planned for Sprint 6.",
-                     *       "code": "NOT_IMPLEMENTED"
+                     *       "title": "Override reason required",
+                     *       "status": 422,
+                     *       "detail": "A corrective status change requires a reason.",
+                     *       "code": "OVERRIDE_REASON_REQUIRED"
                      *     }
                      */
                     "application/json": components["schemas"]["Error"];

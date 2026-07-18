@@ -5,7 +5,7 @@ import {
   CheckCircle2,
   CreditCard,
   Eye,
-  FileText,
+  FileWarning,
   Info,
   Send,
   ShieldAlert,
@@ -88,17 +88,21 @@ export const notificationMeta: Record<NotificationType, NotificationMeta> = {
     bgClass: 'bg-success-bg',
     routeFn: toProfile,
   },
+  // Info-tier (S3). Action → the recent-viewers surface on the dashboard.
+  // In-app only by the notification matrix, so no delivery-receipt ever attaches.
   PROFILE_VIEWED: {
     Icon: Eye,
-    colorClass: 'text-primary-600',
-    bgClass: 'bg-primary-50',
-    routeFn: toProfile,
+    colorClass: 'text-info-fg',
+    bgClass: 'bg-info-bg',
+    routeFn: () => '/dashboard#recent-views',
   },
+  // Warning-tier (S3). Action → the profile Documents section (the re-upload remedy).
+  // Copy (expiring vs expired) comes from the server-rendered title/body.
   PASSPORT_EXPIRY: {
-    Icon: FileText,
+    Icon: FileWarning,
     colorClass: 'text-warning-fg',
     bgClass: 'bg-warning-bg',
-    routeFn: toProfile,
+    routeFn: () => '/profile#documents',
   },
   // ── System (employer / subscription) ──────────────────────────────────────
   EMPLOYER_APPROVED: {

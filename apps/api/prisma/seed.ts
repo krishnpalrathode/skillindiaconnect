@@ -396,6 +396,10 @@ async function main(): Promise<void> {
     foreign: boolean;
     skills: string[];
     resume?: boolean;
+    // Integration-test fixture toggles (default to the schema defaults when omitted):
+    showPhone?: boolean; // false → employer-context mapper OMITS phone (Candidate B)
+    profileVisible?: boolean; // false → invisible: byte-identical 404 + excluded from browse (Candidate C)
+    passportExpired?: boolean; // true → passport uploaded but expired → apply-gate rung 5 PASSPORT_INVALID
   };
   const candDefs: CandDef[] = [
     {
@@ -408,6 +412,18 @@ async function main(): Promise<void> {
       skills: ['Electrical Wiring', 'Panel Installation', 'Circuit Testing'],
       resume: true,
     },
+    // Candidate A (apply-able): complete + eligible, foreign, NO seeded application →
+    // the apply happy-path, match reveal, and first-time SELECTED WhatsApp are walkable.
+    {
+      key: 'arjun',
+      email: 'arjun@example.com',
+      name: 'Arjun Mehra',
+      pct: 100,
+      docs: ['PASSPORT', 'EXPERIENCE_CERT', 'EDUCATIONAL_CERT'],
+      foreign: true,
+      skills: ['Electrical Wiring', 'Panel Installation'],
+    },
+    // Candidate B: complete + eligible, but showPhone=OFF (the hidden-phone privacy subject).
     {
       key: 'sajid',
       email: 'sajid@example.com',
@@ -416,6 +432,18 @@ async function main(): Promise<void> {
       docs: ['PASSPORT', 'EXPERIENCE_CERT', 'EDUCATIONAL_CERT'],
       foreign: true,
       skills: ['Electrical Wiring', 'Safety Compliance'],
+      showPhone: false,
+    },
+    // Candidate C: complete but profileVisible=OFF (invisible → 404 + excluded from browse).
+    {
+      key: 'chandan',
+      email: 'chandan@example.com',
+      name: 'Chandan Verma',
+      pct: 90,
+      docs: ['PASSPORT', 'EXPERIENCE_CERT', 'EDUCATIONAL_CERT'],
+      foreign: true,
+      skills: ['Electrical Wiring', 'Circuit Testing'],
+      profileVisible: false,
     },
     {
       key: 'arun',
@@ -435,6 +463,20 @@ async function main(): Promise<void> {
       foreign: false,
       skills: [],
     },
+    // The admin-override fixture's candidate — a VALID applicant whose SELECTED was
+    // reversed to REJECTED by an admin (so the candidate timeline shows the neutral
+    // "Status updated by SkillIndiaConnect" step). Was ineligible `deepak` before,
+    // which was inconsistent (he could never have applied).
+    {
+      key: 'naveen',
+      email: 'naveen@example.com',
+      name: 'Naveen Reddy',
+      pct: 88,
+      docs: ['PASSPORT', 'EXPERIENCE_CERT', 'EDUCATIONAL_CERT'],
+      foreign: true,
+      skills: ['Electrical Wiring', 'Panel Installation'],
+    },
+    // Candidate D: deliberately ineligible (≈40%, no docs) — NO seeded application.
     {
       key: 'deepak',
       email: 'deepak@example.com',
@@ -444,28 +486,56 @@ async function main(): Promise<void> {
       foreign: false,
       skills: [],
     },
+    // Expired-passport candidate: complete + all docs, but the passport is expired →
+    // reaches apply-gate rung 5 (PASSPORT_INVALID, reason=expired).
+    {
+      key: 'vikram',
+      email: 'vikram@example.com',
+      name: 'Vikram Rao',
+      pct: 85,
+      docs: ['PASSPORT', 'EXPERIENCE_CERT', 'EDUCATIONAL_CERT'],
+      foreign: false,
+      skills: ['Electrical Wiring'],
+      passportExpired: true,
+    },
   ];
 
   const profileIdByKey: Record<string, string> = {};
 
-  for (const cd of candDefs) {
+  for (const [i, cd] of candDefs.entries()) {
     const u = await mkUser(cd.email, UserRole.CANDIDATE);
+    // Unique, non-'0000'-suffixed number per candidate. MockWhatsappChannel treats
+    // any phone ending in '0000' as NOT registered on WhatsApp, so a '...0000' number
+    // on a whatsappCapable candidate makes the SELECTED send fail+retry forever.
+    const phone = `+9194521${String(i + 1).padStart(5, '0')}`;
     const profile = await prisma.candidateProfile.upsert({
       where: { userId: u.id },
       create: {
         userId: u.id,
         fullName: cd.name,
         jobCategoryId: electrician.id,
-        phone: '+919452100000',
+        phone,
         phoneVerifiedAt: cd.pct >= 70 ? now : null,
         whatsappCapable: cd.pct >= 70,
+        // dob present → the employer-context mapper derives `age` (a number) and
+        // then DROPS dob. Without it, age is null and the age row/field is empty.
+        dob: new Date('1990-05-15'),
         nationality: 'Indian',
         currentLocation: 'India',
         maritalStatus: MaritalStatus.MARRIED,
         languages: ['Hindi', 'English'],
         completionPct: cd.pct, // seed approximation; S1 engine recomputes
+        showPhone: cd.showPhone ?? true, // schema default true; B overrides to false
+        profileVisible: cd.profileVisible ?? true, // schema default true; C overrides to false
       },
-      update: { fullName: cd.name, completionPct: cd.pct },
+      update: {
+        fullName: cd.name,
+        completionPct: cd.pct,
+        dob: new Date('1990-05-15'),
+        phone,
+        showPhone: cd.showPhone ?? true,
+        profileVisible: cd.profileVisible ?? true,
+      },
     });
     profileIdByKey[cd.key] = profile.id;
 
@@ -508,9 +578,22 @@ async function main(): Promise<void> {
           mimeType: 'application/pdf',
           sizeBytes: 102400,
           expiryDate:
-            t === 'PASSPORT' ? new Date(now.getTime() + 5 * 365 * 24 * 60 * 60 * 1000) : null,
+            t === 'PASSPORT'
+              ? cd.passportExpired
+                ? new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) // expired 30 days ago
+                : new Date(now.getTime() + 5 * 365 * 24 * 60 * 60 * 1000)
+              : null,
         },
-        update: {},
+        // Re-seed must correct the expiry (idempotent) — otherwise a prior run's
+        // future-dated passport would mask the expired-passport fixture.
+        update: {
+          expiryDate:
+            t === 'PASSPORT'
+              ? cd.passportExpired
+                ? new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+                : new Date(now.getTime() + 5 * 365 * 24 * 60 * 60 * 1000)
+              : null,
+        },
       });
     }
 
@@ -732,11 +815,15 @@ async function main(): Promise<void> {
       archived: true,
     },
     {
-      cand: 'deepak',
+      // Admin-override fixture: SELECTED → then admin-reversed to REJECTED.
+      // `selected: true` sets selectedNotifiedAt + the DELIVERED WhatsApp row, so
+      // the once-per-application guard and the reversal are both represented.
+      cand: 'naveen',
       status: ApplicationStatus.REJECTED,
-      score: 38,
-      bd: { category: 20, expYears: 0, foreign: 0, documents: 0 },
+      score: 80,
+      bd: { category: 40, expYears: 20, foreign: 20, documents: 0 },
       override: true,
+      selected: true,
     },
   ];
 

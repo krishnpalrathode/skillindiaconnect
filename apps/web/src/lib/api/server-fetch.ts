@@ -9,9 +9,9 @@ import type { ApiError } from './client';
 // for its Node-side absolute BASE (see mocks/ssr-origin.ts) — the Node MSW
 // server registered in instrumentation.ts matches on byte-identical origin.
 const SERVER_API_BASE =
-  process.env['NEXT_PUBLIC_API_MOCKING'] === 'enabled'
+  process.env.NEXT_PUBLIC_API_MOCKING === 'enabled'
     ? `${MOCK_SSR_ORIGIN}/api/v1`
-    : `${process.env['NEXT_PUBLIC_API_URL'] ?? ''}/api/v1`;
+    : `${process.env.NEXT_PUBLIC_API_URL ?? ''}/api/v1`;
 
 export class ServerApiError extends Error {
   constructor(public readonly error: ApiError) {
@@ -40,11 +40,12 @@ export async function serverFetch<T>(path: string, init: RequestInit = {}): Prom
   if (!res.ok) {
     const body = await res.json().catch(() => ({
       code: 'UNKNOWN_ERROR',
-      status: res.status,
       title: 'Error',
       detail: 'An unexpected error occurred.',
     }));
-    throw new ServerApiError(body as ApiError);
+    // Stamp the transport status LAST — `error.status` must always be the real
+    // HTTP status (SSR pages gate notFound() on it), never undefined.
+    throw new ServerApiError({ ...(body as ApiError), status: res.status });
   }
 
   return res.json() as Promise<T>;

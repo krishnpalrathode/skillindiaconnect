@@ -19,6 +19,8 @@ interface FileUploadProps {
   label: string;
   hint?: string;
   expiryDate?: string;
+  /** Blocks file selection — used when a prerequisite (e.g. passport expiry) is unset. */
+  disabled?: boolean;
   onDone?: (key: string) => void;
   className?: string;
 }
@@ -38,6 +40,7 @@ export function FileUpload({
   label,
   hint,
   expiryDate,
+  disabled = false,
   onDone,
   className,
 }: FileUploadProps) {
@@ -76,6 +79,9 @@ export function FileUpload({
 
   const isActive =
     state.status === 'presigning' || state.status === 'uploading' || state.status === 'confirming';
+  // `disabled` blocks selection AND retry: retrying without the missing prerequisite
+  // just reproduces the same server-side rejection.
+  const isInert = isActive || disabled;
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
@@ -94,8 +100,8 @@ export function FileUpload({
       {/* Drop zone / trigger — div+role to avoid <button> nesting in done/error states */}
       <div
         role="button"
-        tabIndex={isActive ? -1 : 0}
-        aria-disabled={isActive}
+        tabIndex={isInert ? -1 : 0}
+        aria-disabled={isInert}
         aria-label={
           state.status === 'error'
             ? t('retryUpload')
@@ -104,7 +110,7 @@ export function FileUpload({
               : t('selectFile')
         }
         onClick={() => {
-          if (isActive) return;
+          if (isInert) return;
           if (state.status === 'error') {
             retry();
           } else if (state.status !== 'done') {
@@ -112,7 +118,7 @@ export function FileUpload({
           }
         }}
         onKeyDown={(e) => {
-          if (isActive) return;
+          if (isInert) return;
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             if (state.status === 'error') retry();
@@ -130,6 +136,9 @@ export function FileUpload({
               ? 'border-error/50 bg-error-bg/30 text-error-fg cursor-pointer hover:bg-error-bg/50'
               : 'border-border bg-neutral-50 text-neutral-500 hover:border-primary-400 hover:bg-primary-50 cursor-pointer',
           isActive && 'cursor-wait pointer-events-none',
+          disabled &&
+            !isActive &&
+            'cursor-not-allowed opacity-60 hover:border-border hover:bg-neutral-50',
         )}
       >
         {state.status === 'idle' && (
@@ -220,6 +229,7 @@ export function FileUpload({
         id={id}
         type="file"
         accept={accept}
+        disabled={disabled}
         className="sr-only"
         onChange={handleFileChange}
         aria-label={label}

@@ -365,7 +365,7 @@ describe('MyJobsTable', () => {
     expect(publishButton).toBeInTheDocument();
   });
 
-  it('application counts show 0 (S4 placeholder — not fabricated)', async () => {
+  it('applicant counts are live and link to the applicants pipeline (S4-F3)', async () => {
     loginAsEmployer(EMPLOYER_APPROVED_USER_ID);
 
     render(
@@ -378,9 +378,10 @@ describe('MyJobsTable', () => {
       expect(screen.getByText('Experienced Mason')).toBeInTheDocument();
     });
 
-    // All application counts should be 0 (honest placeholder)
-    const zeroCounts = screen.getAllByLabelText(/0 applications/i);
-    expect(zeroCounts.length).toBeGreaterThan(0);
+    // The placeholder "0" is gone — the count is a live link into Screen 18.
+    const countLinks = screen.getAllByLabelText(/\d+ applicants/i);
+    expect(countLinks.length).toBeGreaterThan(0);
+    expect(countLinks[0]).toHaveAttribute('href', expect.stringContaining('/applicants'));
   });
 
   it('Pause action calls /pause and optimistically updates status', async () => {

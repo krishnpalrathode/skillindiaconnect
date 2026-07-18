@@ -43,7 +43,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user) return;
     if (user.role !== 'CANDIDATE') {
-      router.replace(`/${locale}/onboarding/employer`);
+      router.replace(`/${locale}/employer/onboarding`);
       return;
     }
 
@@ -103,11 +103,14 @@ export default function ProfilePage() {
         onCompletionRefetch={refetchCompletion}
       />
 
-      <DocumentsSection
-        profile={profile}
-        onProfileUpdate={setProfile}
-        onCompletionRefetch={refetchCompletion}
-      />
+      {/* Anchor target for PASSPORT_EXPIRY notifications (/profile#documents). */}
+      <div id="documents" className="scroll-mt-20">
+        <DocumentsSection
+          profile={profile}
+          onProfileUpdate={setProfile}
+          onCompletionRefetch={refetchCompletion}
+        />
+      </div>
 
       <SkillsSection
         profile={profile}

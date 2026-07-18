@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { HttpProblemFilter } from './core/http-problem.filter';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CoreModule } from './core/core.module';
@@ -14,6 +15,7 @@ import { NotificationModule } from './notifications/notification.module';
 import { EmployerModule } from './employer/employer.module';
 import { JobsModule } from './jobs/jobs.module';
 import { JobsSearchModule } from './jobs-search/jobs-search.module';
+import { ApplicationsModule } from './applications/applications.module';
 import { JwtAuthGuard } from './auth/guards/auth.guard';
 import { PermissionsGuard } from './auth/rbac/permissions.guard';
 
@@ -36,10 +38,13 @@ import { PermissionsGuard } from './auth/rbac/permissions.guard';
     EmployerModule,
     JobsModule,
     JobsSearchModule,
+    ApplicationsModule,
     EventEmitterModule.forRoot(),
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
   ],
   providers: [
+    // Every error body leaves through the RFC-7807 envelope (api-conventions.md).
+    { provide: APP_FILTER, useClass: HttpProblemFilter },
     // Guard execution order: ThrottlerGuard → JwtAuthGuard → PermissionsGuard.
     // NestJS APP_GUARD providers are applied in registration order.
     { provide: APP_GUARD, useClass: ThrottlerGuard },

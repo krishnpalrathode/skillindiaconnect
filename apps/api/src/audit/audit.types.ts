@@ -12,6 +12,7 @@ export const AUDIT_MODULES = {
   CANDIDATE: 'Candidate',
   EMPLOYER: 'Employer',
   JOBS: 'Jobs',
+  APPLICATIONS: 'Applications',
   PAYMENTS: 'Payments',
   NOTIFICATIONS: 'Notifications',
   ERRORS: 'Errors',
@@ -45,6 +46,7 @@ export const AUDIT_ACTIONS = {
   JOB_AUTO_ARCHIVED: 'job.auto_archived',
   JOB_DUPLICATED: 'job.duplicated',
   // Applications (S4)
+  APPLICATION_CREATED: 'application.created',
   APPLICATION_STATUS_CHANGED: 'application.status.changed',
   APPLICATION_ADMIN_OVERRIDE: 'application.admin_override',
   // Payments (S5)
@@ -53,6 +55,14 @@ export const AUDIT_ACTIONS = {
   // Notifications (S2-B3)
   NOTIFICATION_DELIVERED: 'notification.delivered',
   NOTIFICATION_FAILED: 'notification.failed',
+  // Employer profile (S3-B1)
+  EMPLOYER_PROFILE_UPDATED: 'employer.profile.updated',
+  EMPLOYER_LOGO_CONFIRMED: 'employer.logo.confirmed',
+  EMPLOYER_CONTACT_CREATED: 'employer.contact.created',
+  EMPLOYER_CONTACT_UPDATED: 'employer.contact.updated',
+  EMPLOYER_CONTACT_DELETED: 'employer.contact.deleted',
+  // Passport expiry cron (S3-B3)
+  PASSPORT_EXPIRY_RUN: 'passport_expiry.run',
 } as const;
 
 export type AuditActionName = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

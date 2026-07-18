@@ -5,6 +5,7 @@ import { CoreModule } from './core/core.module';
 import { AuditModule } from './audit/audit.module';
 import { NotificationWorkerModule } from './notifications/notification.worker-module';
 import { JobsWorkerModule } from './jobs/jobs.worker-module';
+import { CandidateWorkerModule } from './candidate/candidate.worker-module';
 
 // Loads: CoreModule (config + Redis) + ScheduleModule (cron runner).
 // Must NOT import AppApiModule or any HTTP controllers.
@@ -19,6 +20,7 @@ import { JobsWorkerModule } from './jobs/jobs.worker-module';
     AuditModule,
     NotificationWorkerModule,
     JobsWorkerModule,
+    CandidateWorkerModule,
   ],
 })
 export class AppWorkerModule {}

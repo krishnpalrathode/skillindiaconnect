@@ -7,12 +7,14 @@ import type { components } from '@skillindiaconnect/shared-types';
 import { useAuth } from '@/lib/auth/auth-context';
 import { getCandidateProfile, getCandidateCompletion } from '@/lib/api/candidate';
 import { getCandidateStats } from '@/lib/api/dashboard';
+import { getProfileViews, type ProfileViewsSummary } from '@/lib/api/profile-views';
 import { listNotifications } from '@/lib/api/notifications';
 import { searchJobsClient } from '@/lib/api/jobs';
 import { ApiRequestError } from '@/lib/api/client';
 import { EMPTY_FILTERS } from '@/lib/jobs/searchParams';
 import { Spinner } from '@/components/ui/spinner';
 import { KpiCards } from '@/components/dashboard/KpiCards';
+import { RecentViewersCard } from '@/components/dashboard/RecentViewersCard';
 import { ProfileSummaryCard } from '@/components/dashboard/ProfileSummaryCard';
 import { RecommendedJobs } from '@/components/dashboard/RecommendedJobs';
 import { MyApplicationsMini } from '@/components/dashboard/MyApplicationsMini';
@@ -29,6 +31,9 @@ interface DashboardData {
   stats: CandidateStats;
   unreadCount: number;
   recommendedJobs: JobCard[];
+  // null when the profile-views fetch failed → KPI shows a quiet dash, never a
+  // fabricated number.
+  profileViews: ProfileViewsSummary | null;
 }
 
 const EMPTY_STATS: CandidateStats = { applied: 0, profileViews: 0, shortlisted: 0 };
@@ -49,7 +54,7 @@ export default function DashboardPage() {
     if (!user) return;
 
     if (user.role !== 'CANDIDATE') {
-      router.replace(`/${locale}/onboarding/employer`);
+      router.replace(`/${locale}/employer/onboarding`);
       return;
     }
 
@@ -71,11 +76,13 @@ export default function DashboardPage() {
         // stats/notifications/jobs are independent of the profile-exists
         // check above and shouldn't take the whole dashboard down if one
         // fails — notably /me/stats 404s until the Applications module ships.
-        const [statsResult, unreadResult, jobsResult] = await Promise.allSettled([
-          getCandidateStats(),
-          listNotifications({ unread: true, limit: 50 }),
-          searchJobsClient(EMPTY_FILTERS, { limit: 4 }),
-        ]);
+        const [statsResult, unreadResult, jobsResult, profileViewsResult] =
+          await Promise.allSettled([
+            getCandidateStats(),
+            listNotifications({ unread: true, limit: 50 }),
+            searchJobsClient(EMPTY_FILTERS, { limit: 4 }),
+            getProfileViews(),
+          ]);
 
         setData({
           profile,
@@ -83,6 +90,7 @@ export default function DashboardPage() {
           stats: statsResult.status === 'fulfilled' ? statsResult.value : EMPTY_STATS,
           unreadCount: unreadResult.status === 'fulfilled' ? unreadResult.value.data.length : 0,
           recommendedJobs: jobsResult.status === 'fulfilled' ? jobsResult.value.data : [],
+          profileViews: profileViewsResult.status === 'fulfilled' ? profileViewsResult.value : null,
         });
       })
       .catch((err) => {
@@ -124,7 +132,7 @@ export default function DashboardPage() {
     );
   }
 
-  const { profile, completion, stats, unreadCount, recommendedJobs } = data;
+  const { profile, completion, stats, unreadCount, recommendedJobs, profileViews } = data;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6">
@@ -134,7 +142,9 @@ export default function DashboardPage() {
         </h1>
       </header>
 
-      <KpiCards stats={stats} unreadCount={unreadCount} />
+      <KpiCards stats={stats} unreadCount={unreadCount} profileViews={profileViews} />
+
+      <RecentViewersCard summary={profileViews} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">

@@ -1,10 +1,14 @@
-﻿import { useTranslations } from 'next-intl';
+import { redirect } from 'next/navigation';
 
-export default function EmployerOnboardingPage() {
-  const t = useTranslations('auth');
-  return (
-    <main className="flex min-h-svh items-center justify-center">
-      <p className="text-neutral-600">{t('employerOnboardingComingSoon')}</p>
-    </main>
-  );
+/**
+ * Legacy S1-F1 route. Employer onboarding (Screen 14) lives at
+ * /{locale}/employer/onboarding inside the employer shell — this stub only
+ * keeps old links/bookmarks working.
+ */
+export default function LegacyEmployerOnboardingRedirect({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  redirect(`/${params.locale}/employer/onboarding`);
 }

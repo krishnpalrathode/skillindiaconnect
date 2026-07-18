@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { CandidateController } from './candidate.controller';
 import { CandidateService } from './candidate.service';
 import { CandidateReadService } from './candidate-read.service';
@@ -9,10 +9,12 @@ import { DocumentController } from './document.controller';
 import { DocumentService } from './document.service';
 import { OnboardingController } from './onboarding.controller';
 import { OnboardingService } from './onboarding.service';
+import { ProfileViewsReadService } from './profile-views-read.service';
 import { QueueModule } from '../queue/queue.module';
+import { ApplicationsModule } from '../applications/applications.module';
 
 @Module({
-  imports: [QueueModule],
+  imports: [QueueModule, forwardRef(() => ApplicationsModule)],
   controllers: [CandidateController, DocumentController, OnboardingController],
   providers: [
     CandidateService,
@@ -22,6 +24,8 @@ import { QueueModule } from '../queue/queue.module';
     CompletionService,
     DocumentService,
     OnboardingService,
+    // Split ownership: Employer module writes profile_views; Candidate module reads own rows.
+    ProfileViewsReadService,
   ],
   exports: [
     // CandidateReadService is the seam for cross-module reads.

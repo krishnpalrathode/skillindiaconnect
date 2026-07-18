@@ -37,12 +37,17 @@ const BASE_JOB_DATA: Omit<NotificationJobData, 'channel'> = {
 
 function makeJob(
   channel: 'whatsapp' | 'email',
-  overrides: Partial<Pick<Job, 'attemptsMade' | 'opts'>> = {},
+  overrides: Partial<Pick<Job, 'attemptsMade' | 'opts'>> & {
+    data?: Partial<NotificationJobData>;
+  } = {},
 ): Job<NotificationJobData> {
   return {
-    data: { ...BASE_JOB_DATA, channel },
+    data: { ...BASE_JOB_DATA, channel, ...(overrides.data ?? {}) },
     attemptsMade: overrides.attemptsMade ?? 1,
     opts: { attempts: overrides.opts?.attempts ?? 3, ...(overrides.opts ?? {}) },
+    // Real BullMQ persists this to Redis; the processor pins the delivery-row
+    // id here so retries reuse the row.
+    updateData: jest.fn().mockResolvedValue(undefined),
   } as unknown as Job<NotificationJobData>;
 }
 
@@ -87,6 +92,11 @@ function makePrismaMock(overrides: {
         if (waMsgRow) Object.assign(waMsgRow, data);
         return waMsgRow;
       }),
+      findUnique: jest
+        .fn()
+        .mockImplementation(async ({ where }: { where: { id: string } }) =>
+          waMsgRow && (waMsgRow as { id?: string })['id'] === where.id ? waMsgRow : null,
+        ),
     },
     emailMessage: {
       create: jest.fn().mockImplementation(async ({ data }: { data: Record<string, unknown> }) => {
@@ -267,6 +277,61 @@ describe('NotificationProcessor', () => {
           meta: expect.objectContaining({ reason: 'retry_exhausted' }),
         }),
       );
+    });
+  });
+
+  // ── WhatsApp delivery-row lifecycle (one row per logical send) ───────────────
+
+  describe('WhatsApp — delivery-row reuse across retries', () => {
+    beforeEach(() => buildProcessor({ whatsappCapable: true, phone: PHONE }));
+
+    it('first attempt creates the row and pins its id on the job (updateData)', async () => {
+      waSendSpy.mockResolvedValue({ ok: false, errorCode: 'PROVIDER_DOWN' });
+
+      const job = makeJob('whatsapp', { attemptsMade: 1, opts: { attempts: 3 } });
+      await expect(processor.process(job)).rejects.toThrow();
+
+      expect(prismaMock.whatsappMessage.create).toHaveBeenCalledTimes(1);
+      expect(job.updateData).toHaveBeenCalledWith(
+        expect.objectContaining({ waMessageRowId: 'wa-msg-id' }),
+      );
+    });
+
+    it('a retry reuses the pinned row — NO second create', async () => {
+      waSendSpy.mockResolvedValue({ ok: false, errorCode: 'PROVIDER_DOWN' });
+
+      // First attempt creates + pins the row.
+      const first = makeJob('whatsapp', { attemptsMade: 1, opts: { attempts: 3 } });
+      await expect(processor.process(first)).rejects.toThrow();
+      const pinned = (first.updateData as jest.Mock).mock.calls[0]![0] as NotificationJobData;
+
+      // Retry carries the pinned id (BullMQ persists updateData to Redis).
+      const retry = makeJob('whatsapp', {
+        attemptsMade: 2,
+        opts: { attempts: 3 },
+        data: { waMessageRowId: pinned.waMessageRowId },
+      });
+      await expect(processor.process(retry)).rejects.toThrow();
+
+      // One logical send → one row: create ran ONCE across both attempts.
+      expect(prismaMock.whatsappMessage.create).toHaveBeenCalledTimes(1);
+      expect(prismaMock.whatsappMessage.findUnique).toHaveBeenCalledWith({
+        where: { id: 'wa-msg-id' },
+      });
+    });
+
+    it('threads payload.data.applicationId onto the delivery row', async () => {
+      waSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'wamid-1' });
+
+      const job = makeJob('whatsapp', {
+        data: {
+          payload: { ...BASE_JOB_DATA.payload, data: { applicationId: 'app-123' } },
+        },
+      });
+      await processor.process(job);
+
+      const created = prismaMock.whatsappMessage.create.mock.calls[0]?.[0]?.data;
+      expect(created?.applicationId).toBe('app-123');
     });
   });
 

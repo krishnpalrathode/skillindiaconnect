@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
-import { Briefcase, Users, Star, UserCheck } from 'lucide-react';
+import { Briefcase, Eye, Star, Users, CheckCircle2 } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 
 type EmployerDashboardKpi = components['schemas']['EmployerDashboardKpi'];
@@ -12,11 +12,12 @@ interface EmployerKpisProps {
 }
 
 /**
- * KPI cards for the employer dashboard.
- * At S2, all values come from GET /employers/me/dashboard which returns 0 for
- * totalApplications, shortlisted, and selected (no applications exist yet in S2).
- * activeJobs reflects actual posted jobs once S2-B5 ships. All values are honest —
- * no fabricated numbers.
+ * Dashboard KPI row (Screen 15).
+ *
+ * ALL five metrics are LIVE aggregates. `totalApplications`, `shortlisted`, and
+ * `hiredThisMonth` went live in the S4-B3 rewiring — the S3 "available once
+ * applications open" placeholder caption has retired (mirrors the candidate
+ * KpiCards). We render the API's real value and never fabricate or hide a metric.
  */
 export function EmployerKpis({ kpis }: EmployerKpisProps) {
   const t = useTranslations('employer.dashboard.kpi');
@@ -29,6 +30,14 @@ export function EmployerKpis({ kpis }: EmployerKpisProps) {
       icon: <Briefcase className="size-5" aria-hidden="true" />,
       colorClass: 'text-primary-600',
       bgClass: 'bg-primary-50',
+    },
+    {
+      key: 'totalJobViews',
+      label: t('totalJobViews'),
+      value: kpis.totalJobViews,
+      icon: <Eye className="size-5" aria-hidden="true" />,
+      colorClass: 'text-success-fg',
+      bgClass: 'bg-success-bg',
     },
     {
       key: 'totalApplications',
@@ -47,17 +56,17 @@ export function EmployerKpis({ kpis }: EmployerKpisProps) {
       bgClass: 'bg-warning-bg',
     },
     {
-      key: 'hired',
+      key: 'hiredThisMonth',
       label: t('hired'),
-      value: kpis.selected,
-      icon: <UserCheck className="size-5" aria-hidden="true" />,
-      colorClass: 'text-success-fg',
-      bgClass: 'bg-success-bg',
+      value: kpis.hiredThisMonth,
+      icon: <CheckCircle2 className="size-5" aria-hidden="true" />,
+      colorClass: 'text-info-fg',
+      bgClass: 'bg-info-bg',
     },
   ] as const;
 
   return (
-    <dl className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <dl className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
       {cards.map(({ key, label, value, icon, colorClass, bgClass }) => (
         <div
           key={key}

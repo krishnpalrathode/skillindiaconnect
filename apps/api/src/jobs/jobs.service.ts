@@ -1,12 +1,15 @@
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { JobStatus, UserRole } from '@prisma/client';
+import { JobMarket, JobStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { EmployerService } from '../employer/employer.service';
+import { ApplicationsAggregateService } from '../applications/applications-aggregate.service';
 import { SettingsService } from '../settings/settings.service';
 import { SETTING_KEYS } from '../settings/settings.keys';
 import { AuditService } from '../audit/audit.service';
@@ -40,6 +43,29 @@ const SORT_FIELD_MAP: Record<string, 'createdAt' | 'publishedAt' | 'title'> = {
   title: 'title',
 };
 
+/** Narrow projection of a job for the S4 apply flow (see getJobForApplication). */
+export interface JobForApplication {
+  id: string;
+  status: JobStatus;
+  market: JobMarket;
+  categoryId: string;
+  experienceRequiredYears: number | null;
+  companyId: string;
+  title: string;
+}
+
+/** Public-safe job subset for the candidate applications list (see getJobSubsets). */
+export interface JobSubset {
+  id: string;
+  title: string;
+  companyName: string;
+  location: string;
+  market: JobMarket;
+}
+
+/** My-Jobs row = the job plus its live applicant count (S4-B3). */
+export type JobWithApplicantCount = JobData & { applicantCount: number };
+
 @Injectable()
 export class JobsService {
   constructor(
@@ -50,6 +76,8 @@ export class JobsService {
     private readonly publishGuard: PublishGuardService,
     private readonly lifecycle: JobLifecycleService,
     private readonly eventEmitter: EventEmitter2,
+    @Inject(forwardRef(() => ApplicationsAggregateService))
+    private readonly applicationsAggregate: ApplicationsAggregateService,
   ) {}
 
   // ── Create ─────────────────────────────────────────────────────────────────
@@ -121,7 +149,7 @@ export class JobsService {
   async list(
     userId: string,
     dto: ListJobsDto,
-  ): Promise<{ data: JobData[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }> {
+  ): Promise<{ data: JobWithApplicantCount[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }> {
     const company = await this.employerService.getCompanyForEmployerUser(userId);
     const [field, dir] = (dto.sort ?? 'createdAt:desc').split(':');
     const safeField = SORT_FIELD_MAP[field ?? 'createdAt'] ?? 'createdAt';
@@ -148,7 +176,15 @@ export class JobsService {
       this.prisma.job.count({ where }),
     ]);
 
-    return { data, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } };
+    // S4-B3: live applicant counts for the page — ONE grouped query for all rows
+    // (never N per-row queries). Counts come through the applications aggregate.
+    const counts = await this.applicationsAggregate.countsPerJob(data.map((j) => j.id));
+    const enriched: JobWithApplicantCount[] = data.map((j) => ({
+      ...j,
+      applicantCount: counts.get(j.id)?.applications ?? 0,
+    }));
+
+    return { data: enriched, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } };
   }
 
   // ── Update ─────────────────────────────────────────────────────────────────
@@ -379,6 +415,130 @@ export class JobsService {
     });
     if (!job) throw new NotFoundException({ code: 'JOB_NOT_FOUND' });
     await this.assertOwnership(job.companyId, userId);
+  }
+
+  // ── Cross-module seam: ApplicationsModule (S4-B1) ─────────────────────────
+
+  /**
+   * Narrow read for the apply flow (S4-B1). The Applications module must NOT
+   * query the jobs table directly (module-boundaries.md Rule 4) — it calls this.
+   *
+   * Returns only what the apply gate + match engine need (status, market,
+   * category, required years, companyId for the employer notification), or throws
+   * a 404 `JOB_NOT_FOUND` — identical to every other job-not-found path. The
+   * status is returned raw; gate 1 decides whether a non-ACTIVE job is applyable.
+   */
+  async getJobForApplication(jobId: string): Promise<JobForApplication> {
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      select: {
+        id: true,
+        status: true,
+        market: true,
+        categoryId: true,
+        experienceRequiredYears: true,
+        companyId: true,
+        title: true,
+      },
+    });
+    if (!job) throw new NotFoundException({ code: 'JOB_NOT_FOUND' });
+    return job;
+  }
+
+  /**
+   * Batched public-safe job subset for the candidate applications list (S4-B3).
+   * Returns ONLY display-safe fields (no internal/employer PII) keyed by jobId.
+   * `companyName` is read via the job→company relation (denormalized for display,
+   * same precedent as getCompanyJobStats) — the caller never touches jobs/companies.
+   */
+  async getJobSubsets(jobIds: string[]): Promise<Map<string, JobSubset>> {
+    if (jobIds.length === 0) return new Map();
+    const rows = await this.prisma.job.findMany({
+      where: { id: { in: jobIds } },
+      select: {
+        id: true,
+        title: true,
+        location: true,
+        market: true,
+        company: { select: { name: true } },
+      },
+    });
+    return new Map(
+      rows.map((j) => [
+        j.id,
+        { id: j.id, title: j.title, companyName: j.company.name, location: j.location, market: j.market },
+      ]),
+    );
+  }
+
+  /** All job ids for a company (S4-B3 aggregates scope applications by these). */
+  async getJobIdsForCompany(companyId: string): Promise<string[]> {
+    const rows = await this.prisma.job.findMany({
+      where: { companyId },
+      select: { id: true },
+    });
+    return rows.map((r) => r.id);
+  }
+
+  // ── Cross-module seam: EmployerDashboardService (S3-B1) ───────────────────
+
+  /**
+   * Narrow read for employer dashboard aggregates.
+   * Called by EmployerDashboardService — the Employer module must NOT query
+   * the jobs table directly (module-boundaries.md Rule 4).
+   * Returns at most 5 recent jobs in the JobCard shape.
+   */
+  async getCompanyJobStats(companyId: string): Promise<{
+    activeJobs: number;
+    totalJobViews: number;
+    recentJobs: Array<{
+      id: string;
+      title: string;
+      market: string;
+      location: string;
+      salaryCurrency: string;
+      salaryMin: number | null;
+      salaryMax: number | null;
+      accommodation: boolean;
+      healthInsurance: boolean;
+      transportation: boolean;
+      companyName: string;
+      createdAt: string;
+      publishedAt: string | null;
+      isSaved: null;
+    }>;
+  }> {
+    const [activeJobs, viewsAgg, recentRows] = await Promise.all([
+      this.prisma.job.count({ where: { companyId, status: JobStatus.ACTIVE } }),
+      this.prisma.job.aggregate({ where: { companyId }, _sum: { viewsCount: true } }),
+      this.prisma.job.findMany({
+        where: { companyId },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: { company: { select: { name: true } } },
+      }),
+    ]);
+
+    return {
+      activeJobs,
+      totalJobViews: viewsAgg._sum.viewsCount ?? 0,
+      recentJobs: recentRows.map((j) => ({
+        id: j.id,
+        title: j.title,
+        market: j.market,
+        location: j.location,
+        salaryCurrency: j.currency,
+        salaryMin: j.salaryMin,
+        salaryMax: j.salaryMax,
+        accommodation: j.accommodation,
+        healthInsurance: j.healthInsurance,
+        transportation: j.transportation,
+        companyName: j.company.name,
+        createdAt: j.createdAt.toISOString(),
+        publishedAt: j.publishedAt?.toISOString() ?? null,
+        isSaved: null, // employer dashboard context — not a candidate save action
+      })),
+    };
   }
 
   /**

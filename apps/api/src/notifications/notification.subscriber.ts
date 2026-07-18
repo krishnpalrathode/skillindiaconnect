@@ -8,6 +8,7 @@ import {
   EmployerRejectedPayload,
   EmployerSuspendedPayload,
 } from '../employer/employer.events';
+import { PROFILE_VIEW_EVENTS, ProfileViewedPayload } from '../employer/profile-view.events';
 
 /**
  * Passive subscriber: turns domain events into notify() calls.
@@ -52,17 +53,24 @@ export class NotificationSubscriber {
     });
   }
 
-  // ── Stubs for future sprint events ─────────────────────────────────────────
+  // ── S3-B2: Profile view events ─────────────────────────────────────────────
 
-  // S3 CandidateReadService — emits when an employer views a candidate profile:
-  // @OnEvent('profile.viewed')
-  // async onProfileViewed(payload: { candidateUserId: string }): Promise<void> {
-  //   await this.notificationService.notify(
-  //     payload.candidateUserId,
-  //     NotificationType.PROFILE_VIEWED,
-  //     { title: 'Profile Viewed', body: 'An employer viewed your profile.', data: payload },
-  //   );
-  // }
+  @OnEvent(PROFILE_VIEW_EVENTS.VIEWED)
+  async onProfileViewed(payload: ProfileViewedPayload): Promise<void> {
+    // In-app ONLY — matrix row for PROFILE_VIEWED has whatsapp:false, email:false.
+    // Dedup is upstream (ProfileViewService) — this fires at most once per 24h per company.
+    await this.notificationService.notify(
+      payload.candidateUserId,
+      NotificationType.PROFILE_VIEWED,
+      {
+        title: 'Profile Viewed',
+        body: `${payload.companyName} viewed your profile.`,
+        data: { companyName: payload.companyName, companyId: payload.companyId },
+      },
+    );
+  }
+
+  // ── Stubs for future sprint events ─────────────────────────────────────────
 
   // S4 ApplicationsService — emits on application status transitions:
   // @OnEvent('application.status.changed')

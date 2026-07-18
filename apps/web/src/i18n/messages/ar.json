@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "continue": "[ar] Continue",
     "back": "[ar] Back",
@@ -110,8 +110,6 @@
     "rateLimited": "طلبات كثيرة جداً. يرجى المحاولة لاحقاً.",
     "callbackError": "فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.",
     "signingIn": "جارٍ تسجيل دخولك…",
-    "onboardingComingSoon": "تأهيل المرشحين — قريباً",
-    "employerOnboardingComingSoon": "تأهيل أصحاب العمل — قريباً",
     "phone": "رقم الهاتف",
     "phonePlaceholderLegacy": "أدخل رقم هاتفك",
     "otp": "كلمة مرور لمرة واحدة",
@@ -491,7 +489,14 @@
         "activeJobs": "الوظائف النشطة",
         "totalApplications": "إجمالي الطلبات",
         "shortlisted": "المرشحون في القائمة المختصرة",
-        "hired": "المُوظَّفون هذا الشهر"
+        "hired": "المُوظَّفون هذا الشهر",
+        "totalJobViews": "إجمالي مشاهدات الوظائف",
+        "pendingHint": "متاح عند فتح الطلبات"
+      },
+      "checklist": {
+        "title": "أكمل ملف شركتك",
+        "cta": "الذهاب إلى الملف",
+        "dismiss": "إغلاق"
       },
       "recentJobs": {
         "title": "آخر الوظائف المنشورة",
@@ -520,6 +525,183 @@
       "loading": "جارٍ تحميل لوحة التحكم…",
       "errorLoad": "فشل تحميل بيانات لوحة التحكم.",
       "retry": "إعادة المحاولة"
+    },
+    "profile": {
+      "metaTitle": "[ar] Company Profile — SkillIndiaConnect",
+      "pageTitle": "ملف الشركة",
+      "loadingProfile": "جارٍ تحميل الملف…",
+      "errorLoad": "فشل تحميل الملف.",
+      "retry": "إعادة المحاولة",
+      "hero": {
+        "changeLogoLabel": "تغيير شعار الشركة",
+        "uploadLogoLabel": "رفع شعار الشركة",
+        "logoAlt": "شعار الشركة",
+        "approvedBadge": "معتمدة من SkillIndiaConnect",
+        "verifiedBadge": "موثّق",
+        "uploading": "جارٍ الرفع…",
+        "uploadDone": "تم تحديث الشعار",
+        "uploadError": "فشل الرفع — اضغط للإعادة",
+        "typeHint": "JPEG أو PNG، بحد أقصى 2 ميغابايت"
+      },
+      "nudge": {
+        "title": "أكمل ملفك الشخصي",
+        "dismiss": "إغلاق"
+      },
+      "companyInfo": {
+        "sectionTitle": "معلومات الشركة",
+        "nameLabel": "اسم الشركة",
+        "typeLabel": "نوع الشركة",
+        "typeLocal": "محلية (الهند)",
+        "typeForeign": "أجنبية / الخليج",
+        "typeReadOnlyHint": "نوع الشركة محدد عند التسجيل ولا يمكن تغييره هنا. تواصل مع الدعم.",
+        "registrationNumberLabel": "رقم التسجيل",
+        "registrationNumberReadOnlyHint": "هوية تسجيلك الموثّقة. تواصل مع الدعم للتحديث.",
+        "industryLabel": "القطاع",
+        "phoneLabel": "هاتف الشركة",
+        "locationLabel": "الموقع",
+        "websiteLabel": "الموقع الإلكتروني",
+        "websitePlaceholder": "https://yourcompany.com",
+        "employeeRangeLabel": "حجم الفريق",
+        "descriptionLabel": "وصف الشركة",
+        "descriptionPlaceholder": "أخبر المرشحين عن شركتك…",
+        "notSet": "غير محدد",
+        "saveError": "فشل الحفظ. يرجى المحاولة مجدداً."
+      },
+      "hiringPrefs": {
+        "sectionTitle": "تفضيلات التوظيف",
+        "emptyHint": "أضف تفضيلات التوظيف لمساعدتنا في مطابقة المرشحين المناسبين.",
+        "categoriesLabel": "فئات الوظائف المفضّلة",
+        "categoriesHint": "اختر المهن التي توظّف لها عادةً",
+        "categoriesLoading": "جارٍ تحميل الفئات…",
+        "nationalitiesLabel": "الجنسيات المفضّلة",
+        "nationalitiesHint": "مفصولة بفواصل، مثل: هندي، نيبالي",
+        "minExperienceLabel": "الحد الأدنى للخبرة (بالسنوات)",
+        "notesLabel": "ملاحظات التوظيف",
+        "notesPlaceholder": "أي تفضيلات أخرى…",
+        "notSet": "غير محدد",
+        "saveError": "فشل حفظ التفضيلات. يرجى المحاولة مجدداً."
+      },
+      "contacts": {
+        "sectionTitle": "أشخاص التواصل",
+        "emptyHint": "أضف شخص تواصل واحداً على الأقل.",
+        "addContact": "إضافة جهة اتصال",
+        "editContact": "تعديل جهة الاتصال",
+        "primaryBadge": "رئيسي",
+        "makePrimary": "تعيين كرئيسي",
+        "edit": "تعديل",
+        "delete": "حذف",
+        "nameLabel": "الاسم الكامل",
+        "roleLabel": "المسمى الوظيفي",
+        "phoneLabel": "الهاتف",
+        "emailLabel": "البريد الإلكتروني",
+        "isPrimaryLabel": "تعيين كجهة اتصال رئيسية",
+        "cancelForm": "إلغاء",
+        "saveContact": "حفظ",
+        "primaryHintNote": "يُلغى تعيين جهة الاتصال الرئيسية الحالية تلقائياً",
+        "nameRoleRequired": "الاسم والدور مطلوبان.",
+        "saveError": "فشل حفظ جهة الاتصال. يرجى المحاولة مجدداً.",
+        "deleteError": "فشل حذف جهة الاتصال. يرجى المحاولة مجدداً."
+      },
+      "documents": {
+        "sectionTitle": "مستندات الشركة",
+        "certLabel": "شهادة التسجيل",
+        "certVerified": "موثّق",
+        "certPending": "قيد المراجعة",
+        "reuploadLabel": "إعادة رفع الشهادة",
+        "reuploadHint": "PDF أو JPG أو PNG — بحد أقصى 10 ميغابايت",
+        "noDocument": "لا توجد شهادة مرفوعة.",
+        "uploadedOn": "تم الرفع",
+        "verifiedNote": "اكتمل التحقق. تمت مراجعة شهادتك من قِبَل SkillIndiaConnect.",
+        "pendingReviewNote": "قيد المراجعة. سيتحقق فريقنا من شهادتك قريباً."
+      },
+      "accountSettings": {
+        "sectionTitle": "إعدادات الحساب",
+        "languageLabel": "اللغة المفضّلة",
+        "languageHint": "تحدد اللغة الافتراضية للإشعارات والمراسلات.",
+        "langEn": "الإنجليزية",
+        "langHi": "الهندية",
+        "langAr": "العربية",
+        "moreSettingsNote": "تفضيلات الإشعارات الإضافية ستكون متاحة في تحديث قادم.",
+        "saveError": "فشل الحفظ. يرجى المحاولة مجدداً."
+      }
+    },
+    "candidates": {
+      "title": "المرشحون",
+      "subtitle": "تصفح العمال المهرة الموثّقين وافتح ملفاً لعرض التفاصيل الكاملة.",
+      "available": "متاح",
+      "notAvailable": "غير متاح",
+      "loadError": "تعذّر تحميل المرشحين. يرجى المحاولة مجدداً.",
+      "loadMoreError": "تعذّر تحميل المزيد من المرشحين. يرجى المحاولة مجدداً.",
+      "retry": "إعادة المحاولة",
+      "loadMore": "تحميل المزيد",
+      "approvalGate": {
+        "title": "بانتظار الموافقة",
+        "body": "يمكنك تصفح المرشحين بعد الموافقة على ملف شركتك.",
+        "backToDashboard": "العودة إلى لوحة التحكم"
+      },
+      "empty": {
+        "title": "لا يوجد مرشحون يطابقون عوامل التصفية",
+        "body": "جرّب توسيع عوامل التصفية أو مسح البحث."
+      },
+      "card": {
+        "srLabel": "{name}، {category}",
+        "experienceYears": "{years, plural, =0 {لا خبرة} one {سنة خبرة} two {سنتان خبرة} few {# سنوات خبرة} many {# سنة خبرة} other {# سنوات خبرة}}",
+        "gulfExperience": "خبرة خليجية",
+        "skillsLabel": "أبرز المهارات"
+      },
+      "filters": {
+        "panelLabel": "عوامل تصفية المرشحين",
+        "search": "بحث",
+        "searchPlaceholder": "الاسم أو الموقع أو المهارة",
+        "category": "التصنيف",
+        "allCategories": "جميع التصنيفات",
+        "minExperience": "الحد الأدنى للخبرة",
+        "anyExperience": "أي خبرة",
+        "yearsPlus": "{years}+ سنوات",
+        "foreignExperience": "لديه خبرة خليجية",
+        "availableNow": "متاح الآن",
+        "clear": "مسح عوامل التصفية"
+      },
+      "view": {
+        "back": "رجوع",
+        "backToBrowse": "العودة إلى المرشحين",
+        "loading": "جارٍ تحميل الملف…",
+        "loadError": "تعذّر تحميل هذا الملف. يرجى المحاولة مجدداً.",
+        "notFoundTitle": "ملف هذا المرشح غير متاح",
+        "notFoundBody": "ربما تمت إزالته أو لم يعد ظاهراً.",
+        "ageYears": "{age} سنة",
+        "memberSince": "عضو منذ {date}",
+        "skillsTitle": "المهارات",
+        "facts": {
+          "title": "التفاصيل",
+          "nationality": "الجنسية",
+          "languages": "اللغات",
+          "noticePeriod": "فترة الإشعار",
+          "noticeDays": "{days, plural, zero {# يوم} one {يوم واحد} two {يومان} few {# أيام} many {# يوماً} other {# يوم}}",
+          "phone": "الهاتف",
+          "religion": "الديانة"
+        },
+        "timeline": {
+          "title": "الخبرة العملية",
+          "india": "الهند",
+          "foreign": "الخليج / الخارج",
+          "years": "{count, plural, zero {# سنة} one {سنة} two {سنتان} few {# سنوات} many {# سنة} other {# سنوات}}",
+          "months": "{count, plural, zero {# شهر} one {شهر} two {شهران} few {# أشهر} many {# شهراً} other {# شهر}}"
+        },
+        "documents": {
+          "title": "المستندات",
+          "type": {
+            "PASSPORT": "جواز السفر",
+            "EXPERIENCE_CERT": "شهادة الخبرة",
+            "EDUCATIONAL_CERT": "الشهادة التعليمية"
+          },
+          "uploaded": "تم الرفع",
+          "notUploaded": "لم يتم الرفع",
+          "passportValid": "ساري",
+          "passportExpired": "منتهي",
+          "proHint": "الوصول إلى المستندات متاح في خطة Pro."
+        }
+      }
     }
   },
   "jobs": {
@@ -619,8 +801,16 @@
     "kpi": {
       "applied": "الوظائف المُقدَّم عليها",
       "views": "مشاهدات الملف",
+      "viewsCaption": "آخر 30 يوماً",
+      "viewsSrLabel": "{count} مشاهدة للملف، آخر 30 يوماً",
       "shortlisted": "في القائمة المختصرة",
       "updates": "التحديثات"
+    },
+    "recentViews": {
+      "title": "مشاهدات الملف الأخيرة",
+      "emptyTitle": "لا توجد مشاهدات للملف بعد",
+      "emptyBody": "أكمل ملفك ليلاحظك أصحاب العمل.",
+      "emptyCta": "إكمال الملف"
     },
     "recommendedJobs": {
       "title": "الوظائف الموصى بها",
@@ -629,7 +819,10 @@
     },
     "myApplications": {
       "title": "طلباتي",
-      "coming": "تتبع الطلبات قريباً."
+      "coming": "تتبع الطلبات قريباً.",
+      "viewAll": "عرض الكل",
+      "empty": "لم تتقدّم لأي وظيفة بعد.",
+      "browseJobs": "تصفّح الوظائف"
     },
     "quickActions": {
       "title": "إجراءات سريعة",
@@ -867,6 +1060,211 @@
       "archive": "أرشفة",
       "archiveLabel": "أرشفة الوظيفة: {title}",
       "repostAsDraft": "إعادة نشر كمسودة"
+    },
+    "applicantsCountLabel": "{count} متقدمين"
+  },
+  "apply": {
+    "title": "قدّم على هذه الوظيفة",
+    "close": "إغلاق",
+    "submit": "إرسال الطلب",
+    "submitting": "جارٍ إرسال طلبك…",
+    "cta": {
+      "apply": "قدّم الآن",
+      "completeProfile": "أكمل ملفك الشخصي للتقديم",
+      "applied": "تم التقديم"
+    },
+    "coverLetter": {
+      "label": "خطاب التقديم (اختياري)",
+      "placeholder": "أخبر صاحب العمل لماذا أنت مناسب لهذه الوظيفة…",
+      "counter": "{n}/{max}"
+    },
+    "eligibility": {
+      "title": "قبل التقديم",
+      "pct": "اكتمل ملفك الشخصي بنسبة {pct}%",
+      "allClear": "أنت تستوفي جميع متطلبات التقديم.",
+      "fix": "إصلاح",
+      "recheck": "إعادة الفحص"
+    },
+    "errors": {
+      "profileIncomplete": {
+        "title": "أكمل ملفك الشخصي",
+        "body": "ملفك الشخصي {pct}% — يلزم {threshold}% للتقديم.",
+        "action": "إكمال الملف الشخصي"
+      },
+      "docsMissing": {
+        "title": "مستندات ناقصة",
+        "body": "ارفع هذه المستندات للتقديم: {docs}.",
+        "action": "الذهاب إلى المستندات"
+      },
+      "passportInvalid": {
+        "title": "مشكلة في جواز السفر",
+        "expired": "انتهت صلاحية جواز سفرك. جدّده للتقديم.",
+        "missing": "يلزم جواز سفر صالح للتقديم.",
+        "action": "الذهاب إلى المستندات"
+      },
+      "alreadyApplied": {
+        "title": "لقد قدّمت بالفعل",
+        "body": "لقد قدّمت بالفعل على هذه الوظيفة.",
+        "action": "عرض الطلب"
+      },
+      "jobNotActive": {
+        "title": "لم تعد تقبل الطلبات",
+        "body": "هذه الوظيفة لم تعد تقبل الطلبات.",
+        "action": "تصفّح الوظائف"
+      },
+      "generic": {
+        "title": "حدث خطأ ما",
+        "body": "تعذّر إرسال طلبك. يرجى المحاولة مرة أخرى.",
+        "retry": "حاول مرة أخرى"
+      },
+      "docTypes": {
+        "PASSPORT": "جواز السفر",
+        "EXPERIENCE_CERT": "شهادة الخبرة",
+        "EDUCATIONAL_CERT": "الشهادة التعليمية"
+      }
+    },
+    "reveal": {
+      "score": "أنت متطابق بنسبة {score}%",
+      "category": "فئة الوظيفة",
+      "experience": "الخبرة",
+      "experienceBasis": "بناءً على {clamped} من {raw} سنوات",
+      "foreign": "الخبرة الأجنبية",
+      "foreignLocalNote": "لا تُحتسب للوظائف المحلية.",
+      "documents": "المستندات",
+      "componentScore": "{score}/{max}",
+      "track": "تتبّع في طلباتي"
+    }
+  },
+  "applications": {
+    "title": "طلباتي",
+    "filterLabel": "تصفية الطلبات حسب الحالة",
+    "filter": {
+      "all": "الكل"
+    },
+    "status": {
+      "PENDING": "قيد الانتظار",
+      "SHORTLISTED": "القائمة المختصرة",
+      "SELECTED": "مقبول",
+      "REJECTED": "مرفوض"
+    },
+    "matchShort": "تطابق {score}%",
+    "appliedAgo": "تم التقديم {ago}",
+    "loadMore": "عرض المزيد",
+    "error": "تعذّر تحميل طلباتك.",
+    "retry": "حاول مرة أخرى",
+    "emptyAll": "لم تتقدّم بعد — تصفّح الوظائف للبدء.",
+    "emptyStatus": "لا توجد طلبات {status} بعد.",
+    "browseJobs": "تصفّح الوظائف",
+    "backToList": "العودة إلى طلباتي",
+    "notFound": "الطلب غير موجود.",
+    "coverLetter": "خطاب التقديم الخاص بك",
+    "receipt": {
+      "notified": "✓ تم الإخطار عبر واتساب · {date}"
+    },
+    "timeline": {
+      "heading": "الجدول الزمني للحالة",
+      "applied": "تم إرسال الطلب",
+      "SHORTLISTED": "أُدرج في القائمة المختصرة من قبل صاحب العمل",
+      "SELECTED": "تم اختياره من قبل صاحب العمل",
+      "REJECTED": "لم يتم اختياره من قبل صاحب العمل",
+      "PENDING": "أُعيد فتحه",
+      "adminOverride": "تم تحديث الحالة بواسطة SkillIndiaConnect"
+    },
+    "rejection": {
+      "feedbackLabel": "ملاحظات من صاحب العمل",
+      "nextStepTitle": "واصل التقدّم",
+      "nextStepBody": "كل طلب يبني زخمًا. استكشف المزيد من الأدوار في مجالك.",
+      "browseJobs": "تصفّح المزيد من الوظائف"
+    }
+  },
+  "applicants": {
+    "title": "المتقدمون",
+    "backToJobs": "العودة إلى وظائفي",
+    "notFound": "لم يتم العثور على هذه الوظيفة، أو ليس لديك صلاحية الوصول إليها.",
+    "error": "تعذّر تحميل المتقدمين.",
+    "retry": "حاول مرة أخرى",
+    "empty": "لا يوجد متقدمون في هذا العرض بعد.",
+    "loadMore": "عرض المزيد",
+    "approvalGate": {
+      "title": "الشركة قيد المراجعة",
+      "body": "يمكنك إدارة المتقدمين بعد الموافقة على شركتك.",
+      "back": "العودة إلى لوحة التحكم"
+    },
+    "filterLabel": "تصفية المتقدمين حسب الحالة",
+    "filter": {
+      "all": "الكل"
+    },
+    "status": {
+      "PENDING": "قيد الانتظار",
+      "SHORTLISTED": "القائمة المختصرة",
+      "SELECTED": "مقبول",
+      "REJECTED": "مرفوض"
+    },
+    "tabSrLabel": "{label} ({count})",
+    "sortLabel": "ترتيب",
+    "sort": {
+      "match": "الأفضل تطابقًا",
+      "recent": "الأحدث"
+    },
+    "matchShort": "تطابق {score}%",
+    "gulfBadge": "خبرة خليجية",
+    "ageYears": "{age} سنة",
+    "expYears": "خبرة {years} سنة",
+    "appliedAgo": "تم التقديم {ago}",
+    "showMore": "عرض المزيد",
+    "showLess": "عرض أقل",
+    "viewDetails": "عرض التفاصيل",
+    "docs": {
+      "heading": "المستندات",
+      "PASSPORT": "جواز السفر",
+      "EXPERIENCE_CERT": "الخبرة",
+      "EDUCATIONAL_CERT": "التعليم",
+      "valid": "صالح",
+      "expired": "منتهٍ"
+    },
+    "breakdown": {
+      "open": "تفصيل التطابق لـ {name}، تطابق {score}%",
+      "scoreShort": "{score}%",
+      "title": "تفصيل التطابق",
+      "category": "فئة الوظيفة",
+      "experience": "الخبرة",
+      "experienceBasis": "بناءً على {clamped} من {raw} سنوات",
+      "foreign": "الخبرة الأجنبية",
+      "foreignLocalNote": "لا تُحتسب للوظائف المحلية.",
+      "documents": "المستندات",
+      "componentScore": "{score}/{max}"
+    },
+    "actions": {
+      "shortlist": "إدراج",
+      "select": "اختيار",
+      "reject": "رفض",
+      "shortlistName": "إدراج {name}",
+      "selectName": "اختيار {name}",
+      "rejectName": "رفض {name}"
+    },
+    "selectDialog": {
+      "title": "اختيار {name}؟",
+      "body": "سيتم إخطارهم عبر واتساب — يُرسل هذا الإشعار مرة واحدة.",
+      "cancel": "إلغاء",
+      "confirm": "اختيار"
+    },
+    "rejectDialog": {
+      "title": "رفض {name}؟",
+      "body": "يمكنك إضافة ملاحظات اختيارية للمرشح.",
+      "feedbackLabel": "ملاحظات (اختياري)",
+      "feedbackPlaceholder": "شارك ملاحظة موجزة وبنّاءة…",
+      "visibleNote": "هذه الملاحظات مرئية للمرشح.",
+      "counter": "{n}/{max}",
+      "cancel": "إلغاء",
+      "confirm": "رفض"
+    },
+    "detail": {
+      "close": "إغلاق",
+      "coverLetter": "خطاب التقديم"
+    },
+    "toast": {
+      "staleRefresh": "تغيّرت حالة هذا الطلب — جارٍ التحديث.",
+      "error": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
     }
   }
 }

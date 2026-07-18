@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: SkillIndiaConnect API
-  version: 0.2.0
+  version: 0.3.0
   description: |
     Production blue-collar recruitment platform connecting skilled workers in India
     with employers in the Gulf and locally.
@@ -19,6 +19,15 @@ info:
 
     **S2 additions (Sprint 2):** Employer identity, jobs + lifecycle, public job
     search, candidate notifications, admin settings + employer approval.
+
+    **S3 additions (Sprint 3):** Employer profile (hiring preferences, contact
+    persons, logo); real employer dashboard shape (totalJobViews, hiredThisMonth,
+    profileChecklist); employer-views-candidate with privacy subset
+    (CandidateEmployerView); minimal candidate browse (CandidateBrowseCard);
+    profile-view analytics for candidates (ProfileViewsSummary). Three locked
+    decisions: (1) candidates with profileVisible=false return 404 identical to
+    nonexistent; (2) employer context exposes document status/validity ONLY — no
+    keys or URLs; (3) profileChecklist is computed per-request, no stored percentage.
 
 servers:
   - url: /api/v1
@@ -38,7 +47,8 @@ tags:
   - name: employer
     description: >
       Employer company registration, dashboard, and job management (S2 full).
-      Candidate profile views in employer context → S3.
+      Employer profile (hiring prefs, contacts, logo) and candidate profile views
+      in employer context (S3 full).
   - name: jobs
     description: >
       Job listings — public search and detail (S2), employer CRUD + lifecycle (S2),
@@ -218,10 +228,16 @@ components:
       type: string
       enum: [MALE, FEMALE, ANY]
 
-    # ── Notification enums (S2) ─────────────────────────────────────────────────
+    # ── Notification enums (S2 + S3) ───────────────────────────────────────────
     NotificationType:
       type: string
-      # Must match the Prisma `NotificationType` enum (the DB source of truth).
+      description: >
+        Must match the Prisma `NotificationType` enum (the DB source of truth).
+        PROFILE_VIEWED fires when an employer views a candidate's full profile
+        (deduplicated per company per rolling 24 h window). Data payload:
+        `{ companyName: string }`.
+        PASSPORT_EXPIRY fires when a passport is within the reminder window.
+        Data payload: `{ expiryDate: string, daysRemaining: integer }`.
       enum:
         [
           APPLICATION_SELECTED,
@@ -551,23 +567,42 @@ components:
 
     EmployerDashboardKpi:
       type: object
-      required: [activeJobs, totalApplications, shortlisted, selected]
+      required: [activeJobs, totalApplications, shortlisted, totalJobViews, hiredThisMonth]
+      description: >
+        Employer dashboard KPIs. As of Sprint 4, `totalApplications` and
+        `shortlisted` are LIVE application counts across the employer's jobs
+        (they were honest zeros in S3). `totalJobViews` and `hiredThisMonth`
+        are S3 KPIs.
       properties:
         activeJobs:
           type: integer
         totalApplications:
           type: integer
+          description: Total applications across all the employer's jobs (live in S4).
         shortlisted:
           type: integer
-        selected:
+          description: Applications in SHORTLISTED status across the employer's jobs (live in S4).
+        totalJobViews:
           type: integer
+          description: Total views across all the employer's job postings (S3)
+        hiredThisMonth:
+          type: integer
+          description: Candidates marked hired in the current calendar month (S3)
 
     EmployerDashboard:
       type: object
-      required: [kpis, recentJobs, recentApplicants]
-      description: >
-        Employer dashboard summary (Screen 15). `recentApplicants` applies
-        viewer-aware DTO masking — phone and religion follow candidate privacy toggles.
+      required: [kpis, recentJobs, recentApplicants, profileChecklist]
+      description: |
+        Employer dashboard summary (Screen 15).
+
+        As of Sprint 4, `recentApplicants` is LIVE — the most recent applicants
+        across the employer's jobs, each an `ApplicantSummary` carrying
+        employer-context privacy masking (no phone/religion/dob). It was an honest
+        `[]` in S3. An empty array now means genuinely no applicants yet.
+
+        `profileChecklist` is computed per-request from current company state —
+        never stored as a percentage. Use its `hint` field to surface the next
+        actionable item to the employer.
       properties:
         kpis:
           $ref: '#/components/schemas/EmployerDashboardKpi'
@@ -577,8 +612,11 @@ components:
             $ref: '#/components/schemas/JobCard'
         recentApplicants:
           type: array
+          description: Most recent applicants across the employer's jobs (live in S4).
           items:
-            $ref: '#/components/schemas/CandidateProfile'
+            $ref: '#/components/schemas/ApplicantSummary'
+        profileChecklist:
+          $ref: '#/components/schemas/ProfileChecklist'
 
     # ── Job schemas (S2) ────────────────────────────────────────────────────────
     Job:
@@ -663,6 +701,13 @@ components:
         companyName:
           type: string
           description: Denormalized for display
+        applicantCount:
+          type: integer
+          minimum: 0
+          description: >
+            Total applications to this job. Live in Sprint 4 — powers the
+            applicant count on the employer's My Jobs list (Screen 17), the entry
+            point to the applicants view (Screen 18). Omitted before S4.
         createdAt:
           type: string
           format: date-time
@@ -829,6 +874,570 @@ components:
         updatedBy:
           type: [string, 'null']
           description: User ID of the last updater
+
+    # ── Employer profile schemas (S3) ──────────────────────────────────────────
+    ProfileChecklist:
+      type: object
+      required: [hasLogo, hasHiringPreferences, hasSecondContact, hasDescription, hint]
+      description: |
+        Employer profile completeness checklist — computed per-request from current
+        company state. No stored percentage; no scoring engine.
+        `hint` is the next actionable item (null when all checks pass).
+      properties:
+        hasLogo:
+          type: boolean
+          description: Company logo has been uploaded and confirmed
+        hasHiringPreferences:
+          type: boolean
+          description: Hiring preferences have been saved at least once
+        hasSecondContact:
+          type: boolean
+          description: At least two contact persons are recorded
+        hasDescription:
+          type: boolean
+          description: Company description field is non-empty
+        hint:
+          type: [string, 'null']
+          description: Next actionable item for the employer; null when all checks pass
+          example: 'Add a company logo to build candidate trust'
+
+    HiringPreferences:
+      type: object
+      description: Employer hiring preferences used for candidate browse context
+      properties:
+        preferredCategories:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Category IDs the employer prefers to hire from
+        preferredNationalities:
+          type: array
+          items:
+            type: string
+          description: Preferred candidate nationalities (e.g. 'Indian', 'Nepali')
+        minExperience:
+          type: integer
+          minimum: 0
+          description: Minimum years of experience preferred
+        notes:
+          type: string
+          description: Free-text hiring notes (internal, not shown to candidates)
+
+    ContactPerson:
+      type: object
+      required: [id, name, role, isPrimary, createdAt]
+      description: |
+        Display-only contact record for employer profile.
+        **NOT a login account** — these are human contacts listed on the company
+        profile (e.g., HR Manager, Recruitment Lead) so candidates and admins
+        know who to reach. Creating a contact does NOT create a user account.
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Rajesh Mehta
+        role:
+          type: string
+          example: HR Manager
+        phone:
+          type: string
+          example: '+971501234567'
+        email:
+          type: string
+          format: email
+          example: rajesh@gulfbuilders.example.com
+        isPrimary:
+          type: boolean
+          description: >
+            Only one contact per company may be primary. Setting a new contact
+            as primary auto-demotes the existing primary.
+        createdAt:
+          type: string
+          format: date-time
+
+    EmployerProfile:
+      type: object
+      required: [company, contacts, profileChecklist]
+      description: >
+        Full employer profile returned by GET /employers/me/profile.
+        Includes company details, hiring preferences, contact persons, logo URL,
+        and the computed profile completeness checklist.
+      properties:
+        company:
+          $ref: '#/components/schemas/Company'
+        hiringPreferences:
+          $ref: '#/components/schemas/HiringPreferences'
+          description: null when not yet saved
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactPerson'
+        logoUrl:
+          type: [string, 'null']
+          format: uri
+          description: Short-expiry signed R2 URL; null if no logo uploaded
+        profileChecklist:
+          $ref: '#/components/schemas/ProfileChecklist'
+
+    # ── Candidate employer-view schemas (S3) ────────────────────────────────────
+    CandidateDocumentStatus:
+      type: object
+      required: [type, uploaded]
+      description: |
+        Document status indicator visible in employer context.
+        **NEVER includes keys, URLs, or document content.**
+        Signed-URL access (for download) is S5 Pro-gated.
+      properties:
+        type:
+          $ref: '#/components/schemas/DocumentType'
+        uploaded:
+          type: boolean
+          description: Whether the candidate has uploaded this document type
+        passportValid:
+          type: boolean
+          description: >
+            PASSPORT type only. true = passport exists and is not expired.
+            Absent for non-PASSPORT types.
+
+    CandidateEmployerView:
+      type: object
+      required: [id, fullName, isAvailable, documentsStatus, createdAt]
+      description: |
+        Employer-context view of a candidate profile. Privacy invariants:
+        - `phone` is **ABSENT** (not null) when `showPhone = false`
+        - `religion` is **ABSENT** (not null) when `showReligion = false`
+        - `dob` is NEVER included — only derived `age` (integer years)
+        - `documentsStatus` contains status/validity ONLY — no keys, URLs, or content
+        - A `profileVisible = false` candidate returns 404 (indistinguishable from
+          nonexistent) — NEVER appears here
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        age:
+          type: integer
+          minimum: 0
+          description: Age in full years derived from dob — never raw dob
+        phone:
+          type: string
+          description: ABSENT when showPhone = false; present when showPhone = true
+          example: '+919876543210'
+        religion:
+          type: string
+          description: ABSENT when showReligion = false (default); present when showReligion = true
+        nationality:
+          type: string
+        currentLocation:
+          type: string
+        jobCategoryId:
+          type: [string, 'null']
+          format: uuid
+        isAvailable:
+          type: boolean
+        noticePeriod:
+          type: integer
+          description: Notice period in days
+        languages:
+          type: array
+          items:
+            type: string
+        experiences:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkExperience'
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/CandidateSkill'
+        documentsStatus:
+          type: array
+          items:
+            $ref: '#/components/schemas/CandidateDocumentStatus'
+        createdAt:
+          type: string
+          format: date-time
+
+    CandidateBrowseCard:
+      type: object
+      required: [id, fullName, isAvailable, hasForeignExperience, createdAt]
+      description: |
+        Card-level candidate summary for employer browse (GET /employers/candidates).
+        Deliberately minimal — no phone, religion, salary, or documents.
+        All `profileVisible = false` candidates are excluded at query time
+        (never appear in browse results).
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        nationality:
+          type: string
+        currentLocation:
+          type: string
+        jobCategoryId:
+          type: [string, 'null']
+          format: uuid
+        experienceYears:
+          type: integer
+          minimum: 0
+          description: Total years of experience across all work entries
+        skills:
+          type: array
+          items:
+            type: string
+          maxItems: 3
+          description: Up to 3 skill names for display (full list on detail view)
+        hasForeignExperience:
+          type: boolean
+          description: true if any work experience has type = FOREIGN
+        isAvailable:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Profile view analytics schema (S3) ─────────────────────────────────────
+    ProfileViewsSummary:
+      type: object
+      required: [total, last30Days, recentViews]
+      description: Profile view analytics returned to the authenticated candidate
+      properties:
+        total:
+          type: integer
+          description: All-time total profile views
+        last30Days:
+          type: integer
+          description: Profile views in the last 30 days
+        recentViews:
+          type: array
+          description: Most recent individual view events (newest first, max 20)
+          items:
+            type: object
+            required: [companyName, viewedAt]
+            properties:
+              companyName:
+                type: string
+                description: Name of the company that viewed the profile
+              viewedAt:
+                type: string
+                format: date-time
+
+    # ── Application schemas (S4) ───────────────────────────────────────────────
+    ApplicationStatus:
+      type: string
+      enum: [PENDING, SHORTLISTED, SELECTED, REJECTED]
+      description: >
+        Application lifecycle status. There is NO `WITHDRAWN` state at MVP —
+        candidates cannot withdraw an application (deliberately out of scope; a
+        later sprint may add it). Employer transitions are forward-only
+        (PENDING → SHORTLISTED → SELECTED|REJECTED); only admins may move
+        backward/corrective, and only with a mandatory override reason.
+
+    MatchBreakdown:
+      type: object
+      required: [category, experienceYears, foreignExperience, documents]
+      description: >
+        Per-factor breakdown of `matchScore`, SNAPSHOTTED at apply time and
+        NEVER recomputed on later reads or status changes. The four factor
+        scores sum to `matchScore` (0–100). Max weights: category 40,
+        experienceYears 30, foreignExperience 20, documents 10.
+      properties:
+        category:
+          type: object
+          required: [score, max]
+          description: 40 when the job category matches the candidate's category, else 0.
+          properties:
+            score: { type: integer, minimum: 0, maximum: 40 }
+            max: { type: integer, example: 40 }
+        experienceYears:
+          type: object
+          required: [raw, clamped, score, max]
+          description: Scales with clamped years of experience.
+          properties:
+            raw:
+              type: integer
+              minimum: 0
+              description: Candidate's total years of experience at apply time (unclamped).
+            clamped:
+              type: integer
+              minimum: 0
+              description: '`raw` clamped to the scoring ceiling before scoring.'
+            score: { type: integer, minimum: 0, maximum: 30 }
+            max: { type: integer, example: 30 }
+        foreignExperience:
+          type: object
+          required: [score, max]
+          description: 20 when any work experience has type FOREIGN, else 0.
+          properties:
+            score: { type: integer, minimum: 0, maximum: 20 }
+            max: { type: integer, example: 20 }
+        documents:
+          type: object
+          required: [score, max]
+          description: Scales with the count of mandatory documents present at apply.
+          properties:
+            score: { type: integer, minimum: 0, maximum: 10 }
+            max: { type: integer, example: 10 }
+
+    Application:
+      type: object
+      required:
+        [
+          id,
+          humanId,
+          jobId,
+          candidateId,
+          status,
+          matchScore,
+          matchBreakdown,
+          docsCompleteCount,
+          docsRequiredCount,
+          passportValidAtApply,
+          appliedAt,
+        ]
+      description: >
+        A candidate's application to a job. `matchScore` (0–100) and
+        `matchBreakdown` are computed ONCE at apply time and snapshotted —
+        NEVER recomputed on later reads or status changes. The snapshot fields
+        (`docsCompleteCount` / `docsRequiredCount` / `passportValidAtApply`)
+        freeze the gate state at apply time. `humanId` is DB-assigned in the
+        format `AP-YYYY-N`.
+      properties:
+        id:
+          type: string
+          format: uuid
+        humanId:
+          type: string
+          example: AP-2026-1
+          description: DB-assigned human id, format `AP-YYYY-N`.
+        jobId:
+          type: string
+          format: uuid
+        candidateId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        matchScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Snapshot at apply time — never recomputed.
+        matchBreakdown:
+          $ref: '#/components/schemas/MatchBreakdown'
+        coverLetter:
+          type: [string, 'null']
+          maxLength: 500
+        docsCompleteCount:
+          type: integer
+          description: Mandatory documents present at apply time (snapshot).
+        docsRequiredCount:
+          type: integer
+          description: Mandatory documents required at apply time (snapshot).
+        passportValidAtApply:
+          type: boolean
+          description: Passport present and unexpired at apply time (snapshot).
+        selectedNotifiedAt:
+          type: [string, 'null']
+          format: date-time
+          description: >
+            Set the FIRST time the application enters SELECTED — guards the
+            once-per-application "Selected" WhatsApp. Re-entry to SELECTED does
+            NOT change it (email + in-app only on re-entry).
+        rejectionFeedback:
+          type: [string, 'null']
+          description: Optional employer feedback surfaced to the candidate on rejection.
+        overrideReason:
+          type: [string, 'null']
+          description: >
+            Reason for the most recent admin corrective (override) move.
+            ADMIN CONTEXT ONLY — present only in admin serializations; never
+            emitted to candidate or employer contexts.
+        appliedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ApplicationCard:
+      type: object
+      required: [id, humanId, job, status, matchScore, appliedAt]
+      description: >
+        Candidate-facing application list item (GET /candidates/me/applications).
+      properties:
+        id:
+          type: string
+          format: uuid
+        humanId:
+          type: string
+          example: AP-2026-1
+        job:
+          type: object
+          required: [id, title, companyName, location, market]
+          description: Minimal job subset for the applications list.
+          properties:
+            id:
+              type: string
+              format: uuid
+            title:
+              type: string
+            companyName:
+              type: string
+            location:
+              type: string
+            market:
+              $ref: '#/components/schemas/JobMarket'
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        matchScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        appliedAt:
+          type: string
+          format: date-time
+        selectedNotifiedAt:
+          type: [string, 'null']
+          format: date-time
+          description: Non-null drives the "WhatsApp receipt sent" indicator on the card.
+        rejectionFeedback:
+          type: [string, 'null']
+
+    ApplicationTimelineEntry:
+      type: object
+      required: [fromStatus, toStatus, actorRole, isAdminOverride, createdAt]
+      description: >
+        One status transition in an application's history. Carries the actor's
+        ROLE only — NEVER actor identity. `overrideReason` is admin/audit-facing
+        and is DELIBERATELY EXCLUDED from the candidate-facing timeline (see
+        GET /candidates/me/applications/{id}).
+      properties:
+        fromStatus:
+          $ref: '#/components/schemas/ApplicationStatus'
+        toStatus:
+          $ref: '#/components/schemas/ApplicationStatus'
+        actorRole:
+          $ref: '#/components/schemas/UserRole'
+        isAdminOverride:
+          type: boolean
+          description: true when an admin made a non-forward-only (corrective) move.
+        createdAt:
+          type: string
+          format: date-time
+
+    ApplicationDetail:
+      allOf:
+        - $ref: '#/components/schemas/ApplicationCard'
+        - type: object
+          required: [matchBreakdown, coverLetter, timeline]
+          description: >
+            Candidate-facing application detail. Adds the match breakdown, the
+            candidate's cover letter, and the status `timeline`. The timeline
+            excludes `overrideReason` (admin/audit-only).
+          properties:
+            matchBreakdown:
+              $ref: '#/components/schemas/MatchBreakdown'
+            coverLetter:
+              type: [string, 'null']
+              maxLength: 500
+            timeline:
+              type: array
+              items:
+                $ref: '#/components/schemas/ApplicationTimelineEntry'
+
+    ApplicantCard:
+      allOf:
+        - $ref: '#/components/schemas/CandidateEmployerView'
+        - type: object
+          required:
+            [applicationId, humanId, status, matchScore, matchBreakdown, appliedAt]
+          description: >
+            An applicant to a job (GET /jobs/{id}/applicants). Combines the S3
+            employer-context candidate subset (INHERITING all its privacy
+            omission semantics — phone/religion omitted per the candidate's
+            toggles, no dob, documents status-only) with the application's own
+            fields. The candidate subset is `$ref`'d, never forked — one privacy
+            contract. `id` (inherited) is the candidate id; `applicationId` is
+            the application.
+          properties:
+            applicationId:
+              type: string
+              format: uuid
+            humanId:
+              type: string
+              example: AP-2026-1
+            status:
+              $ref: '#/components/schemas/ApplicationStatus'
+            matchScore:
+              type: integer
+              minimum: 0
+              maximum: 100
+            matchBreakdown:
+              $ref: '#/components/schemas/MatchBreakdown'
+            coverLetter:
+              type: [string, 'null']
+              maxLength: 500
+            appliedAt:
+              type: string
+              format: date-time
+            docsCompleteCount:
+              type: integer
+            docsRequiredCount:
+              type: integer
+            passportValidAtApply:
+              type: boolean
+
+    ApplicantCounts:
+      type: object
+      required: [pending, shortlisted, selected, rejected]
+      description: Per-status applicant counts — powers Screen 18's column headers.
+      properties:
+        pending:
+          type: integer
+        shortlisted:
+          type: integer
+        selected:
+          type: integer
+        rejected:
+          type: integer
+
+    ApplicantSummary:
+      type: object
+      required: [applicationId, candidateId, candidateName, jobId, jobTitle, status, matchScore, appliedAt]
+      description: >
+        Compact applicant row for the employer dashboard's `recentApplicants`.
+        Employer-context: applies the candidate privacy omission semantics
+        (no phone / religion / dob).
+      properties:
+        applicationId:
+          type: string
+          format: uuid
+        candidateId:
+          type: string
+          format: uuid
+        candidateName:
+          type: string
+        jobId:
+          type: string
+          format: uuid
+        jobTitle:
+          type: string
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        matchScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        appliedAt:
+          type: string
+          format: date-time
 
 # ─── Paths ───────────────────────────────────────────────────────────────────
 
@@ -1995,6 +2604,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  # ── Candidate: profile views (S3) ────────────────────────────────────────────
+  /candidates/me/profile-views:
+    get:
+      operationId: getCandidateMeProfileViews
+      tags: [candidate]
+      summary: Get profile view analytics for the authenticated candidate (S3)
+      description: |
+        Returns total views, views in the last 30 days, and up to 20 most recent
+        individual view events (company name + timestamp).
+
+        Profile views are recorded when an employer calls
+        `GET /employers/candidates/:id` — deduplicated per (company, candidate)
+        per rolling 24-hour window.
+      responses:
+        '200':
+          description: Profile view analytics
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProfileViewsSummary'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   # ── Account: self-deletion ────────────────────────────────────────────────────
   /account:
     delete:
@@ -2245,6 +2885,12 @@ paths:
                   default: en
                 description:
                   type: string
+                registrationCertKey:
+                  type: string
+                  description: >
+                    R2 key returned by POST /employers/me/company/documents/presign
+                    (which works BEFORE registration) after the direct PUT upload.
+                    Ownership- and existence-validated; attached to the new company.
       responses:
         '201':
           description: Company profile created (status PENDING)
@@ -2475,11 +3121,16 @@ paths:
       tags: [employer]
       summary: Get the employer's dashboard summary (Screen 15)
       description: |
-        Returns KPIs (active jobs, total applications, shortlisted, selected)
-        and the most recent jobs and applicants.
+        Returns the dashboard shape: KPIs (active jobs, totalApplications,
+        shortlisted, totalJobViews, hiredThisMonth), recent active jobs,
+        `recentApplicants`, and the computed `profileChecklist`.
 
-        `recentApplicants` uses employer-context viewer-aware DTO masking:
-        phone and religion are omitted based on candidate privacy toggles.
+        As of Sprint 4, `totalApplications` / `shortlisted` are live counts and
+        `recentApplicants` is populated with employer-context `ApplicantSummary`
+        rows (no phone/religion/dob). An empty array now means no applicants yet.
+
+        `profileChecklist` is computed per-request — never stored as a percentage.
+        Use its `hint` field to show the next actionable item to the employer.
 
         **403 EMPLOYER_NOT_APPROVED** if the company status is not APPROVED.
       responses:
@@ -2555,6 +3206,432 @@ paths:
                         type: integer
                       totalPages:
                         type: integer
+
+  # ══════════════════════════════════════════════════════════════════════════════
+  # EMPLOYER PROFILE — S3 FULL DETAIL
+  # ══════════════════════════════════════════════════════════════════════════════
+
+  /employers/me/profile:
+    get:
+      operationId: getEmployersMeProfile
+      tags: [employer]
+      summary: Get the employer's full profile (S3)
+      description: |
+        Returns company details, hiring preferences, contact persons, logo URL,
+        and the computed profile completeness checklist.
+
+        **403 EMPLOYER_NOT_APPROVED** if company status is not APPROVED.
+      responses:
+        '200':
+          description: Employer profile
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/EmployerProfile'
+        '403':
+          description: Company not approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: No company profile registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /employers/me/profile/hiring-preferences:
+    patch:
+      operationId: patchEmployersMeProfileHiringPreferences
+      tags: [employer]
+      summary: Upsert hiring preferences (S3)
+      description: >
+        Creates or replaces the employer's hiring preferences. The entire
+        preferences object is replaced (not merged) on each call.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HiringPreferences'
+      responses:
+        '200':
+          description: Preferences saved
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/HiringPreferences'
+        '403':
+          description: Company not approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /employers/me/profile/contacts:
+    post:
+      operationId: postEmployersMeProfileContacts
+      tags: [employer]
+      summary: Add a contact person (S3)
+      description: |
+        Adds a display-only contact record to the employer's profile.
+        **NOT a login account** — this creates a contact listing only.
+
+        If `isPrimary: true`, any existing primary contact is auto-demoted to
+        non-primary. Only one contact may be primary at a time.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, role, isPrimary]
+              properties:
+                name:
+                  type: string
+                role:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                isPrimary:
+                  type: boolean
+      responses:
+        '201':
+          description: Contact person created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContactPerson'
+        '403':
+          description: Company not approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /employers/me/profile/contacts/{id}:
+    patch:
+      operationId: patchEmployersMeProfileContactById
+      tags: [employer]
+      summary: Update a contact person (S3)
+      description: >
+        Partial update of a contact record. Setting `isPrimary: true` auto-demotes
+        the existing primary contact.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                role:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                isPrimary:
+                  type: boolean
+      responses:
+        '200':
+          description: Contact updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContactPerson'
+        '404':
+          description: Contact not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      operationId: deleteEmployersMeProfileContactById
+      tags: [employer]
+      summary: Delete a contact person (S3)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Contact deleted
+        '404':
+          description: Contact not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /employers/me/profile/logo/presign:
+    post:
+      operationId: postEmployersMeProfileLogoPresign
+      tags: [employer]
+      summary: Get a presigned R2 URL to upload the company logo (S3)
+      description: |
+        Issues a short-lived presigned PUT URL for direct R2 upload of the
+        company logo. After upload, call
+        `POST /employers/me/profile/logo/confirm` with the returned `key`.
+
+        Accepted: image/jpeg, image/png. Max 2 MB.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fileName, mimeType, sizeBytes]
+              properties:
+                fileName:
+                  type: string
+                  example: company-logo.jpg
+                mimeType:
+                  type: string
+                  enum: [image/jpeg, image/png]
+                sizeBytes:
+                  type: integer
+                  maximum: 2097152
+      responses:
+        '200':
+          description: Presigned URL ready
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [uploadUrl, key, expiresInSeconds]
+                    properties:
+                      uploadUrl:
+                        type: string
+                        format: uri
+                      key:
+                        type: string
+                      expiresInSeconds:
+                        type: integer
+                        example: 300
+        '422':
+          description: Invalid file type or exceeds 2 MB limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /employers/me/profile/logo/confirm:
+    post:
+      operationId: postEmployersMeProfileLogoConfirm
+      tags: [employer]
+      summary: Confirm the uploaded company logo (S3)
+      description: >
+        After PUT to the presigned URL succeeds, call this to record the logo key
+        on the company profile. Returns the updated employer profile.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key]
+              properties:
+                key:
+                  type: string
+                  description: R2 key returned by the presign endpoint
+      responses:
+        '200':
+          description: Logo confirmed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/EmployerProfile'
+        '422':
+          description: Upload not found (HEAD check failed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Upload not found
+                status: 422
+                detail: The uploaded file was not found in storage. Please try uploading again.
+                code: UPLOAD_NOT_FOUND
+
+  # ── Employer: candidate browse (S3) ──────────────────────────────────────────
+  /employers/candidates:
+    get:
+      operationId: getEmployersCandidates
+      tags: [employer]
+      summary: Browse visible candidates (employer, cursor-paginated) (S3)
+      description: |
+        Returns cursor-paginated browse cards for candidates with
+        `profileVisible = true`. **Candidates with `profileVisible = false` are
+        NEVER returned** — they are excluded at query time.
+
+        **Whitelisted query parameters only** — arbitrary field access is not
+        allowed. Filtering/sorting beyond these parameters is not supported at MVP.
+
+        Viewing a candidate's full profile (GET /employers/candidates/:id) is a
+        separate call that records a profile view.
+      parameters:
+        - name: category
+          in: query
+          description: Filter by job category ID
+          schema:
+            type: string
+            format: uuid
+        - name: minExperienceYears
+          in: query
+          description: Minimum total years of experience (inclusive)
+          schema:
+            type: integer
+            minimum: 0
+        - name: hasForeignExperience
+          in: query
+          description: Filter to candidates with at least one FOREIGN experience entry
+          schema:
+            type: boolean
+        - name: availability
+          in: query
+          description: Filter by isAvailable flag
+          schema:
+            type: boolean
+        - name: q
+          in: query
+          description: Keyword search on fullName, currentLocation, and skills
+          schema:
+            type: string
+        - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Cursor-paginated candidate browse cards
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, nextCursor]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CandidateBrowseCard'
+                  nextCursor:
+                    type: [string, 'null']
+        '403':
+          description: Company not approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ── Employer: view candidate profile (S3) ─────────────────────────────────────
+  /employers/candidates/{id}:
+    get:
+      operationId: getEmployersCandidateById
+      tags: [employer]
+      summary: View a candidate's full profile (employer context, S3)
+      description: |
+        Returns the employer-context view of a candidate's profile.
+
+        **Privacy invariants (enforced at API layer):**
+        - `phone` is ABSENT (not null) when `showPhone = false`
+        - `religion` is ABSENT (not null) when `showReligion = false`
+        - `dob` is NEVER included — only derived `age`
+        - `documentsStatus` contains status/validity ONLY — no keys, URLs, content
+        - A `profileVisible = false` candidate returns **404** (identical to
+          nonexistent — indistinguishable to the caller)
+
+        **Side effect:** Records a profile view, deduplicated per (company, candidate)
+        per rolling 24-hour window. On first view (or after 24 h), appends a
+        `PROFILE_VIEWED` in-app notification to the candidate's notification feed
+        (fire-and-forget — never blocks the response).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Candidate profile (employer context)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CandidateEmployerView'
+        '403':
+          description: Company not approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Candidate not found or profile is hidden (profileVisible = false)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Not found
+                status: 404
+                detail: Candidate not found.
+                code: NOT_FOUND
 
   # ══════════════════════════════════════════════════════════════════════════════
   # JOBS — S2 FULL DETAIL
@@ -3468,46 +4545,42 @@ paths:
   # LATER-SPRINT STUBS — path + method + summary only; NOT_IMPLEMENTED response
   # ══════════════════════════════════════════════════════════════════════════════
 
-  # ── Employer: candidate views (Sprint 3) ──────────────────────────────────────
-  /employers/candidates/{id}:
-    get:
-      operationId: getEmployersCandidateById
-      tags: [employer]
-      summary: '[S3] View a candidate profile (employer context)'
-      description: >
-        **Sprint 3 — not yet implemented.** Privacy rules apply: phone and
-        religion are omitted based on candidate toggle settings.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '501':
-          description: Not implemented
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 3.
-                code: NOT_IMPLEMENTED
-
   # ── Applications (Sprint 4) ───────────────────────────────────────────────────
   /jobs/{id}/apply:
     post:
       operationId: applyToJob
       tags: [jobs]
-      summary: '[S4] Apply to a job (candidate)'
+      summary: Apply to a job (candidate)
       description: >
-        **Sprint 4 — not yet implemented.** The apply gate enforces profile
-        completion ≥ threshold, all mandatory documents present, and passport
-        not expired. Match score is computed once at apply time and snapshotted.
+        Candidate applies to an ACTIVE job. **Apply-gate error ladder** — checked
+        fail-fast IN THIS EXACT ORDER, each with a distinct code:
+
+        1. `JOB_NOT_ACTIVE` (422) — the job is not ACTIVE (draft/paused/archived).
+        2. `ALREADY_APPLIED` (409) — this candidate already applied to this job.
+        3. `PROFILE_INCOMPLETE` (422) — completion below the required threshold;
+           `meta: { completionPct: int, threshold: int }`.
+        4. `MANDATORY_DOCS_MISSING` (422) — a required document is absent;
+           `meta: { missing: DocumentType[] }`.
+        5. `PASSPORT_INVALID` (422) — passport expired or missing;
+           `meta: { reason: "expired" | "missing" }`.
+
+        On success (201) the match score is computed ONCE and snapshotted
+        (`matchScore` + `matchBreakdown`), the gate snapshot fields are frozen
+        (`docsCompleteCount` / `docsRequiredCount` / `passportValidAtApply`), the
+        application enters PENDING with a DB-assigned `humanId` (`AP-YYYY-N`).
+
+        **Side effects:** an in-app receipt notification to the candidate, and an
+        in-app new-applicant notification to the employer.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                coverLetter:
+                  type: string
+                  maxLength: 500
       parameters:
         - name: id
           in: path
@@ -3516,25 +4589,100 @@ paths:
             type: string
             format: uuid
       responses:
-        '501':
-          description: Not implemented
+        '201':
+          description: Application created (PENDING) with match snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Application'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Caller is not a CANDIDATE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: '`ALREADY_APPLIED` — the candidate already applied to this job'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 4.
-                code: NOT_IMPLEMENTED
+                title: Already applied
+                status: 409
+                detail: You have already applied to this job.
+                code: ALREADY_APPLIED
+        '422':
+          description: >
+            An apply-gate failure. `code` is one of (checked in order):
+            `JOB_NOT_ACTIVE`, `PROFILE_INCOMPLETE` (meta.completionPct +
+            meta.threshold), `MANDATORY_DOCS_MISSING` (meta.missing[]),
+            `PASSPORT_INVALID` (meta.reason).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                jobNotActive:
+                  value:
+                    type: about:blank
+                    title: Job not active
+                    status: 422
+                    detail: This job is not accepting applications.
+                    code: JOB_NOT_ACTIVE
+                profileIncomplete:
+                  value:
+                    type: about:blank
+                    title: Profile incomplete
+                    status: 422
+                    detail: Complete your profile before applying.
+                    code: PROFILE_INCOMPLETE
+                    meta: { completionPct: 55, threshold: 70 }
+                mandatoryDocsMissing:
+                  value:
+                    type: about:blank
+                    title: Mandatory documents missing
+                    status: 422
+                    detail: Upload all required documents before applying.
+                    code: MANDATORY_DOCS_MISSING
+                    meta: { missing: [PASSPORT, EXPERIENCE_CERT] }
+                passportInvalid:
+                  value:
+                    type: about:blank
+                    title: Passport invalid
+                    status: 422
+                    detail: Your passport is expired.
+                    code: PASSPORT_INVALID
+                    meta: { reason: expired }
 
   /jobs/{id}/applicants:
     get:
       operationId: getJobApplicants
       tags: [jobs]
-      summary: '[S4] List applicants for a job (employer)'
-      description: '**Sprint 4 — not yet implemented.**'
+      summary: List applicants for a job (employer)
+      description: >
+        Employer lists applicants to their OWN job. Cursor-paginated. Each
+        `ApplicantCard` reuses the S3 employer-context candidate subset, so the
+        privacy omission semantics carry through (phone/religion omitted per the
+        candidate's toggles, no dob, documents status-only). `counts` powers the
+        status column headers on Screen 18.
       parameters:
         - name: id
           in: path
@@ -3542,32 +4690,67 @@ paths:
           schema:
             type: string
             format: uuid
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/PageSizeParam'
+        - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: status
+          in: query
+          description: Filter by application status.
+          schema:
+            $ref: '#/components/schemas/ApplicationStatus'
+        - name: sort
+          in: query
+          description: '`match` = highest matchScore first; `recent` = newest first.'
+          schema:
+            type: string
+            enum: [match, recent]
+            default: match
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Applicant cards for the job
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, nextCursor, counts]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApplicantCard'
+                  nextCursor:
+                    type: [string, 'null']
+                  counts:
+                    $ref: '#/components/schemas/ApplicantCounts'
+        '403':
+          description: Not the owning employer
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 4.
-                code: NOT_IMPLEMENTED
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /applications/{id}/status:
     patch:
       operationId: patchApplicationStatus
       tags: [jobs]
-      summary: '[S4] Update application status (employer)'
+      summary: Update application status (employer, forward-only)
       description: >
-        **Sprint 4 — not yet implemented.** Employers can only move status
-        FORWARD (PENDING → SHORTLISTED → SELECTED/REJECTED). Backward/corrective
-        moves require ADMIN_OVERRIDE with a mandatory reason. The "Selected"
-        WhatsApp fires once per application (guarded by `selectedNotifiedAt`).
+        The owning employer moves an application FORWARD only. **Legal
+        transitions:** PENDING → SHORTLISTED | SELECTED | REJECTED;
+        SHORTLISTED → SELECTED | REJECTED. Any other move (including backward or
+        same-state) → 422 `ILLEGAL_TRANSITION` with `meta: { from, to, allowed[] }`.
+        Corrective/backward moves are ADMIN-ONLY (see
+        PATCH /admin/applications/{id}/status).
+
+        **SELECTED side effect:** the FIRST entry into SELECTED fires ONE WhatsApp
+        (`wa.selected`) + email + in-app, and sets `selectedNotifiedAt`. Re-entry
+        into SELECTED (e.g. after an admin correction) sends email + in-app ONLY —
+        the WhatsApp never fires twice (guarded by `selectedNotifiedAt`).
       parameters:
         - name: id
           in: path
@@ -3576,23 +4759,123 @@ paths:
             type: string
             format: uuid
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               type: object
+              required: [status]
+              properties:
+                status:
+                  $ref: '#/components/schemas/ApplicationStatus'
+                rejectionFeedback:
+                  type: string
+                  maxLength: 1000
+                  description: Optional feedback shown to the candidate on REJECTED.
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Updated application
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Application'
+        '403':
+          description: Not the owning employer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: '`ILLEGAL_TRANSITION` — the move is not forward-only'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 4.
-                code: NOT_IMPLEMENTED
+                title: Illegal transition
+                status: 422
+                detail: Employers can only move an application forward.
+                code: ILLEGAL_TRANSITION
+                meta: { from: SELECTED, to: PENDING, allowed: [] }
+
+  /candidates/me/applications:
+    get:
+      operationId: getCandidateMeApplications
+      tags: [candidates]
+      summary: List the candidate's applications
+      description: >
+        The authenticated candidate's applications, cursor-paginated, newest
+        first. `selectedNotifiedAt` (non-null) drives the "WhatsApp receipt sent"
+        indicator on the card.
+      parameters:
+        - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: status
+          in: query
+          description: Filter by application status.
+          schema:
+            $ref: '#/components/schemas/ApplicationStatus'
+      responses:
+        '200':
+          description: Application cards
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, nextCursor]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApplicationCard'
+                  nextCursor:
+                    type: [string, 'null']
+
+  /candidates/me/applications/{id}:
+    get:
+      operationId: getCandidateMeApplicationById
+      tags: [candidates]
+      summary: Get one of the candidate's applications (with timeline)
+      description: >
+        Full candidate-facing application detail including the status `timeline`.
+        Each timeline entry carries the actor's ROLE only (never identity) and
+        `isAdminOverride`. The admin `overrideReason` is DELIBERATELY EXCLUDED
+        from this candidate view — it is admin/audit-facing only.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Application detail with timeline
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApplicationDetail'
+        '404':
+          description: Application not found (or not the candidate's)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   # ── Payments (Sprint 5) ───────────────────────────────────────────────────────
   /billing/plans:
@@ -3791,25 +5074,131 @@ paths:
     get:
       operationId: getAdminApplications
       tags: [admin]
-      summary: '[S6] List all applications (admin)'
-      description: '**Sprint 6 — not yet implemented.**'
+      summary: List all applications (admin)
+      description: >
+        Admin-wide application table (offset-paginated). RBAC: requires an admin
+        role with the applications-read permission. The admin context is the ONLY
+        context that may carry `overrideReason` on an application; candidate and
+        employer contexts never see it.
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PageSizeParam'
         - $ref: '#/components/parameters/SortParam'
+        - name: status
+          in: query
+          description: Filter by application status.
+          schema:
+            $ref: '#/components/schemas/ApplicationStatus'
+        - name: jobId
+          in: query
+          description: Filter to a single job.
+          schema:
+            type: string
+            format: uuid
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Applications page (admin context)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Application'
+                  meta:
+                    type: object
+                    required: [page, pageSize, total, totalPages]
+                    properties:
+                      page:
+                        type: integer
+                      pageSize:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+        '403':
+          description: Missing the applications-read permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/applications/{id}/status:
+    patch:
+      operationId: patchAdminApplicationStatus
+      tags: [admin]
+      summary: Corrective application status move (admin override)
+      description: >
+        Admins may move an application to ANY status (including backward/corrective
+        moves the employer cannot make). A corrective move is an ADMIN_OVERRIDE and
+        REQUIRES a non-empty `overrideReason`; omitting it → 422
+        `OVERRIDE_REASON_REQUIRED`. The reason is logged to the audit trail and
+        recorded on the timeline entry (`isAdminOverride: true`), but is NEVER
+        serialized into candidate/employer contexts.
+
+        Re-entry into SELECTED still respects the once-per-application WhatsApp
+        guard (`selectedNotifiedAt`): email + in-app only, no second WhatsApp.
+        RBAC: requires the applications-write permission.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status, overrideReason]
+              properties:
+                status:
+                  $ref: '#/components/schemas/ApplicationStatus'
+                overrideReason:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+      responses:
+        '200':
+          description: Updated application (admin context, includes overrideReason)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Application'
+        '403':
+          description: Missing the applications-write permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: '`OVERRIDE_REASON_REQUIRED` — a corrective move needs a reason'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
+                title: Override reason required
+                status: 422
+                detail: A corrective status change requires a reason.
+                code: OVERRIDE_REASON_REQUIRED
 
   /admin/roles/{role}/permissions:
     get:

@@ -13,6 +13,7 @@ import { EmployerKpis } from '@/components/employer/dashboard/EmployerKpis';
 import { RecentJobsTable } from '@/components/employer/dashboard/RecentJobsTable';
 import { RecentApplicants } from '@/components/employer/dashboard/RecentApplicants';
 import { PostFirstJobCta } from '@/components/employer/dashboard/PostFirstJobCta';
+import { ChecklistCard } from '@/components/employer/dashboard/ChecklistCard';
 import type { components } from '@skillindiaconnect/shared-types';
 
 type EmployerDashboard = components['schemas']['EmployerDashboard'];
@@ -53,9 +54,22 @@ export default function EmployerDashboardPage() {
     if (company.status !== 'APPROVED') {
       // Company exists but not approved — dashboard API returns 403; show zeros
       setDashboard({
-        kpis: { activeJobs: 0, totalApplications: 0, shortlisted: 0, selected: 0 },
+        kpis: {
+          activeJobs: 0,
+          totalApplications: 0,
+          shortlisted: 0,
+          totalJobViews: 0,
+          hiredThisMonth: 0,
+        },
         recentJobs: [],
         recentApplicants: [],
+        profileChecklist: {
+          hasLogo: false,
+          hasHiringPreferences: false,
+          hasSecondContact: false,
+          hasDescription: false,
+          hint: null,
+        },
       });
       setLoading(false);
       return;
@@ -69,9 +83,22 @@ export default function EmployerDashboardPage() {
       .catch((err) => {
         if (err instanceof ApiRequestError && err.error.status === 403) {
           setDashboard({
-            kpis: { activeJobs: 0, totalApplications: 0, shortlisted: 0, selected: 0 },
+            kpis: {
+              activeJobs: 0,
+              totalApplications: 0,
+              shortlisted: 0,
+              totalJobViews: 0,
+              hiredThisMonth: 0,
+            },
             recentJobs: [],
             recentApplicants: [],
+            profileChecklist: {
+              hasLogo: false,
+              hasHiringPreferences: false,
+              hasSecondContact: false,
+              hasDescription: false,
+              hint: null,
+            },
           });
         } else {
           setError(t('errorLoad'));
@@ -114,6 +141,8 @@ export default function EmployerDashboardPage() {
       </div>
 
       <EmployerKpis kpis={dashboard.kpis} />
+
+      <ChecklistCard hint={dashboard.profileChecklist.hint} />
 
       {hasNoJobs && <PostFirstJobCta companyStatus={company.status} />}
 

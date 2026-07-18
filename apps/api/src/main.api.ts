@@ -4,6 +4,7 @@ import { RequestMethod, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import { AppApiModule } from './app-api.module';
+import { validationProblemFactory } from './core/http-problem.filter';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppApiModule);
@@ -30,11 +31,14 @@ async function bootstrap(): Promise<void> {
     defaultVersion: '1',
   });
 
-  // Validate and strip unknown fields from all incoming DTOs.
+  // Validate and strip unknown fields from all incoming DTOs. The factory
+  // shapes validation failures per the contract (`code: VALIDATION_ERROR` +
+  // `meta.errors[]` per-field codes); HttpProblemFilter adds the envelope.
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       transform: true,
+      exceptionFactory: validationProblemFactory,
     }),
   );
 

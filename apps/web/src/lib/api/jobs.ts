@@ -26,6 +26,14 @@ export async function getJobServer(id: string): Promise<JobDetail> {
   return result.data;
 }
 
+/**
+ * Client-side single job detail (public GET /jobs/:id). Used by the employer
+ * applicants page for the job title + market (the popover's foreign-on-LOCAL note).
+ */
+export async function getJobClient(id: string): Promise<JobDetail> {
+  return apiFetch<JobDetail>(`/jobs/${encodeURIComponent(id)}`);
+}
+
 /** Client-side: subsequent pages for JobList's "Load more". */
 export async function searchJobsClient(
   filters: JobSearchFilters,

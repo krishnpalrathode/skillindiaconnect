@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "continue": "[hi] Continue",
     "back": "[hi] Back",
@@ -110,8 +110,6 @@
     "rateLimited": "बहुत अधिक अनुरोध। कृपया बाद में पुनः प्रयास करें।",
     "callbackError": "साइन-इन विफल। कृपया पुनः प्रयास करें।",
     "signingIn": "साइन इन हो रहा है…",
-    "onboardingComingSoon": "उम्मीदवार ऑनबोर्डिंग — जल्द आ रहा है",
-    "employerOnboardingComingSoon": "नियोक्ता ऑनबोर्डिंग — जल्द आ रहा है",
     "phone": "फ़ोन नंबर",
     "phonePlaceholderLegacy": "अपना फ़ोन नंबर दर्ज करें",
     "otp": "एकमुश्त पासवर्ड",
@@ -491,7 +489,14 @@
         "activeJobs": "सक्रिय नौकरियां",
         "totalApplications": "कुल आवेदन",
         "shortlisted": "शॉर्टलिस्टेड",
-        "hired": "इस महीने नियुक्त"
+        "hired": "इस महीने नियुक्त",
+        "totalJobViews": "कुल नौकरी व्यूज़",
+        "pendingHint": "आवेदन शुरू होने पर उपलब्ध"
+      },
+      "checklist": {
+        "title": "अपनी कंपनी प्रोफ़ाइल पूरी करें",
+        "cta": "प्रोफ़ाइल पर जाएं",
+        "dismiss": "बंद करें"
       },
       "recentJobs": {
         "title": "हाल की नौकरी पोस्टिंग",
@@ -520,6 +525,183 @@
       "loading": "डैशबोर्ड लोड हो रहा है…",
       "errorLoad": "डैशबोर्ड डेटा लोड करने में विफल।",
       "retry": "पुनः प्रयास करें"
+    },
+    "profile": {
+      "metaTitle": "[hi] Company Profile — SkillIndiaConnect",
+      "pageTitle": "कंपनी प्रोफ़ाइल",
+      "loadingProfile": "[hi] Loading profile…",
+      "errorLoad": "[hi] Failed to load profile.",
+      "retry": "पुनः प्रयास करें",
+      "hero": {
+        "changeLogoLabel": "[hi] Change company logo",
+        "uploadLogoLabel": "[hi] Upload company logo",
+        "logoAlt": "[hi] Company logo",
+        "approvedBadge": "[hi] Approved by SkillIndiaConnect",
+        "verifiedBadge": "सत्यापित",
+        "uploading": "[hi] Uploading…",
+        "uploadDone": "[hi] Logo updated",
+        "uploadError": "[hi] Upload failed — tap to retry",
+        "typeHint": "[hi] JPEG or PNG, max 2 MB"
+      },
+      "nudge": {
+        "title": "[hi] Complete your profile",
+        "dismiss": "[hi] Dismiss"
+      },
+      "companyInfo": {
+        "sectionTitle": "कंपनी जानकारी",
+        "nameLabel": "[hi] Company name",
+        "typeLabel": "[hi] Company type",
+        "typeLocal": "[hi] Local (India)",
+        "typeForeign": "[hi] Foreign / Gulf",
+        "typeReadOnlyHint": "[hi] Company type is set at registration and cannot be changed here. Contact support if you need to update it.",
+        "registrationNumberLabel": "[hi] Registration number",
+        "registrationNumberReadOnlyHint": "[hi] Your verified registration identity. Contact support to update.",
+        "industryLabel": "[hi] Industry",
+        "phoneLabel": "[hi] Company phone",
+        "locationLabel": "[hi] Location",
+        "websiteLabel": "[hi] Website",
+        "websitePlaceholder": "[hi] https://yourcompany.com",
+        "employeeRangeLabel": "[hi] Team size",
+        "descriptionLabel": "[hi] Company description",
+        "descriptionPlaceholder": "[hi] Tell candidates about your company…",
+        "notSet": "[hi] Not set",
+        "saveError": "[hi] Failed to save. Please try again."
+      },
+      "hiringPrefs": {
+        "sectionTitle": "[hi] Hiring Preferences",
+        "emptyHint": "[hi] Add hiring preferences to help us match the right candidates.",
+        "categoriesLabel": "[hi] Preferred job categories",
+        "categoriesHint": "[hi] Select the trades you usually hire for",
+        "categoriesLoading": "[hi] Loading categories…",
+        "nationalitiesLabel": "[hi] Preferred nationalities",
+        "nationalitiesHint": "[hi] Comma-separated, e.g. Indian, Nepali",
+        "minExperienceLabel": "[hi] Minimum experience (years)",
+        "notesLabel": "[hi] Hiring notes",
+        "notesPlaceholder": "[hi] Any other preferences…",
+        "notSet": "[hi] Not specified",
+        "saveError": "[hi] Failed to save preferences. Please try again."
+      },
+      "contacts": {
+        "sectionTitle": "संपर्क व्यक्ति",
+        "emptyHint": "[hi] Add at least one contact person.",
+        "addContact": "[hi] Add contact",
+        "editContact": "[hi] Edit contact",
+        "primaryBadge": "[hi] Primary",
+        "makePrimary": "[hi] Make primary",
+        "edit": "[hi] Edit",
+        "delete": "[hi] Delete",
+        "nameLabel": "[hi] Full name",
+        "roleLabel": "[hi] Job title / Role",
+        "phoneLabel": "[hi] Phone",
+        "emailLabel": "[hi] Email",
+        "isPrimaryLabel": "[hi] Set as primary contact",
+        "cancelForm": "[hi] Cancel",
+        "saveContact": "[hi] Save",
+        "primaryHintNote": "[hi] auto-demotes the current primary",
+        "nameRoleRequired": "[hi] Name and role are required.",
+        "saveError": "[hi] Failed to save contact. Please try again.",
+        "deleteError": "[hi] Failed to delete contact. Please try again."
+      },
+      "documents": {
+        "sectionTitle": "[hi] Company Documents",
+        "certLabel": "[hi] Registration certificate",
+        "certVerified": "सत्यापित",
+        "certPending": "[hi] Pending review",
+        "reuploadLabel": "[hi] Re-upload certificate",
+        "reuploadHint": "[hi] PDF, JPG, or PNG — up to 10 MB",
+        "noDocument": "[hi] No certificate uploaded.",
+        "uploadedOn": "[hi] Uploaded",
+        "verifiedNote": "[hi] Verification complete. Your certificate has been reviewed.",
+        "pendingReviewNote": "[hi] Under review. Our team will verify your certificate shortly."
+      },
+      "accountSettings": {
+        "sectionTitle": "[hi] Account Settings",
+        "languageLabel": "[hi] Preferred language",
+        "languageHint": "[hi] Sets the default language for your notifications.",
+        "langEn": "अंग्रेज़ी",
+        "langHi": "हिन्दी",
+        "langAr": "अरबी",
+        "moreSettingsNote": "[hi] Additional notification preferences will be available in a future update.",
+        "saveError": "[hi] Failed to save. Please try again."
+      }
+    },
+    "candidates": {
+      "title": "उम्मीदवार",
+      "subtitle": "सत्यापित ब्लू-कॉलर श्रमिकों को ब्राउज़ करें और पूरा विवरण देखने के लिए प्रोफ़ाइल खोलें।",
+      "available": "उपलब्ध",
+      "notAvailable": "अनुपलब्ध",
+      "loadError": "उम्मीदवार लोड नहीं हो सके। कृपया पुनः प्रयास करें।",
+      "loadMoreError": "और उम्मीदवार लोड नहीं हो सके। कृपया पुनः प्रयास करें।",
+      "retry": "पुनः प्रयास करें",
+      "loadMore": "और लोड करें",
+      "approvalGate": {
+        "title": "अनुमोदन प्रतीक्षारत",
+        "body": "आपकी कंपनी प्रोफ़ाइल अनुमोदित होने के बाद आप उम्मीदवार ब्राउज़ कर सकते हैं।",
+        "backToDashboard": "डैशबोर्ड पर वापस"
+      },
+      "empty": {
+        "title": "आपके फ़िल्टर से कोई उम्मीदवार मेल नहीं खाता",
+        "body": "अपने फ़िल्टर को व्यापक करें या खोज साफ़ करें।"
+      },
+      "card": {
+        "srLabel": "{name}, {category}",
+        "experienceYears": "{years, plural, =0 {कोई अनुभव नहीं} one {# वर्ष अनुभव} other {# वर्ष अनुभव}}",
+        "gulfExperience": "गल्फ अनुभव",
+        "skillsLabel": "प्रमुख कौशल"
+      },
+      "filters": {
+        "panelLabel": "उम्मीदवार फ़िल्टर",
+        "search": "खोजें",
+        "searchPlaceholder": "नाम, स्थान या कौशल",
+        "category": "श्रेणी",
+        "allCategories": "सभी श्रेणियाँ",
+        "minExperience": "न्यूनतम अनुभव",
+        "anyExperience": "कोई भी अनुभव",
+        "yearsPlus": "{years}+ वर्ष",
+        "foreignExperience": "गल्फ अनुभव है",
+        "availableNow": "अभी उपलब्ध",
+        "clear": "फ़िल्टर साफ़ करें"
+      },
+      "view": {
+        "back": "वापस",
+        "backToBrowse": "उम्मीदवारों पर वापस",
+        "loading": "प्रोफ़ाइल लोड हो रही है…",
+        "loadError": "यह प्रोफ़ाइल लोड नहीं हो सकी। कृपया पुनः प्रयास करें।",
+        "notFoundTitle": "यह उम्मीदवार प्रोफ़ाइल उपलब्ध नहीं है",
+        "notFoundBody": "इसे हटा दिया गया हो सकता है या अब दृश्यमान नहीं है।",
+        "ageYears": "{age} वर्ष",
+        "memberSince": "{date} से सदस्य",
+        "skillsTitle": "कौशल",
+        "facts": {
+          "title": "विवरण",
+          "nationality": "राष्ट्रीयता",
+          "languages": "भाषाएँ",
+          "noticePeriod": "नोटिस अवधि",
+          "noticeDays": "{days, plural, one {# दिन} other {# दिन}}",
+          "phone": "फ़ोन",
+          "religion": "धर्म"
+        },
+        "timeline": {
+          "title": "कार्य अनुभव",
+          "india": "भारत",
+          "foreign": "गल्फ / विदेश",
+          "years": "{count, plural, one {# वर्ष} other {# वर्ष}}",
+          "months": "{count, plural, one {# माह} other {# माह}}"
+        },
+        "documents": {
+          "title": "दस्तावेज़",
+          "type": {
+            "PASSPORT": "पासपोर्ट",
+            "EXPERIENCE_CERT": "अनुभव प्रमाणपत्र",
+            "EDUCATIONAL_CERT": "शैक्षिक प्रमाणपत्र"
+          },
+          "uploaded": "अपलोड किया गया",
+          "notUploaded": "अपलोड नहीं किया गया",
+          "passportValid": "वैध",
+          "passportExpired": "समाप्त",
+          "proHint": "दस्तावेज़ पहुँच Pro पर उपलब्ध है।"
+        }
+      }
     }
   },
   "jobs": {
@@ -619,8 +801,16 @@
     "kpi": {
       "applied": "आवेदन किए",
       "views": "प्रोफ़ाइल व्यूज़",
+      "viewsCaption": "पिछले 30 दिन",
+      "viewsSrLabel": "{count} प्रोफ़ाइल व्यूज़, पिछले 30 दिन",
       "shortlisted": "शॉर्टलिस्ट",
       "updates": "अपडेट"
+    },
+    "recentViews": {
+      "title": "हाल के प्रोफ़ाइल व्यूज़",
+      "emptyTitle": "अभी तक कोई प्रोफ़ाइल व्यू नहीं",
+      "emptyBody": "नियोक्ताओं का ध्यान आकर्षित करने के लिए अपनी प्रोफ़ाइल पूरी करें।",
+      "emptyCta": "प्रोफ़ाइल पूरी करें"
     },
     "recommendedJobs": {
       "title": "अनुशंसित नौकरियाँ",
@@ -629,7 +819,10 @@
     },
     "myApplications": {
       "title": "मेरे आवेदन",
-      "coming": "आवेदन ट्रैकिंग जल्द आ रही है।"
+      "coming": "आवेदन ट्रैकिंग जल्द आ रही है।",
+      "viewAll": "सभी देखें",
+      "empty": "आपने अभी तक किसी नौकरी के लिए आवेदन नहीं किया।",
+      "browseJobs": "नौकरियाँ देखें"
     },
     "quickActions": {
       "title": "त्वरित कार्य",
@@ -867,6 +1060,211 @@
       "archive": "संग्रहीत करें",
       "archiveLabel": "नौकरी संग्रहीत करें: {title}",
       "repostAsDraft": "ड्राफ्ट के रूप में पुनः पोस्ट करें"
+    },
+    "applicantsCountLabel": "{count} आवेदक"
+  },
+  "apply": {
+    "title": "इस नौकरी के लिए आवेदन करें",
+    "close": "बंद करें",
+    "submit": "आवेदन जमा करें",
+    "submitting": "आपका आवेदन जमा किया जा रहा है…",
+    "cta": {
+      "apply": "अभी आवेदन करें",
+      "completeProfile": "आवेदन के लिए अपनी प्रोफ़ाइल पूरी करें",
+      "applied": "आवेदन किया"
+    },
+    "coverLetter": {
+      "label": "कवर लेटर (वैकल्पिक)",
+      "placeholder": "नियोक्ता को बताएं कि आप इस भूमिका के लिए सही क्यों हैं…",
+      "counter": "{n}/{max}"
+    },
+    "eligibility": {
+      "title": "आवेदन से पहले",
+      "pct": "आपकी प्रोफ़ाइल {pct}% पूरी है",
+      "allClear": "आप आवेदन की सभी आवश्यकताएँ पूरी करते हैं।",
+      "fix": "ठीक करें",
+      "recheck": "फिर जाँचें"
+    },
+    "errors": {
+      "profileIncomplete": {
+        "title": "अपनी प्रोफ़ाइल पूरी करें",
+        "body": "आपकी प्रोफ़ाइल {pct}% है — आवेदन के लिए {threshold}% ज़रूरी है।",
+        "action": "प्रोफ़ाइल पूरी करें"
+      },
+      "docsMissing": {
+        "title": "दस्तावेज़ अनुपलब्ध",
+        "body": "आवेदन के लिए ये दस्तावेज़ अपलोड करें: {docs}।",
+        "action": "दस्तावेज़ों पर जाएँ"
+      },
+      "passportInvalid": {
+        "title": "पासपोर्ट समस्या",
+        "expired": "आपका पासपोर्ट समाप्त हो गया है। आवेदन के लिए इसे नवीनीकृत करें।",
+        "missing": "आवेदन के लिए एक वैध पासपोर्ट आवश्यक है।",
+        "action": "दस्तावेज़ों पर जाएँ"
+      },
+      "alreadyApplied": {
+        "title": "आप पहले ही आवेदन कर चुके हैं",
+        "body": "आप इस नौकरी के लिए पहले ही आवेदन कर चुके हैं।",
+        "action": "आवेदन देखें"
+      },
+      "jobNotActive": {
+        "title": "अब आवेदन स्वीकार नहीं किए जा रहे",
+        "body": "यह नौकरी अब आवेदन स्वीकार नहीं कर रही है।",
+        "action": "नौकरियाँ देखें"
+      },
+      "generic": {
+        "title": "कुछ गड़बड़ हो गई",
+        "body": "हम आपका आवेदन जमा नहीं कर सके। कृपया फिर से प्रयास करें।",
+        "retry": "फिर प्रयास करें"
+      },
+      "docTypes": {
+        "PASSPORT": "पासपोर्ट",
+        "EXPERIENCE_CERT": "अनुभव प्रमाणपत्र",
+        "EDUCATIONAL_CERT": "शैक्षिक प्रमाणपत्र"
+      }
+    },
+    "reveal": {
+      "score": "आप {score}% मैच हैं",
+      "category": "नौकरी श्रेणी",
+      "experience": "अनुभव",
+      "experienceBasis": "{raw} में से {clamped} वर्ष के आधार पर",
+      "foreign": "विदेशी अनुभव",
+      "foreignLocalNote": "स्थानीय नौकरियों के लिए स्कोर नहीं किया जाता।",
+      "documents": "दस्तावेज़",
+      "componentScore": "{score}/{max}",
+      "track": "मेरे आवेदनों में ट्रैक करें"
+    }
+  },
+  "applications": {
+    "title": "मेरे आवेदन",
+    "filterLabel": "स्थिति के अनुसार आवेदन फ़िल्टर करें",
+    "filter": {
+      "all": "सभी"
+    },
+    "status": {
+      "PENDING": "लंबित",
+      "SHORTLISTED": "शॉर्टलिस्ट",
+      "SELECTED": "चयनित",
+      "REJECTED": "अस्वीकृत"
+    },
+    "matchShort": "{score}% मैच",
+    "appliedAgo": "{ago} आवेदन किया",
+    "loadMore": "और देखें",
+    "error": "आपके आवेदन लोड नहीं हो सके।",
+    "retry": "फिर प्रयास करें",
+    "emptyAll": "आपने अभी तक आवेदन नहीं किया — शुरू करने के लिए नौकरियाँ देखें।",
+    "emptyStatus": "अभी कोई {status} आवेदन नहीं।",
+    "browseJobs": "नौकरियाँ देखें",
+    "backToList": "मेरे आवेदनों पर वापस",
+    "notFound": "आवेदन नहीं मिला।",
+    "coverLetter": "आपका कवर लेटर",
+    "receipt": {
+      "notified": "✓ व्हाट्सएप पर सूचित किया गया · {date}"
+    },
+    "timeline": {
+      "heading": "स्थिति समयरेखा",
+      "applied": "आवेदन जमा किया गया",
+      "SHORTLISTED": "नियोक्ता द्वारा शॉर्टलिस्ट किया गया",
+      "SELECTED": "नियोक्ता द्वारा चयनित",
+      "REJECTED": "नियोक्ता द्वारा चयनित नहीं",
+      "PENDING": "पुनः खोला गया",
+      "adminOverride": "SkillIndiaConnect द्वारा स्थिति अपडेट की गई"
+    },
+    "rejection": {
+      "feedbackLabel": "नियोक्ता से प्रतिक्रिया",
+      "nextStepTitle": "आगे बढ़ते रहें",
+      "nextStepBody": "हर आवेदन गति बनाता है। अपने क्षेत्र में और भूमिकाएँ देखें।",
+      "browseJobs": "और नौकरियाँ देखें"
+    }
+  },
+  "applicants": {
+    "title": "आवेदक",
+    "backToJobs": "मेरी नौकरियों पर वापस",
+    "notFound": "यह नौकरी नहीं मिली, या आपके पास इसकी पहुँच नहीं है।",
+    "error": "आवेदक लोड नहीं हो सके।",
+    "retry": "फिर प्रयास करें",
+    "empty": "इस दृश्य में अभी कोई आवेदक नहीं।",
+    "loadMore": "और देखें",
+    "approvalGate": {
+      "title": "कंपनी समीक्षाधीन",
+      "body": "आपकी कंपनी स्वीकृत होने के बाद आप आवेदक प्रबंधित कर सकते हैं।",
+      "back": "डैशबोर्ड पर वापस"
+    },
+    "filterLabel": "स्थिति के अनुसार आवेदक फ़िल्टर करें",
+    "filter": {
+      "all": "सभी"
+    },
+    "status": {
+      "PENDING": "लंबित",
+      "SHORTLISTED": "शॉर्टलिस्ट",
+      "SELECTED": "चयनित",
+      "REJECTED": "अस्वीकृत"
+    },
+    "tabSrLabel": "{label} ({count})",
+    "sortLabel": "क्रमबद्ध करें",
+    "sort": {
+      "match": "सर्वोत्तम मैच",
+      "recent": "सबसे नया"
+    },
+    "matchShort": "{score}% मैच",
+    "gulfBadge": "खाड़ी अनुभव",
+    "ageYears": "{age} वर्ष",
+    "expYears": "{years} वर्ष अनुभव",
+    "appliedAgo": "{ago} आवेदन किया",
+    "showMore": "और दिखाएं",
+    "showLess": "कम दिखाएं",
+    "viewDetails": "विवरण देखें",
+    "docs": {
+      "heading": "दस्तावेज़",
+      "PASSPORT": "पासपोर्ट",
+      "EXPERIENCE_CERT": "अनुभव",
+      "EDUCATIONAL_CERT": "शिक्षा",
+      "valid": "वैध",
+      "expired": "समाप्त"
+    },
+    "breakdown": {
+      "open": "{name} के लिए मैच विवरण, {score}% मैच",
+      "scoreShort": "{score}%",
+      "title": "मैच विवरण",
+      "category": "नौकरी श्रेणी",
+      "experience": "अनुभव",
+      "experienceBasis": "{raw} में से {clamped} वर्ष के आधार पर",
+      "foreign": "विदेशी अनुभव",
+      "foreignLocalNote": "स्थानीय नौकरियों के लिए स्कोर नहीं।",
+      "documents": "दस्तावेज़",
+      "componentScore": "{score}/{max}"
+    },
+    "actions": {
+      "shortlist": "शॉर्टलिस्ट",
+      "select": "चयन करें",
+      "reject": "अस्वीकार करें",
+      "shortlistName": "{name} को शॉर्टलिस्ट करें",
+      "selectName": "{name} को चयनित करें",
+      "rejectName": "{name} को अस्वीकार करें"
+    },
+    "selectDialog": {
+      "title": "{name} को चयनित करें?",
+      "body": "उन्हें व्हाट्सएप पर सूचित किया जाएगा — यह सूचना एक बार भेजी जाती है।",
+      "cancel": "रद्द करें",
+      "confirm": "चयन करें"
+    },
+    "rejectDialog": {
+      "title": "{name} को अस्वीकार करें?",
+      "body": "आप उम्मीदवार के लिए वैकल्पिक प्रतिक्रिया जोड़ सकते हैं।",
+      "feedbackLabel": "प्रतिक्रिया (वैकल्पिक)",
+      "feedbackPlaceholder": "एक संक्षिप्त, रचनात्मक टिप्पणी साझा करें…",
+      "visibleNote": "यह प्रतिक्रिया उम्मीदवार को दिखाई देती है।",
+      "counter": "{n}/{max}",
+      "cancel": "रद्द करें",
+      "confirm": "अस्वीकार करें"
+    },
+    "detail": {
+      "close": "बंद करें",
+      "coverLetter": "कवर लेटर"
+    },
+    "toast": {
+      "staleRefresh": "इस आवेदन की स्थिति बदल गई — रीफ्रेश कर रहे हैं।",
+      "error": "कुछ गड़बड़ हो गई। कृपया फिर से प्रयास करें।"
     }
   }
 }

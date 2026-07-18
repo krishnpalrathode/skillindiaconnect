@@ -23,7 +23,9 @@ export class JobsCron {
   @Cron('0 2 * * *')
   async scheduleAutoArchive(): Promise<void> {
     const day = new Date().toISOString().slice(0, 10); // e.g. "2026-07-01"
-    const jobId = `auto-archive:${day}`;
+    // BullMQ (v5) forbids ':' in custom job IDs (Redis key separator) — a colon
+    // throws and the archive scan is NEVER enqueued. Use '-'.
+    const jobId = `auto-archive-${day}`;
 
     await this.autoArchiveQueue.add(JOB_NAMES.AUTO_ARCHIVE_JOBS, {}, { jobId });
     this.logger.log(`Auto-archive job enqueued for ${day} (jobId: ${jobId})`);

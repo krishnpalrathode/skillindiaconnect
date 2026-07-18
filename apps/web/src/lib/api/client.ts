@@ -42,10 +42,15 @@ export class ApiRequestError extends Error {
 // When MSW mocking is enabled the service worker intercepts same-origin requests.
 // MSW handlers register with relative paths (/api/v1), which resolve to localhost:3000.
 // Sending to http://localhost:3001 would miss the service worker entirely.
+//
+// Dot access is required: webpack's DefinePlugin only inlines `process.env.FOO`.
+// `process.env['FOO']` is never substituted — it survives into the browser bundle
+// as a lookup on Next's empty `process` shim and always reads undefined, which
+// silently degrades this base to a relative '/api/v1' pointed at the web origin.
 const API_BASE =
-  process.env['NEXT_PUBLIC_API_MOCKING'] === 'enabled'
+  process.env.NEXT_PUBLIC_API_MOCKING === 'enabled'
     ? '/api/v1'
-    : `${process.env['NEXT_PUBLIC_API_URL'] ?? ''}/api/v1`;
+    : `${process.env.NEXT_PUBLIC_API_URL ?? ''}/api/v1`;
 
 async function rawFetch(path: string, init: RequestInit): Promise<Response> {
   const headers: Record<string, string> = {
@@ -90,10 +95,12 @@ export async function apiFetch<T>(
     const body = await res.json().catch(() => ({
       code: 'UNKNOWN_ERROR',
       title: 'Error',
-      status: res.status,
       detail: 'An unexpected error occurred.',
     }));
-    throw new ApiRequestError(body as ApiError);
+    // Stamp the transport status LAST so `error.status` is always the real HTTP
+    // status — consumers gate UX on it (404 → notFound, 403 → forbidden), and a
+    // body that omits or mis-states `status` must never leave it undefined.
+    throw new ApiRequestError({ ...(body as ApiError), status: res.status });
   }
 
   if (res.status === 204) return undefined as T;
@@ -126,10 +133,10 @@ export async function apiFetchRaw<T>(
     const body = await res.json().catch(() => ({
       code: 'UNKNOWN_ERROR',
       title: 'Error',
-      status: res.status,
       detail: 'An unexpected error occurred.',
     }));
-    throw new ApiRequestError(body as ApiError);
+    // Same status-stamping rule as apiFetch — transport status is ground truth.
+    throw new ApiRequestError({ ...(body as ApiError), status: res.status });
   }
 
   return res.json() as Promise<T>;

@@ -1,10 +1,10 @@
-﻿{
+{
   "common": {
     "continue": "Continue",
     "back": "Back",
     "save": "Save",
     "cancel": "Cancel",
-    "loading": "Loadingâ€¦",
+    "loading": "Loading…",
     "required": "Required",
     "optional": "Optional",
     "submit": "Submit",
@@ -53,7 +53,7 @@
   },
   "auth": {
     "loginTitle": "Log in to SkillIndiaConnect",
-    "loginSubtitle": "Welcome back â€” continue your journey",
+    "loginSubtitle": "Welcome back — continue your journey",
     "signupTitle": "Create your account",
     "signupSubtitle": "Join thousands of workers finding opportunities",
     "googleLogin": "Continue with Google",
@@ -69,7 +69,7 @@
     "forgotPassword": "Forgot password?",
     "loginButton": "Log in",
     "signupButton": "Create account",
-    "noAccount": "Don\u0027t have an account?",
+    "noAccount": "Don't have an account?",
     "signupLink": "Sign up",
     "hasAccount": "Already have an account?",
     "loginLink": "Log in",
@@ -82,7 +82,7 @@
       "good": "Good",
       "strong": "Strong"
     },
-    "termsText": "I agree to the \u003cterms\u003eTerms of Service\u003c/terms\u003e and \u003cprivacy\u003ePrivacy Policy\u003c/privacy\u003e",
+    "termsText": "I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>",
     "mustAcceptTerms": "Please accept the Terms of Service and Privacy Policy to continue",
     "emailTaken": "An account with this email already exists. Try logging in.",
     "invalidEmail": "Please enter a valid email address",
@@ -98,20 +98,18 @@
     "otpSentMessage": "Enter the 6-digit code we sent to your number",
     "invalidOtp": "Invalid or expired OTP. Please try again.",
     "otpRateLimited": "Too many attempts. Please wait before trying again.",
-    "otpDidntGet": "Didn\u0027t receive the code?",
+    "otpDidntGet": "Didn't receive the code?",
     "wrongNumber": "Wrong number",
     "resendCode": "Resend",
     "forgotTitle": "Reset your password",
-    "forgotSubtitle": "Enter your email and we\u0027ll send a reset link",
+    "forgotSubtitle": "Enter your email and we'll send a reset link",
     "sendResetEmail": "Send reset email",
     "forgotSentTitle": "Check your inbox",
-    "forgotSentBody": "If an account with that email exists, you\u0027ll receive a password reset link shortly.",
+    "forgotSentBody": "If an account with that email exists, you'll receive a password reset link shortly.",
     "backToLogin": "Back to log in",
     "rateLimited": "Too many requests. Please try again later.",
     "callbackError": "Sign-in failed. Please try again.",
-    "signingIn": "Signing you inâ€¦",
-    "onboardingComingSoon": "Candidate onboarding â€” coming soon",
-    "employerOnboardingComingSoon": "Employer onboarding â€” coming soon",
+    "signingIn": "Signing you in…",
     "phone": "Phone number",
     "phonePlaceholderLegacy": "Enter your phone number",
     "otp": "One-time password",
@@ -128,7 +126,7 @@
     "dateOfBirth": "Date of birth",
     "gender": "Gender",
     "religion": "Religion",
-    "fatherName": "Father\u0027s name",
+    "fatherName": "Father's name",
     "address": "Address",
     "city": "City",
     "state": "State",
@@ -138,7 +136,7 @@
     "skills": "Skills",
     "experience": "Experience",
     "education": "Education",
-    "loading": "Loading your profileâ€¦",
+    "loading": "Loading your profile…",
     "loadingError": "Failed to load your profile. Please refresh.",
     "retry": "Retry",
     "hero": {
@@ -148,14 +146,14 @@
       "downloadResume": "Download resume",
       "shareProfile": "Share profile",
       "comingSoon": "Coming soon",
-      "availableForWork": "Active â€” Available for Work",
+      "availableForWork": "Active — Available for Work",
       "notAvailable": "Not currently available",
       "memberSince": "Member since {date}"
     },
     "sections": {
       "personalInfo": "Personal Info",
       "workExperience": "Work Experience",
-      "documents": "Documents \u0026 Certificates",
+      "documents": "Documents & Certificates",
       "skills": "Skills",
       "accountSettings": "Account Settings"
     },
@@ -171,8 +169,8 @@
       "verifyPhoneLink": "Verify phone",
       "nameLabel": "Full name",
       "namePlaceholder": "Your full name",
-      "fatherNameLabel": "Father\u0027s name",
-      "fatherNamePlaceholder": "Father\u0027s full name",
+      "fatherNameLabel": "Father's name",
+      "fatherNamePlaceholder": "Father's full name",
       "dobLabel": "Date of birth",
       "maritalStatusLabel": "Marital status",
       "religionLabel": "Religion",
@@ -208,9 +206,9 @@
       "notificationsHeading": "Notifications",
       "salaryHeading": "Salary Expectation",
       "showPhone": "Show phone to employers",
-      "showPhoneHint": "Controls what employers see â€” you always see your phone here",
+      "showPhoneHint": "Controls what employers see — you always see your phone here",
       "showReligion": "Show religion to employers",
-      "showReligionHint": "Controls what employers see â€” you always see your religion here",
+      "showReligionHint": "Controls what employers see — you always see your religion here",
       "waNotifications": "WhatsApp notifications",
       "emailNotifications": "Email notifications",
       "profileVisible": "Profile visible to employers",
@@ -221,7 +219,7 @@
       "salaryMinPlaceholder": "e.g. 25000",
       "salaryMaxPlaceholder": "e.g. 50000",
       "saveSalary": "Save salary",
-      "salaryNote": "Unscored â€” for matching guidance only"
+      "salaryNote": "Unscored — for matching guidance only"
     }
   },
   "document": {
@@ -242,16 +240,16 @@
     "network": "Network error. Please check your connection.",
     "notFound": "Page not found",
     "unauthorized": "Please log in to continue",
-    "forbidden": "You don\u0027t have permission to do this"
+    "forbidden": "You don't have permission to do this"
   },
   "onboarding": {
     "pageTitle": "Complete your profile",
-    "loading": "Loading your profileâ€¦",
+    "loading": "Loading your profile…",
     "stepOf": "Step {current} of {total}",
     "steps": {
       "personalInfo": "Personal Info",
       "workExperience": "Work Experience",
-      "documentsSkills": "Documents \u0026 Skills",
+      "documentsSkills": "Documents & Skills",
       "preview": "Preview"
     },
     "personalInfo": {
@@ -268,7 +266,7 @@
       "languagesPlaceholder": "Type languages separated by commas",
       "jobCategoryLabel": "Job category",
       "phoneVerifyTitle": "Verify your phone",
-      "phoneVerifySubtitle": "We\u0027ll send a WhatsApp OTP to confirm your number",
+      "phoneVerifySubtitle": "We'll send a WhatsApp OTP to confirm your number",
       "phoneLabel": "Mobile number",
       "phonePlaceholder": "9876543210",
       "phoneVerified": "Phone verified",
@@ -299,7 +297,7 @@
       "cancel": "Cancel"
     },
     "documentsSkills": {
-      "title": "Documents \u0026 Skills",
+      "title": "Documents & Skills",
       "subtitle": "Upload your documents and add your skills",
       "passportLabel": "Passport",
       "passportHint": "PDF or image, up to 10 MB",
@@ -327,7 +325,7 @@
       }
     },
     "preview": {
-      "title": "Preview \u0026 Export",
+      "title": "Preview & Export",
       "subtitle": "Review your profile completion and export your resume",
       "completionTitle": "Profile completion",
       "exportTitle": "Export resume",
@@ -335,25 +333,25 @@
       "sendWhatsapp": "Send via WhatsApp",
       "sendEmail": "Send to email",
       "exportComingSoon": "Resume export coming in Sprint 7",
-      "saveAndContinue": "Save \u0026 continue to profile",
+      "saveAndContinue": "Save & continue to profile",
       "videoTitle": "Video introduction",
       "videoComingSoon": "Coming soon"
     },
     "upload": {
       "selectFile": "Select file",
       "changeFile": "Change file",
-      "uploading": "Uploadingâ€¦ {pct}%",
+      "uploading": "Uploading… {pct}%",
       "retryUpload": "Retry upload",
       "uploadComplete": "Uploaded",
       "fileTooLarge": "File is too large",
       "uploadFailed": "Upload failed. Tap to retry.",
-      "dropzoneHint": "Drag \u0026 drop or click to select",
+      "dropzoneHint": "Drag & drop or click to select",
       "maxSize": "Max {size} MB"
     },
     "nav": {
       "back": "Back",
       "next": "Next",
-      "saveAndContinue": "Save \u0026 Continue",
+      "saveAndContinue": "Save & Continue",
       "skipForNow": "Skip for now"
     },
     "maritalStatus": {
@@ -383,7 +381,7 @@
     },
     "banner": {
       "pendingTitle": "Your company is under review.",
-      "pendingBody": "Verification usually takes up to 24 hours. You can set up your profile now â€” job posting unlocks after approval.",
+      "pendingBody": "Verification usually takes up to 24 hours. You can set up your profile now — job posting unlocks after approval.",
       "rejectedTitle": "Company registration rejected.",
       "rejectedBodyFallback": "Please review your submission and resubmit.",
       "rejectedAction": "Resubmit registration â†’",
@@ -399,7 +397,7 @@
       "manage": "Manage Subscription"
     },
     "shell": {
-      "loadingCompany": "Loading companyâ€¦",
+      "loadingCompany": "Loading company…",
       "errorTitle": "Could not load company profile.",
       "errorBody": "Please check your connection and try again.",
       "retry": "Retry"
@@ -491,7 +489,14 @@
         "activeJobs": "Active Jobs",
         "totalApplications": "Total Applications",
         "shortlisted": "Shortlisted",
-        "hired": "Hired This Month"
+        "hired": "Hired This Month",
+        "totalJobViews": "Total Job Views",
+        "pendingHint": "Available once applications open"
+      },
+      "checklist": {
+        "title": "Complete your company profile",
+        "cta": "Go to profile",
+        "dismiss": "Dismiss"
       },
       "recentJobs": {
         "title": "Recent Job Postings",
@@ -520,16 +525,193 @@
       "loading": "Loading dashboard…",
       "errorLoad": "Failed to load dashboard data.",
       "retry": "Retry"
+    },
+    "profile": {
+      "metaTitle": "Company Profile — SkillIndiaConnect",
+      "pageTitle": "Company Profile",
+      "loadingProfile": "Loading profile…",
+      "errorLoad": "Failed to load profile.",
+      "retry": "Retry",
+      "hero": {
+        "changeLogoLabel": "Change company logo",
+        "uploadLogoLabel": "Upload company logo",
+        "logoAlt": "Company logo",
+        "approvedBadge": "Approved by SkillIndiaConnect",
+        "verifiedBadge": "Verified",
+        "uploading": "Uploading…",
+        "uploadDone": "Logo updated",
+        "uploadError": "Upload failed — tap to retry",
+        "typeHint": "JPEG or PNG, max 2 MB"
+      },
+      "nudge": {
+        "title": "Complete your profile",
+        "dismiss": "Dismiss"
+      },
+      "companyInfo": {
+        "sectionTitle": "Company Information",
+        "nameLabel": "Company name",
+        "typeLabel": "Company type",
+        "typeLocal": "Local (India)",
+        "typeForeign": "Foreign / Gulf",
+        "typeReadOnlyHint": "Company type is set at registration and cannot be changed here. Contact support if you need to update it.",
+        "registrationNumberLabel": "Registration number",
+        "registrationNumberReadOnlyHint": "Your verified registration identity. Contact support to update.",
+        "industryLabel": "Industry",
+        "phoneLabel": "Company phone",
+        "locationLabel": "Location",
+        "websiteLabel": "Website",
+        "websitePlaceholder": "https://yourcompany.com",
+        "employeeRangeLabel": "Team size",
+        "descriptionLabel": "Company description",
+        "descriptionPlaceholder": "Tell candidates about your company and the types of roles you hire for…",
+        "notSet": "Not set",
+        "saveError": "Failed to save. Please try again."
+      },
+      "hiringPrefs": {
+        "sectionTitle": "Hiring Preferences",
+        "emptyHint": "Add hiring preferences to help us match the right candidates to your jobs.",
+        "categoriesLabel": "Preferred job categories",
+        "categoriesHint": "Select the trades you usually hire for",
+        "categoriesLoading": "Loading categories…",
+        "nationalitiesLabel": "Preferred nationalities",
+        "nationalitiesHint": "Comma-separated, e.g. Indian, Nepali",
+        "minExperienceLabel": "Minimum experience (years)",
+        "notesLabel": "Hiring notes",
+        "notesPlaceholder": "Any other preferences for recruiters…",
+        "notSet": "Not specified",
+        "saveError": "Failed to save preferences. Please try again."
+      },
+      "contacts": {
+        "sectionTitle": "Contact Persons",
+        "emptyHint": "Add at least one contact person so candidates and admins know who to reach.",
+        "addContact": "Add contact",
+        "editContact": "Edit contact",
+        "primaryBadge": "Primary",
+        "makePrimary": "Make primary",
+        "edit": "Edit",
+        "delete": "Delete",
+        "nameLabel": "Full name",
+        "roleLabel": "Job title / Role",
+        "phoneLabel": "Phone",
+        "emailLabel": "Email",
+        "isPrimaryLabel": "Set as primary contact",
+        "cancelForm": "Cancel",
+        "saveContact": "Save",
+        "primaryHintNote": "auto-demotes the current primary",
+        "nameRoleRequired": "Name and role are required.",
+        "saveError": "Failed to save contact. Please try again.",
+        "deleteError": "Failed to delete contact. Please try again."
+      },
+      "documents": {
+        "sectionTitle": "Company Documents",
+        "certLabel": "Registration certificate",
+        "certVerified": "Verified",
+        "certPending": "Pending review",
+        "reuploadLabel": "Re-upload certificate",
+        "reuploadHint": "PDF, JPG, or PNG — up to 10 MB",
+        "noDocument": "No certificate uploaded.",
+        "uploadedOn": "Uploaded",
+        "verifiedNote": "Verification complete. Your certificate has been reviewed by SkillIndiaConnect.",
+        "pendingReviewNote": "Under review. Our team will verify your certificate shortly."
+      },
+      "accountSettings": {
+        "sectionTitle": "Account Settings",
+        "languageLabel": "Preferred language",
+        "languageHint": "Sets the default language for your notifications and communications.",
+        "langEn": "English",
+        "langHi": "Hindi",
+        "langAr": "Arabic",
+        "moreSettingsNote": "Additional notification preferences will be available in a future update.",
+        "saveError": "Failed to save. Please try again."
+      }
+    },
+    "candidates": {
+      "title": "Candidates",
+      "subtitle": "Browse verified blue-collar workers and open a profile to see the full picture.",
+      "available": "Available",
+      "notAvailable": "Unavailable",
+      "loadError": "Couldn't load candidates. Please try again.",
+      "loadMoreError": "Couldn't load more candidates. Please try again.",
+      "retry": "Retry",
+      "loadMore": "Load more",
+      "approvalGate": {
+        "title": "Awaiting approval",
+        "body": "You can browse candidates once your company profile is approved.",
+        "backToDashboard": "Back to dashboard"
+      },
+      "empty": {
+        "title": "No candidates match your filters",
+        "body": "Try widening your filters or clearing the search."
+      },
+      "card": {
+        "srLabel": "{name}, {category}",
+        "experienceYears": "{years, plural, =0 {No experience} one {# yr experience} other {# yrs experience}}",
+        "gulfExperience": "Gulf experience",
+        "skillsLabel": "Top skills"
+      },
+      "filters": {
+        "panelLabel": "Candidate filters",
+        "search": "Search",
+        "searchPlaceholder": "Name, location, or skill",
+        "category": "Category",
+        "allCategories": "All categories",
+        "minExperience": "Minimum experience",
+        "anyExperience": "Any experience",
+        "yearsPlus": "{years}+ years",
+        "foreignExperience": "Has Gulf experience",
+        "availableNow": "Available now",
+        "clear": "Clear filters"
+      },
+      "view": {
+        "back": "Back",
+        "backToBrowse": "Back to candidates",
+        "loading": "Loading profile…",
+        "loadError": "Couldn't load this profile. Please try again.",
+        "notFoundTitle": "This candidate profile isn't available",
+        "notFoundBody": "It may have been removed or is no longer visible.",
+        "ageYears": "{age} years old",
+        "memberSince": "Member since {date}",
+        "skillsTitle": "Skills",
+        "facts": {
+          "title": "Details",
+          "nationality": "Nationality",
+          "languages": "Languages",
+          "noticePeriod": "Notice period",
+          "noticeDays": "{days, plural, one {# day} other {# days}}",
+          "phone": "Phone",
+          "religion": "Religion"
+        },
+        "timeline": {
+          "title": "Work experience",
+          "india": "India",
+          "foreign": "Gulf / Foreign",
+          "years": "{count, plural, one {# yr} other {# yrs}}",
+          "months": "{count, plural, one {# mo} other {# mos}}"
+        },
+        "documents": {
+          "title": "Documents",
+          "type": {
+            "PASSPORT": "Passport",
+            "EXPERIENCE_CERT": "Experience certificate",
+            "EDUCATIONAL_CERT": "Educational certificate"
+          },
+          "uploaded": "Uploaded",
+          "notUploaded": "Not uploaded",
+          "passportValid": "Valid",
+          "passportExpired": "Expired",
+          "proHint": "Document access is available on Pro."
+        }
+      }
     }
   },
   "jobs": {
-    "metaTitle": "Find Jobs â€” SkillIndiaConnect",
+    "metaTitle": "Find Jobs — SkillIndiaConnect",
     "metaDescription": "Browse thousands of blue-collar jobs in India and the Gulf. Filter by location, salary, and category.",
     "pageTitle": "Find Jobs",
     "pageSubtitle": "Explore opportunities across India and the Gulf",
     "filtersLabel": "Job filters",
     "searchLabel": "Search jobs",
-    "searchPlaceholder": "Job title or keywordâ€¦",
+    "searchPlaceholder": "Job title or keyword…",
     "searchButton": "Search",
     "marketTabsLabel": "Job market",
     "tabs": {
@@ -613,14 +795,22 @@
     }
   },
   "dashboard": {
-    "metaTitle": "My Dashboard â€” SkillIndiaConnect",
+    "metaTitle": "My Dashboard — SkillIndiaConnect",
     "pageTitle": "Dashboard",
     "greeting": "Hello, {name}",
     "kpi": {
       "applied": "Jobs Applied",
       "views": "Profile Views",
+      "viewsCaption": "last 30 days",
+      "viewsSrLabel": "{count} profile views, last 30 days",
       "shortlisted": "Shortlisted",
       "updates": "Updates"
+    },
+    "recentViews": {
+      "title": "Recent profile views",
+      "emptyTitle": "No profile views yet",
+      "emptyBody": "Complete your profile to get noticed by employers.",
+      "emptyCta": "Complete profile"
     },
     "recommendedJobs": {
       "title": "Recommended Jobs",
@@ -629,7 +819,10 @@
     },
     "myApplications": {
       "title": "My Applications",
-      "coming": "Application tracking coming soon."
+      "coming": "Application tracking coming soon.",
+      "viewAll": "View all",
+      "empty": "You haven't applied to any jobs yet.",
+      "browseJobs": "Browse jobs"
     },
     "quickActions": {
       "title": "Quick Actions",
@@ -643,7 +836,7 @@
     }
   },
   "notifications": {
-    "metaTitle": "Notifications â€” SkillIndiaConnect",
+    "metaTitle": "Notifications — SkillIndiaConnect",
     "pageTitle": "Notifications",
     "empty": {
       "all": "You have no notifications yet.",
@@ -653,7 +846,7 @@
     "markAllRead": "Mark all as read",
     "markRead": "Mark as read",
     "loadMore": "Load more",
-    "loading": "Loading notificationsâ€¦",
+    "loading": "Loading notifications…",
     "errorLoad": "Failed to load notifications.",
     "retry": "Retry",
     "filters": {
@@ -867,6 +1060,211 @@
       "archive": "Archive",
       "archiveLabel": "Archive job: {title}",
       "repostAsDraft": "Repost as Draft"
+    },
+    "applicantsCountLabel": "{count} applicants"
+  },
+  "apply": {
+    "title": "Apply for this job",
+    "close": "Close",
+    "submit": "Submit application",
+    "submitting": "Submitting your application…",
+    "cta": {
+      "apply": "Apply now",
+      "completeProfile": "Complete your profile to apply",
+      "applied": "Applied"
+    },
+    "coverLetter": {
+      "label": "Cover letter (optional)",
+      "placeholder": "Tell the employer why you're a great fit…",
+      "counter": "{n}/{max}"
+    },
+    "eligibility": {
+      "title": "Before you apply",
+      "pct": "Your profile is {pct}% complete",
+      "allClear": "You meet all the requirements to apply.",
+      "fix": "Fix",
+      "recheck": "Recheck"
+    },
+    "errors": {
+      "profileIncomplete": {
+        "title": "Complete your profile",
+        "body": "Your profile is {pct}% — {threshold}% is needed to apply.",
+        "action": "Complete profile"
+      },
+      "docsMissing": {
+        "title": "Documents missing",
+        "body": "Upload these documents to apply: {docs}.",
+        "action": "Go to documents"
+      },
+      "passportInvalid": {
+        "title": "Passport problem",
+        "expired": "Your passport has expired. Renew it to apply.",
+        "missing": "A valid passport is required to apply.",
+        "action": "Go to documents"
+      },
+      "alreadyApplied": {
+        "title": "You've already applied",
+        "body": "You have already applied to this job.",
+        "action": "View application"
+      },
+      "jobNotActive": {
+        "title": "No longer accepting applications",
+        "body": "This job is no longer accepting applications.",
+        "action": "Browse jobs"
+      },
+      "generic": {
+        "title": "Something went wrong",
+        "body": "We couldn't submit your application. Please try again.",
+        "retry": "Try again"
+      },
+      "docTypes": {
+        "PASSPORT": "Passport",
+        "EXPERIENCE_CERT": "Experience certificate",
+        "EDUCATIONAL_CERT": "Educational certificate"
+      }
+    },
+    "reveal": {
+      "score": "You're a {score}% match",
+      "category": "Job category",
+      "experience": "Experience",
+      "experienceBasis": "Based on {clamped} of {raw} yrs",
+      "foreign": "Foreign experience",
+      "foreignLocalNote": "Not scored for local jobs.",
+      "documents": "Documents",
+      "componentScore": "{score}/{max}",
+      "track": "Track in My Applications"
+    }
+  },
+  "applications": {
+    "title": "My Applications",
+    "filterLabel": "Filter applications by status",
+    "filter": {
+      "all": "All"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "SHORTLISTED": "Shortlisted",
+      "SELECTED": "Selected",
+      "REJECTED": "Rejected"
+    },
+    "matchShort": "{score}% match",
+    "appliedAgo": "Applied {ago}",
+    "loadMore": "Load more",
+    "error": "Couldn't load your applications.",
+    "retry": "Try again",
+    "emptyAll": "You haven't applied yet — browse jobs to get started.",
+    "emptyStatus": "No {status} applications yet.",
+    "browseJobs": "Browse jobs",
+    "backToList": "Back to My Applications",
+    "notFound": "Application not found.",
+    "coverLetter": "Your cover letter",
+    "receipt": {
+      "notified": "✓ Notified on WhatsApp · {date}"
+    },
+    "timeline": {
+      "heading": "Status timeline",
+      "applied": "Application submitted",
+      "SHORTLISTED": "Shortlisted by the employer",
+      "SELECTED": "Selected by the employer",
+      "REJECTED": "Not selected by the employer",
+      "PENDING": "Reopened",
+      "adminOverride": "Status updated by SkillIndiaConnect"
+    },
+    "rejection": {
+      "feedbackLabel": "Feedback from the employer",
+      "nextStepTitle": "Keep going",
+      "nextStepBody": "Every application builds momentum. Explore more roles in your trade.",
+      "browseJobs": "Browse more jobs"
+    }
+  },
+  "applicants": {
+    "title": "Applicants",
+    "backToJobs": "Back to My Jobs",
+    "notFound": "This job was not found, or you do not have access to it.",
+    "error": "Couldn't load applicants.",
+    "retry": "Try again",
+    "empty": "No applicants in this view yet.",
+    "loadMore": "Load more",
+    "approvalGate": {
+      "title": "Company under review",
+      "body": "You can manage applicants once your company is approved.",
+      "back": "Back to dashboard"
+    },
+    "filterLabel": "Filter applicants by status",
+    "filter": {
+      "all": "All"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "SHORTLISTED": "Shortlisted",
+      "SELECTED": "Selected",
+      "REJECTED": "Rejected"
+    },
+    "tabSrLabel": "{label} ({count})",
+    "sortLabel": "Sort",
+    "sort": {
+      "match": "Best match",
+      "recent": "Most recent"
+    },
+    "matchShort": "{score}% match",
+    "gulfBadge": "Gulf experience",
+    "ageYears": "{age} yrs",
+    "expYears": "{years} yrs exp",
+    "appliedAgo": "Applied {ago}",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "viewDetails": "View details",
+    "docs": {
+      "heading": "Documents",
+      "PASSPORT": "Passport",
+      "EXPERIENCE_CERT": "Experience",
+      "EDUCATIONAL_CERT": "Education",
+      "valid": "Valid",
+      "expired": "Expired"
+    },
+    "breakdown": {
+      "open": "Match breakdown for {name}, {score}% match",
+      "scoreShort": "{score}%",
+      "title": "Match breakdown",
+      "category": "Job category",
+      "experience": "Experience",
+      "experienceBasis": "Based on {clamped} of {raw} yrs",
+      "foreign": "Foreign experience",
+      "foreignLocalNote": "Not scored for local jobs.",
+      "documents": "Documents",
+      "componentScore": "{score}/{max}"
+    },
+    "actions": {
+      "shortlist": "Shortlist",
+      "select": "Select",
+      "reject": "Reject",
+      "shortlistName": "Shortlist {name}",
+      "selectName": "Select {name}",
+      "rejectName": "Reject {name}"
+    },
+    "selectDialog": {
+      "title": "Select {name}?",
+      "body": "They'll be notified on WhatsApp — this notification is sent once.",
+      "cancel": "Cancel",
+      "confirm": "Select"
+    },
+    "rejectDialog": {
+      "title": "Reject {name}?",
+      "body": "You can add optional feedback for the candidate.",
+      "feedbackLabel": "Feedback (optional)",
+      "feedbackPlaceholder": "Share a brief, constructive note…",
+      "visibleNote": "This feedback is visible to the candidate.",
+      "counter": "{n}/{max}",
+      "cancel": "Cancel",
+      "confirm": "Reject"
+    },
+    "detail": {
+      "close": "Close",
+      "coverLetter": "Cover letter"
+    },
+    "toast": {
+      "staleRefresh": "This application's status changed — refreshing.",
+      "error": "Something went wrong. Please try again."
     }
   }
 }

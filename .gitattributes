@@ -1,0 +1,30 @@
+# Enforce LF line endings for all text files on every platform.
+#
+# This is the authoritative setting for the repo: `eol=lf` OVERRIDES each
+# developer's local `core.autocrlf`, so the working tree, the committed blobs,
+# and CI all agree on LF. Without it, a Windows checkout with core.autocrlf=true
+# rewrites LF→CRLF in the working tree and Prettier (endOfLine: "lf") then fails
+# every file with "Delete ␍".
+#
+# `text=auto` lets Git still auto-detect binary vs text; `eol=lf` pins the
+# checkout EOL for text files.
+* text=auto eol=lf
+
+# Shell scripts must stay LF regardless (they break with CRLF).
+*.sh text eol=lf
+
+# Explicit binary assets — never normalized or diffed as text.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+*.pdf   binary
+*.zip   binary
+*.gz    binary
+*.dump  binary

@@ -18,6 +18,11 @@ import {
 import { MarkReadDto } from './dto/mark-read.dto';
 import { NotificationDto, toNotificationDto } from './notification.mapper';
 
+export interface NotifyOptions {
+  /** Skip the WhatsApp channel even when the type's matrix row enables it. */
+  suppressWhatsapp?: boolean;
+}
+
 @Injectable()
 export class NotificationService {
   constructor(
@@ -34,7 +39,12 @@ export class NotificationService {
    *
    * The API NEVER calls WhatsApp/SES channels directly — worker-and-external-sends.md.
    */
-  async notify(userId: string, type: NotificationType, payload: NotifyPayload): Promise<void> {
+  async notify(
+    userId: string,
+    type: NotificationType,
+    payload: NotifyPayload,
+    opts?: NotifyOptions,
+  ): Promise<void> {
     const entry = NOTIFICATION_MATRIX[type];
 
     // In-app is synchronous — written before we return so the feed is instantly updated.
@@ -56,7 +66,10 @@ export class NotificationService {
       backoff: { type: 'exponential', delay: NOTIFICATION_JOB_BACKOFF_MS },
     };
 
-    if (entry.whatsapp) {
+    // `suppressWhatsapp` lets a matrix-WhatsApp type (e.g. APPLICATION_SELECTED)
+    // fan out to email + in-app ONLY. Used by the S4-B2 one-WhatsApp guard on a
+    // SELECTED re-entry — the WhatsApp already fired on the first entry.
+    if (entry.whatsapp && !opts?.suppressWhatsapp) {
       await this.notificationQueue.add(
         JOB_NAMES.SEND_NOTIFICATION,
         { ...jobBase, channel: 'whatsapp' } satisfies NotificationJobData,
@@ -71,6 +84,29 @@ export class NotificationService {
         jobOpts,
       );
     }
+  }
+
+  /**
+   * In-app-ONLY send (S4-B1). Writes the `notifications` row synchronously and
+   * enqueues NOTHING — no WhatsApp, no email — regardless of the type's matrix
+   * entry. Use for intra-app receipts that must never fan out externally, e.g.
+   * the apply-side receipts (candidate "application submitted" + employer "new
+   * applicant"). SELECTED's WhatsApp fireworks are a separate, guarded send (B2)
+   * and go through notify(), not this method.
+   *
+   * The Applications module owns no notifications rows — it calls this seam so the
+   * Notifications module remains the sole writer of that table (Rule 4).
+   */
+  async notifyInApp(userId: string, type: NotificationType, payload: NotifyPayload): Promise<void> {
+    await this.prisma.notification.create({
+      data: {
+        userId,
+        type,
+        title: payload.title,
+        body: payload.body,
+        data: (payload.data as Prisma.InputJsonValue) ?? {},
+      },
+    });
   }
 
   // ── Candidate read endpoints ────────────────────────────────────────────────

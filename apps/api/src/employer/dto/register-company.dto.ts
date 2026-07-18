@@ -1,6 +1,6 @@
 import {
-  IsArray,
   IsEnum,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -48,12 +48,22 @@ export class RegisterCompanyDto {
   @MaxLength(50)
   employeeRange!: string;
 
-  @IsArray()
-  @IsString({ each: true })
-  languagePref!: string[];
+  // Contract: single optional locale string (default 'en'); stored as an
+  // array on the Company row. The web form omits it entirely.
+  @IsOptional()
+  @IsIn(['en', 'hi', 'ar'])
+  languagePref?: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(2000)
   description?: string;
+
+  // R2 key from the PRE-registration presign→PUT flow (Screen 14 initial
+  // mode) — validated against the caller's `employer-reg/{userId}/cert/`
+  // prefix and HEAD-checked in register().
+  @IsOptional()
+  @IsString()
+  @MaxLength(512)
+  registrationCertKey?: string;
 }
