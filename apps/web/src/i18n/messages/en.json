@@ -1,4 +1,50 @@
 {
+  "resume": {
+    "downloadPdf": "Download PDF",
+    "regenerate": "Regenerate",
+    "loading": "Loading your resume…",
+    "completionTitle": "Profile completion",
+    "previewUnavailable": "Preview is unavailable right now.",
+    "regenerateHint": "Changing your resume settings updates the preview below. Regenerate to apply them to your downloaded PDF.",
+    "preview": {
+      "ariaLabel": "Resume preview",
+      "previewLabel": "Preview — download the PDF for the final document.",
+      "unnamed": "Your name",
+      "fatherName": "Father's name",
+      "dob": "Date of birth",
+      "maritalStatus": "Marital status",
+      "nationality": "Nationality",
+      "currentLocation": "Current location",
+      "religion": "Religion",
+      "passportNumber": "Passport number",
+      "languages": "Languages",
+      "experience": "Work experience",
+      "noExperience": "No work experience added yet.",
+      "years": "{years}y {months}m",
+      "skills": "Skills",
+      "noSkills": "No skills added yet.",
+      "documents": "Documents",
+      "passportValid": "Valid",
+      "passportExpired": "Expired",
+      "docType": {
+        "PASSPORT": "Passport",
+        "EXPERIENCE_CERT": "Experience certificate",
+        "EDUCATIONAL_CERT": "Educational certificate"
+      }
+    },
+    "status": {
+      "generatingTitle": "Generating your resume…",
+      "generatingBody": "This takes a few seconds. Please keep this page open.",
+      "readyTitle": "Your resume is ready",
+      "readyBody": "Your PDF has been downloaded. You can download it again below.",
+      "downloadAgain": "Download again",
+      "failedTitle": "Couldn't generate your resume",
+      "failedBody": "Something went wrong while creating your PDF. Please try again.",
+      "retry": "Try again",
+      "timeoutTitle": "Taking longer than expected",
+      "timeoutBody": "Your resume is still being prepared. Please try again in a moment."
+    }
+  },
   "common": {
     "continue": "Continue",
     "back": "Back",

@@ -1,4 +1,50 @@
 {
+  "resume": {
+    "downloadPdf": "PDF डाउनलोड करें",
+    "regenerate": "फिर से बनाएँ",
+    "loading": "आपका रिज्यूमे लोड हो रहा है…",
+    "completionTitle": "प्रोफ़ाइल पूर्णता",
+    "previewUnavailable": "पूर्वावलोकन अभी उपलब्ध नहीं है।",
+    "regenerateHint": "रिज्यूमे सेटिंग्स बदलने पर नीचे का पूर्वावलोकन अपडेट होता है। इन्हें अपने डाउनलोड किए गए PDF पर लागू करने के लिए फिर से बनाएँ।",
+    "preview": {
+      "ariaLabel": "रिज्यूमे पूर्वावलोकन",
+      "previewLabel": "पूर्वावलोकन — अंतिम दस्तावेज़ के लिए PDF डाउनलोड करें।",
+      "unnamed": "आपका नाम",
+      "fatherName": "पिता का नाम",
+      "dob": "जन्म तिथि",
+      "maritalStatus": "वैवाहिक स्थिति",
+      "nationality": "राष्ट्रीयता",
+      "currentLocation": "वर्तमान स्थान",
+      "religion": "धर्म",
+      "passportNumber": "पासपोर्ट नंबर",
+      "languages": "भाषाएँ",
+      "experience": "कार्य अनुभव",
+      "noExperience": "अभी तक कोई कार्य अनुभव नहीं जोड़ा गया।",
+      "years": "{years} वर्ष {months} माह",
+      "skills": "कौशल",
+      "noSkills": "अभी तक कोई कौशल नहीं जोड़ा गया।",
+      "documents": "दस्तावेज़",
+      "passportValid": "वैध",
+      "passportExpired": "समाप्त",
+      "docType": {
+        "PASSPORT": "पासपोर्ट",
+        "EXPERIENCE_CERT": "अनुभव प्रमाणपत्र",
+        "EDUCATIONAL_CERT": "शैक्षणिक प्रमाणपत्र"
+      }
+    },
+    "status": {
+      "generatingTitle": "आपका रिज्यूमे बन रहा है…",
+      "generatingBody": "इसमें कुछ सेकंड लगते हैं। कृपया यह पेज खुला रखें।",
+      "readyTitle": "आपका रिज्यूमे तैयार है",
+      "readyBody": "आपका PDF डाउनलोड हो गया है। आप इसे नीचे फिर से डाउनलोड कर सकते हैं।",
+      "downloadAgain": "फिर से डाउनलोड करें",
+      "failedTitle": "आपका रिज्यूमे नहीं बन सका",
+      "failedBody": "आपका PDF बनाते समय कुछ गड़बड़ हुई। कृपया फिर से प्रयास करें।",
+      "retry": "फिर से प्रयास करें",
+      "timeoutTitle": "अपेक्षा से अधिक समय लग रहा है",
+      "timeoutBody": "आपका रिज्यूमे अभी तैयार हो रहा है। कृपया कुछ देर में फिर से प्रयास करें।"
+    }
+  },
   "common": {
     "continue": "[hi] Continue",
     "back": "[hi] Back",
