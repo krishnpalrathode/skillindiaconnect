@@ -22,7 +22,7 @@ interface MockSetupProps {
 // When NEXT_PUBLIC_API_MOCKING is not 'enabled' this component is a no-op
 // pass-through and adds zero overhead to production builds.
 export function MockSetup({ children }: MockSetupProps) {
-  const isMocking = process.env['NEXT_PUBLIC_API_MOCKING'] === 'enabled';
+  const isMocking = process.env.NEXT_PUBLIC_API_MOCKING === 'enabled';
 
   useEffect(() => {
     if (!isMocking) return;

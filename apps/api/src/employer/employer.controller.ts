@@ -44,14 +44,14 @@ export class EmployerController {
       meta: { companyName: company.name },
     });
 
-    return { data: company };
+    return { data: await this.withCertKey(company) };
   }
 
   @Get('me/company')
   async getMyCompany(@CurrentUser() user: CurrentUserPayload) {
     this.assertEmployerRole(user.role);
     const company = await this.employerService.getCompanyForEmployerUser(user.userId);
-    return { data: company };
+    return { data: await this.withCertKey(company) };
   }
 
   @Patch('me/company')
@@ -61,7 +61,7 @@ export class EmployerController {
   ) {
     this.assertEmployerRole(user.role);
     const company = await this.employerService.updateCompany(user.userId, dto);
-    return { data: company };
+    return { data: await this.withCertKey(company) };
   }
 
   @Post('me/company/documents/presign')
@@ -94,5 +94,17 @@ export class EmployerController {
     if (role !== UserRole.EMPLOYER) {
       throw new ForbiddenException({ code: 'FORBIDDEN' });
     }
+  }
+
+  /**
+   * Contract's Company carries `registrationCertKey` (the latest uploaded
+   * certificate); the column lives on company_documents, so company
+   * responses attach it here. Screen 14's resubmit prefill reads it.
+   */
+  private async withCertKey<T extends { id: string }>(company: T) {
+    return {
+      ...company,
+      registrationCertKey: await this.employerService.getRegistrationCertKey(company.id),
+    };
   }
 }

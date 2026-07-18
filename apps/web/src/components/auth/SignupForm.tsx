@@ -1,12 +1,14 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { Mail, Lock, HardHat, Building2, Check } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { ApiRequestError } from '@/lib/api/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Field } from '@/components/ui/field';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import { PasswordField } from './PasswordField';
 
 type Role = 'CANDIDATE' | 'EMPLOYER';
@@ -14,6 +16,13 @@ type Role = 'CANDIDATE' | 'EMPLOYER';
 interface SignupFormProps {
   onSuccess: (role: Role) => void;
 }
+
+// Role-card visuals only. Descriptions are hardcoded EN this pass (translation
+// files are frozen for this UI task) — same precedent as the hero copy.
+const ROLE_CARD_META: Record<Role, { Icon: typeof HardHat; description: string }> = {
+  CANDIDATE: { Icon: HardHat, description: 'Find jobs and build your career' },
+  EMPLOYER: { Icon: Building2, description: 'Hire skilled workers' },
+};
 
 export function SignupForm({ onSuccess }: SignupFormProps) {
   const t = useTranslations('auth');
@@ -73,44 +82,39 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         </p>
       )}
 
-      {/* Role toggle — default CANDIDATE */}
-      <div role="group" aria-labelledby="role-group-label" className="flex flex-col gap-1.5">
-        <span id="role-group-label" className="text-sm font-medium text-neutral-700">
-          {t('roleSwitcherLabel')}
-        </span>
-        <div className="flex rounded-md border border-border overflow-hidden">
-          {(['CANDIDATE', 'EMPLOYER'] as const).map((r) => (
-            <button
-              key={r}
-              type="button"
-              role="radio"
-              aria-checked={role === r}
-              onClick={() => setRole(r)}
-              className={[
-                'flex-1 py-2 text-sm font-medium transition-colors',
-                'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
-                role === r
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-background text-neutral-600 hover:bg-neutral-50',
-              ].join(' ')}
-            >
-              {r === 'CANDIDATE' ? t('roleCandidate') : t('roleEmployer')}
-            </button>
-          ))}
+      {/* Hand-wired (not Field) so the icon wrapper doesn't intercept Field's
+          cloneElement id — same reasoning as PasswordField. Semantics identical:
+          label htmlFor, aria-describedby, role="alert" error. */}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="signup-email" required>
+          {t('emailLabel')}
+        </Label>
+        <div className="relative">
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-neutral-400"
+          >
+            <Mail className="size-4" />
+          </span>
+          <Input
+            id="signup-email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t('emailPlaceholder')}
+            hasError={!!emailError}
+            aria-required
+            aria-describedby={emailError ? 'signup-email-error' : undefined}
+            className="ps-10 rounded-lg"
+          />
         </div>
+        {emailError && (
+          <p id="signup-email-error" role="alert" className="text-xs text-error-fg font-medium">
+            {emailError}
+          </p>
+        )}
       </div>
-
-      <Field id="signup-email" label={t('emailLabel')} error={emailError} required>
-        <Input
-          id="signup-email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder={t('emailPlaceholder')}
-          hasError={!!emailError}
-        />
-      </Field>
 
       <PasswordField
         id="signup-password"
@@ -119,6 +123,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         placeholder={t('passwordPlaceholder')}
         autoComplete="new-password"
         onChange={(e) => setPassword(e.target.value)}
+        startIcon={<Lock className="size-4" />}
         showStrength
         strengthLabels={{
           weak: t('strength.weak'),
@@ -128,13 +133,64 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         }}
       />
 
+      {/* Role selection cards — same radio semantics as before, card visuals only */}
+      <div role="group" aria-labelledby="role-group-label" className="flex flex-col gap-1.5">
+        <span id="role-group-label" className="text-sm font-medium text-neutral-700">
+          {t('roleSwitcherLabel')}
+        </span>
+        <div className="grid grid-cols-2 gap-3">
+          {(['CANDIDATE', 'EMPLOYER'] as const).map((r) => {
+            const selected = role === r;
+            const { Icon, description } = ROLE_CARD_META[r];
+            return (
+              <button
+                key={r}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => setRole(r)}
+                className={cn(
+                  'relative flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-4 text-center transition-colors',
+                  'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
+                  selected
+                    ? 'border-[#0F3D91] bg-[#eef4ff]'
+                    : 'border-neutral-200 bg-white hover:border-neutral-300',
+                )}
+              >
+                {selected && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute top-2 end-2 flex size-5 items-center justify-center rounded-full bg-[#0F3D91]"
+                  >
+                    <Check className="size-3 text-white" strokeWidth={3} />
+                  </span>
+                )}
+                <Icon
+                  className={cn('size-7', selected ? 'text-[#0F3D91]' : 'text-neutral-400')}
+                  aria-hidden="true"
+                />
+                <span
+                  className={cn(
+                    'text-sm font-semibold',
+                    selected ? 'text-[#0F3D91]' : 'text-neutral-800',
+                  )}
+                >
+                  {r === 'CANDIDATE' ? t('roleCandidate') : t('roleEmployer')}
+                </span>
+                <span className="text-xs leading-snug text-neutral-500">{description}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Terms acceptance */}
       <label className="flex items-start gap-2.5 cursor-pointer group">
         <input
           type="checkbox"
           checked={acceptedTerms}
           onChange={(e) => setAcceptedTerms(e.target.checked)}
-          className="mt-0.5 size-4 rounded accent-primary-600 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+          className="mt-0.5 size-4 rounded accent-[#0F3D91] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         />
         <span className="text-sm text-neutral-600 leading-snug">
           {t.rich('termsText', {
@@ -143,7 +199,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
                 href="/terms"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary-600 hover:underline"
+                className="font-medium text-[#0F3D91] hover:underline"
               >
                 {chunks}
               </a>
@@ -153,7 +209,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
                 href="/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary-600 hover:underline"
+                className="font-medium text-[#0F3D91] hover:underline"
               >
                 {chunks}
               </a>
@@ -168,7 +224,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         size="md"
         loading={loading}
         disabled={!acceptedTerms}
-        className="w-full"
+        className="w-full h-12 rounded-xl bg-[#0F3D91] text-base font-semibold hover:bg-[#0c3070] active:bg-[#0a2a63]"
       >
         {t('signupButton')}
       </Button>

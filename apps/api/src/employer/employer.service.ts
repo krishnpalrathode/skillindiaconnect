@@ -52,6 +52,18 @@ export class EmployerService {
       throw new ConflictException({ code: 'COMPANY_EXISTS' });
     }
 
+    // Screen 14 initial mode uploads the certificate BEFORE the company row
+    // exists (presign→PUT, then the key arrives here). Validate ownership
+    // (the pre-registration prefix is user-scoped) and HEAD the object
+    // before opening the transaction.
+    let certHead: { sizeBytes: number; contentType: string } | null = null;
+    if (dto.registrationCertKey) {
+      certHead = await this.assertOwnedUploadedCert(
+        `employer-reg/${userId}/cert/`,
+        dto.registrationCertKey,
+      );
+    }
+
     const company = await this.prisma.$transaction(async (tx) => {
       const c = await tx.company.create({
         data: {
@@ -63,7 +75,8 @@ export class EmployerService {
           location: dto.location,
           website: dto.website,
           employeeRange: dto.employeeRange,
-          languagePref: dto.languagePref,
+          // Contract: single locale string (default 'en'); column is String[].
+          languagePref: dto.languagePref ? [dto.languagePref] : ['en'],
           description: dto.description,
           status: CompanyStatus.PENDING,
         },
@@ -71,6 +84,17 @@ export class EmployerService {
       await tx.employerUser.create({
         data: { userId, companyId: c.id, isPrimary: true },
       });
+      if (dto.registrationCertKey && certHead) {
+        await tx.companyDocument.create({
+          data: {
+            companyId: c.id,
+            r2Key: dto.registrationCertKey,
+            fileName: dto.registrationCertKey.split('/').pop() ?? dto.registrationCertKey,
+            mimeType: certHead.contentType,
+            sizeBytes: certHead.sizeBytes,
+          },
+        });
+      }
       return c;
     });
 
@@ -138,9 +162,17 @@ export class EmployerService {
     userId: string,
     dto: PresignCertDto,
   ): Promise<{ uploadUrl: string; key: string; expiresInSeconds: number }> {
-    const company = await this.getCompanyForEmployerUser(userId);
+    // Initial registration (Screen 14) presigns BEFORE the company exists —
+    // the contract documents no 404 here. Pre-registration uploads are
+    // user-scoped; once a company exists (resubmit), keys are company-scoped.
+    const link = await this.prisma.employerUser.findUnique({
+      where: { userId },
+      select: { companyId: true },
+    });
     const safeFileName = dto.fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const key = `companies/${company.id}/cert/${uuidv4()}-${safeFileName}`;
+    const key = link
+      ? `companies/${link.companyId}/cert/${uuidv4()}-${safeFileName}`
+      : `employer-reg/${userId}/cert/${uuidv4()}-${safeFileName}`;
     const { url, expiresInSeconds } = await this.storage.presignPut({
       key,
       contentType: dto.mimeType,
@@ -152,21 +184,7 @@ export class EmployerService {
   async confirmCert(userId: string, dto: ConfirmCertDto): Promise<{ id: string; r2Key: string }> {
     const company = await this.getCompanyForEmployerUser(userId);
 
-    const expectedPrefix = `companies/${company.id}/cert/`;
-    if (!dto.key.startsWith(expectedPrefix)) {
-      throw new ForbiddenException({ code: 'KEY_NOT_OWNED' });
-    }
-
-    const head = await this.storage.headObject(dto.key);
-    if (!head) {
-      throw new UnprocessableEntityException({ code: 'UPLOAD_NOT_FOUND' });
-    }
-    if (head.sizeBytes > CERT_MAX_BYTES) {
-      throw new UnprocessableEntityException({ code: 'FILE_TOO_LARGE' });
-    }
-    if (!CERT_MIMES.includes(head.contentType)) {
-      throw new UnprocessableEntityException({ code: 'INVALID_FILE_TYPE' });
-    }
+    const head = await this.assertOwnedUploadedCert(`companies/${company.id}/cert/`, dto.key);
 
     const fileName = dto.key.split('/').pop() ?? dto.key;
 
@@ -181,6 +199,41 @@ export class EmployerService {
     });
 
     return { id: doc.id, r2Key: doc.r2Key };
+  }
+
+  /** Latest uploaded certificate key — the contract's `Company.registrationCertKey`. */
+  async getRegistrationCertKey(companyId: string): Promise<string | null> {
+    const doc = await this.prisma.companyDocument.findFirst({
+      where: { companyId },
+      orderBy: { uploadedAt: 'desc' },
+      select: { r2Key: true },
+    });
+    return doc?.r2Key ?? null;
+  }
+
+  /**
+   * Shared gate for both cert paths (confirm + register-with-key): the key
+   * must sit under the caller's own prefix, and the object must exist in R2
+   * within the type/size limits.
+   */
+  private async assertOwnedUploadedCert(
+    expectedPrefix: string,
+    key: string,
+  ): Promise<{ sizeBytes: number; contentType: string }> {
+    if (!key.startsWith(expectedPrefix)) {
+      throw new ForbiddenException({ code: 'KEY_NOT_OWNED' });
+    }
+    const head = await this.storage.headObject(key);
+    if (!head) {
+      throw new UnprocessableEntityException({ code: 'UPLOAD_NOT_FOUND' });
+    }
+    if (head.sizeBytes > CERT_MAX_BYTES) {
+      throw new UnprocessableEntityException({ code: 'FILE_TOO_LARGE' });
+    }
+    if (!CERT_MIMES.includes(head.contentType)) {
+      throw new UnprocessableEntityException({ code: 'INVALID_FILE_TYPE' });
+    }
+    return head;
   }
 
   // ── Cross-module seam (for S2-B5 Jobs) ────────────────────────────────────

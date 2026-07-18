@@ -1,9 +1,36 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
+// The monorepo keeps ONE .env at the root; apps/api reads it via ROOT_ENV_PATH.
+// Next only auto-loads .env files from apps/web, so without this the root
+// NEXT_PUBLIC_API_URL never reaches the bundle and API_BASE silently degrades to
+// a relative '/api/v1' — which posts back at the web origin and 404s.
+// ONLY NEXT_PUBLIC_* keys are copied: everything else in that file is a secret
+// and must never be inlined into a client bundle. A real process.env value wins,
+// so Railway (where the file is absent) is unaffected.
+function rootPublicEnv() {
+  const rootEnv = path.resolve(process.cwd(), '../../.env');
+  if (!fs.existsSync(rootEnv)) return {};
+
+  const env = {};
+  // Split on \r?\n: this file is gitignored, so .gitattributes never normalizes
+  // it and a Windows checkout leaves CRLF. A trailing \r would defeat the regex
+  // below ('.' does not match \r) and silently parse to nothing.
+  for (const line of fs.readFileSync(rootEnv, 'utf8').split(/\r?\n/)) {
+    const match = /^\s*(NEXT_PUBLIC_[A-Z0-9_]+)\s*=\s*(.*)$/.exec(line);
+    if (!match) continue;
+    const [, key, rawValue] = match;
+    env[key] = process.env[key] ?? rawValue.trim().replace(/^["']|["']$/g, '');
+  }
+  return env;
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: rootPublicEnv(),
   // output: 'standalone' is enabled only in the Docker build (Linux) via NEXT_STANDALONE=1.
   // On Windows, pnpm's virtual-store symlinks require Developer Mode for standalone mode.
   // The Dockerfile re-enables this via a build arg in Prompt 4.

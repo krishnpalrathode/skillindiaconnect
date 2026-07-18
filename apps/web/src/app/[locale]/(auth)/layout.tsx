@@ -1,9 +1,42 @@
-﻿import type { ReactNode } from 'react';
+'use client';
+
+import type { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import { LanguageSwitcher } from '@/components/auth/LanguageSwitcher';
+import { SignupHero } from '@/components/auth/SignupHero';
+import { LoginHero } from '@/components/auth/LoginHero';
 
 // Split-panel auth layout: gradient hero on the left, form on the right.
 // RTL: logical CSS flips the columns automatically when dir="rtl".
+//
+// The sign-up and login routes render their own approved hero designs
+// (SignupHero / LoginHero) in a shared split shell; every other auth page
+// (callback) keeps the original shell untouched. The pathname check is purely
+// presentational — no routing or auth behavior.
 export default function AuthLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const isSignup = /\/signup\/?$/.test(pathname ?? '');
+  const isLogin = /\/login\/?$/.test(pathname ?? '');
+
+  if (isSignup || isLogin) {
+    return (
+      <div className="min-h-svh flex flex-col lg:flex-row bg-white">
+        {/* Hero — left on desktop, stacked above the form on mobile */}
+        {isSignup ? <SignupHero /> : <LoginHero />}
+
+        {/* Form panel */}
+        <div className="flex flex-1 flex-col lg:w-1/2">
+          <div className="flex justify-end px-4 pt-4 sm:px-8 sm:pt-6">
+            <LanguageSwitcher variant="light" />
+          </div>
+          <div className="flex flex-1 items-start justify-center px-4 pb-12 pt-4 sm:px-8 lg:items-center lg:pt-0">
+            <div className="w-full max-w-[560px]">{children}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-svh flex">
       {/* Hero panel (hidden on mobile) */}

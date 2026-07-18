@@ -115,7 +115,7 @@ const BASE_DTO = {
   phone: '+919876543210',
   location: 'Mumbai, India',
   employeeRange: '50-200',
-  languagePref: ['en', 'hi'],
+  languagePref: 'en',
   description: 'A test employer.',
 };
 
@@ -199,6 +199,65 @@ describe('EmployerService â€” integration (real DB)', () => {
     expect(result.uploadUrl).toBeTruthy();
     expect(result.key).toMatch(new RegExp(`^companies/${company.id}/cert/`));
     expect(result.expiresInSeconds).toBeGreaterThan(0);
+  });
+
+  it('presignCert: works BEFORE registration — user-scoped key, no 404 (Screen 14 initial mode)', async () => {
+    if (dockerUnavailable) return;
+    const user = await makeEmployerUser();
+
+    const result = await employerService.presignCert(user.id, {
+      fileName: 'cert.pdf',
+      mimeType: 'application/pdf',
+      sizeBytes: 1024,
+    });
+
+    expect(result.uploadUrl).toBeTruthy();
+    expect(result.key).toMatch(new RegExp(`^employer-reg/${user.id}/cert/`));
+  });
+
+  it('register: registrationCertKey from the pre-registration presign attaches a company_documents row', async () => {
+    if (dockerUnavailable) return;
+    const user = await makeEmployerUser();
+    const key = `employer-reg/${user.id}/cert/abc-cert.pdf`;
+
+    const company = await employerService.register(user.id, {
+      ...BASE_DTO,
+      registrationCertKey: key,
+    });
+
+    const doc = await prisma.companyDocument.findFirst({ where: { companyId: company.id } });
+    expect(doc).not.toBeNull();
+    expect(doc!.r2Key).toBe(key);
+    expect(mockStorage.headObject).toHaveBeenCalledWith(key);
+    // Contract: single locale string in, String[] column out.
+    expect(company.languagePref).toEqual(['en']);
+  });
+
+  it('register: a cert key outside the caller prefix → 403 KEY_NOT_OWNED, no company created', async () => {
+    if (dockerUnavailable) return;
+    const user = await makeEmployerUser();
+
+    await expect(
+      employerService.register(user.id, {
+        ...BASE_DTO,
+        registrationCertKey: 'employer-reg/someone-else/cert/abc-cert.pdf',
+      }),
+    ).rejects.toThrow(ForbiddenException);
+    expect(await prisma.company.count()).toBe(0);
+  });
+
+  it('register: cert key with no uploaded object → 422 UPLOAD_NOT_FOUND, no company created', async () => {
+    if (dockerUnavailable) return;
+    const user = await makeEmployerUser();
+    mockStorage.headObject.mockResolvedValue(null);
+
+    await expect(
+      employerService.register(user.id, {
+        ...BASE_DTO,
+        registrationCertKey: `employer-reg/${user.id}/cert/abc-cert.pdf`,
+      }),
+    ).rejects.toThrow(UnprocessableEntityException);
+    expect(await prisma.company.count()).toBe(0);
   });
 
   it('confirmCert: HEAD-validates and creates a company_documents row', async () => {

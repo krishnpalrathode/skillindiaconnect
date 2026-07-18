@@ -323,7 +323,11 @@ export class EmployerProfileService {
 
   // ── POST /employers/me/profile/logo/confirm ──────────────────────────────
 
-  async confirmLogo(userId: string, dto: ConfirmLogoDto): Promise<void> {
+  /**
+   * Contract: returns the UPDATED EmployerProfile (fresh logoUrl + recomputed
+   * checklist) — the web swaps its whole profile state with this response.
+   */
+  async confirmLogo(userId: string, dto: ConfirmLogoDto): Promise<EmployerProfileShape> {
     const company = await this.employerService.getCompanyForEmployerUser(userId);
 
     const expectedPrefix = `companies/${company.id}/logo/`;
@@ -357,6 +361,8 @@ export class EmployerProfileService {
       // logoKey is NOT in audit meta — it's a storage key (PII_DENYLIST: storageKey pattern)
       meta: { companyId: company.id, mimeType: head.contentType, sizeBytes: head.sizeBytes },
     });
+
+    return this.getProfile(userId);
   }
 
   // ── Internal helpers ─────────────────────────────────────────────────────

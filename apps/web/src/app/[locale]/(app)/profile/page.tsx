@@ -43,7 +43,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user) return;
     if (user.role !== 'CANDIDATE') {
-      router.replace(`/${locale}/onboarding/employer`);
+      router.replace(`/${locale}/employer/onboarding`);
       return;
     }
 

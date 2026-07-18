@@ -298,14 +298,19 @@ describe('EmployerProfileService — prefs + logo (mocked Prisma)', () => {
     ).rejects.toThrow(UnprocessableEntityException);
   });
 
-  it('confirmLogo: HEAD-revalidates, persists HEAD values, sets logoKey', async () => {
+  it('confirmLogo: HEAD-revalidates, persists HEAD values, sets logoKey, returns the UPDATED profile (contract)', async () => {
     const key = 'companies/company-uuid/logo/abc.jpg';
-    await service.confirmLogo('user-1', { key });
+    const result = await service.confirmLogo('user-1', { key });
 
     expect(mockStorage.headObject).toHaveBeenCalledWith(key);
     expect(mockPrisma.company.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { logoKey: key } }),
     );
+    // Contract: the response is the full EmployerProfile, never an ack —
+    // the web replaces its entire profile state with this object.
+    expect(result.company).toBeDefined();
+    expect(result.contacts).toEqual([]);
+    expect(result.profileChecklist).toBeDefined();
   });
 
   it('confirmLogo: key from a different company → 403 KEY_NOT_OWNED', async () => {
