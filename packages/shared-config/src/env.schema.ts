@@ -59,6 +59,26 @@ export const envSchema = z.object({
     (v) => (v === '' ? undefined : v),
     z.string().min(1).optional(),
   ),
+
+  // ── S8-H1: performance tuning knobs ──────────────────────────────────────
+  // All OPTIONAL with the pre-S8 hard-coded values as defaults, so an unset
+  // environment behaves exactly as it did before. They are read directly from
+  // process.env (apps/api/src/pdf/render-tuning.ts and
+  // apps/api/src/core/config/rate-limits.ts) rather than through this schema,
+  // because both are consumed in DECORATOR arguments — evaluated before Nest's
+  // DI container exists. They are declared here so `.env.example` stays the
+  // single documented inventory of the platform's configuration.
+  //
+  // Sizing guidance lives in docs/performance-report.md. The one that carries
+  // real risk is RENDER_POOL_CONCURRENCY: it is a MEMORY knob, not a
+  // throughput knob, and must be set against the worker container's limit.
+  RENDER_POOL_CONCURRENCY: z.coerce.number().int().positive().default(2),
+  RENDER_TIMEOUT_MS: z.coerce.number().int().positive().default(30_000),
+  RENDER_RECYCLE_AFTER: z.coerce.number().int().positive().default(50),
+  RESUME_RENDER_CONCURRENCY: z.coerce.number().int().positive().default(1),
+  INVOICE_RENDER_CONCURRENCY: z.coerce.number().int().positive().default(1),
+  RATE_LIMIT_GLOBAL_PER_MIN: z.coerce.number().int().positive().default(100),
+  RATE_LIMIT_SEARCH_PER_MIN: z.coerce.number().int().positive().default(30),
 });
 
 export type Env = z.infer<typeof envSchema>;

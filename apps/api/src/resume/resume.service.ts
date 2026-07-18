@@ -108,7 +108,8 @@ export class ResumeService {
    * DOUBLE-TAP DEDUPE (stated): an in-flight PENDING generation for this
    * candidate is RETURNED AS-IS instead of creating a second one. A candidate
    * mashing "Download PDF" on a slow connection must not spawn N Chromium
-   * renders — each one costs a slot in a pool with a concurrency of 2, so the
+   * renders — each one costs a slot in a small bounded pool (2 by default; see
+   * pdf/render-tuning.ts, S8-H1 made it configurable), so the
    * mashing would delay everyone including them. The BullMQ `jobId` is derived
    * from the generation id as a second, independent guard: even if two requests
    * raced past the row check, they would enqueue the SAME job id, and BullMQ

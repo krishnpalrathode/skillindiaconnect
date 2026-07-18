@@ -1,0 +1,27 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // These scripts run as `pnpm --filter ./apps/api exec tsx ../../load/x.ts`,
+    // i.e. with apps/api as the working directory, so @prisma/client, bullmq and
+    // ioredis resolve out of apps/api/node_modules. Pointing baseUrl there makes
+    // the typechecker resolve exactly what the runtime does.
+    // TypeScript resolves bare specifiers relative to the importing FILE, so a
+    // baseUrl alone is not enough — these three live in apps/api's tree and are
+    // mapped explicitly. Mapping the PACKAGE directory (not a generated .d.ts)
+    // matters for @prisma/client: it lets TS follow the symlink to the real
+    // pnpm store path, where the freshly-generated client lives. Pointing at
+    // apps/api/node_modules/.prisma directly picks up a stale copy.
+    "baseUrl": ".",
+    "paths": {
+      "@prisma/client": ["../apps/api/node_modules/@prisma/client"],
+      "bullmq": ["../apps/api/node_modules/bullmq"],
+      "ioredis": ["../apps/api/node_modules/ioredis"]
+    },
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "types": ["node"],
+    "lib": ["ES2022", "DOM"]
+  },
+  "include": ["**/*.ts"]
+}

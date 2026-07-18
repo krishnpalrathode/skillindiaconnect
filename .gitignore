@@ -40,3 +40,6 @@ playwright-report/
 
 # pnpm
 .pnpm-store/
+
+# S8-H1 load-test run artifacts (the scripts are checked in; their output is not)
+load/results/

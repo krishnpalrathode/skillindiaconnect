@@ -6,6 +6,7 @@ import { UserRole } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
 import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
+import { RENDER_TUNING } from '../pdf/render-tuning';
 import { ResumeRenderService } from './resume-render.service';
 import { RESUME_EVENTS, ResumeGeneratedPayload } from './resume.events';
 
@@ -31,7 +32,12 @@ export const RESUME_RENDER_JOB_OPTS = {
  * (no-PII-in-logs).
  */
 @Injectable()
-@Processor(QUEUE_NAMES.RESUME_RENDER)
+@Processor(QUEUE_NAMES.RESUME_RENDER, {
+  // S8-H1: was BullMQ's implicit default of 1. Explicit and tunable now — this
+  // is how many resume renders are in flight inside the worker; the Chromium
+  // pool semaphore is the memory ceiling behind it. See render-tuning.ts.
+  concurrency: RENDER_TUNING.resumeRenderConcurrency,
+})
 export class ResumeRenderProcessor extends WorkerHost {
   private readonly logger = new Logger(ResumeRenderProcessor.name);
 

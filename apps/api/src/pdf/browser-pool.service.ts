@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Browser, PDFOptions } from 'puppeteer';
+import { RENDER_TUNING } from './render-tuning';
 
 /**
  * puppeteer ≥22 ships ESM-only. This file compiles to CommonJS (Nest), where
@@ -21,12 +22,24 @@ const importPuppeteer = new Function(
  *
  * The memory ceiling, stated:
  *
- * - **Concurrency = 2** (MAX_CONCURRENT_RENDERS). The worker container runs
- *   at 512MB–1GB; the shared browser costs ~150MB and each active page
- *   ~50–120MB, so two parallel renders bound peak Chromium footprint at
- *   roughly 150 + 2×120 ≈ 400MB with Node headroom left. This cap is shared
- *   by BOTH processors (resume + invoice) — BullMQ may hold more jobs, but
- *   renders beyond 2 WAIT for a slot here; they never spawn more browsers.
+ * - **Concurrency = 2** (MAX_CONCURRENT_RENDERS). This cap is shared by BOTH
+ *   processors (resume + invoice) — BullMQ may hold more jobs, but renders
+ *   beyond 2 WAIT for a slot here; they never spawn more browsers.
+ *
+ *   ⚠️ S8-H1 CORRECTION. The original estimate here was ~150MB browser +
+ *   50–120MB per page ⇒ ~400MB peak at cap 2. MEASURED under load (process
+ *   TREE working set — node plus every Chromium child, which the estimate
+ *   omitted), against a realistic profile with work history and skills:
+ *
+ *       cap 1 → ~555MB   cap 2 → ~515-680MB   cap 4 → ~1095MB
+ *       cap 8 → ~1789MB  cap 16 → ~2497MB
+ *
+ *   Each additional concurrent render costs roughly 150–300MB, i.e. 2–3× the
+ *   original per-page figure. Cap 2 remains the right value for a 1GB worker —
+ *   but the real headroom is ~35%, not the ~60% the old comment implied, and
+ *   **cap 4 already breaches a 1GB container.** Raise this ONLY together with
+ *   the container's memory limit; see docs/performance-report.md for the
+ *   sizing table and the recommended production worker sizing.
  * - **One shared browser, fresh page per render.** Launch is expensive (~1s);
  *   pages are cheap and disposable. Every page is closed in a `finally` —
  *   a leaked page is a leaked slot AND leaked memory.
@@ -62,9 +75,13 @@ const importPuppeteer = new Function(
  * Logs carry durations and counters ONLY — never HTML content (it contains
  * candidate PII).
  */
-const MAX_CONCURRENT_RENDERS = 2;
-const RENDER_TIMEOUT_MS = 30_000;
-const RECYCLE_AFTER_RENDERS = 50;
+// S8-H1: these three were hard-coded here in S7-B1. They are now env-tunable
+// (render-tuning.ts) with the S7-B1 values as defaults — the numbers and the
+// reasoning documented above are unchanged for an unset environment. Load
+// testing tunes them to the target instance; see docs/performance-report.md.
+const MAX_CONCURRENT_RENDERS = RENDER_TUNING.maxConcurrentRenders;
+const RENDER_TIMEOUT_MS = RENDER_TUNING.renderTimeoutMs;
+const RECYCLE_AFTER_RENDERS = RENDER_TUNING.recycleAfterRenders;
 
 const LAUNCH_ARGS = [
   '--no-sandbox',
@@ -90,12 +107,25 @@ export class BrowserPoolService implements OnModuleDestroy {
   /** Instance-level so the timeout test can shrink the budget; 30s in production. */
   renderTimeoutMs = RENDER_TIMEOUT_MS;
 
+  /** S8-H1: browser (re)launches so far — recycles and crash-relaunches show up here. */
+  private launchCount = 0;
+
   // Exposed for the pool tests: the cap must be observable to be provable.
   get activeCount(): number {
     return this.activeRenders;
   }
   get maxConcurrency(): number {
     return MAX_CONCURRENT_RENDERS;
+  }
+  /** S8-H1 load observability: renders parked on the semaphore (queue depth). */
+  get queuedCount(): number {
+    return this.waiters.length;
+  }
+  get launchesCount(): number {
+    return this.launchCount;
+  }
+  get rendersSinceLaunchCount(): number {
+    return this.rendersSinceLaunch;
   }
 
   constructor(private readonly config: ConfigService) {}
@@ -253,7 +283,8 @@ export class BrowserPoolService implements OnModuleDestroy {
     });
     this.browser = browser;
     this.rendersSinceLaunch = 0;
-    this.logger.log('chromium launched');
+    this.launchCount += 1;
+    this.logger.log(`chromium launched (launch #${this.launchCount})`);
     return browser;
   }
 

@@ -543,6 +543,13 @@ model Job {
   applications Application[]
   savedBy      SavedJob[]
   @@index([status, market, categoryId, publishedAt(sort: Desc)])
+  // S8-H1: the LANDING PAGE's shape — `status = 'ACTIVE' ORDER BY publishedAt DESC`
+  // with no market/category filter. The composite above cannot serve it: market
+  // and categoryId sit between the equality column and the sort column, so an
+  // unfiltered recent sort fell back to a Seq Scan over every ACTIVE job plus a
+  // top-N sort (10,004 rows / 13.7ms at 10k jobs, growing linearly). With this
+  // index the planner does an Index Scan and stops early — 71 rows / 0.7ms.
+  @@index([status, publishedAt(sort: Desc)])
   @@index([companyId, status])
   @@index([status, autoArchiveAt])
   @@index([title(ops: raw("gin_trgm_ops"))], type: Gin)

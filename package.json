@@ -26,17 +26,25 @@
     "db:seed": "pnpm --filter ./apps/api exec prisma db seed",
     "db:reset": "pnpm --filter ./apps/api exec prisma migrate reset --force",
     "contract:generate": "pnpm --filter @skillindiaconnect/contract validate && pnpm --filter @skillindiaconnect/shared-types generate",
-    "check:env": "tsx scripts/check-env-drift.ts"
+    "check:env": "tsx scripts/check-env-drift.ts",
+    "load:typecheck": "tsc -p load/tsconfig.json --noEmit",
+    "load:seed": "pnpm --filter ./apps/api exec tsx ../../load/seed-load-data.ts",
+    "load:chromium": "pnpm --filter ./apps/api exec tsx ../../load/chromium-pool-burst.ts",
+    "load:search": "pnpm --filter ./apps/api exec tsx ../../load/search-load.ts",
+    "load:webhook": "pnpm --filter ./apps/api exec tsx ../../load/webhook-load.ts",
+    "load:apply": "pnpm --filter ./apps/api exec tsx ../../load/apply-load.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
-    "@types/node": "^20.0.0",
     "concurrently": "^8.2.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.1.0",
+    "jsonwebtoken": "^9.0.3",
     "prettier": "^3.2.0",
     "tsx": "^4.0.0",
     "typescript": "^5.4.0"
