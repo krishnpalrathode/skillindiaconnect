@@ -47,32 +47,41 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const refreshing = useRef(false);
+  // The in-flight refresh, SHARED. Concurrent callers must AWAIT the same
+  // promise — the old boolean guard returned null to the second caller, which
+  // meant "refresh failed": in dev StrictMode the double-mounted bootstrap's
+  // second call resolved isLoading=false while user was still null, so every
+  // full-page load of a guarded route bounced an AUTHENTICATED user through
+  // /login (caught live by the S6 happy-path pass, C2's reload). The same race
+  // hits any 401-triggered refresh that lands while another is in flight.
+  const refreshPromise = useRef<Promise<string | null> | null>(null);
   // Incremented by login/signup/logout so a concurrent doRefresh doesn't overwrite
   // state that was set by an explicit auth action (e.g., signup during bootstrap).
   const authGeneration = useRef(0);
 
   // Called by the API client on 401 to silently renew the token.
   // Returns the new token or null (triggers logout in the form component).
-  const doRefresh = useCallback(async (): Promise<string | null> => {
-    if (refreshing.current) return null;
-    refreshing.current = true;
+  const doRefresh = useCallback((): Promise<string | null> => {
+    if (refreshPromise.current) return refreshPromise.current;
     const myGeneration = authGeneration.current;
-    try {
-      const result = await postRefresh();
-      setAccessToken(result.accessToken);
-      setUser(decodeToken(result.accessToken));
-      return result.accessToken;
-    } catch {
-      // Only clear auth state if no explicit login/signup/logout superseded us.
-      if (authGeneration.current === myGeneration) {
-        setAccessToken(null);
-        setUser(null);
+    refreshPromise.current = (async () => {
+      try {
+        const result = await postRefresh();
+        setAccessToken(result.accessToken);
+        setUser(decodeToken(result.accessToken));
+        return result.accessToken;
+      } catch {
+        // Only clear auth state if no explicit login/signup/logout superseded us.
+        if (authGeneration.current === myGeneration) {
+          setAccessToken(null);
+          setUser(null);
+        }
+        return null;
+      } finally {
+        refreshPromise.current = null;
       }
-      return null;
-    } finally {
-      refreshing.current = false;
-    }
+    })();
+    return refreshPromise.current;
   }, []);
 
   // On mount: wire the refresh function into the API client, then bootstrap auth.

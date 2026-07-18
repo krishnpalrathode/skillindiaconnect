@@ -75,6 +75,25 @@ module.exports = {
                 message:
                   'Auth must not reach into candidate internals. Import CandidateReadService via CandidateModule export.',
               },
+              // payments (S5-B1): other modules must not import payments internals
+              // (adapters, routing, money). B3's quota rewiring goes through the
+              // public CheckoutService export on PaymentsModule.
+              {
+                target: './apps/api/src/jobs',
+                from: './apps/api/src/payments',
+                except: ['./checkout.service.ts'],
+                message:
+                  'Jobs must not reach into payments internals. Import CheckoutService via PaymentsModule export.',
+              },
+              // …and payments itself only touches other domains via their public
+              // services (EmployerService, SettingsService) — never internals.
+              {
+                target: './apps/api/src/payments',
+                from: './apps/api/src/employer',
+                except: ['./employer.service.ts', './employer.module.ts'],
+                message:
+                  'Payments must not reach into employer internals. Import EmployerService via EmployerModule export.',
+              },
             ],
           },
         ],

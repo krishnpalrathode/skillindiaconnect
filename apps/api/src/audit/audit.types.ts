@@ -50,8 +50,17 @@ export const AUDIT_ACTIONS = {
   APPLICATION_STATUS_CHANGED: 'application.status.changed',
   APPLICATION_ADMIN_OVERRIDE: 'application.admin_override',
   // Payments (S5)
+  CHECKOUT_CREATED: 'checkout.created',
+  CHECKOUT_FAILED: 'checkout.failed',
   PAYMENT_CAPTURED: 'payment.captured',
+  PAYMENT_REFUNDED: 'payment.refunded',
+  SUBSCRIPTION_ACTIVATED: 'subscription.activated',
   WEBHOOK_RECEIVED: 'webhook.received',
+  WEBHOOK_REJECTED: 'webhook.rejected',
+  WEBHOOK_DUPLICATE: 'webhook.duplicate',
+  WEBHOOK_NOOP: 'webhook.noop',
+  WEBHOOK_STALE_IGNORED: 'webhook.stale_ignored',
+  WEBHOOK_UNKNOWN_ORDER: 'webhook.unknown_order',
   // Notifications (S2-B3)
   NOTIFICATION_DELIVERED: 'notification.delivered',
   NOTIFICATION_FAILED: 'notification.failed',
@@ -63,6 +72,50 @@ export const AUDIT_ACTIONS = {
   EMPLOYER_CONTACT_DELETED: 'employer.contact.deleted',
   // Passport expiry cron (S3-B3)
   PASSPORT_EXPIRY_RUN: 'passport_expiry.run',
+  // Subscription lifecycle (S5-B3)
+  SUBSCRIPTION_GRACE_STARTED: 'subscription.grace_started',
+  SUBSCRIPTION_EXPIRED: 'subscription.expired',
+  SUBSCRIPTION_LIFECYCLE_RUN: 'subscription_lifecycle.run',
+  // Pro document gate (S5-B3) — the DPDP who-saw-whose-passport trail.
+  // REUSED by S6a-B1's admin grants (employer certs + candidate documents):
+  // one action, one meaning — "someone was granted sight of a document".
+  DOCUMENT_VIEWED: 'document.viewed',
+  // Audit-trail read side (S6a-B1). The export records ITSELF — bulk extraction
+  // of the trail is exactly the kind of event the trail exists to record.
+  AUDIT_EXPORTED: 'audit.exported',
+  // RBAC matrix (S6a-B2). Who flipped which cell, from what to what. Written
+  // TRANSACTIONALLY with the grant — a permission change without an audit row is
+  // the one event this trail may never miss.
+  RBAC_PERMISSION_CHANGED: 'rbac.permission.changed',
+  // Admin candidate management (S6b-B1).
+  CANDIDATE_SUSPENDED: 'candidate.suspended',
+  CANDIDATE_REACTIVATED: 'candidate.reactivated',
+  // The admin PURGE REQUEST — written transactionally with the state change that
+  // schedules it. Separate from ACCOUNT_PURGED (the completion) on purpose: the
+  // request records who asked and why; the completion records what was destroyed.
+  ADMIN_CANDIDATE_PURGE_REQUESTED: 'admin.candidate.purge_requested',
+  // The purge COMPLETION (S6b-B1, DPDP erasure). Meta carries COUNTS ONLY —
+  // never a name, phone, email, or object key. The audit row must not preserve
+  // the PII the purge just destroyed.
+  ACCOUNT_PURGED: 'account.purged',
+  // Admin job moderation (S6b-B2).
+  JOB_REVIEW_APPROVED: 'job.review.approved',
+  JOB_REVIEW_REJECTED: 'job.review.rejected',
+  JOB_FLAGS_CHANGED: 'job.flags.changed',
+  JOB_CREATED_ONBEHALF: 'job.created_onbehalf',
+  // Application notes (S6b-B2) — the audit records THAT a note was added or
+  // deleted, never its content (notes may contain judgments/PII by nature).
+  APPLICATION_NOTE_ADDED: 'application.note.added',
+  APPLICATION_NOTE_DELETED: 'application.note.deleted',
+  // The manual WhatsApp resend (S6b-B2) — actor + reason, never a phone number.
+  APPLICATION_WHATSAPP_RESENT: 'application.whatsapp.resent',
+  // S7-B1 (worker renders — meta is ids/counts only, never profile content)
+  RESUME_GENERATED: 'resume.generated',
+  // S7-B2 deliveries. Meta carries the CHANNEL ACTUALLY USED and ids only —
+  // never the phone number or the email address (no-PII-in-logs).
+  RESUME_SENT: 'resume.sent',
+  RESUME_EMAILED: 'resume.emailed',
+  INVOICE_PDF_RENDERED: 'invoice.pdf.rendered',
 } as const;
 
 export type AuditActionName = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

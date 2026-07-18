@@ -5,6 +5,7 @@ type WorkExperience = components['schemas']['WorkExperience'];
 type CandidateSkill = components['schemas']['CandidateSkill'];
 type CandidateDocument = components['schemas']['CandidateDocument'];
 type ResumeSettings = components['schemas']['ResumeSettings'];
+type ResumeView = components['schemas']['ResumeView'];
 type Company = components['schemas']['Company'];
 type Job = components['schemas']['Job'];
 type JobCard = components['schemas']['JobCard'];
@@ -21,6 +22,24 @@ type ApplicantCard = components['schemas']['ApplicantCard'];
 type ApplicantCounts = components['schemas']['ApplicantCounts'];
 type ApplicantSummary = components['schemas']['ApplicantSummary'];
 type DocumentType = components['schemas']['DocumentType'];
+// S5: Billing
+type Plan = components['schemas']['Plan'];
+type PlanCode = components['schemas']['PlanCode'];
+type PaymentGateway = components['schemas']['PaymentGateway'];
+type SubscriptionStatus = components['schemas']['SubscriptionStatus'];
+type SubscriptionState = components['schemas']['SubscriptionState'];
+type Invoice = components['schemas']['Invoice'];
+type CheckoutSession = components['schemas']['CheckoutSession'];
+type Order = components['schemas']['Order'];
+type OrderStatus = components['schemas']['OrderStatus'];
+// S6: Admin console
+type PermissionKey = components['schemas']['PermissionKey'];
+type RbacCell = components['schemas']['RbacCell'];
+type AuditLogEntry = components['schemas']['AuditLogEntry'];
+type NoteEntry = components['schemas']['NoteEntry'];
+type UserRole = components['schemas']['UserRole'];
+/** The admin-side roles — the matrix's columns (CANDIDATE/EMPLOYER never appear). */
+type AdminRole = Extract<UserRole, 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR' | 'SUPPORT'>;
 
 // ─── Fixed mock constants ────────────────────────────────────────────────────
 
@@ -38,6 +57,30 @@ export const EMPLOYER_REJECTED_EMAIL = 'employer-rejected@example.com';
 export const EMPLOYER_SUSPENDED_USER_ID = 'mock-user-employer-suspended';
 export const EMPLOYER_SUSPENDED_EMAIL = 'employer-suspended@example.com';
 
+// S5: Billing fixture employer IDs (all APPROVED — each isolates one billing state)
+//  - LOCAL  + FREE  → checkout routes to Razorpay domestic WITH the GST split
+//  - FOREIGN + FREE → employer-1 above (checkout routes Razorpay Intl / Stripe-when-enabled)
+//  - PRO ACTIVE     → the document-gate signed-URL fixture; publish quota unlimited
+//  - PRO GRACE      → the PlanStatusWidget grace-state fixture
+export const EMPLOYER_LOCAL_USER_ID = 'mock-user-employer-local';
+export const EMPLOYER_LOCAL_EMAIL = 'employer-local@example.com';
+export const EMPLOYER_PRO_USER_ID = 'mock-user-employer-pro';
+export const EMPLOYER_PRO_EMAIL = 'employer-pro@example.com';
+export const EMPLOYER_GRACE_USER_ID = 'mock-user-employer-grace';
+export const EMPLOYER_GRACE_EMAIL = 'employer-grace@example.com';
+
+// S5: The delayed webhook-effect simulation. An order flips CREATED→PAID (or
+// →FAILED) only after this many polls of GET /billing/orders/{id} — NEVER
+// instantly — so the FE is forced to build the "confirming your payment…"
+// polling state (instant activation is impossible on mocks, by design).
+export const ORDER_FLIP_POLL_THRESHOLD = 3;
+// S5: A checkout sent with an Idempotency-Key starting with this prefix
+// produces an order that flips to FAILED instead of PAID — the failure UX hook.
+export const MOCK_FAIL_IDEMPOTENCY_PREFIX = 'fail-';
+// S5: …and this prefix makes checkout itself return 503 GATEWAY_UNAVAILABLE
+// (the honest no-usable-gateway failure — buildable without breaking fixtures).
+export const MOCK_GATEWAY_DOWN_IDEMPOTENCY_PREFIX = 'gwdown-';
+
 // S4: Apply-gate scenario candidate IDs — each isolates one gate-ladder rung.
 export const APPLY_OK_USER_ID = 'mock-user-candidate-apply-ok';
 export const APPLY_INCOMPLETE_USER_ID = 'mock-user-candidate-incomplete';
@@ -49,13 +92,98 @@ export const MANDATORY_DOC_TYPES: DocumentType[] = ['PASSPORT', 'EXPERIENCE_CERT
 // S4: Profile-completion threshold (mirrors the PROFILE_COMPLETION_THRESHOLD setting).
 export const APPLY_COMPLETION_THRESHOLD = 70;
 
+// ─── S6: Admin console fixtures (EN-only — no HI/AR, no RTL for admin) ───────
+
+// One user per admin role. The RBAC-accurate mocks enforce each endpoint's
+// PermissionKey against the seeded matrix below, so the console is built against
+// REAL denials: a MODERATOR hitting logs.export / roles.manage / candidates.delete
+// gets a genuine 403, exactly as the API will answer.
+export const SUPER_ADMIN_USER_ID = 'mock-user-superadmin';
+export const SUPER_ADMIN_EMAIL = 'superadmin@example.com';
+export const ADMIN_USER_ID = 'mock-user-admin-1';
+export const ADMIN_EMAIL = 'admin@example.com';
+export const MODERATOR_USER_ID = 'mock-user-moderator';
+export const MODERATOR_EMAIL = 'moderator@example.com';
+export const SUPPORT_USER_ID = 'mock-user-support';
+export const SUPPORT_EMAIL = 'support@example.com';
+
+/** The S6 permission set: the 20 S2-seeded keys + the 5 the admin console adds. */
+export const ALL_PERMISSION_KEYS: PermissionKey[] = [
+  'candidates.view',
+  'candidates.edit',
+  'candidates.delete',
+  'candidates.onboard_manual',
+  'candidates.export',
+  'employers.view',
+  'employers.approve_reject',
+  'employers.suspend',
+  'employers.delete',
+  'jobs.view',
+  'jobs.post_admin',
+  'jobs.archive',
+  'applications.manage',
+  'applications.change_status',
+  'applications.notes',
+  'reports.view',
+  'logs.view',
+  'billing.manage',
+  'subscriptions.manage',
+  'admin_users.manage',
+  // Added by S6 (must be seeded into permission.constants.ts + the seed matrix
+  // by S6a-B2 — the contract declares them, the backend catches up):
+  'logs.export',
+  'roles.view',
+  'roles.manage',
+  'candidates.view_documents',
+  'jobs.moderate',
+  // Added by S6a-F1: /admin/settings used to ride on `logs.view`, which a
+  // MODERATOR holds — so they could write platform settings. Read and write are
+  // now separate keys, neither granted to MODERATOR.
+  'settings.view',
+  'settings.manage',
+];
+
+/** Admin-side roles only — CANDIDATE/EMPLOYER are never matrix columns. */
+export const ADMIN_ROLES: AdminRole[] = ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'];
+
+/** Rate cap for the manual "Selected" WhatsApp resend (per application, per 24h). */
+export const RESEND_WHATSAPP_CAP = 3;
+
+// ── S7-0: resume generation lifecycle ────────────────────────────────────────
+// A generation flips out of PENDING only after this many STATUS POLLS — the
+// deliberate delay that forces F1 to build the polling UX (payments lesson).
+export const RESUME_GENERATION_POLL_THRESHOLD = 3;
+// CR-001: resume WhatsApp sends per candidate per day.
+export const RESUME_SEND_CAP = 5;
+// The designated FAILURE fixture: this user's generations flip to FAILED at
+// the threshold instead of READY, so the failure UX is buildable on mocks.
+export const RESUME_FAIL_USER_ID = 'mock-user-candidate-pendingdel';
+
+export interface MockResumeGeneration {
+  generationId: string;
+  status: 'PENDING' | 'READY' | 'FAILED';
+  /** Status polls seen so far — the delayed-flip counter. */
+  pollCount: number;
+  resumeId?: string;
+  generatedAt?: string;
+  failureReason?: string;
+  /** The settings SNAPSHOT captured at generate time (they apply at generation). */
+  settingsSnapshot: ResumeSettings;
+}
+/** Bounds on the audit-log CSV export (the contract's documented caps). */
+export const LOGS_EXPORT_MAX_ROWS = 10_000;
+export const LOGS_EXPORT_MAX_RANGE_DAYS = 90;
+
+/** The candidate the purge flow is exercised against (tombstoned on purge). */
+export const PURGEABLE_CANDIDATE_USER_ID = 'mock-user-candidate-purgeable';
+
 // ─── In-memory stores ────────────────────────────────────────────────────────
 
 export interface MockUser {
   id: string;
   email: string;
   passwordHash: string;
-  role: 'CANDIDATE' | 'EMPLOYER' | 'ADMIN' | 'SUPER_ADMIN';
+  role: 'CANDIDATE' | 'EMPLOYER' | 'ADMIN' | 'SUPER_ADMIN' | 'MODERATOR' | 'SUPPORT';
   status: 'ACTIVE' | 'SUSPENDED' | 'PENDING_DELETION';
 }
 
@@ -138,11 +266,319 @@ export interface MockApplicationTimelineEntry {
   createdAt: string;
 }
 
+// ─── S5: Billing ──────────────────────────────────────────────────────────────
+
+/**
+ * A non-FREE subscription record. ABSENCE of a record = the well-formed FREE
+ * state (never an error) — `getSubscriptionStatus()` synthesizes it.
+ */
+export interface MockSubscription {
+  planCode: PlanCode;
+  status: SubscriptionState;
+  startsAt: string;
+  expiresAt: string;
+  /** Non-null only while status = GRACE. */
+  graceEndsAt: string | null;
+}
+
+/**
+ * A mock checkout order. `pollCount` drives the DELAYED webhook-effect flip
+ * (CREATED→PAID/FAILED after ORDER_FLIP_POLL_THRESHOLD polls — never
+ * instantly). `session` is the CheckoutSession snapshot replayed verbatim for
+ * Idempotency-Key retries.
+ */
+export interface MockOrder {
+  id: string;
+  humanOrderRef: string;
+  userId: string;
+  planCode: PlanCode;
+  status: OrderStatus;
+  gateway: PaymentGateway;
+  amountSubunits: number;
+  gstSubunits: number;
+  totalSubunits: number;
+  currency: string;
+  createdAt: string;
+  subscriptionActivatedAt: string | null;
+  invoiceId: string | null;
+  pollCount: number;
+  /** Set at creation (fail-prefixed Idempotency-Key) → flips to FAILED. */
+  failOnFlip: boolean;
+  session: CheckoutSession;
+}
+
+export interface MockInvoice extends Invoice {
+  userId: string;
+}
+
 // ─── Seeded data ─────────────────────────────────────────────────────────────
 
 const NOW = new Date().toISOString();
 const PAST_DATE = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
+const daysFromNow = (n: number) => new Date(Date.now() + n * 24 * 60 * 60 * 1000).toISOString();
+const hoursAgo = (n: number) => new Date(Date.now() - n * 60 * 60 * 1000).toISOString();
+
+// ─── S6: the RBAC seed matrix ────────────────────────────────────────────────
+// A FAITHFUL copy of apps/api/prisma/seed.ts's matrix. If these drift, the admin
+// console gets built against denials the real API won't produce — the whole
+// point of RBAC-accurate mocks. The 5 S6-added keys are seeded here the way
+// S6a-B2 must seed them for real.
+
+const ON = { enabled: true, locked: false };
+const OFF = { enabled: false, locked: false };
+const LOCKED_OFF = { enabled: false, locked: true };
+
+/** role → permission → {enabled, locked}. SUPER_ADMIN is all-on, all-locked. */
+const SEED_MATRIX: Record<
+  AdminRole,
+  Partial<Record<PermissionKey, { enabled: boolean; locked: boolean }>>
+> = {
+  SUPER_ADMIN: Object.fromEntries(
+    ALL_PERMISSION_KEYS.map((k) => [k, { enabled: true, locked: true }]),
+  ) as Record<PermissionKey, { enabled: boolean; locked: boolean }>,
+  ADMIN: {
+    'candidates.view': ON,
+    'candidates.edit': ON,
+    'candidates.delete': OFF, // purge — NOT granted to ADMIN by default
+    'candidates.onboard_manual': ON,
+    'candidates.export': ON,
+    'candidates.view_documents': ON,
+    'employers.view': ON,
+    'employers.approve_reject': ON,
+    'employers.suspend': ON,
+    'employers.delete': OFF,
+    'jobs.view': ON,
+    'jobs.post_admin': ON,
+    'jobs.archive': ON,
+    'jobs.moderate': ON,
+    'applications.manage': ON,
+    'applications.change_status': ON,
+    'applications.notes': ON,
+    'reports.view': ON,
+    'logs.view': ON,
+    'logs.export': ON,
+    'roles.view': ON,
+    'roles.manage': LOCKED_OFF, // matrix writes are SUPER_ADMIN-effective
+    'settings.view': ON,
+    'settings.manage': ON, // core rules stay SUPER_ADMIN-gated inside the service
+    'billing.manage': LOCKED_OFF,
+    'subscriptions.manage': LOCKED_OFF,
+    'admin_users.manage': LOCKED_OFF,
+  },
+  MODERATOR: {
+    'candidates.view': ON,
+    'candidates.edit': OFF,
+    'candidates.delete': OFF,
+    'candidates.onboard_manual': OFF,
+    'candidates.export': OFF,
+    'candidates.view_documents': OFF, // moderators do NOT read passports
+    'employers.view': ON,
+    'employers.approve_reject': ON,
+    'employers.suspend': OFF,
+    'employers.delete': OFF,
+    'jobs.view': ON,
+    'jobs.post_admin': OFF,
+    'jobs.archive': ON,
+    'jobs.moderate': ON, // moderation IS the moderator's job
+    'applications.manage': OFF,
+    'applications.change_status': OFF,
+    'applications.notes': ON,
+    'reports.view': ON,
+    'logs.view': ON,
+    'logs.export': OFF, // may READ the log on screen, may not walk out with it
+    'roles.view': OFF,
+    'roles.manage': LOCKED_OFF,
+    // A moderator moderates content; they do not tune the platform. Until S6a-F1
+    // they could, because settings rode on logs.view — which they hold.
+    'settings.view': OFF,
+    'settings.manage': OFF,
+    'billing.manage': LOCKED_OFF,
+    'subscriptions.manage': LOCKED_OFF,
+    'admin_users.manage': LOCKED_OFF,
+  },
+  SUPPORT: {
+    'candidates.view': ON,
+    'candidates.edit': OFF,
+    'candidates.delete': LOCKED_OFF,
+    'candidates.onboard_manual': OFF,
+    'candidates.export': OFF,
+    'candidates.view_documents': OFF,
+    'employers.view': ON,
+    'employers.approve_reject': OFF,
+    'employers.suspend': OFF,
+    'employers.delete': LOCKED_OFF,
+    'jobs.view': ON,
+    'jobs.post_admin': OFF,
+    'jobs.archive': OFF,
+    'jobs.moderate': OFF,
+    // DRIFT CORRECTED (S6a-F1). These two were ON here with the note "support
+    // runs the manual WhatsApp resend", but the REAL seed
+    // (apps/api/prisma/seed.ts) has both OFF — and has since S2. The mock was
+    // promising a capability the server denies, which is the exact failure mode
+    // these mocks exist to prevent. Aligned to the server.
+    //
+    // If SUPPORT genuinely should run the resend, that is a SEED change (a
+    // product decision), not a mock change. Flagged, not silently decided.
+    'applications.manage': OFF,
+    'applications.change_status': OFF,
+    'applications.notes': OFF,
+    'reports.view': ON,
+    'logs.view': OFF,
+    'logs.export': OFF,
+    'roles.view': OFF,
+    'roles.manage': LOCKED_OFF,
+    'settings.view': OFF,
+    'settings.manage': OFF,
+    'billing.manage': LOCKED_OFF,
+    'subscriptions.manage': LOCKED_OFF,
+    'admin_users.manage': LOCKED_OFF,
+  },
+};
+
+function buildSeedMatrix(): RbacCell[] {
+  const cells: RbacCell[] = [];
+  for (const role of ADMIN_ROLES) {
+    for (const permission of ALL_PERMISSION_KEYS) {
+      const cell = SEED_MATRIX[role][permission] ?? OFF;
+      cells.push({ role, permission, enabled: cell.enabled, locked: cell.locked });
+    }
+  }
+  return cells;
+}
+
+/**
+ * THE mock RBAC check — every admin handler runs it. Mirrors the API's
+ * permission service: a role holds a permission iff its matrix cell is enabled.
+ * CANDIDATE/EMPLOYER hold nothing (no rows).
+ */
+export function roleHasPermission(role: string, permission: PermissionKey): boolean {
+  const cell = db.rolePermissions.find((c) => c.role === role && c.permission === permission);
+  return cell?.enabled === true;
+}
+
+// ─── S6: seeded audit rows (Screen 29) ───────────────────────────────────────
+// Spread across modules / actions / statuses so the filter chips and keyset
+// paging are exercisable. `meta` carries ONLY redaction-safe values.
+
+function buildSeedAuditLogs(): AuditLogEntry[] {
+  const rows: Array<Omit<AuditLogEntry, 'id'>> = [
+    {
+      createdAt: hoursAgo(1),
+      module: 'Payments',
+      action: 'subscription.activated',
+      actorUserId: null,
+      actorRole: 'SUPER_ADMIN',
+      targetType: 'Subscription',
+      targetId: 'sub-mock-1',
+      status: 'SUCCESS',
+      meta: { planCode: 'PRO_MONTHLY', companyId: 'mock-company-pro' },
+    },
+    {
+      createdAt: hoursAgo(3),
+      module: 'Payments',
+      action: 'webhook.received',
+      actorUserId: null,
+      actorRole: 'SUPER_ADMIN',
+      targetType: 'Webhook',
+      targetId: 'evt-mock-1',
+      status: 'SUCCESS',
+      meta: { provider: 'razorpay', eventType: 'payment.captured' },
+    },
+    {
+      createdAt: hoursAgo(6),
+      module: 'Jobs',
+      action: 'job.publish.blocked',
+      actorUserId: 'mock-user-employer-1',
+      actorRole: 'EMPLOYER',
+      targetType: 'Job',
+      targetId: 'job-2',
+      status: 'BLOCKED',
+      meta: { failedRules: ['accommodation'], companyId: 'mock-company-1' },
+    },
+    {
+      createdAt: hoursAgo(9),
+      module: 'Employer',
+      action: 'document.viewed',
+      actorUserId: 'mock-user-admin-1',
+      actorRole: 'ADMIN',
+      targetType: 'CandidateDocument',
+      targetId: 'mock-user-candidate-1',
+      // The DPDP trail: the TYPE, never the key or the signed URL.
+      status: 'SUCCESS',
+      meta: { documentType: 'PASSPORT', companyId: 'mock-company-pro' },
+    },
+    {
+      createdAt: daysAgo(1),
+      module: 'Applications',
+      action: 'application.admin_override',
+      actorUserId: 'mock-user-admin-1',
+      actorRole: 'ADMIN',
+      targetType: 'Application',
+      targetId: 'app-3',
+      status: 'SUCCESS',
+      meta: { from: 'REJECTED', to: 'SELECTED' },
+    },
+    {
+      createdAt: daysAgo(2),
+      module: 'Auth',
+      action: 'auth.login.failed',
+      actorUserId: null,
+      actorRole: null,
+      targetType: 'User',
+      targetId: null,
+      status: 'FAILED',
+      meta: { reason: 'invalid_credentials' },
+    },
+    {
+      createdAt: daysAgo(3),
+      module: 'Settings',
+      action: 'settings.update',
+      actorUserId: SUPER_ADMIN_USER_ID,
+      actorRole: 'SUPER_ADMIN',
+      targetType: 'Setting',
+      targetId: 'REQUIRE_ACCOMMODATION',
+      status: 'SUCCESS',
+      meta: { from: false, to: true, isCoreRule: true },
+    },
+    {
+      createdAt: daysAgo(4),
+      module: 'Notifications',
+      action: 'notification.delivered',
+      actorUserId: null,
+      actorRole: null,
+      targetType: 'WhatsappMessage',
+      targetId: 'wa-mock-1',
+      status: 'DELIVERED',
+      meta: { template: 'wa.selected', applicationId: 'app-1' },
+    },
+    {
+      createdAt: daysAgo(5),
+      module: 'Candidate',
+      action: 'passport_expiry.run',
+      actorUserId: null,
+      actorRole: null,
+      targetType: null,
+      targetId: null,
+      status: 'SUCCESS',
+      meta: { window60: 2, window30: 1, window7: 0, window0: 0 },
+    },
+    {
+      createdAt: daysAgo(6),
+      module: 'Errors',
+      action: 'worker.job.failed',
+      actorUserId: null,
+      actorRole: null,
+      targetType: 'Job',
+      targetId: 'bull-job-77',
+      status: 'ERROR',
+      meta: { queue: 'notification', attempts: 3 },
+    },
+  ];
+  // Newest first; ids descend so the keyset cursor is monotonic.
+  let id = 1_000_100;
+  return rows.map((r) => ({ ...r, id: String(id--) }) as AuditLogEntry);
+}
 
 export const db = {
   users: new Map<string, MockUser>([
@@ -186,6 +622,72 @@ export const db = {
         status: 'ACTIVE',
       },
     ],
+    // ── S6: one fixture per admin role, so the console's RBAC gating is built
+    // against REAL per-role denials (a permissive mock ships buttons a
+    // MODERATOR can't actually use).
+    [
+      SUPER_ADMIN_USER_ID,
+      {
+        id: SUPER_ADMIN_USER_ID,
+        email: SUPER_ADMIN_EMAIL,
+        passwordHash: 'hashed-password',
+        role: 'SUPER_ADMIN',
+        status: 'ACTIVE',
+      },
+    ],
+    [
+      MODERATOR_USER_ID,
+      {
+        id: MODERATOR_USER_ID,
+        email: MODERATOR_EMAIL,
+        passwordHash: 'hashed-password',
+        role: 'MODERATOR',
+        status: 'ACTIVE',
+      },
+    ],
+    [
+      SUPPORT_USER_ID,
+      {
+        id: SUPPORT_USER_ID,
+        email: SUPPORT_EMAIL,
+        passwordHash: 'hashed-password',
+        role: 'SUPPORT',
+        status: 'ACTIVE',
+      },
+    ],
+    // S6: the purge target (tombstoned in place by the purge handler).
+    [
+      PURGEABLE_CANDIDATE_USER_ID,
+      {
+        id: PURGEABLE_CANDIDATE_USER_ID,
+        email: 'purgeable@example.com',
+        passwordHash: 'hashed-password',
+        role: 'CANDIDATE',
+        status: 'ACTIVE',
+      },
+    ],
+    // S6b-F1: one fixture per remaining account state, so Screen 25's filters
+    // and the deletion countdown render against real data.
+    [
+      'mock-user-candidate-suspended',
+      {
+        id: 'mock-user-candidate-suspended',
+        email: 'suspended@example.com',
+        passwordHash: 'hashed-password',
+        role: 'CANDIDATE',
+        status: 'SUSPENDED',
+      },
+    ],
+    [
+      'mock-user-candidate-pendingdel',
+      {
+        id: 'mock-user-candidate-pendingdel',
+        email: 'leaving@example.com',
+        passwordHash: 'hashed-password',
+        role: 'CANDIDATE',
+        status: 'PENDING_DELETION',
+      },
+    ],
     [
       'mock-user-employer-pending',
       {
@@ -214,6 +716,38 @@ export const db = {
         passwordHash: 'hashed-password',
         role: 'EMPLOYER',
         status: 'SUSPENDED',
+      },
+    ],
+    // S5: Billing fixture employers — LOCAL/FREE (GST routing), PRO ACTIVE
+    // (doc gate + quota lift), PRO GRACE (PlanStatusWidget grace state).
+    [
+      EMPLOYER_LOCAL_USER_ID,
+      {
+        id: EMPLOYER_LOCAL_USER_ID,
+        email: EMPLOYER_LOCAL_EMAIL,
+        passwordHash: 'hashed-password',
+        role: 'EMPLOYER',
+        status: 'ACTIVE',
+      },
+    ],
+    [
+      EMPLOYER_PRO_USER_ID,
+      {
+        id: EMPLOYER_PRO_USER_ID,
+        email: EMPLOYER_PRO_EMAIL,
+        passwordHash: 'hashed-password',
+        role: 'EMPLOYER',
+        status: 'ACTIVE',
+      },
+    ],
+    [
+      EMPLOYER_GRACE_USER_ID,
+      {
+        id: EMPLOYER_GRACE_USER_ID,
+        email: EMPLOYER_GRACE_EMAIL,
+        passwordHash: 'hashed-password',
+        role: 'EMPLOYER',
+        status: 'ACTIVE',
       },
     ],
     // S3: Additional browsable candidate users
@@ -289,6 +823,82 @@ export const db = {
   // mock-user-candidate-hidden = Hidden User (profileVisible=false — NEVER in browse)
 
   candidates: new Map<string, MockCandidate>([
+    // S6: the purge fixture. Starts as an ordinary, fully-populated candidate;
+    // POST /admin/candidates/{id}/purge tombstones them IN PLACE (name →
+    // "Deleted user", contacts nulled, documents emptied, purgedAt set) so the
+    // console can render the deletion state AND the S4 null-candidate applicant
+    // path becomes exercisable.
+    [
+      PURGEABLE_CANDIDATE_USER_ID,
+      {
+        userId: PURGEABLE_CANDIDATE_USER_ID,
+        profile: buildProfile(PURGEABLE_CANDIDATE_USER_ID, 'purgeable@example.com', {
+          fullName: 'Vikram Singh',
+          phone: '+919812345678',
+          phoneVerifiedAt: new Date().toISOString(),
+          completionPct: 80,
+          documents: [
+            {
+              id: 'doc-purge-1',
+              type: 'PASSPORT',
+              key: 'uploads/doc-purge-1/passport.pdf',
+              uploadedAt: daysAgo(20),
+              expiryDate: daysFromNow(400),
+            } as CandidateDocument,
+          ],
+        }),
+        resumeSettings: {
+          language: 'en',
+          showPhone: true,
+          showReligion: false,
+          showFatherName: true,
+          showPassportNumber: false,
+        },
+        lastRenderedAt: null,
+      },
+    ],
+    // S6b-F1: the SUSPENDED fixture (user status above) — Screen 25's
+    // suspended tab + the reactivate path.
+    [
+      'mock-user-candidate-suspended',
+      {
+        userId: 'mock-user-candidate-suspended',
+        profile: buildProfile('mock-user-candidate-suspended', 'suspended@example.com', {
+          fullName: 'Deepak Verma',
+          phone: '+919811112222',
+          completionPct: 55,
+        }),
+        resumeSettings: {
+          language: 'en',
+          showPhone: true,
+          showReligion: false,
+          showFatherName: true,
+          showPassportNumber: false,
+        },
+        lastRenderedAt: null,
+      },
+    ],
+    // S6b-F1: the PENDING_DELETION fixture — the countdown row (lifecycle map
+    // carries deletionDueAt 12 days out).
+    [
+      'mock-user-candidate-pendingdel',
+      {
+        userId: 'mock-user-candidate-pendingdel',
+        profile: buildProfile('mock-user-candidate-pendingdel', 'leaving@example.com', {
+          fullName: 'Sunita Devi',
+          phone: '+919833334444',
+          completionPct: 70,
+        }),
+        resumeSettings: {
+          language: 'en',
+          showPhone: true,
+          showReligion: false,
+          showFatherName: true,
+          showPassportNumber: false,
+        },
+        lastRenderedAt: null,
+      },
+    ],
     [
       'mock-user-candidate-1',
       {
@@ -329,7 +939,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -356,7 +966,7 @@ export const db = {
           language: 'en',
           showPhone: false,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -410,7 +1020,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -430,7 +1040,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -514,7 +1124,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -551,7 +1161,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -582,7 +1192,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -620,7 +1230,7 @@ export const db = {
           language: 'en',
           showPhone: true,
           showReligion: false,
-          showFatherName: false,
+          showFatherName: true,
           showPassportNumber: false,
         },
         lastRenderedAt: null,
@@ -719,6 +1329,72 @@ export const db = {
         languagePref: 'en',
         description: 'Company account is suspended.',
         registrationCertKey: 'employer-docs/suspended-company/reg-cert.pdf',
+        rejectionReason: null,
+        createdAt: PAST_DATE,
+        approvedAt: PAST_DATE,
+      } satisfies MockCompany,
+    ],
+    // S5: LOCAL approved employer (FREE plan) — checkout routes to Razorpay
+    // domestic and the response carries the GST split.
+    [
+      EMPLOYER_LOCAL_USER_ID,
+      {
+        id: 'mock-company-local',
+        name: 'Shree Ram Constructions',
+        type: 'LOCAL',
+        status: 'APPROVED',
+        registrationNumber: 'MH-2024-55555',
+        industryType: 'Construction',
+        phone: '+912233445566',
+        location: 'Pune, India',
+        employeeRange: '51-200',
+        languagePref: 'en',
+        description: 'Residential and commercial construction across Maharashtra.',
+        registrationCertKey: 'employer-docs/mock-company-local/reg-cert.pdf',
+        rejectionReason: null,
+        createdAt: PAST_DATE,
+        approvedAt: PAST_DATE,
+      } satisfies MockCompany,
+    ],
+    // S5: FOREIGN approved employer on PRO_MONTHLY (ACTIVE) — the document-gate
+    // signed-URL fixture; publish quota is unlimited for this company.
+    [
+      EMPLOYER_PRO_USER_ID,
+      {
+        id: 'mock-company-pro',
+        name: 'Emirates Skill Partners',
+        type: 'FOREIGN',
+        status: 'APPROVED',
+        registrationNumber: 'DXB-2023-77777',
+        industryType: 'Recruitment',
+        phone: '+971504455667',
+        location: 'Dubai, UAE',
+        employeeRange: '11-50',
+        languagePref: 'en',
+        description: 'Gulf recruitment agency on the Pro plan.',
+        registrationCertKey: 'employer-docs/mock-company-pro/reg-cert.pdf',
+        rejectionReason: null,
+        createdAt: PAST_DATE,
+        approvedAt: PAST_DATE,
+      } satisfies MockCompany,
+    ],
+    // S5: FOREIGN approved employer whose PRO_MONTHLY is in its 7-day GRACE
+    // window — the PlanStatusWidget grace-state fixture.
+    [
+      EMPLOYER_GRACE_USER_ID,
+      {
+        id: 'mock-company-grace',
+        name: 'Doha Manpower Services',
+        type: 'FOREIGN',
+        status: 'APPROVED',
+        registrationNumber: 'QAT-2023-88888',
+        industryType: 'Manpower',
+        phone: '+97455667788',
+        location: 'Doha, Qatar',
+        employeeRange: '51-200',
+        languagePref: 'en',
+        description: 'Qatar manpower agency whose Pro plan just lapsed into grace.',
+        registrationCertKey: 'employer-docs/mock-company-grace/reg-cert.pdf',
         rejectionReason: null,
         createdAt: PAST_DATE,
         approvedAt: PAST_DATE,
@@ -1079,6 +1755,119 @@ export const db = {
         archivedAt: null,
       } satisfies MockJob,
     ],
+    // S6: the moderation-queue fixture. PENDING_REVIEW exists ONLY on the admin
+    // surface (no employer or public list returns it) — approve → ACTIVE,
+    // reject → back to DRAFT with the reason.
+    [
+      'job-pending-review',
+      {
+        id: 'job-pending-review',
+        title: 'Site Supervisor (Awaiting Review)',
+        status: 'PENDING_REVIEW',
+        market: 'GULF',
+        location: 'Doha, Qatar',
+        description:
+          'Supervise a residential build crew. Submitted for admin approval because jobs.require_admin_approval is ON.',
+        categoryId: 'cat-construction',
+        salaryMin: 2000,
+        salaryMax: 2600,
+        salaryCurrency: 'QAR',
+        accommodation: true,
+        healthInsurance: true,
+        transportation: true,
+        workConditions: '9 hours/day, 6 days/week.',
+        requirements: ['5+ years supervision', 'Valid passport'],
+        experienceRequiredYears: 5,
+        vacancies: 2,
+        genderPreference: 'ANY',
+        companyId: 'mock-company-1',
+        companyName: 'Gulf Builders Arabia',
+        createdAt: daysAgo(2),
+        publishedAt: null,
+        archivedAt: null,
+      } satisfies MockJob,
+    ],
+    // S6b-F2: the NON-COMPLIANT review fixture. Submitted while (the fiction
+    // goes) the health-insurance and transportation rules were OFF; the seeded
+    // settings have them ON — so APPROVING this job fails rung 2 of the re-run
+    // gate ladder with the two rule names in meta.violations. This is the live
+    // gate failure the browser-walk must render.
+    [
+      'job-pending-noncompliant',
+      {
+        id: 'job-pending-noncompliant',
+        title: 'Warehouse Loader (Awaiting Review — non-compliant)',
+        status: 'PENDING_REVIEW',
+        market: 'GULF',
+        location: 'Jebel Ali, UAE',
+        description:
+          'Loading crew for a logistics warehouse. Submitted before the current worker-protection rules were switched on.',
+        categoryId: 'cat-general',
+        salaryMin: 1400,
+        salaryMax: 1700,
+        salaryCurrency: 'AED',
+        accommodation: true,
+        healthInsurance: false,
+        transportation: false,
+        workConditions: '10 hours/day, 6 days/week.',
+        requirements: ['Physically fit', 'Basic English'],
+        experienceRequiredYears: 0,
+        vacancies: 10,
+        genderPreference: 'ANY',
+        companyId: 'mock-company-1',
+        companyName: 'Gulf Builders Arabia',
+        createdAt: daysAgo(3),
+        publishedAt: null,
+        archivedAt: null,
+      } satisfies MockJob,
+    ],
+    // S6b-F2: a pending job whose employer was SUSPENDED while it sat in
+    // review — rung 1 of the re-run ladder (403 EMPLOYER_NOT_APPROVED), and
+    // the review panel's pre-emptive warning fixture.
+    [
+      'job-pending-suspended',
+      {
+        id: 'job-pending-suspended',
+        title: 'Steel Fixer (Awaiting Review — suspended employer)',
+        status: 'PENDING_REVIEW',
+        market: 'GULF',
+        location: 'Dubai, UAE',
+        description: 'Steel fixing crew for a high-rise project.',
+        categoryId: 'cat-construction',
+        salaryMin: 1800,
+        salaryMax: 2200,
+        salaryCurrency: 'AED',
+        accommodation: true,
+        healthInsurance: true,
+        transportation: true,
+        workConditions: '9 hours/day, 6 days/week.',
+        requirements: ['3+ years steel fixing'],
+        experienceRequiredYears: 3,
+        vacancies: 6,
+        genderPreference: 'ANY',
+        companyId: 'mock-company-suspended',
+        companyName: 'Blacklisted Corp',
+        createdAt: daysAgo(4),
+        publishedAt: null,
+        archivedAt: null,
+      } satisfies MockJob,
+    ],
+  ]),
+
+  // S6: admin-only job metadata. `Job` carries no humanId / Featured / Urgent,
+  // but the admin row does — and Featured/Urgent are ADMIN-SET ONLY (decision 3):
+  // an employer can never set them, which is exactly what keeps them meaningful.
+  // PATCH /admin/jobs/{id}/flags mutates this store; the badges + search filters
+  // read it.
+  jobAdminMeta: new Map<
+    string,
+    { humanId: string; isFeatured: boolean; isUrgent: boolean; moderationReason?: string | null }
+  >([
+    ['job-1', { humanId: 'JB-2026-00001', isFeatured: true, isUrgent: false }],
+    ['job-2', { humanId: 'JB-2026-00002', isFeatured: false, isUrgent: true }],
+    ['job-pending-review', { humanId: 'JB-2026-00007', isFeatured: false, isUrgent: false }],
+    ['job-pending-noncompliant', { humanId: 'JB-2026-00008', isFeatured: false, isUrgent: false }],
+    ['job-pending-suspended', { humanId: 'JB-2026-00009', isFeatured: false, isUrgent: false }],
   ]),
 
   // ── S3: Hiring preferences (userId → preferences) ─────────────────────────
@@ -1467,70 +2256,361 @@ export const db = {
 
   // ── S2: Platform settings ──────────────────────────────────────────────────
   settings: [
+    // REWRITTEN IN S6a-F2 to the REAL wire shape (the S2-B1 API returns the
+    // persisted row verbatim: dotted keys, no group/label/description — those
+    // are client i18n). The previous fixture (SCREAMING_CASE keys + presentation
+    // fields) was frozen against a shape the server never returned — the exact
+    // MSW-vs-real drift class this repo keeps meeting. Values mirror
+    // apps/api/prisma/seed.ts exactly.
     {
-      key: 'REQUIRE_ACCOMMODATION',
-      group: 'WORKER_PROTECTION',
-      label: 'Require Accommodation',
-      description: 'All jobs must offer accommodation to publish.',
+      id: 'setting-01',
+      key: 'worker_protection.accommodation_required',
       value: true,
       isCoreRule: true,
-      updatedAt: null,
-      updatedBy: null,
+      version: 1,
+      updatedAt: '2026-01-05T09:00:00.000Z',
+      updatedById: null,
     },
     {
-      key: 'REQUIRE_HEALTH_INSURANCE',
-      group: 'WORKER_PROTECTION',
-      label: 'Require Health Insurance',
-      description: 'All jobs must offer health insurance to publish.',
+      id: 'setting-02',
+      key: 'worker_protection.health_insurance_required',
       value: true,
       isCoreRule: true,
-      updatedAt: null,
-      updatedBy: null,
+      version: 1,
+      updatedAt: '2026-01-05T09:00:00.000Z',
+      updatedById: null,
     },
     {
-      key: 'REQUIRE_TRANSPORTATION',
-      group: 'WORKER_PROTECTION',
-      label: 'Require Transportation',
-      description: 'All jobs must offer transportation to publish.',
+      id: 'setting-03',
+      key: 'worker_protection.transportation_required',
       value: true,
       isCoreRule: true,
-      updatedAt: null,
-      updatedBy: null,
+      version: 1,
+      updatedAt: '2026-01-05T09:00:00.000Z',
+      updatedById: null,
     },
     {
-      key: 'PROFILE_COMPLETION_THRESHOLD',
-      group: 'COMPLETION',
-      label: 'Apply Gate Threshold (%)',
-      description: 'Minimum profile completion percentage required to apply for a job.',
-      value: 70,
+      id: 'setting-04',
+      key: 'jobs.auto_archive_days',
+      value: 90,
       isCoreRule: false,
-      updatedAt: null,
-      updatedBy: null,
+      version: 1,
+      updatedAt: '2026-01-05T09:00:00.000Z',
+      updatedById: null,
     },
     {
-      key: 'FREE_PLAN_JOB_LIMIT',
-      group: 'APPLICATION',
-      label: 'Free Plan Active Job Limit',
-      description: 'Maximum number of active jobs for Free plan employers.',
+      id: 'setting-05',
+      key: 'jobs.require_admin_approval',
+      value: false,
+      isCoreRule: false,
+      version: 1,
+      updatedAt: '2026-01-05T09:00:00.000Z',
+      updatedById: null,
+    },
+    {
+      id: 'setting-06',
+      key: 'jobs.free_max_active_jobs',
       value: 1,
       isCoreRule: false,
-      updatedAt: null,
-      updatedBy: null,
+      version: 1,
+      updatedAt: '2026-01-05T09:00:00.000Z',
+      updatedById: null,
     },
     {
-      key: 'PLATFORM_NAME',
-      group: 'PLATFORM',
-      label: 'Platform Name',
-      description: 'Display name used in email templates and WhatsApp messages.',
-      value: 'SkillIndiaConnect',
+      id: 'setting-07',
+      key: 'jobs.allow_local',
+      value: true,
       isCoreRule: false,
-      updatedAt: null,
-      updatedBy: null,
+      version: 1,
+      updatedAt: '2026-01-05T09:00:00.000Z',
+      updatedById: null,
+    },
+    {
+      id: 'setting-08',
+      key: 'jobs.allow_foreign',
+      value: true,
+      isCoreRule: false,
+      version: 1,
+      updatedAt: '2026-01-05T09:00:00.000Z',
+      updatedById: null,
+    },
+    {
+      id: 'setting-09',
+      key: 'candidates.mandatory_documents',
+      value: ['PASSPORT', 'EXPERIENCE_CERT', 'EDUCATIONAL_CERT'],
+      isCoreRule: false,
+      version: 1,
+      updatedAt: '2026-01-05T09:00:00.000Z',
+      updatedById: null,
+    },
+    {
+      id: 'setting-10',
+      key: 'candidates.min_completion_pct',
+      value: 70,
+      isCoreRule: false,
+      version: 1,
+      updatedAt: '2026-01-05T09:00:00.000Z',
+      updatedById: null,
+    },
+    {
+      id: 'setting-11',
+      key: 'candidates.video_max_minutes',
+      value: 5,
+      isCoreRule: false,
+      version: 1,
+      updatedAt: '2026-01-05T09:00:00.000Z',
+      updatedById: null,
+    },
+    {
+      id: 'setting-12',
+      key: 'candidates.video_max_mb',
+      value: 500,
+      isCoreRule: false,
+      version: 1,
+      updatedAt: '2026-01-05T09:00:00.000Z',
+      updatedById: null,
+    },
+    {
+      id: 'setting-13',
+      key: 'payments.gst_rate_pct',
+      value: 18,
+      isCoreRule: false,
+      version: 1,
+      updatedAt: '2026-01-05T09:00:00.000Z',
+      updatedById: null,
+    },
+    {
+      id: 'setting-14',
+      key: 'payments.stripe_enabled',
+      value: false,
+      isCoreRule: false,
+      version: 1,
+      updatedAt: '2026-01-05T09:00:00.000Z',
+      updatedById: null,
     },
   ] as MockSetting[],
+
+  // ── S5: Billing stores ───────────────────────────────────────────────────────
+
+  // The seeded three plans. Money = integer subunits (paise) — no floats.
+  plans: [
+    {
+      code: 'FREE',
+      name: 'Free',
+      priceSubunits: 0,
+      currency: 'INR',
+      period: null,
+      maxActiveJobs: 1,
+      gstRatePct: 18,
+      features: ['1 active job', 'Applicant pipeline', 'Candidate browse'],
+    },
+    {
+      code: 'PRO_MONTHLY',
+      name: 'Pro Monthly',
+      priceSubunits: 299900,
+      currency: 'INR',
+      period: 'MONTHLY',
+      maxActiveJobs: null,
+      gstRatePct: 18,
+      features: ['Unlimited active jobs', 'Candidate document access', 'Priority support'],
+    },
+    {
+      code: 'PRO_YEARLY',
+      name: 'Pro Yearly',
+      priceSubunits: 2499900,
+      currency: 'INR',
+      period: 'YEARLY',
+      maxActiveJobs: null,
+      gstRatePct: 18,
+      features: [
+        'Unlimited active jobs',
+        'Candidate document access',
+        'Priority support',
+        '2 months free vs monthly',
+      ],
+    },
+  ] as Plan[],
+
+  // Non-FREE subscriptions by employer userId. Absent = well-formed FREE state.
+  subscriptions: new Map<string, MockSubscription>([
+    [
+      EMPLOYER_PRO_USER_ID,
+      {
+        planCode: 'PRO_MONTHLY',
+        status: 'ACTIVE',
+        startsAt: daysAgo(10),
+        expiresAt: daysFromNow(20),
+        graceEndsAt: null,
+      },
+    ],
+    [
+      EMPLOYER_GRACE_USER_ID,
+      {
+        planCode: 'PRO_MONTHLY',
+        status: 'GRACE',
+        startsAt: daysAgo(33),
+        expiresAt: daysAgo(3),
+        graceEndsAt: daysFromNow(4),
+      },
+    ],
+  ]),
+
+  // Checkout orders by order id. `pollCount` drives the delayed webhook-effect flip.
+  orders: new Map<string, MockOrder>(),
+
+  // Idempotency-Key → orderId. A retry with a seen key replays the stored session.
+  checkoutIdempotency: new Map<string, string>(),
+
+  // Invoices, newest last. Seeded history for the PRO + GRACE fixtures; the
+  // most recent PRO invoice has pdfUrl null (async generation still pending).
+  invoices: [
+    {
+      userId: EMPLOYER_GRACE_USER_ID,
+      id: 'mock-invoice-grace-1',
+      number: 'SIC-2026-00040',
+      issuedAt: daysAgo(33),
+      totalSubunits: 299900,
+      currency: 'INR',
+      planName: 'Pro Monthly',
+      pdfUrl:
+        'https://r2.mock.skillindiaconnect.example/invoices/SIC-2026-00040.pdf?sig=mock&exp=900',
+    },
+    {
+      userId: EMPLOYER_PRO_USER_ID,
+      id: 'mock-invoice-pro-1',
+      number: 'SIC-2026-00041',
+      issuedAt: daysAgo(40),
+      totalSubunits: 299900,
+      currency: 'INR',
+      planName: 'Pro Monthly',
+      pdfUrl:
+        'https://r2.mock.skillindiaconnect.example/invoices/SIC-2026-00041.pdf?sig=mock&exp=900',
+    },
+    {
+      userId: EMPLOYER_PRO_USER_ID,
+      id: 'mock-invoice-pro-2',
+      number: 'SIC-2026-00042',
+      issuedAt: daysAgo(10),
+      totalSubunits: 299900,
+      currency: 'INR',
+      planName: 'Pro Monthly',
+      pdfUrl: null, // async PDF generation pending — the FE must render this state
+    },
+  ] as MockInvoice[],
+
+  // Sequential counters (invoice numbers are per-year gapless: SIC-YYYY-NNNNN).
+  billingCounters: {
+    nextInvoiceSeq: 43,
+    nextOrderSeq: 109,
+  },
+
+  // ── S6: Admin console stores ────────────────────────────────────────────────
+
+  // The Screen-27 RBAC matrix, mirroring the API seed EXACTLY (prisma/seed.ts):
+  // SUPER_ADMIN = every key enabled AND locked; the billing/subscriptions/
+  // admin_users keys are locked-OFF for every other role; the rest vary. The
+  // handlers enforce these cells, so a MODERATOR really is denied.
+  rolePermissions: buildSeedMatrix(),
+
+  // Screen-29 fixtures: spread across modules, actions and statuses so the
+  // filter chips + keyset paging have something to bite on. `meta` is already
+  // redaction-safe (counts/ids/codes only) — exactly as the API writes it.
+  auditLogs: buildSeedAuditLogs(),
+
+  // Internal admin notes, keyed by applicationId. NEVER served to candidate or
+  // employer surfaces (contract: NoteEntry is admin-only).
+  applicationNotes: new Map<string, NoteEntry[]>([
+    [
+      'app-3',
+      [
+        {
+          id: 'note-1',
+          authorUserId: 'mock-user-admin-1',
+          authorRole: 'ADMIN',
+          body: 'Candidate called support — confirmed they never received the WhatsApp.',
+          createdAt: daysAgo(2),
+        },
+      ],
+    ],
+  ]),
+
+  // Timestamps of manual "Selected" WhatsApp resends, keyed by applicationId —
+  // drives the 3-per-24h cap (429 beyond it).
+  whatsappResends: new Map<string, string[]>(),
+
+  // Candidate deletion lifecycle, keyed by candidate PROFILE id. Deliberately a
+  // mock-side store rather than fields on CandidateProfile: purge state is an
+  // ADMIN-context concern (AdminCandidateCard carries it) and has no business on
+  // the candidate-facing schema.
+  //   deletionDueAt — the candidate's own 30-day self-deletion request.
+  //   purgedAt      — anonymized (admin purge OR the elapsed self-deletion; SAME
+  //                   worker, different trigger).
+  candidateLifecycle: new Map<string, { deletionDueAt: string | null; purgedAt: string | null }>([
+    // S6b-F1: the pending-deletion fixture's running clock (12 days out).
+    ['mock-user-candidate-pendingdel', { deletionDueAt: daysFromNow(12), purgedAt: null }],
+  ]),
+
+  // ── S7-0: resume generation lifecycle (keyed by userId) ────────────────────
+  // The DELAYED pending→ready flip lives in the STATUS handler: a generation
+  // stays PENDING until it has been POLLED RESUME_GENERATION_POLL_THRESHOLD
+  // times — never instant — so F1 is FORCED to build the polling UX (the
+  // S5 payments-timing lesson, reused). RESUME_FAIL_USER_ID's generations
+  // flip to FAILED instead, so the failure UX is buildable too.
+  resumeGenerations: new Map<string, MockResumeGeneration>(),
+
+  // Timestamps of resume WhatsApp sends, keyed by userId — drives the CR-001
+  // 5/day cap (429 RESUME_SEND_LIMIT_EXCEEDED beyond it).
+  resumeSends: new Map<string, string[]>(),
+
+  // Audit-log id counter (the BigInt PK, rendered as a string on the wire).
+  nextAuditLogId: 1_000_100,
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * S7-0: the RESUME-VIEW — the THIRD viewer context. Omissions come from the
+ * generation's SETTINGS SNAPSHOT, never the profile privacy toggles:
+ *   showPhone=false → phone absent · showFatherName=false → fatherName absent
+ *   showReligion=false → religion absent · showPassportNumber=false → number absent
+ * Passport NUMBER appearing here (toggle ON) is correct and is NOT a privacy
+ * regression — a different context with different rules than the employer view.
+ * The number has no profile field yet (B1 owns storage); the mock synthesizes
+ * a deterministic placeholder so the omission behavior is real either way.
+ */
+export function buildResumeView(candidate: MockCandidate, settings: ResumeSettings): ResumeView {
+  const p = candidate.profile;
+  const view: ResumeView = {
+    fullName: p.fullName ?? '',
+    email: p.email ?? '',
+    photoUrl: null,
+    dob: p.dob ?? null,
+    maritalStatus: p.maritalStatus ?? null,
+    nationality: p.nationality ?? null,
+    currentLocation: p.currentLocation ?? null,
+    languages: p.languages ?? [],
+    jobCategory: p.jobCategoryId ?? null,
+    experiences: p.experiences ?? [],
+    skills: p.skills ?? [],
+    documents: (p.documents ?? []).map((d) => ({
+      type: d.type,
+      uploaded: true,
+      ...(d.type === 'PASSPORT'
+        ? { passportValid: d.expiryDate ? new Date(d.expiryDate) > new Date() : false }
+        : {}),
+    })),
+    generatedAt: new Date().toISOString(),
+    settingsApplied: { ...settings },
+  };
+  if (settings.showPhone && p.phone) view.phone = p.phone;
+  if (settings.showFatherName && p.fatherName) view.fatherName = p.fatherName;
+  if (settings.showReligion && p.religion) view.religion = p.religion;
+  const hasPassport = (p.documents ?? []).some((d) => d.type === 'PASSPORT');
+  if (settings.showPassportNumber && hasPassport) {
+    view.passportNumber = `MOCK-PP-${candidate.userId.slice(-4).toUpperCase()}`;
+  }
+  return view;
+}
 
 export function buildProfile(
   id: string,
@@ -2020,3 +3100,153 @@ export const EMPLOYER_ALLOWED_TRANSITIONS: Record<ApplicationStatus, Application
   SELECTED: [],
   REJECTED: [],
 };
+
+// ─── S5: Billing helpers ──────────────────────────────────────────────────────
+
+export function getPlan(code: PlanCode): Plan | undefined {
+  return db.plans.find((p) => p.code === code);
+}
+
+/** Whole days from now until `iso`, floored at 0. */
+function wholeDaysUntil(iso: string): number {
+  return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
+}
+
+/**
+ * The company's subscription — ALWAYS well-formed. No record = the FREE state
+ * (plan FREE, status ACTIVE, expiresAt null) — never a 404.
+ *
+ * `renewable` mirrors the contract: true inside the renewal window (last 7
+ * days before expiry) and throughout GRACE/EXPIRED; false otherwise. FREE is
+ * never renewable (there is nothing to renew — purchases are upgrades).
+ */
+export function getSubscriptionStatus(userId: string): SubscriptionStatus {
+  const sub = db.subscriptions.get(userId);
+  if (!sub) {
+    return {
+      plan: getPlan('FREE')!,
+      status: 'ACTIVE',
+      startsAt: PAST_DATE,
+      expiresAt: null,
+      graceEndsAt: null,
+      daysRemaining: null,
+      renewable: false,
+    };
+  }
+  const daysRemaining =
+    sub.status === 'GRACE' && sub.graceEndsAt
+      ? wholeDaysUntil(sub.graceEndsAt)
+      : sub.status === 'EXPIRED'
+        ? 0
+        : wholeDaysUntil(sub.expiresAt);
+  const renewable =
+    sub.status === 'GRACE' || sub.status === 'EXPIRED' || wholeDaysUntil(sub.expiresAt) <= 7;
+  return {
+    plan: getPlan(sub.planCode)!,
+    status: sub.status,
+    startsAt: sub.startsAt,
+    expiresAt: sub.expiresAt,
+    graceEndsAt: sub.graceEndsAt,
+    daysRemaining,
+    renewable,
+  };
+}
+
+/**
+ * The publish-quota seam (S2-0 → S5): the ACTIVE-job limit comes from the
+ * subscription plan. ACTIVE/GRACE keep the paid plan's limit (null =
+ * unlimited); EXPIRED (or no record) falls back to FREE's limit.
+ */
+export function getActivePlanMaxJobs(userId: string): number | null {
+  const sub = db.subscriptions.get(userId);
+  const effective =
+    sub && (sub.status === 'ACTIVE' || sub.status === 'GRACE') ? sub.planCode : 'FREE';
+  return getPlan(effective)!.maxActiveJobs ?? null;
+}
+
+/** Sequential per-year GST invoice number: SIC-YYYY-NNNNN (gapless). */
+export function nextInvoiceNumber(): string {
+  const seq = db.billingCounters.nextInvoiceSeq++;
+  return `SIC-${new Date().getFullYear()}-${String(seq).padStart(5, '0')}`;
+}
+
+export function nextOrderRef(): string {
+  const seq = db.billingCounters.nextOrderSeq++;
+  return `ORD-${new Date().getFullYear()}-${String(seq).padStart(5, '0')}`;
+}
+
+/** Strip mock-internal fields down to the contract `Order` shape. */
+export function toOrder(o: MockOrder): Order {
+  return {
+    id: o.id,
+    humanOrderRef: o.humanOrderRef,
+    planCode: o.planCode,
+    status: o.status,
+    gateway: o.gateway,
+    amountSubunits: o.amountSubunits,
+    gstSubunits: o.gstSubunits,
+    totalSubunits: o.totalSubunits,
+    currency: o.currency,
+    createdAt: o.createdAt,
+    subscriptionActivatedAt: o.subscriptionActivatedAt,
+    invoiceId: o.invoiceId,
+  };
+}
+
+/**
+ * THE simulated webhook effect. Called by the order-status GET handler once
+ * `pollCount` crosses ORDER_FLIP_POLL_THRESHOLD — NEVER at checkout time and
+ * never on a client callback (mirrors webhook-only activation; instant
+ * activation is impossible on mocks, by design).
+ *
+ * On PAID (same "transaction", like the real worker):
+ *  - the subscription becomes ACTIVE (same-plan renewal EXTENDS from the
+ *    current expiry — paid time is never lost; otherwise a fresh term),
+ *  - an invoice appears with the next sequential number (pdfUrl null —
+ *    generation is async in the real system),
+ *  - `subscriptionActivatedAt` + `invoiceId` are stamped on the order,
+ *  - and the publish quota changes via getActivePlanMaxJobs.
+ */
+export function settleMockOrder(order: MockOrder): void {
+  if (order.status !== 'CREATED') return;
+
+  if (order.failOnFlip) {
+    order.status = 'FAILED';
+    return;
+  }
+
+  order.status = 'PAID';
+  const now = new Date();
+  const plan = getPlan(order.planCode)!;
+  const periodMs = (plan.period === 'YEARLY' ? 365 : 30) * 24 * 60 * 60 * 1000;
+
+  const existing = db.subscriptions.get(order.userId);
+  const extendsSamePlan =
+    existing &&
+    existing.planCode === order.planCode &&
+    new Date(existing.expiresAt).getTime() > now.getTime();
+  const base = extendsSamePlan ? new Date(existing.expiresAt).getTime() : now.getTime();
+
+  db.subscriptions.set(order.userId, {
+    planCode: order.planCode,
+    status: 'ACTIVE',
+    startsAt: extendsSamePlan ? existing.startsAt : now.toISOString(),
+    expiresAt: new Date(base + periodMs).toISOString(),
+    graceEndsAt: null,
+  });
+
+  const invoice: MockInvoice = {
+    userId: order.userId,
+    id: `mock-invoice-${order.id}`,
+    number: nextInvoiceNumber(),
+    issuedAt: now.toISOString(),
+    totalSubunits: order.totalSubunits,
+    currency: order.currency,
+    planName: plan.name,
+    pdfUrl: null, // async generation — a later list read may still show null
+  };
+  db.invoices.push(invoice);
+
+  order.subscriptionActivatedAt = now.toISOString();
+  order.invoiceId = invoice.id;
+}

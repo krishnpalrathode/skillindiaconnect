@@ -10,6 +10,7 @@ import { formatPostedAgo } from '@/lib/jobs/format';
 import { cn } from '@/lib/utils';
 import { MatchBreakdownPopover } from './MatchBreakdownPopover';
 import { ApplicantActions } from './ApplicantActions';
+import { DocumentViewButton } from '@/components/billing/DocumentViewButton';
 
 type ApplicantCard = components['schemas']['ApplicantCard'];
 type ApplicationStatus = components['schemas']['ApplicationStatus'];
@@ -103,7 +104,7 @@ export function ApplicantCard({
         />
       </div>
 
-      {/* Docs chips — STATUS ONLY, text-backed, nothing focusable/clickable. */}
+      {/* Docs chips — status badge + Pro-gated View button per uploaded doc. */}
       <ul className="flex flex-wrap gap-1.5" aria-label={t('docs.heading')}>
         {DOC_TYPES.map((type) => {
           const d = docsByType.get(type);
@@ -127,6 +128,9 @@ export function ApplicantCard({
               {t(`docs.${type}`)}
               {type === 'PASSPORT' && uploaded && (
                 <span>· {expired ? t('docs.expired') : t('docs.valid')}</span>
+              )}
+              {uploaded && (
+                <DocumentViewButton candidateId={a.id} documentType={type} uploaded={uploaded} />
               )}
             </li>
           );

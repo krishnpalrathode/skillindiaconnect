@@ -59,6 +59,18 @@ export const SETTING_KEYS = {
     core: false,
     type: 'number' as const,
   },
+  // S5-B1: Payments — GST rate used by the checkout money split (LOCAL
+  // companies), and the Stripe routing flag for FOREIGN companies.
+  GST_RATE_PCT: {
+    key: 'payments.gst_rate_pct',
+    core: false,
+    type: 'number' as const,
+  },
+  STRIPE_ENABLED: {
+    key: 'payments.stripe_enabled',
+    core: false,
+    type: 'boolean' as const,
+  },
 } as const;
 
 export type SettingType = 'boolean' | 'number' | 'string[]';

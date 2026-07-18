@@ -1,12 +1,13 @@
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Company, Job, JobStatus, SubscriptionStatus, UserRole } from '@prisma/client';
+import { Company, Job, JobStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { EmployerService } from '../employer/employer.service';
 import { SettingsService } from '../settings/settings.service';
 import { SETTING_KEYS } from '../settings/settings.keys';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
+import { SubscriptionReadService } from '../payments/subscription-read.service';
 import { JOB_EVENTS, JobPublishBlockedPayload } from './jobs.events';
 
 /**
@@ -21,7 +22,9 @@ import { JOB_EVENTS, JobPublishBlockedPayload } from './jobs.events';
  * Protection rules are read from SettingsService at every call; cache-DEL on write guarantees
  * freshness. Never cache rules inside this module.
  *
- * TODO S5: quota sub/plan lookup moves to PaymentsService once that module exists.
+ * S5-B3 closed the S5 TODO: the quota's plan lookup goes through
+ * SubscriptionReadService.effectivePlan() — the single plan-truth source shared
+ * with the Pro document gate. This module no longer reads the subscriptions table.
  */
 @Injectable()
 export class PublishGuardService {
@@ -30,6 +33,7 @@ export class PublishGuardService {
     private readonly employerService: EmployerService,
     private readonly settingsService: SettingsService,
     private readonly auditService: AuditService,
+    private readonly subscriptionReadService: SubscriptionReadService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -89,25 +93,10 @@ export class PublishGuardService {
     }
 
     // ── 3. Quota check ────────────────────────────────────────────────────────
-    // Look for any ACTIVE or GRACE subscription (grace still means they paid).
-    // If no subscription → treat as FREE tier.
-    // If subscription with plan.maxActiveJobs = null → unlimited → pass.
-    // TODO S5: move this subscription lookup to PaymentsService.
-    const activeSub = await this.prisma.subscription.findFirst({
-      where: {
-        companyId: company.id,
-        status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.GRACE] },
-      },
-      include: { plan: true },
-      orderBy: { startsAt: 'desc' },
-    });
-
-    let maxActiveJobs: number | null;
-    if (!activeSub) {
-      maxActiveJobs = await this.settingsService.get(SETTING_KEYS.FREE_MAX_ACTIVE_JOBS);
-    } else {
-      maxActiveJobs = activeSub.plan.maxActiveJobs; // null = unlimited
-    }
+    // effectivePlan() owns ALL subscription-state interpretation (S5-B3):
+    // ACTIVE/GRACE paid plan → its maxActiveJobs (null = unlimited); EXPIRED or
+    // none → the FREE cap from Settings. GRACE still means they paid.
+    const { maxActiveJobs } = await this.subscriptionReadService.effectivePlan(company.id);
 
     if (maxActiveJobs !== null) {
       const activeCount = await this.prisma.job.count({

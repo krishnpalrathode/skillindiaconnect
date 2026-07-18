@@ -36,6 +36,7 @@ describe('EmployerDashboardService', () => {
     description: 'Gulf construction firm.',
     website: null,
     rejectionReason: null,
+    registrationCertKey: null,
     approvedAt: new Date(),
     reviewedById: null,
     suspendedAt: null,

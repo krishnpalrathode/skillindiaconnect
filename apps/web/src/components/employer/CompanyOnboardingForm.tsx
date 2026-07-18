@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter, useParams } from 'next/navigation';
 import type { components } from '@skillindiaconnect/shared-types';
 import { registerCompany, patchCompany } from '@/lib/api/employer';
+import { useEmployer } from '@/lib/employer/employer-context';
 import { ApiRequestError } from '@/lib/api/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,6 +48,7 @@ const INDUSTRY_KEYS = [
 
 export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
   const t = useTranslations('employer.onboarding');
+  const { refetch: refetchCompany } = useEmployer();
   const router = useRouter();
   const params = useParams<{ locale: string }>();
   const locale = params?.locale ?? 'en';
@@ -73,6 +75,15 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
   const [submitting, setSubmitting] = useState(false);
 
   const certKeyRef = useRef<string | null>(certKey);
+  // The post-success redirect timer must die with the component — a push()
+  // firing after unmount navigates a screen the user already left.
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    },
+    [],
+  );
   useEffect(() => {
     certKeyRef.current = certKey;
   }, [certKey]);
@@ -131,7 +142,16 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
         });
       }
       setSubmitSuccess(t('submitSuccess'));
-      setTimeout(() => router.push(`/${locale}/employer/dashboard`), 1500);
+      redirectTimerRef.current = setTimeout(() => {
+        // The shell's banner + gating render from EmployerProvider — without a
+        // refetch, a resubmitted employer keeps seeing their STALE rejection
+        // banner (old reason included) until a hard reload (caught by the S6
+        // happy-path pass, B5). Refetched HERE, at the redirect moment, not on
+        // success: the provider's loading flip unmounts this form, which would
+        // eat the success message and this very timer.
+        refetchCompany();
+        router.push(`/${locale}/employer/dashboard`);
+      }, 1500);
     } catch (err) {
       if (err instanceof ApiRequestError) {
         if (err.error.code === 'COMPANY_ALREADY_EXISTS' || err.error.status === 409) {

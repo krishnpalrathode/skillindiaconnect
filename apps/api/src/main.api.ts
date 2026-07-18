@@ -5,9 +5,15 @@ import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import { AppApiModule } from './app-api.module';
 import { validationProblemFactory } from './core/http-problem.filter';
+import { applyScopedBodyParsers } from './payments/webhooks/raw-body.middleware';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppApiModule);
+  // bodyParser: false — body parsing is re-wired by applyScopedBodyParsers so
+  // the two webhook routes receive the UNTOUCHED raw byte buffer (signature
+  // verification runs on those exact bytes) while every other route keeps
+  // normal JSON parsing. See raw-body.middleware.ts for the mechanism.
+  const app = await NestFactory.create(AppApiModule, { bodyParser: false });
+  applyScopedBodyParsers(app);
 
   // Parse cookies — required for the httpOnly refresh-token cookie.
   app.use(cookieParser());

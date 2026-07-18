@@ -1,9 +1,9 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis';
 import { createHash, randomUUID } from 'node:crypto';
-import { UserRole } from '@prisma/client';
+import { UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { REDIS_CLIENT } from '../core/redis/redis.provider';
 
@@ -136,6 +136,12 @@ export class TokenService {
     });
 
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: session.userId } });
+    // S6b-B1: suspension must actually lock the account, not just block fresh
+    // logins — without this, a live refresh token keeps minting access tokens
+    // for a suspended user. Mirrors the login-time gate (same code).
+    if (user.status === UserStatus.SUSPENDED) {
+      throw new ForbiddenException({ code: 'ACCOUNT_SUSPENDED' });
+    }
     return this.issue(user.id, user.email, user.role, ip, userAgent);
   }
 

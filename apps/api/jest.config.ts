@@ -19,6 +19,12 @@ const config: Config = {
   // CPU-heavy specs like argon2. 2 workers is enough for CI speed without the
   // memory spike from fully parallel execution.
   maxWorkers: 2,
+  // S7-B1: the browser-pool spec deliberately SIGKILLs Chromium (timeout +
+  // crash-recovery proofs); puppeteer's internal process handles then keep the
+  // event loop alive after all tests + hooks complete. forceExit skips only
+  // that final wait — afterAll/afterEach cleanup (incl. testcontainers stops)
+  // still runs. detectOpenHandles was used to verify our OWN handles are clean.
+  forceExit: true,
 };
 
 export default config;

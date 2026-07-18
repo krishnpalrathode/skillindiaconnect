@@ -19,6 +19,27 @@ export type ApplicantSort = 'match' | 'recent';
 export interface AdminApplicationCardDto extends ApplicationResponse {
   candidateName: string | null;
   jobTitle: string | null;
+  /** ADMIN CONTEXT ONLY — the most recent corrective-move reason (contract 0.8.1 row). */
+  overrideReason: string | null;
+}
+
+/**
+ * One timeline entry in the ADMIN serialization (contract AdminTimelineEntry,
+ * 0.8.1). Unlike the candidate-facing shaped timeline this carries
+ * `overrideReason` — the reason exists FOR admins and the audit trail, and
+ * this is its only serialization.
+ */
+export interface AdminTimelineEntryDto {
+  fromStatus: ApplicationStatus | null;
+  toStatus: ApplicationStatus;
+  actorRole: string | null;
+  isAdminOverride: boolean;
+  overrideReason: string | null;
+  createdAt: string;
+}
+
+export interface AdminApplicationDetailDto extends AdminApplicationCardDto {
+  timeline: AdminTimelineEntryDto[];
 }
 
 export interface ApplicantCounts {
@@ -209,20 +230,80 @@ export class ApplicationsReadService {
       this.prisma.application.count({ where }),
     ]);
 
-    const [names, jobs] = await Promise.all([
+    const [names, jobs, overrideReasons] = await Promise.all([
       this.candidateRead.getNamesByIds(
         [...new Set(rows.map((a) => a.candidateId).filter((x): x is string => !!x))],
       ),
       this.jobsService.getJobSubsets([...new Set(rows.map((a) => a.jobId))]),
+      this.latestOverrideReasons(rows.map((a) => a.id)),
     ]);
 
     const data = rows.map((a) => ({
       ...toApplicationResponse(a),
       candidateName: a.candidateId ? names.get(a.candidateId) ?? null : null,
       jobTitle: jobs.get(a.jobId)?.title ?? null,
+      overrideReason: overrideReasons.get(a.id) ?? null,
     }));
 
     return { data, meta: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) } };
+  }
+
+  // ── Admin: GET /admin/applications/{id} (0.8.1) ─────────────────────────────
+
+  /**
+   * The Screen 26 detail: the admin row + the FULL timeline, each entry with
+   * its `overrideReason`. This is the record's only surface — the candidate's
+   * shaped timeline deliberately excludes the reason and the employer never
+   * sees a timeline at all.
+   */
+  async getAdminApplicationDetail(applicationId: string): Promise<AdminApplicationDetailDto> {
+    const app = await this.prisma.application.findUnique({ where: { id: applicationId } });
+    if (!app) throw new NotFoundException({ code: 'APPLICATION_NOT_FOUND' });
+
+    const [timeline, names, jobs] = await Promise.all([
+      this.prisma.applicationTimelineEntry.findMany({
+        where: { applicationId },
+        orderBy: { createdAt: 'asc' },
+      }),
+      app.candidateId
+        ? this.candidateRead.getNamesByIds([app.candidateId])
+        : Promise.resolve(new Map<string, string>()),
+      this.jobsService.getJobSubsets([app.jobId]),
+    ]);
+
+    // The row-level reason is DERIVED — the most recent override entry. The
+    // applications table stores no reason column; the timeline is the record.
+    const lastOverride = [...timeline].reverse().find((t) => t.isAdminOverride);
+
+    return {
+      ...toApplicationResponse(app),
+      candidateName: app.candidateId ? names.get(app.candidateId) ?? null : null,
+      jobTitle: jobs.get(app.jobId)?.title ?? null,
+      overrideReason: lastOverride?.overrideReason ?? null,
+      timeline: timeline.map((t) => ({
+        fromStatus: t.fromStatus ?? null,
+        toStatus: t.toStatus,
+        actorRole: t.actorRole ?? null,
+        isAdminOverride: t.isAdminOverride,
+        overrideReason: t.overrideReason ?? null,
+        createdAt: t.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  /** Batched most-recent override reason per application (one query per page). */
+  private async latestOverrideReasons(applicationIds: string[]): Promise<Map<string, string | null>> {
+    if (applicationIds.length === 0) return new Map();
+    const entries = await this.prisma.applicationTimelineEntry.findMany({
+      where: { applicationId: { in: applicationIds }, isAdminOverride: true },
+      orderBy: { createdAt: 'desc' },
+      select: { applicationId: true, overrideReason: true },
+    });
+    const map = new Map<string, string | null>();
+    for (const e of entries) {
+      if (!map.has(e.applicationId)) map.set(e.applicationId, e.overrideReason ?? null);
+    }
+    return map;
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────

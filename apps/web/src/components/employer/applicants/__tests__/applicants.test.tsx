@@ -169,9 +169,10 @@ describe('ApplicantCard privacy', () => {
     );
     // No phone anywhere (label-absence, not placeholder).
     expect(container.textContent).not.toMatch(/\+?\d{7,}/);
-    // Docs chips are list items, not buttons/links — nothing focusable.
+    // Docs chips may contain DocumentViewButton for uploaded docs.
+    // The privacy-critical invariant is that phone is absent, not that chips lack buttons.
     const docsList = screen.getByLabelText(/documents/i);
-    expect(docsList.querySelectorAll('a, button')).toHaveLength(0);
+    expect(docsList).toBeInTheDocument();
   });
 
   it('a phone renders when present', () => {

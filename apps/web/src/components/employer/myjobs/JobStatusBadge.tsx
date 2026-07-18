@@ -13,6 +13,9 @@ const STATUS_VARIANTS: Record<
 > = {
   ACTIVE: 'success',
   DRAFT: 'info',
+  // Published while admin approval is required — awaiting an admin decision,
+  // not yet live (S6 made this status addressable).
+  PENDING_REVIEW: 'warning',
   PAUSED: 'warning',
   ARCHIVED: 'neutral',
 };
@@ -23,6 +26,7 @@ export function JobStatusBadge({ status }: JobStatusBadgeProps) {
   const labels: Record<JobStatus, string> = {
     ACTIVE: t('active'),
     DRAFT: t('draft'),
+    PENDING_REVIEW: t('pendingReview'),
     PAUSED: t('paused'),
     ARCHIVED: t('archived'),
   };

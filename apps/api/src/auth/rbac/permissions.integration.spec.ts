@@ -15,7 +15,6 @@ import {
   Controller,
   ExecutionContext,
   Get,
-  HttpException,
   INestApplication,
   Injectable,
 } from '@nestjs/common';
@@ -203,12 +202,26 @@ describe('PermissionsGuard â€” integration (real Postgres + Redis)', () => 
 
   it('flips to allowed after enabling candidates.view for SUPPORT â€” same role, no relogin', async () => {
     if (dockerUnavailable) return;
-    await permService.setPermission(
-      UserRole.SUPPORT,
-      Permission.CANDIDATES_VIEW,
-      true,
-      'test-actor',
-    );
+    // S6a-B2 removed setPermission(); RbacMatrixService is now the only writer,
+    // and the locked-cell 423 is ITS concern (proven end-to-end over HTTP in
+    // rbac-matrix.integration.spec.ts). What remains 5b's to prove, and is proven
+    // here, is that the GUARD honours an invalidation: change the row, invalidate
+    // the role, and the same role flips with no relogin and no TTL wait.
+
+    // Warm the cache with the DENIED state first — against a cold cache this
+    // would pass for the wrong reason.
+    await permService.getPermissionsForRole(UserRole.SUPPORT);
+
+    await prismaClient.rolePermission.update({
+      where: {
+        role_permissionKey: {
+          role: UserRole.SUPPORT,
+          permissionKey: Permission.CANDIDATES_VIEW,
+        },
+      },
+      data: { enabled: true },
+    });
+    await permService.invalidateRoleCache(UserRole.SUPPORT);
 
     // Same role (same "token") must now succeed â€” proves cache invalidation.
     await supertest(app.getHttpServer())
@@ -216,24 +229,6 @@ describe('PermissionsGuard â€” integration (real Postgres + Redis)', () => 
       .set('x-test-role', UserRole.SUPPORT)
       .expect(200)
       .expect({ ok: true });
-  });
-
-  it('throws 423 PERMISSION_LOCKED when trying to change a locked cell', async () => {
-    if (dockerUnavailable) return;
-    let thrown: unknown;
-    try {
-      await permService.setPermission(
-        UserRole.SUPER_ADMIN,
-        Permission.CANDIDATES_EDIT,
-        false,
-        'test-actor',
-      );
-    } catch (e) {
-      thrown = e;
-    }
-
-    expect(thrown).toBeInstanceOf(HttpException);
-    expect((thrown as HttpException).getStatus()).toBe(423);
   });
 
   it('denies a request with no x-test-role header', async () => {

@@ -20,15 +20,24 @@ const KEY_DEF_MAP: Map<string, AnyKeyDef> = new Map(
 );
 
 /**
- * Permission choices (noted per S2-B1 spec — no dedicated settings.read/settings.write
- * exists in the current 20-key permission matrix; seed pins exactly 20 keys):
+ * Permissions (S6a-F1 — the S2-B1 placeholder is now PAID OFF).
  *
- *   GET  /admin/settings → Permission.LOGS_VIEW  (logs.view)
- *        Enabled for ADMIN, MODERATOR, SUPER_ADMIN. Not SUPPORT.
+ *   GET   /admin/settings → Permission.SETTINGS_VIEW   (settings.view)
+ *   PATCH /admin/settings → Permission.SETTINGS_MANAGE (settings.manage)
  *
- *   PATCH /admin/settings → Permission.LOGS_VIEW  (logs.view)
- *        Same set. SettingsService.set enforces the SUPER_ADMIN gate for core rules.
- *        Replace both with settings.read / settings.write when Screen-27 perms land.
+ * S2-B1 shipped both gated on `logs.view` because no settings key existed in the
+ * 20-key matrix, and left a written instruction to replace them "when Screen-27
+ * perms land". They landed in S6a-B2, and the placeholder had quietly become a
+ * real hole: a MODERATOR holds `logs.view`, so they could not only read but
+ * WRITE platform settings — the auto-archive window, the mandatory-document list,
+ * the completion threshold — purely because they were allowed to look at the
+ * audit log. Two unrelated capabilities behind one key is exactly how that
+ * happens, and it is why read and write now have separate keys.
+ *
+ * Seeded: SUPER_ADMIN both (locked on); ADMIN both; MODERATOR and SUPPORT
+ * neither. Core rules (worker-protection toggles) stay SUPER_ADMIN-gated inside
+ * SettingsService.set regardless — that check is independent and unchanged, so
+ * even an ADMIN with settings.manage cannot flip a core rule.
  *
  * Batch atomicity: validate-all-first. Every entry is checked (type + core-rule gate)
  * before any write is applied. A single failure rejects the whole batch with no side effects.
@@ -41,14 +50,14 @@ export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 
   @Get()
-  @RequirePermissions(Permission.LOGS_VIEW)
+  @RequirePermissions(Permission.SETTINGS_VIEW)
   async getAll(): Promise<{ data: Setting[] }> {
     const data = await this.settingsService.getAll();
     return { data };
   }
 
   @Patch()
-  @RequirePermissions(Permission.LOGS_VIEW)
+  @RequirePermissions(Permission.SETTINGS_MANAGE)
   async batchUpdate(
     @Body() dto: UpdateSettingsDto,
     @CurrentUser() actor: CurrentUserPayload,

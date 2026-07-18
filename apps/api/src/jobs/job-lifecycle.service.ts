@@ -15,8 +15,9 @@ export type JobData = Job;
  *
  * DRAFT          → PENDING_REVIEW (when approval setting is ON at publish)
  * DRAFT          → ACTIVE         (when approval setting is OFF at publish)
- * PENDING_REVIEW → ACTIVE         (admin approve — S6; entry via publish, resolution via S6)
- * PENDING_REVIEW → ARCHIVED       (admin reject — S6)
+ * PENDING_REVIEW → ACTIVE         (admin approve — S6b-B2, after RE-RUNNING the publish gates)
+ * PENDING_REVIEW → DRAFT          (admin reject — S6b-B2; the employer fixes and resubmits)
+ * PENDING_REVIEW → ARCHIVED       (admin hard-stop on a job that will never run)
  * ACTIVE         ↔ PAUSED
  * ACTIVE/PAUSED  → ARCHIVED
  *
@@ -25,7 +26,7 @@ export type JobData = Job;
  */
 const LEGAL_TRANSITIONS: Partial<Record<JobStatus, JobStatus[]>> = {
   [JobStatus.DRAFT]: [JobStatus.PENDING_REVIEW, JobStatus.ACTIVE],
-  [JobStatus.PENDING_REVIEW]: [JobStatus.ACTIVE, JobStatus.ARCHIVED],
+  [JobStatus.PENDING_REVIEW]: [JobStatus.ACTIVE, JobStatus.DRAFT, JobStatus.ARCHIVED],
   [JobStatus.ACTIVE]: [JobStatus.PAUSED, JobStatus.ARCHIVED],
   [JobStatus.PAUSED]: [JobStatus.ACTIVE, JobStatus.ARCHIVED],
 };
@@ -51,7 +52,9 @@ export class JobLifecycleService {
   async pause(
     jobId: string,
     companyId: string,
-    actorUserId: string,
+    // undefined = system action (e.g. the S5-B3 subscription-expiry cascade);
+    // the audit row then carries only the role.
+    actorUserId: string | undefined,
     actorRole: UserRole,
     reason?: string,
   ): Promise<JobData> {

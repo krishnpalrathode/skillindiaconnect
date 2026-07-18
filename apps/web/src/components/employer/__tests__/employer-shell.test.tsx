@@ -17,7 +17,7 @@ import { EmployerProvider } from '../../../lib/employer/employer-context';
 import { CompanyStateBanner } from '../CompanyStateBanner';
 import { EmployerSidebar } from '../EmployerSidebar';
 import { PlanStatusWidget } from '../PlanStatusWidget';
-import { getSubscription } from '@/lib/api/employer';
+import { EMPLOYER_PRO_USER_ID, EMPLOYER_GRACE_USER_ID } from '../../../mocks/data';
 
 // ─── Mock next navigation ─────────────────────────────────────────────────────
 
@@ -27,16 +27,8 @@ vi.mock('next/navigation', () => ({
   useParams: () => ({ locale: 'en' }),
 }));
 
-// ─── Partial mock of employer API — only getSubscription is mocked ────────────
-// getCompany and others remain real (MSW-intercepted) so sidebar/context tests
-// continue to exercise the full stack.
-
-vi.mock('@/lib/api/employer', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('@/lib/api/employer')>();
-  // Default: 501 stub (Sprint 5 not implemented). PlanStatusWidget catches this and
-  // shows the Free Plan fallback. Individual tests can override with vi.mocked().
-  return { ...mod, getSubscription: vi.fn().mockRejectedValue(new Error('stub: 501')) };
-});
+// PlanStatusWidget now uses getSubscriptionStatus (billing.ts → MSW /billing/subscription).
+// No module mock needed — the MSW handler is already live.
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -139,43 +131,46 @@ describe('EmployerSidebar — Post a Job approval gate', () => {
   });
 });
 
-// ─── PlanStatusWidget — free plan fallback ────────────────────────────────────
+// ─── PlanStatusWidget — live subscription states (MSW) ───────────────────────
 
 describe('PlanStatusWidget', () => {
-  it('shows free plan UI when billing endpoint returns 501', async () => {
-    vi.mocked(getSubscription).mockRejectedValue(new Error('501 Not Implemented'));
-
+  it('Free employer shows free plan UI + upgrade link', async () => {
+    loginAsEmployer(EMPLOYER_APPROVED_USER_ID);
     render(
       <NextIntlClientProvider locale="en" messages={enMessages}>
         <PlanStatusWidget />
       </NextIntlClientProvider>,
     );
-
     await waitFor(() => {
       expect(screen.getByText(/free plan/i)).toBeInTheDocument();
-      // Use role query to avoid matching "Upgrade for more active jobs" hint text
       expect(screen.getByRole('link', { name: /upgrade/i })).toBeInTheDocument();
     });
   });
 
-  it('shows days-left when subscription has expiresAt', async () => {
-    const futureDate = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
-    vi.mocked(getSubscription).mockResolvedValue({
-      planName: 'Pro Plan',
-      planKey: 'PRO',
-      expiresAt: futureDate,
-      activeJobsLimit: 10,
-    });
-
+  it('Pro employer shows plan name and days remaining', async () => {
+    loginAsEmployer(EMPLOYER_PRO_USER_ID);
     render(
       <NextIntlClientProvider locale="en" messages={enMessages}>
         <PlanStatusWidget />
       </NextIntlClientProvider>,
     );
-
     await waitFor(() => {
-      expect(screen.getByText(/pro plan/i)).toBeInTheDocument();
+      expect(screen.getByText(/pro monthly/i)).toBeInTheDocument();
       expect(screen.getByText(/days? left/i)).toBeInTheDocument();
+    });
+  });
+
+  it('Grace employer shows grace label + renew link', async () => {
+    loginAsEmployer(EMPLOYER_GRACE_USER_ID);
+    render(
+      <NextIntlClientProvider locale="en" messages={enMessages}>
+        <PlanStatusWidget />
+      </NextIntlClientProvider>,
+    );
+    await waitFor(() => {
+      // Widget shows "Pro Monthly (Grace)" AND "Grace ends in…", both matching /grace/
+      expect(screen.getAllByText(/grace/i).length).toBeGreaterThan(0);
+      expect(screen.getByRole('link', { name: /renew now/i })).toBeInTheDocument();
     });
   });
 });

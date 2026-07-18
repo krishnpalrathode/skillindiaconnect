@@ -23,7 +23,7 @@
       "sourceRoot": "src",
       "compilerOptions": {
         "tsConfigPath": "tsconfig.build.json",
-        "outDir": "dist"
+        "outDir": "dist-worker"
       }
     }
   }

@@ -6,12 +6,11 @@ import { AuditModule } from './audit/audit.module';
 import { NotificationWorkerModule } from './notifications/notification.worker-module';
 import { JobsWorkerModule } from './jobs/jobs.worker-module';
 import { CandidateWorkerModule } from './candidate/candidate.worker-module';
+import { PaymentsWorkerModule } from './payments/payments.worker-module';
+import { ResumeWorkerModule } from './resume/resume.worker-module';
 
 // Loads: CoreModule (config + Redis) + ScheduleModule (cron runner).
 // Must NOT import AppApiModule or any HTTP controllers.
-// BullMQ queues and @Cron handlers are added in later sprints.
-// Must NOT import AppApiModule or any HTTP controllers.
-// BullMQ queues and @Cron handlers are added in later sprints.
 @Module({
   imports: [
     CoreModule,
@@ -21,6 +20,10 @@ import { CandidateWorkerModule } from './candidate/candidate.worker-module';
     NotificationWorkerModule,
     JobsWorkerModule,
     CandidateWorkerModule,
+    PaymentsWorkerModule,
+    // S7-B1: Puppeteer renders (resume). Chromium lives HERE and only here —
+    // AppApiModule must never import ResumeWorkerModule or PdfModule.
+    ResumeWorkerModule,
   ],
 })
 export class AppWorkerModule {}

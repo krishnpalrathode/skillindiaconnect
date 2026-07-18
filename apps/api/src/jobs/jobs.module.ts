@@ -3,11 +3,15 @@ import { EmployerModule } from '../employer/employer.module';
 import { SettingsModule } from '../settings/settings.module';
 import { QueueModule } from '../queue/queue.module';
 import { ApplicationsModule } from '../applications/applications.module';
+import { SubscriptionReadModule } from '../payments/subscription-read.module';
+import { NotificationModule } from '../notifications/notification.module';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
 import { JobLifecycleService } from './job-lifecycle.service';
 import { PublishGuardService } from './publish-guard.service';
 import { JobsSubscriber } from './jobs.subscriber';
+import { AdminJobsController } from './admin-jobs.controller';
+import { AdminJobsService } from './admin-jobs.service';
 
 /**
  * API-process side of the Jobs module.
@@ -33,13 +37,16 @@ import { JobsSubscriber } from './jobs.subscriber';
     SettingsModule,   // SettingsService: protection rules, auto-archive days, quota settings
     QueueModule,      // BullMQ: auto-archive queue registration (producer side)
     forwardRef(() => ApplicationsModule), // ApplicationsAggregateService: live My-Jobs applicant counts (S4-B3)
+    SubscriptionReadModule, // effectivePlan(): the publish-quota plan truth (S5-B3)
+    NotificationModule, // S6b-B2: moderation outcomes notify the employer (matrix rows)
   ],
-  controllers: [JobsController],
+  controllers: [JobsController, AdminJobsController],
   providers: [
     JobsService,
     JobLifecycleService,
     PublishGuardService,
     JobsSubscriber,
+    AdminJobsService, // S6b-B2: Screen 26's data layer — reuses guard + lifecycle
   ],
   exports: [JobsService],
 })

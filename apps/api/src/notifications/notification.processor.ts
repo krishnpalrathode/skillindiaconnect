@@ -10,6 +10,7 @@ import { WHATSAPP_CHANNEL, WhatsappChannel } from './channels/whatsapp.channel';
 import { EMAIL_CHANNEL, EmailChannel } from './channels/email.channel';
 import { NOTIFICATION_MATRIX } from './notification.matrix';
 import { NotificationJobData, NotifyPayload } from './notification.types';
+import { isWhatsappDeliverable } from './whatsapp-deliverability';
 
 @Processor(QUEUE_NAMES.NOTIFICATION)
 export class NotificationProcessor extends WorkerHost {
@@ -59,8 +60,9 @@ export class NotificationProcessor extends WorkerHost {
 
     // ── Downgrade: user not WhatsApp-capable or has opted out ─────────────────
     // Distinct from the failure-fallback path (tried to send but failed).
-    const isCapable = profile?.whatsappCapable && profile?.phone && profile?.waNotifications !== false;
-    if (!isCapable) {
+    // The predicate is SHARED with the API (S7-B2 resume send reads it to state
+    // the real channel in its 202) — one definition, no drift.
+    if (!isWhatsappDeliverable(profile)) {
       if (profile?.phone) {
         // Record the downgrade attempt (phone present but not capable/opted-out)
         await this.prisma.whatsappMessage.create({

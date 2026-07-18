@@ -1,4 +1,75 @@
 {
+  "resume": {
+    "downloadPdf": "Download PDF",
+    "regenerate": "Regenerate",
+    "regeneratePrompt": "You changed your resume settings — regenerate your resume to apply them to the downloaded PDF.",
+    "settings": {
+      "title": "Resume settings",
+      "showPhone": "Show phone number on your resume",
+      "showFatherName": "Show father's name on your resume",
+      "showReligion": "Show religion on your resume",
+      "showPassportNumber": "Show passport number on your resume",
+      "religionNote": "Off by default — your resume may be shared widely.",
+      "passportNote": "Off by default — your resume may be shared widely.",
+      "language": "Resume language",
+      "languageEnglish": "English",
+      "languageComingSoon": "More languages coming soon.",
+      "saveError": "Couldn't save that change. Please try again."
+    },
+    "delivery": {
+      "title": "Send your resume",
+      "whatsappButton": "Send to WhatsApp",
+      "emailButton": "Email to myself",
+      "waSent": "Sent to your WhatsApp — forward it to any employer.",
+      "emailFallback": "You can't receive WhatsApp, so we emailed your resume to you instead.",
+      "emailed": "Emailed to you.",
+      "notReady": "Generate your resume first, then send it.",
+      "limit": "You've reached today's limit (5 sends). Try again tomorrow.",
+      "error": "Something went wrong. Please try again."
+    },
+    "loading": "Loading your resume…",
+    "completionTitle": "Profile completion",
+    "previewUnavailable": "Preview is unavailable right now.",
+    "regenerateHint": "Changing your resume settings updates the preview below. Regenerate to apply them to your downloaded PDF.",
+    "preview": {
+      "ariaLabel": "Resume preview",
+      "previewLabel": "Preview — download the PDF for the final document.",
+      "unnamed": "Your name",
+      "fatherName": "Father's name",
+      "dob": "Date of birth",
+      "maritalStatus": "Marital status",
+      "nationality": "Nationality",
+      "currentLocation": "Current location",
+      "religion": "Religion",
+      "passportNumber": "Passport number",
+      "languages": "Languages",
+      "experience": "Work experience",
+      "noExperience": "No work experience added yet.",
+      "years": "{years}y {months}m",
+      "skills": "Skills",
+      "noSkills": "No skills added yet.",
+      "documents": "Documents",
+      "passportValid": "Valid",
+      "passportExpired": "Expired",
+      "docType": {
+        "PASSPORT": "Passport",
+        "EXPERIENCE_CERT": "Experience certificate",
+        "EDUCATIONAL_CERT": "Educational certificate"
+      }
+    },
+    "status": {
+      "generatingTitle": "Generating your resume…",
+      "generatingBody": "This takes a few seconds. Please keep this page open.",
+      "readyTitle": "Your resume is ready",
+      "readyBody": "Your PDF has been downloaded. You can download it again below.",
+      "downloadAgain": "Download again",
+      "failedTitle": "Couldn't generate your resume",
+      "failedBody": "Something went wrong while creating your PDF. Please try again.",
+      "retry": "Try again",
+      "timeoutTitle": "Taking longer than expected",
+      "timeoutBody": "Your resume is still being prepared. Please try again in a moment."
+    }
+  },
   "common": {
     "continue": "Continue",
     "back": "Back",
@@ -391,10 +462,13 @@
     "plan": {
       "freePlan": "Free Plan",
       "proPlan": "Pro Plan",
+      "gracePlan": "{plan} (Grace)",
       "freeHint": "Upgrade for more active jobs",
       "daysLeft": "{count, plural, one {# day left} other {# days left}}",
+      "graceDaysLeft": "{count, plural, one {Grace ends in # day} other {Grace ends in # days}}",
       "upgrade": "Upgrade plan",
-      "manage": "Manage Subscription"
+      "manage": "Manage Subscription",
+      "renewNow": "Renew now"
     },
     "shell": {
       "loadingCompany": "Loading company…",
@@ -1041,7 +1115,8 @@
       "active": "Active",
       "draft": "Draft",
       "paused": "Paused",
-      "archived": "Archived"
+      "archived": "Archived",
+      "pendingReview": "Pending review"
     },
     "actions": {
       "groupLabel": "Actions for {title}",
@@ -1265,6 +1340,959 @@
     "toast": {
       "staleRefresh": "This application's status changed — refreshing.",
       "error": "Something went wrong. Please try again."
+    }
+  },
+  "admin": {
+    "brand": "Admin Console",
+    "logout": "Log out",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "permissionsLoadFailed": "Couldn't load your permissions, so the console can't be shown safely.",
+    "roleBadgeLabel": "Signed in as {role}",
+    "placeholder": "This screen is built in {unit}. The route and its permission check are live — the screen itself is next.",
+    "nav": {
+      "ariaLabel": "Admin navigation",
+      "toggle": "Toggle navigation",
+      "dashboard": "Dashboard",
+      "employers": "Employers",
+      "candidates": "Candidates",
+      "jobs": "Jobs",
+      "applications": "Applications",
+      "logs": "Audit log",
+      "roles": "Roles & permissions",
+      "settings": "Settings"
+    },
+    "guard": {
+      "checking": "Checking access…",
+      "notAuthorizedTitle": "This area is for administrators",
+      "notAuthorizedBody": "You're signed in, but your account doesn't have access to the admin console. You haven't been signed out — this just isn't your area of the app.",
+      "backHome": "Go back to your dashboard"
+    },
+    "forbidden": {
+      "title": "You don't have permission for this",
+      "body": "Your role doesn't include access to this screen. If you think it should, ask a Super Admin to grant it in Roles & permissions.",
+      "requires": "Requires",
+      "retry": "Try again"
+    },
+    "candidates": {
+      "title": "Candidate management",
+      "subtitle": "Search, review and moderate candidate accounts. Purged accounts remain listed as records.",
+      "statusFilterLabel": "Filter by account state",
+      "statusTab": {
+        "ALL": "All",
+        "ACTIVE": "Active",
+        "SUSPENDED": "Suspended",
+        "PENDING_DELETION": "Pending deletion"
+      },
+      "visibilityFilterLabel": "Visibility",
+      "visibilityAll": "All",
+      "visibilityVisible": "Visible to employers",
+      "visibilityHidden": "Hidden from employers",
+      "searchLabel": "Search candidates by name, phone or email",
+      "searchPlaceholder": "Name, phone or email…",
+      "searchButton": "Search",
+      "loadFailed": "Couldn't load candidates.",
+      "retry": "Try again",
+      "tableCaption": "Candidate accounts with status and actions",
+      "col": {
+        "candidate": "Candidate",
+        "phone": "Phone",
+        "completion": "Completion",
+        "visibility": "Visibility",
+        "status": "Status",
+        "memberSince": "Member since",
+        "actions": "Actions"
+      },
+      "visible": "Visible",
+      "hidden": "Hidden",
+      "autoPurgesIn": "Auto-purges in {days} days",
+      "detail": "View",
+      "detailAria": "View candidate {name}",
+      "empty": {
+        "ALL": "No candidates yet.",
+        "ACTIVE": "No active candidates match.",
+        "SUSPENDED": "No suspended candidates.",
+        "PENDING_DELETION": "No candidates are pending deletion."
+      },
+      "paginationLabel": "Candidate pages",
+      "prevPage": "Previous",
+      "nextPage": "Next",
+      "pageOf": "Page {page} of {total}",
+      "state": {
+        "ACTIVE": "Active",
+        "SUSPENDED": "Suspended",
+        "PENDING_DELETION": "Pending deletion",
+        "PURGED": "Purged"
+      },
+      "deletionState": {
+        "pendingTitle": "This candidate requested deletion — auto-purges in {days} days",
+        "pendingBody": "Their data will be permanently destroyed on {date} unless the request is withdrawn.",
+        "purgedTitle": "This account was purged on {date}",
+        "purgedBody": "Personal data has been permanently destroyed. Their applications remain as anonymous records."
+      },
+      "profile": {
+        "backToList": "All candidates",
+        "loadFailed": "Couldn't load this candidate.",
+        "retry": "Try again",
+        "actionFailed": "Something went wrong. Try again.",
+        "purgeStarted": "Purge started — this account's data is being destroyed.",
+        "visibleToEmployers": "Visible to employers",
+        "hiddenFromEmployers": "Hidden from employers",
+        "memberSince": "Member since {date}",
+        "suspend": "Suspend account",
+        "reactivate": "Reactivate account",
+        "contactHeading": "Contact",
+        "phone": "Phone",
+        "email": "Email",
+        "adminViewNote": "Admin view — you can see contact details this candidate has hidden from employers. Document access is logged.",
+        "profileHeading": "Profile",
+        "completion": "Profile completion",
+        "applications": "Applications",
+        "skills": "Skills",
+        "experienceHeading": "Work experience",
+        "experienceNone": "No work experience added.",
+        "experiencePurged": "Experience records were destroyed when this account was purged.",
+        "experienceYears": "{years}y {months}m",
+        "dangerZoneHeading": "Danger zone — permanently erase this person's data",
+        "dangerZoneBody": "Purging anonymizes this account and destroys all personal data and documents. It cannot be undone.",
+        "purgeButton": "Purge this account…"
+      },
+      "documents": {
+        "heading": "Documents",
+        "viewsLogged": "Document views are logged.",
+        "emptyNone": "No documents uploaded.",
+        "emptyPurged": "Documents were destroyed when this account was purged.",
+        "type": {
+          "PASSPORT": "Passport",
+          "EXPERIENCE_CERT": "Experience certificate",
+          "EDUCATIONAL_CERT": "Educational certificate",
+          "WORKING_VIDEO": "Working video"
+        },
+        "passportValid": "Valid",
+        "passportExpired": "Expired",
+        "view": "View",
+        "viewAria": "View {type} (opens in a new tab; access is logged)",
+        "refreshLink": "Refresh link"
+      },
+      "suspendDialog": {
+        "title": "Suspend {name}?",
+        "consequence": "This candidate will be unable to log in and will not appear to employers until reactivated.",
+        "reasonLabel": "Reason for suspension",
+        "reasonPlaceholder": "e.g. Multiple employers reported forged experience certificates.",
+        "reasonRequired": "A reason is required — it goes into the audit trail.",
+        "confirm": "Suspend account",
+        "cancel": "Cancel"
+      },
+      "purgeDialog": {
+        "title": "Permanently purge {name}?",
+        "destroysTitle": "This permanently destroys:",
+        "destroysBody": "Name, phone, email, date of birth, photo, work history, and all uploaded documents (passport, certificates). Files are removed from storage.",
+        "survivesTitle": "What remains:",
+        "survivesBody": "Their applications remain as anonymous records, so employers keep their hiring history. The audit log records that this account existed and was purged.",
+        "irreversible": "This cannot be undone.",
+        "reasonLabel": "Reason for purging",
+        "reasonPlaceholder": "e.g. Data-erasure request verified via support ticket #1234.",
+        "typeToConfirmLabel": "Type the candidate's full name to confirm",
+        "typeToConfirmHint": "Type exactly: {name}",
+        "requirements": "Purge stays disabled until you type the candidate's full name exactly and give a reason.",
+        "confirm": "Purge permanently",
+        "cancel": "Cancel"
+      }
+    },
+    "employers": {
+      "title": "Employer management",
+      "statusFilterLabel": "Filter by status",
+      "statusTab": {
+        "PENDING": "Pending review",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "SUSPENDED": "Suspended",
+        "ALL": "All"
+      },
+      "status": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "SUSPENDED": "Suspended"
+      },
+      "type": {
+        "LOCAL": "Local",
+        "FOREIGN": "Foreign"
+      },
+      "typeFilterLabel": "Type",
+      "typeAll": "All types",
+      "typeLocal": "Local",
+      "typeForeign": "Foreign",
+      "searchLabel": "Search companies",
+      "searchPlaceholder": "Search by company name…",
+      "searchButton": "Search",
+      "tableCaption": "Employer companies awaiting or past review",
+      "col": {
+        "company": "Company",
+        "type": "Type",
+        "registrationNumber": "Registration no.",
+        "submitted": "Submitted",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "review": "Review",
+      "reviewAria": "Review {name}",
+      "empty": {
+        "PENDING": "No employers waiting for review — the queue is clear.",
+        "APPROVED": "No approved employers match these filters.",
+        "REJECTED": "No rejected employers match these filters.",
+        "SUSPENDED": "No suspended employers.",
+        "ALL": "No employers match these filters."
+      },
+      "paginationLabel": "Employer list pages",
+      "prevPage": "Previous",
+      "nextPage": "Next",
+      "pageOf": "Page {page} of {total}",
+      "loadFailed": "Couldn't load employers.",
+      "notFound": "This company doesn't exist (it may have been removed).",
+      "retry": "Try again",
+      "actionFailed": "The action failed. Please try again.",
+      "backToQueue": "Back to employer queue",
+      "factsHeading": "Company details",
+      "fact": {
+        "registrationNumber": "Registration number",
+        "type": "Type",
+        "industry": "Industry",
+        "phone": "Phone",
+        "location": "Location",
+        "employeeRange": "Company size",
+        "website": "Website",
+        "submitted": "Submitted",
+        "description": "Description"
+      },
+      "rejectionReasonLabel": "Rejection reason (visible to the employer)",
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "suspend": "Suspend",
+        "reactivate": "Reactivate"
+      },
+      "toast": {
+        "approved": "Company approved. They can now post jobs.",
+        "rejected": "Company rejected. The reason has been shared with them.",
+        "suspended": "Company suspended. All their active jobs are now paused.",
+        "reactivated": "Company reactivated. Their jobs remain paused until they resume them."
+      },
+      "certificate": {
+        "heading": "Registration certificate",
+        "openInNewTab": "Open in new tab",
+        "imageAlt": "The company's registration certificate document",
+        "iframeTitle": "Registration certificate document",
+        "noneTitle": "No certificate uploaded",
+        "noneBody": "This company hasn't uploaded a registration certificate. You can still approve or reject — but you'd be doing it without the document.",
+        "expiredOrFailed": "The document link expired or failed to load. Links are short-lived by design — get a fresh one.",
+        "refreshLink": "Refresh link"
+      },
+      "approveDialog": {
+        "title": "Approve {name}?",
+        "body": "The company will be able to post jobs to candidates the moment you approve.",
+        "confirm": "Approve company",
+        "cancel": "Cancel"
+      },
+      "rejectDialog": {
+        "title": "Reject {name}?",
+        "visibility": "This reason is shown to the employer on their dashboard and emailed to them. Write it for a person to read.",
+        "reasonLabel": "Reason for rejection",
+        "reasonPlaceholder": "e.g. The registration certificate doesn't match the company name. Please re-upload a certificate in the registered name.",
+        "reasonRequired": "A reason is required — the employer needs to know what to fix.",
+        "confirm": "Reject company",
+        "cancel": "Cancel"
+      },
+      "suspendDialog": {
+        "title": "Suspend {name}?",
+        "consequence": "This will pause ALL of this employer's active jobs immediately. Candidates will no longer see them.",
+        "consequenceWithCount": "This will pause all {count} of this employer's active jobs immediately. Candidates will no longer see them.",
+        "body": "The employer keeps access to their account but cannot publish until reactivated.",
+        "confirm": "Suspend company",
+        "cancel": "Cancel"
+      },
+      "reactivateDialog": {
+        "title": "Reactivate {name}?",
+        "body": "The company returns to Approved and can publish again.",
+        "jobsStayPaused": "Their previously paused jobs stay paused — the employer resumes each one manually.",
+        "confirm": "Reactivate company",
+        "cancel": "Cancel"
+      }
+    },
+    "settings": {
+      "title": "Platform settings",
+      "tabsLabel": "Setting groups",
+      "groups": {
+        "worker_protection": "Worker protection",
+        "jobs": "Jobs",
+        "candidates": "Candidates",
+        "payments": "Payments",
+        "other": "Other"
+      },
+      "save": "Save",
+      "discard": "Discard",
+      "saved": "Saved.",
+      "saveFailed": "Couldn't save this setting.",
+      "loadFailed": "Couldn't load settings.",
+      "retry": "Try again",
+      "addItem": "Add",
+      "addItemLabel": "Add an item",
+      "addItemPlaceholder": "Add item…",
+      "removeItemAria": "Remove {item}",
+      "coreRule": {
+        "superAdminOnly": "Super Admin only",
+        "forbidden": "Only a Super Admin can change worker-protection rules. Your change was not saved.",
+        "confirmTitle": "Turn off \"{label}\"?",
+        "weakensProtection": "This weakens worker protection on the platform.",
+        "effectImmediate": "This takes effect immediately: the next job publish attempt is checked against the new rule.",
+        "confirmButton": "Turn it off",
+        "cancelButton": "Keep it on"
+      },
+      "keys": {
+        "worker_protection": {
+          "accommodation_required": {
+            "label": "Require accommodation",
+            "description": "A job cannot publish unless it guarantees worker accommodation.",
+            "offConsequence": "Jobs will be publishable without guaranteed accommodation."
+          },
+          "health_insurance_required": {
+            "label": "Require health insurance",
+            "description": "A job cannot publish unless it guarantees health insurance.",
+            "offConsequence": "Jobs will be publishable without guaranteed health insurance."
+          },
+          "transportation_required": {
+            "label": "Require transportation",
+            "description": "A job cannot publish unless it guarantees worker transportation.",
+            "offConsequence": "Jobs will be publishable without guaranteed transportation."
+          }
+        },
+        "jobs": {
+          "auto_archive_days": {
+            "label": "Auto-archive after (days)",
+            "description": "Active jobs are automatically archived after this many days."
+          },
+          "require_admin_approval": {
+            "label": "Require admin approval for jobs",
+            "description": "New jobs enter a review queue instead of publishing directly."
+          },
+          "free_max_active_jobs": {
+            "label": "Free plan active job limit",
+            "description": "Maximum simultaneous active jobs for Free plan employers."
+          },
+          "allow_local": {
+            "label": "Allow local (India) jobs",
+            "description": "Employers may post jobs located in India."
+          },
+          "allow_foreign": {
+            "label": "Allow foreign (Gulf) jobs",
+            "description": "Employers may post jobs located abroad."
+          }
+        },
+        "candidates": {
+          "mandatory_documents": {
+            "label": "Mandatory documents",
+            "description": "Documents a candidate must upload before they can apply."
+          },
+          "min_completion_pct": {
+            "label": "Apply gate threshold (%)",
+            "description": "Minimum profile completion percentage required to apply."
+          },
+          "video_max_minutes": {
+            "label": "Intro video max length (minutes)",
+            "description": "Upper limit on candidate introduction video duration."
+          },
+          "video_max_mb": {
+            "label": "Intro video max size (MB)",
+            "description": "Upper limit on candidate introduction video file size."
+          }
+        },
+        "payments": {
+          "gst_rate_pct": {
+            "label": "GST rate (%)",
+            "description": "GST applied to local (India) checkout totals."
+          },
+          "stripe_enabled": {
+            "label": "Stripe for foreign checkout",
+            "description": "Route foreign-company checkout through Stripe instead of Razorpay International."
+          }
+        }
+      }
+    },
+    "logs": {
+      "title": "Audit log",
+      "subtitle": "Every consequential action on the platform, newest first. Append-only — nothing here is ever deleted.",
+      "moduleFilterLabel": "Filter by module",
+      "allModules": "All modules",
+      "modules": {
+        "Auth": "Auth",
+        "Admin": "Admin actions",
+        "Candidate": "Candidate",
+        "Employer": "Employer",
+        "Jobs": "Jobs",
+        "Applications": "Applications",
+        "Payments": "Payments",
+        "Notifications": "Notifications",
+        "Errors": "Errors",
+        "System": "System",
+        "Settings": "Settings"
+      },
+      "statusLabel": "Status",
+      "anyStatus": "Any status",
+      "actorLabel": "Actor ID",
+      "actorPlaceholder": "User ID of who acted…",
+      "targetLabel": "Target ID",
+      "targetPlaceholder": "Affected record ID…",
+      "searchLabel": "Search",
+      "searchPlaceholder": "Action or target…",
+      "fromLabel": "From",
+      "toLabel": "To",
+      "applyFilters": "Apply",
+      "defaultWindowNote": "Showing the last {days} days. Set a date range to search further back — older events exist, they just aren't loaded by default.",
+      "tableCaption": "Audit log entries, newest first",
+      "col": {
+        "expand": "Details",
+        "time": "Time",
+        "module": "Module",
+        "action": "Action",
+        "actor": "Actor",
+        "target": "Target",
+        "status": "Status"
+      },
+      "toggleMetaAria": "Show details for {action}",
+      "systemActor": "system",
+      "metaLabel": "Event details (sensitive fields removed at write time)",
+      "metaEmpty": "No additional details recorded for this event.",
+      "loadMore": "Load more",
+      "endOfResults": "End of results.",
+      "empty": "No events match these filters.",
+      "loadFailed": "Couldn't load the audit log.",
+      "retry": "Try again",
+      "export": {
+        "button": "Export these {count}+ results (current filters)",
+        "selfAuditNote": "Exports are themselves recorded in this log.",
+        "tooLarge": "Too many rows for one export — narrow the date range or add filters.",
+        "tooLargeWithCaps": "Too many rows for one export (limit: {maxRows} rows or {maxRangeDays} days) — narrow the date range or add filters.",
+        "failed": "The export failed. Please try again."
+      }
+    },
+    "roles": {
+      "title": "Roles & permissions",
+      "subtitle": "What each admin role may do. Changes apply immediately to everyone holding the role.",
+      "tableCaption": "Permission matrix: roles as columns, permissions as rows",
+      "permissionColumn": "Permission",
+      "readOnlyNote": "You can view this matrix but not change it — only a Super Admin can manage roles.",
+      "loadFailed": "Couldn't load the permission matrix.",
+      "retry": "Try again",
+      "cell": {
+        "allowed": "allowed",
+        "notAllowed": "not allowed",
+        "lockedReason": "Locked — Super Admin permissions and platform-critical grants can't be changed here.",
+        "toggleHint": "activate to change"
+      },
+      "groups": {
+        "candidates": "Candidates",
+        "employers": "Employers",
+        "jobs": "Jobs",
+        "applications": "Applications",
+        "reports": "Reports",
+        "logs": "Logs",
+        "billing": "Billing",
+        "subscriptions": "Subscriptions",
+        "admin_users": "Admin users",
+        "roles": "Roles",
+        "settings": "Settings"
+      },
+      "permissions": {
+        "candidates::view": "view candidates",
+        "candidates::edit": "edit candidates (incl. suspend/reactivate)",
+        "candidates::delete": "permanently delete a candidate",
+        "candidates::onboard_manual": "manually onboard candidates",
+        "candidates::export": "export candidate lists",
+        "candidates::view_documents": "view candidate documents (passports)",
+        "employers::view": "view employer companies",
+        "employers::approve_reject": "approve or reject employers",
+        "employers::suspend": "suspend employers",
+        "employers::delete": "delete employer companies",
+        "jobs::view": "view all jobs",
+        "jobs::post_admin": "post jobs on an employer's behalf",
+        "jobs::archive": "archive jobs",
+        "jobs::moderate": "approve or reject job postings",
+        "applications::manage": "view and manage applications",
+        "applications::change_status": "change application status",
+        "applications::notes": "read and write internal notes",
+        "reports::view": "view dashboards and reports",
+        "logs::view": "read the audit log",
+        "logs::export": "export the audit log",
+        "billing::manage": "manage billing",
+        "subscriptions::manage": "manage subscriptions",
+        "admin_users::manage": "manage admin users",
+        "roles::view": "view this permission matrix",
+        "roles::manage": "change role permissions",
+        "settings::view": "view platform settings",
+        "settings::manage": "change platform settings"
+      },
+      "confirm": {
+        "grantTitle": "Allow {role} to {permission}?",
+        "revokeTitle": "Remove {role}'s ability to {permission}?",
+        "revokeBody": "Everyone with the {role} role loses this ability the moment you confirm.",
+        "immediateEffect": "This takes effect immediately for all users with the {role} role — their very next request is checked against the new grant.",
+        "grantConfirm": "Allow it",
+        "revokeConfirm": "Remove it",
+        "cancel": "Cancel"
+      },
+      "errors": {
+        "locked": "This permission can't be changed — it's locked to keep the platform administrable.",
+        "selfLockout": "You can't remove your own ability to manage roles — that's the guardrail working, not an error.",
+        "lastManager": "At least one role must keep the ability to manage roles, and this is the last one.",
+        "generic": "The change failed. The matrix has been reloaded."
+      }
+    },
+    "jobs": {
+      "title": "Jobs",
+      "subtitle": "Every job on the platform — including drafts and the review queue no public list shows.",
+      "postOnBehalf": "Post a job for an employer",
+      "queue": {
+        "waiting": "{count, plural, one {# job awaiting review} other {# jobs awaiting review}}",
+        "waitingAria": "{count, plural, one {# job awaiting review} other {# jobs awaiting review}} — show the queue",
+        "empty": "No jobs awaiting review",
+        "emptyAria": "No jobs awaiting review",
+        "showQueue": "Show the review queue"
+      },
+      "table": {
+        "statusFilterLabel": "Filter by job status",
+        "statusTab": {
+          "ALL": "All",
+          "PENDING_REVIEW": "Awaiting review",
+          "ACTIVE": "Active",
+          "PAUSED": "Paused",
+          "DRAFT": "Drafts",
+          "ARCHIVED": "Archived"
+        },
+        "flagFilterLabel": "Flags",
+        "flagAny": "Any",
+        "flagFeatured": "Featured only",
+        "flagUrgent": "Urgent only",
+        "searchLabel": "Search jobs",
+        "searchPlaceholder": "Search title or company…",
+        "searchButton": "Search",
+        "clearEmployerFilter": "Clear employer filter",
+        "loadFailed": "Couldn't load jobs.",
+        "retry": "Try again",
+        "empty": {
+          "ALL": "No jobs found.",
+          "PENDING_REVIEW": "The review queue is empty — nothing is waiting for a decision.",
+          "ACTIVE": "No active jobs match.",
+          "PAUSED": "No paused jobs match.",
+          "DRAFT": "No drafts match.",
+          "ARCHIVED": "No archived jobs match."
+        },
+        "tableCaption": "All job postings with status, flags and activity",
+        "col": {
+          "job": "Job",
+          "company": "Company",
+          "market": "Market",
+          "status": "Status",
+          "flags": "Flags",
+          "applicants": "Applicants",
+          "views": "Views",
+          "posted": "Posted"
+        },
+        "detailAria": "Open {title}",
+        "featuredChip": "Featured",
+        "urgentChip": "Urgent",
+        "paginationLabel": "Jobs pages",
+        "prevPage": "Previous",
+        "nextPage": "Next",
+        "pageOf": "Page {page} of {total}"
+      },
+      "panel": {
+        "notFound": "This job doesn't exist.",
+        "loadFailed": "Couldn't load this job.",
+        "retry": "Try again",
+        "featuredChip": "Featured",
+        "urgentChip": "Urgent",
+        "cancel": "Cancel",
+        "employerWarning": {
+          "title": "This employer is {status}",
+          "body": "Approval will be blocked until the employer is approved again — the publish gates re-check the employer's status.",
+          "link": "Open the employer's review page"
+        },
+        "candidateView": "As candidates would see it",
+        "marketGulf": "Gulf",
+        "marketLocal": "India",
+        "vacancies": "{count, plural, one {# vacancy} other {# vacancies}}",
+        "experienceYears": "{count, plural, one {# year experience} other {# years experience}}",
+        "description": "Description",
+        "requirements": "Requirements",
+        "workHours": "{hours} hours/day, {days} days/week",
+        "overtime": "Overtime available",
+        "adminFacts": "Admin facts",
+        "facts": {
+          "employer": "Employer",
+          "employerStatus": "Employer status",
+          "submitted": "Submitted",
+          "applicants": "Applicants",
+          "views": "Views",
+          "lastRejectReason": "Last rejection reason (employer-visible): {reason}"
+        },
+        "protection": {
+          "heading": "Worker protection",
+          "accommodation": "Accommodation",
+          "healthInsurance": "Health insurance",
+          "transportation": "Transportation",
+          "present": "Included",
+          "missing": "Missing"
+        },
+        "lifecycle": {
+          "heading": "Lifecycle",
+          "pause": "Pause job",
+          "archive": "Archive job",
+          "conflict": "Nothing to do — the job is already in that state (or the move isn't legal from its current one).",
+          "failed": "Couldn't change the job's state. Try again.",
+          "pauseDialog": {
+            "title": "Pause \"{title}\"?",
+            "confirm": "Pause job",
+            "body": "The job stops accepting applications and leaves public search until it's resumed."
+          },
+          "archiveDialog": {
+            "title": "Archive \"{title}\"?",
+            "confirm": "Archive job",
+            "body": "Archiving is permanent — the job is removed from public search and can't be reactivated."
+          }
+        },
+        "viewApplications": "View applications ({count})"
+      },
+      "review": {
+        "heading": "Review decision",
+        "gatesNote": "Approval re-runs the publish gates — if the employer was suspended, a protection rule changed, or their plan expired while this sat in review, the approval will be blocked and you'll see why.",
+        "approve": "Approve",
+        "reject": "Reject",
+        "approvedNote": "Approved — the job is now live and visible to candidates.",
+        "rejectedNote": "Rejected — the job returned to the employer's drafts with your reason.",
+        "alreadyResolved": "This job is no longer awaiting review — someone may have resolved it already.",
+        "approveFailedGeneric": "Something went wrong while approving. Try again.",
+        "cancel": "Cancel",
+        "approveDialog": {
+          "title": "Approve \"{title}\"?",
+          "confirm": "Approve and publish",
+          "body": "The job goes live immediately and becomes visible to candidates in search."
+        },
+        "rejectDialog": {
+          "title": "Reject \"{title}\"?",
+          "confirm": "Reject job",
+          "body": "The job returns to the employer's drafts so they can fix it and resubmit.",
+          "reasonLabel": "Reason",
+          "employerVisible": "This reason is shown to the employer — tell them what to fix.",
+          "reasonRequired": "A reason is required to reject a job."
+        }
+      },
+      "gateFailure": {
+        "rules": {
+          "accommodation": "Accommodation required",
+          "healthInsurance": "Health insurance required",
+          "transportation": "Transportation required"
+        },
+        "employer": {
+          "title": "The employer is no longer approved",
+          "body": "{company} was suspended (or lost approval) while this job was in review. You can't approve or publish their jobs until they're reinstated.",
+          "remedy": "Open the employer's review page"
+        },
+        "protection": {
+          "title": "A worker-protection rule blocks this job",
+          "body": "A worker-protection rule ({rules}) was enabled after this job was submitted. It no longer meets the platform's requirements — the employer must add the missing benefit and resubmit.",
+          "remedy": "Reject with a reason",
+          "unknownRule": "unspecified"
+        },
+        "quota": {
+          "title": "This would exceed the employer's plan limit",
+          "body": "{company}'s plan doesn't allow another active job — approving or publishing this would exceed their Free-plan limit.",
+          "remedy": "The remedy is on the employer's side: they upgrade their plan. You can leave the job pending, or reject it with a reason."
+        },
+        "unknown": {
+          "title": "The action was blocked",
+          "body": "The server refused this action. Try again."
+        }
+      },
+      "flags": {
+        "heading": "Featured / Urgent",
+        "effect": "Featured and Urgent jobs show a badge in search results and can be filtered by candidates. Admin-set only — employers can never set these.",
+        "featured": "Featured",
+        "urgent": "Urgent",
+        "failed": "Couldn't update the flags. Try again."
+      },
+      "onBehalf": {
+        "title": "Post a job for an employer",
+        "subtitle": "Creates the job in the employer's name. The same publish rules apply — this is not a bypass.",
+        "employerHeading": "Which employer is this job for?",
+        "employerSubtitle": "Only approved employers can have jobs published for them.",
+        "employerRequired": "Choose an employer first.",
+        "changeEmployer": "Change employer",
+        "employerSearchLabel": "Search approved employers",
+        "employerSearchPlaceholder": "Search company name…",
+        "employerSearchButton": "Search",
+        "employerLoading": "Loading employers…",
+        "employerNoResults": "No approved employers match.",
+        "basicHeading": "Job basics",
+        "titleLabel": "Job title",
+        "marketLabel": "Market",
+        "marketGulf": "Gulf",
+        "marketLocal": "India (Local)",
+        "categoryLabel": "Job category",
+        "categoriesLoading": "Loading categories…",
+        "categoryPlaceholder": "Select a category",
+        "locationLabel": "Location",
+        "requirementsHeading": "Requirements",
+        "draftSurvivedFailure": "The job was still saved as a draft for this employer — nothing was published.",
+        "saveDraft": "Save as draft",
+        "publishNow": "Publish now",
+        "gatesNote": "Publishing runs the same gates as the employer's own publish: approved employer, worker-protection rules, and their plan's job limit.",
+        "publishedNote": "Published — the job is live for {company}.",
+        "draftNote": "Draft created for {company}. They can review and publish it themselves.",
+        "viewJob": "Open the job",
+        "createFailed": "Couldn't create the job. Try again."
+      }
+    },
+    "applications": {
+      "title": "Applications",
+      "subtitle": "Every application on the platform, with the full record — including admin overrides.",
+      "table": {
+        "statusFilterLabel": "Filter by application status",
+        "statusTab": {
+          "ALL": "All",
+          "PENDING": "Pending",
+          "SHORTLISTED": "Shortlisted",
+          "SELECTED": "Selected",
+          "REJECTED": "Rejected"
+        },
+        "searchLabel": "Search applications",
+        "searchPlaceholder": "Search application ID or candidate…",
+        "searchButton": "Search",
+        "clearJobFilter": "Clear job filter",
+        "loadFailed": "Couldn't load applications.",
+        "retry": "Try again",
+        "empty": "No applications match.",
+        "tableCaption": "All applications with candidate, job, status and match score",
+        "col": {
+          "application": "Application",
+          "candidate": "Candidate",
+          "job": "Job",
+          "status": "Status",
+          "match": "Match",
+          "applied": "Applied"
+        },
+        "detailAria": "Open application {id}",
+        "deletedUser": "Deleted user",
+        "status": {
+          "PENDING": "Pending",
+          "SHORTLISTED": "Shortlisted",
+          "SELECTED": "Selected",
+          "REJECTED": "Rejected"
+        },
+        "overrideChip": "Admin override",
+        "paginationLabel": "Applications pages",
+        "prevPage": "Previous",
+        "nextPage": "Next",
+        "pageOf": "Page {page} of {total}"
+      },
+      "detail": {
+        "notFound": "This application doesn't exist.",
+        "loadFailed": "Couldn't load this application.",
+        "retry": "Try again",
+        "deletedUser": "Deleted user",
+        "unknownJob": "Unknown job",
+        "overrideChip": "Admin override",
+        "status": {
+          "PENDING": "Pending",
+          "SHORTLISTED": "Shortlisted",
+          "SELECTED": "Selected",
+          "REJECTED": "Rejected"
+        },
+        "match": {
+          "heading": "Match score",
+          "snapshotNote": "Computed once when the candidate applied — never recomputed.",
+          "category": "Category",
+          "experienceYears": "Experience",
+          "foreignExperience": "Foreign exp.",
+          "documents": "Documents"
+        },
+        "facts": {
+          "heading": "Application",
+          "applied": "Applied",
+          "docs": "Documents at apply",
+          "docsValue": "{complete} of {required} mandatory",
+          "passport": "Passport at apply",
+          "passportValid": "Valid",
+          "passportInvalid": "Invalid",
+          "whatsapp": "Selected WhatsApp",
+          "whatsappSentOn": "Sent {date}",
+          "whatsappNotSent": "Never sent",
+          "coverLetter": "Cover letter"
+        },
+        "timeline": {
+          "heading": "Timeline",
+          "adminViewNote": "The full record — actor roles, override flags and override reasons. Candidates see a shaped version without reasons.",
+          "empty": "No status changes yet.",
+          "transition": "{from} → {to}",
+          "initial": "Applied → {to}",
+          "byline": "{role} · {date}",
+          "system": "System",
+          "overrideFlag": "Admin override",
+          "reason": "Reason (admins and audit log only): {reason}"
+        },
+        "actions": {
+          "heading": "Actions",
+          "override": "Change status…",
+          "resend": "Resend WhatsApp…"
+        }
+      },
+      "override": {
+        "title": "Change {candidate}'s application status",
+        "titleWithTarget": "Change {candidate}'s application from {from} to {to}?",
+        "deletedUser": "Deleted user",
+        "targetLabel": "New status",
+        "targetPlaceholder": "Choose the new status",
+        "statusName": {
+          "PENDING": "Pending",
+          "SHORTLISTED": "Shortlisted",
+          "SELECTED": "Selected",
+          "REJECTED": "Rejected"
+        },
+        "noNewWhatsApp": "This candidate already received the Selected WhatsApp — moving them to Selected again will NOT send a new one (they'll get an email and in-app notification). If they genuinely never received it, use the manual WhatsApp resend after this change.",
+        "reasonLabel": "Reason",
+        "reasonVisibility": "This reason is recorded in the audit log and shown to other admins. The candidate sees only a neutral entry: 'Status updated by SkillIndiaConnect'.",
+        "reasonRequired": "A reason is required for a corrective status change.",
+        "rejectedByServer": "The server declined this change.",
+        "failed": "Couldn't change the status. Try again.",
+        "confirm": "Change status",
+        "cancel": "Cancel"
+      },
+      "notes": {
+        "heading": "Internal notes",
+        "internalOnly": "Internal — never shown to the candidate or employer.",
+        "empty": "No notes yet.",
+        "byline": "{role} · {date}",
+        "deleteAria": "Delete note",
+        "notAuthor": "Only the note's author (or a Super Admin) can delete it.",
+        "deleteFailed": "Couldn't delete the note. Try again.",
+        "addFailed": "Couldn't add the note. Try again.",
+        "addLabel": "Add an internal note",
+        "addPlaceholder": "Add a note for the admin team…",
+        "counter": "{used} / {max}",
+        "add": "Add note"
+      },
+      "resend": {
+        "title": "Resend the Selected WhatsApp to {candidate}?",
+        "deletedUser": "Deleted user",
+        "consequence": "This sends a WhatsApp message to {candidate}'s phone.",
+        "originalDateUnchanged": "The candidate's original notification date won't change — this is recorded as an additional send.",
+        "reasonLabel": "Reason",
+        "reasonAudited": "Recorded in the audit log with your name.",
+        "reasonRequired": "A reason is required to resend the WhatsApp.",
+        "confirm": "Send WhatsApp",
+        "cancel": "Cancel",
+        "outcomeTitle": "Resend result",
+        "done": "Done",
+        "close": "Close",
+        "sentNote": "The WhatsApp to {candidate} was queued for delivery.",
+        "emailFallbackNote": "This candidate can't receive WhatsApp — an email was sent instead.",
+        "limitNote": "You've reached the resend limit for this application today. Try again tomorrow.",
+        "failed": "Couldn't resend. Try again."
+      }
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "queuesHeading": "Waiting for you",
+      "kpisHeading": "Platform overview",
+      "pendingEmployerReviews": "Employers awaiting review",
+      "pendingJobReviews": "Jobs awaiting review",
+      "queueEmpty": "Nothing waiting",
+      "candidates": "Candidates",
+      "employers": "Employers",
+      "jobs": "Jobs",
+      "revenueThisMonth": "Revenue this month",
+      "employersByStatus": "Employers by status",
+      "jobsByStatus": "Jobs by status",
+      "applicationsByStatus": "Applications by status",
+      "loadFailed": "Couldn't load the dashboard.",
+      "retry": "Try again"
+    }
+  },
+  "billing": {
+    "pageTitle": "Plans & billing",
+    "pageSubtitle": "Choose a plan to unlock unlimited job posts and candidate document access.",
+    "loadingPlans": "Loading plans…",
+    "loadError": "Couldn't load plans. Please try again.",
+    "retry": "Try again",
+    "plansGroupLabel": "Choose a subscription plan",
+    "bestValue": "Best value",
+    "currentPlan": "Current plan",
+    "yourCurrentPlan": "Your current plan",
+    "freeForever": "Free forever",
+    "perMonth": "/ month",
+    "perYear": "/ year",
+    "gstIndicative": "+ {rate}% GST — approx. {gross} total (indicative; final total shown at checkout)",
+    "upgradeCta": "Upgrade to {plan}",
+    "startingCheckout": "Starting checkout…",
+    "quotaBannerTitle": "You've reached your Free plan's 1-job limit",
+    "quotaBannerBody": "Upgrade to Pro to post unlimited jobs and access candidate documents.",
+    "mockLaunchNote": "Dev/mock mode — no real gateway. Simulate the payment to test the confirming flow.",
+    "mockSimulatePay": "Simulate payment",
+    "cancel": "Cancel",
+    "launchingTitle": "Opening checkout…",
+    "launchingRazorpay": "Opening the secure payment window…",
+    "redirectingStripe": "Redirecting you to the secure payment page…",
+    "launchError": "We couldn't open the payment window. Please try again.",
+    "confirmingTitle": "Confirming your payment…",
+    "confirmingBody": "We're waiting for your bank to confirm. This usually takes a few seconds — please don't close this page.",
+    "successTitle": "You're on Pro!",
+    "successBody": "Your job limit is lifted — post as many jobs as you need, and you can now view candidate documents.",
+    "successPostJob": "Post a job",
+    "successBackToDashboard": "Back to dashboard",
+    "failedTitle": "Payment didn't go through",
+    "failedBody": "No charge was completed. You can pick a plan and try again.",
+    "failedRetry": "Back to plans",
+    "timeoutTitle": "This is taking longer than expected",
+    "timeoutBody": "Your payment is still confirming. We'll email you the moment it's done, and your plan will update automatically — no need to pay again.",
+    "timeoutRefresh": "Refresh status",
+    "errNotApproved": "Your company must be approved before purchasing a plan.",
+    "errNotPurchasable": "That plan can't be purchased.",
+    "errAlreadyActive": "This plan is already active. Renewal opens 7 days before it expires.",
+    "errGatewayUnavailable": "Payments are temporarily unavailable. Please try again later.",
+    "errGeneric": "We couldn't start checkout. Please try again.",
+    "manage": {
+      "currentPlanTitle": "Current plan",
+      "statusFree": "Free",
+      "daysRemaining": "{count, plural, one {# day remaining} other {# days remaining}}",
+      "expiresOn": "Expires {date}",
+      "graceDaysLeft": "{count, plural, one {Grace period — # day to renew} other {Grace period — # days to renew}}",
+      "expiredHint": "Jobs were paused — upgrade to restore",
+      "freeHint": "Upgrade to post more jobs and access documents",
+      "upgradeNow": "Upgrade to Pro",
+      "renewNow": "Renew now",
+      "managePlan": "Manage plan",
+      "graceBannerTitle": "{plan} plan expired",
+      "graceBannerBody": "Grace period ends {date} — {count, plural, one {# day} other {# days}} to renew before jobs are paused. Your plan still works.",
+      "invoicesTitle": "Invoices",
+      "invoicesEmpty": "No invoices yet.",
+      "invoicesLoadError": "Couldn't load invoices.",
+      "retry": "Try again",
+      "invoiceNumber": "Invoice",
+      "invoiceDate": "Date",
+      "invoicePlan": "Plan",
+      "invoiceAmount": "Amount",
+      "invoiceActions": "Actions",
+      "downloadPdf": "Download PDF",
+      "downloadPdfLabel": "Download PDF for invoice {number}",
+      "pdfPending": "Generating…",
+      "viewDoc": "View",
+      "viewDocLoading": "Opening…",
+      "viewDocLabel": "View {doc} document",
+      "docUnavailable": "Not available",
+      "docExpiredRetry": "Link expired — try again",
+      "upgradeDialogTitle": "Pro plan required",
+      "upgradeDialogBody": "Document access is a Pro feature. Upgrade to view and download candidate documents.",
+      "upgradeDialogCta": "View plans",
+      "upgradeDialogClose": "Cancel"
     }
   }
 }

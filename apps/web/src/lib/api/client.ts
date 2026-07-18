@@ -110,6 +110,39 @@ export async function apiFetch<T>(
 }
 
 /**
+ * Fetch a NON-JSON endpoint (the audit-log CSV export) as a Blob, with the same
+ * auth + single-silent-refresh behavior as apiFetch. Errors still arrive as the
+ * RFC-7807 JSON envelope (e.g. 422 EXPORT_TOO_LARGE) and throw ApiRequestError.
+ */
+export async function apiFetchBlob(
+  path: string,
+  init: RequestInit = {},
+): Promise<{ blob: Blob; filename: string | null }> {
+  let res = await rawFetch(path, init);
+
+  if (res.status === 401 && _refreshFn) {
+    const newToken = await _refreshFn().catch(() => null);
+    if (newToken) {
+      _accessToken = newToken;
+      res = await rawFetch(path, init);
+    }
+  }
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({
+      code: 'UNKNOWN_ERROR',
+      title: 'Error',
+      detail: 'An unexpected error occurred.',
+    }));
+    throw new ApiRequestError({ ...(body as ApiError), status: res.status });
+  }
+
+  const disposition = res.headers.get('Content-Disposition') ?? '';
+  const filename = /filename="([^"]+)"/.exec(disposition)?.[1] ?? null;
+  return { blob: await res.blob(), filename };
+}
+
+/**
  * Like `apiFetch`, but returns the raw parsed JSON body without unwrapping
  * `{ data }`. Needed for cursor-paginated endpoints whose envelope is
  * `{ data, nextCursor }` — unwrapping would discard `nextCursor`.

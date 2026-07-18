@@ -16,6 +16,10 @@ import { ApplicantsController } from './applicants.controller';
 import { AdminApplicationsController } from './admin-applications.controller';
 import { ApplicationsReadService } from './applications-read.service';
 import { ApplicationsAggregateService } from './applications-aggregate.service';
+import { AdminNotesController } from './admin-notes.controller';
+import { AdminNotesService } from './admin-notes.service';
+import { AdminResendController } from './admin-resend.controller';
+import { AdminResendService } from './admin-resend.service';
 
 /**
  * Applications module (S4 B1 apply · B2 transitions · B3 reads + aggregates).
@@ -43,6 +47,8 @@ import { ApplicationsAggregateService } from './applications-aggregate.service';
     CandidateApplicationsController,
     ApplicantsController,
     AdminApplicationsController,
+    AdminNotesController, // S6b-B2: internal notes (owns application_notes)
+    AdminResendController, // S6b-B2: the bypassGuard resend endpoint
   ],
   providers: [
     ApplyService,
@@ -51,6 +57,8 @@ import { ApplicationsAggregateService } from './applications-aggregate.service';
     StatusService,
     ApplicationsReadService,
     ApplicationsAggregateService,
+    AdminNotesService,
+    AdminResendService,
   ],
   exports: [ApplicationsAggregateService],
 })

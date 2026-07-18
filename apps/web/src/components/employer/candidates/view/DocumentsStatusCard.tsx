@@ -4,12 +4,14 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, X, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { DocumentViewButton } from '@/components/billing/DocumentViewButton';
 import type { components } from '@skillindiaconnect/shared-types';
 
 type CandidateDocumentStatus = components['schemas']['CandidateDocumentStatus'];
 type DocumentType = components['schemas']['DocumentType'];
 
 interface DocumentsStatusCardProps {
+  candidateId: string;
   documentsStatus: CandidateDocumentStatus[];
 }
 
@@ -25,7 +27,7 @@ const KNOWN_TYPES: DocumentType[] = ['PASSPORT', 'EXPERIENCE_CERT', 'EDUCATIONAL
  * shows Valid/Expired from `passportValid`. Every element is a plain span/badge;
  * no row is focusable or interactive.
  */
-export function DocumentsStatusCard({ documentsStatus }: DocumentsStatusCardProps) {
+export function DocumentsStatusCard({ candidateId, documentsStatus }: DocumentsStatusCardProps) {
   const t = useTranslations('employer.candidates.view.documents');
 
   const byType = new Map(documentsStatus.map((d) => [d.type, d]));
@@ -53,7 +55,7 @@ export function DocumentsStatusCard({ documentsStatus }: DocumentsStatusCardProp
                 {t(`type.${type}`)}
               </span>
 
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-3 flex-wrap">
                 {type === 'PASSPORT' && uploaded && (
                   <Badge variant={status?.passportValid ? 'success' : 'error'}>
                     {status?.passportValid ? t('passportValid') : t('passportExpired')}
@@ -70,14 +72,16 @@ export function DocumentsStatusCard({ documentsStatus }: DocumentsStatusCardProp
                     {t('notUploaded')}
                   </span>
                 )}
+                <DocumentViewButton
+                  candidateId={candidateId}
+                  documentType={type}
+                  uploaded={uploaded}
+                />
               </span>
             </li>
           );
         })}
       </ul>
-
-      {/* Optional upsell hint — informational only; access itself is S5 Pro-gated. */}
-      <p className="mt-3 text-xs text-neutral-400">{t('proHint')}</p>
     </section>
   );
 }

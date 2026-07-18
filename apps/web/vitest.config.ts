@@ -9,6 +9,10 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test-setup.ts'],
     exclude: ['**/node_modules/**', 'e2e/**'],
+    // The suite's heavy userEvent flows (job forms, admin dialogs) exceed the
+    // 5s default under full-suite worker contention — they pass in isolation.
+    // This is a load allowance, not a license for slow tests.
+    testTimeout: 15_000,
   },
   resolve: {
     alias: {

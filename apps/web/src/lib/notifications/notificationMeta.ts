@@ -81,6 +81,14 @@ export const notificationMeta: Record<NotificationType, NotificationMeta> = {
     bgClass: 'bg-primary-50',
     routeFn: toApplication,
   },
+  // S7-0: the async render finished — action → the profile's resume section
+  // (Step 4), where the download lives.
+  RESUME_READY: {
+    Icon: Send,
+    colorClass: 'text-success-fg',
+    bgClass: 'bg-success-bg',
+    routeFn: toProfile,
+  },
   // ── Profile ───────────────────────────────────────────────────────────────
   PROFILE_REMINDER: {
     Icon: UserCheck,
@@ -134,6 +142,25 @@ export const notificationMeta: Record<NotificationType, NotificationMeta> = {
     Icon: CreditCard,
     colorClass: 'text-error-fg',
     bgClass: 'bg-error-bg',
+  },
+  // S6b-B2: job moderation outcomes + on-behalf posting (employer-facing).
+  JOB_APPROVED: {
+    Icon: CheckCircle2,
+    colorClass: 'text-success-fg',
+    bgClass: 'bg-success-bg',
+    routeFn: toJob,
+  },
+  JOB_REJECTED: {
+    Icon: XCircle,
+    colorClass: 'text-error-fg',
+    bgClass: 'bg-error-bg',
+    routeFn: toJob,
+  },
+  JOB_POSTED_ONBEHALF: {
+    Icon: Briefcase,
+    colorClass: 'text-info-fg',
+    bgClass: 'bg-info-bg',
+    routeFn: toJob,
   },
 };
 

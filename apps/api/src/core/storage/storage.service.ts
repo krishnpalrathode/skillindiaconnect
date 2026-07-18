@@ -6,6 +6,7 @@ import {
   GetObjectCommand,
   HeadObjectCommand,
   DeleteObjectCommand,
+  DeleteObjectsCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -56,6 +57,45 @@ export class StorageService {
     return getSignedUrl(this.client, command, { expiresIn });
   }
 
+  /**
+   * S7-B1: server-side upload (the PDF render pipeline — the WORKER writes the
+   * rendered bytes itself; there is no client to presign for).
+   */
+  async putObject(key: string, body: Buffer, contentType: string): Promise<void> {
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: body,
+        ContentType: contentType,
+      }),
+    );
+  }
+
+  /**
+   * S7-B1: server-side read (embedding the profile photo as a data URI at
+   * render time — the template must never make Chromium fetch a live URL).
+   */
+  async getObjectBuffer(
+    key: string,
+  ): Promise<{ body: Buffer; contentType: string } | null> {
+    try {
+      const response = await this.client.send(
+        new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+      );
+      const bytes = await response.Body?.transformToByteArray();
+      if (!bytes) return null;
+      return {
+        body: Buffer.from(bytes),
+        contentType: response.ContentType ?? 'application/octet-stream',
+      };
+    } catch (err: unknown) {
+      const e = err as { name?: string; $metadata?: { httpStatusCode?: number } };
+      if (e.name === 'NoSuchKey' || e.$metadata?.httpStatusCode === 404) return null;
+      throw err;
+    }
+  }
+
   async headObject(key: string): Promise<{ sizeBytes: number; contentType: string } | null> {
     try {
       const response = await this.client.send(
@@ -74,8 +114,30 @@ export class StorageService {
     }
   }
 
-  /** Exposed for the future purge worker — not called in request paths. */
+  /** Exposed for the purge worker — not called in request paths. */
   async deleteObject(key: string): Promise<void> {
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
+  }
+
+  /**
+   * Batch delete (S6b-B1 purge worker). Chunks at the S3 API's 1000-key limit.
+   * THROWS if the provider reports any per-key failure — the caller (a BullMQ
+   * job) relies on that throw to retry; a swallowed error here would leave a
+   * passport scan in the bucket while the DB claims erasure. Error messages
+   * carry counts, never keys.
+   */
+  async deleteObjects(keys: string[]): Promise<void> {
+    for (let i = 0; i < keys.length; i += 1000) {
+      const chunk = keys.slice(i, i + 1000);
+      const result = await this.client.send(
+        new DeleteObjectsCommand({
+          Bucket: this.bucket,
+          Delete: { Objects: chunk.map((Key) => ({ Key })), Quiet: true },
+        }),
+      );
+      if (result.Errors && result.Errors.length > 0) {
+        throw new Error(`R2 batch delete failed for ${result.Errors.length} object(s)`);
+      }
+    }
   }
 }

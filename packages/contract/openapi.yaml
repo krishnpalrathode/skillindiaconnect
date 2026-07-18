@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: SkillIndiaConnect API
-  version: 0.3.0
+  version: 0.9.0
   description: |
     Production blue-collar recruitment platform connecting skilled workers in India
     with employers in the Gulf and locally.
@@ -29,6 +29,28 @@ info:
     nonexistent; (2) employer context exposes document status/validity ONLY — no
     keys or URLs; (3) profileChecklist is computed per-request, no stored percentage.
 
+    **S7 additions (Sprint 7 / CR-001, frozen in S7-0):** the resume builder —
+    settings CRUD, ASYNC PDF generation (202 trigger + status poll, the S5
+    payments discipline), the RESUME-VIEW as a THIRD viewer context whose
+    omissions are driven by Resume Settings (not the profile privacy toggles;
+    passport number may appear here by the candidate's own choice though the
+    employer context never carries it), and delivery (WhatsApp-to-own-number
+    with email degradation + 5/day cap; email-to-self, uncapped). Locked OUT:
+    the public slug page (dormant column stays dormant, no public endpoint),
+    video portfolio, hi/ar rendering (language enum is en-only until a
+    translated template ships).
+
+    **S5 additions (Sprint 5):** Billing — plans, checkout, orders, subscription
+    status, invoices, payment webhooks, and the Pro document-URL gate. Locked
+    semantics: (1) **server-side gateway routing** — the checkout REQUEST carries
+    `{ planCode }` only, NO gateway field exists on it; the RESPONSE tells the
+    frontend which gateway to launch (a client cannot force a gateway);
+    (2) **money is integer subunits** (paise/cents) in every schema — no floats
+    anywhere; (3) **activation is webhook-only** — the gateway success callback
+    changes nothing; the frontend polls `GET /billing/orders/{id}` until the
+    webhook flips it to PAID; (4) checkout accepts an `Idempotency-Key` header
+    (Redis, 24 h) and order-status is safe to poll.
+
 servers:
   - url: /api/v1
     description: Versioned API
@@ -54,7 +76,15 @@ tags:
       Job listings — public search and detail (S2), employer CRUD + lifecycle (S2),
       candidate save (S2). Apply flow → S4.
   - name: payments
-    description: Billing plans, checkout, subscription (Sprint 5)
+    description: >
+      Billing — plans, checkout, orders, subscription status, invoices (S5 full).
+      Server-side gateway routing; integer-subunit money; webhook-only activation.
+  - name: webhooks
+    description: >
+      Server-to-server payment-gateway webhooks (S5). Signature IS the auth
+      (verify-before-parse on the raw body). NOT consumed by the web app and
+      deliberately EXCLUDED from the MSW mocks — the mocks simulate their EFFECT
+      (the delayed order flip) instead.
   - name: admin
     description: >
       Admin — employer approval + platform settings (S2 full). Full moderation
@@ -123,6 +153,40 @@ components:
         type: string
         pattern: '^[a-zA-Z]+:(asc|desc)$'
 
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: >
+        Client-generated idempotency key (S5 checkout). The server stores the
+        FIRST response for this key in Redis for 24 h and replays it verbatim
+        for any retry carrying the same key — a double-click or a network retry
+        never creates a second order. Recommended value: a UUID v4 minted per
+        checkout intent (not per attempt).
+      schema:
+        type: string
+        maxLength: 128
+
+  responses:
+    # S6 — the single RBAC denial shape for every admin endpoint. `meta` names the
+    # permission the caller lacked, so the console can say WHICH grant is missing
+    # instead of a bare "forbidden".
+    AdminForbidden:
+      description: >
+        The caller's role does not hold the permission this endpoint requires.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: about:blank
+            title: Forbidden
+            status: 403
+            detail: You do not have permission to perform this action.
+            code: FORBIDDEN
+            meta:
+              requiredPermission: logs.export
+
   schemas:
     # ── Error envelope (RFC 7807-style) ────────────────────────────────────────
     Error:
@@ -153,7 +217,8 @@ components:
             INVALID_OTP, PHONE_NOT_ON_WHATSAPP, PROFILE_INCOMPLETE,
             MANDATORY_DOCS_MISSING, ILLEGAL_TRANSITION, EMPLOYER_NOT_APPROVED,
             WORKER_PROTECTION_VIOLATION, JOB_QUOTA_EXCEEDED, CORE_RULE_FORBIDDEN,
-            NOT_IMPLEMENTED.
+            PLAN_NOT_PURCHASABLE, SUBSCRIPTION_ALREADY_ACTIVE,
+            GATEWAY_UNAVAILABLE, PLAN_UPGRADE_REQUIRED, NOT_IMPLEMENTED.
           example: EMAIL_TAKEN
         meta:
           type: object
@@ -166,7 +231,12 @@ components:
     # ── Domain enums ────────────────────────────────────────────────────────────
     UserRole:
       type: string
-      enum: [CANDIDATE, EMPLOYER, ADMIN, SUPER_ADMIN]
+      enum: [CANDIDATE, EMPLOYER, SUPER_ADMIN, ADMIN, MODERATOR, SUPPORT]
+      description: >
+        MODERATOR and SUPPORT are admin-side roles that exist in the database and
+        the seeded RBAC matrix from S2 but were missing from this enum until S6
+        made them addressable (they are matrix columns on Screen 27, and audit
+        rows carry them as `actorRole`).
 
     UserStatus:
       type: string
@@ -213,9 +283,14 @@ components:
     # ── Job enums (S2) ──────────────────────────────────────────────────────────
     JobStatus:
       type: string
-      enum: [DRAFT, ACTIVE, PAUSED, ARCHIVED]
+      enum: [DRAFT, PENDING_REVIEW, ACTIVE, PAUSED, ARCHIVED]
       description: >
         DRAFT — visible only to the owning employer, not in public search.
+        PENDING_REVIEW — published while the `jobs.require_admin_approval`
+        setting is ON, so it awaits admin resolution and is NOT yet live. It
+        exists in the database from S2-B5 but was only addressable on the ADMIN
+        surface, which S6 adds (`POST /admin/jobs/{id}/review`). No employer or
+        public list returns it.
         ACTIVE — live in public search; candidates can save and apply (S4).
         PAUSED — hidden from public search; can be resumed to ACTIVE.
         ARCHIVED — permanent, read-only; cannot be un-archived.
@@ -256,15 +331,15 @@ components:
           SUBSCRIPTION_EXPIRED,
           CANDIDATE_MATCHES,
           RESUME_SENT,
+          RESUME_READY,
+          JOB_APPROVED,
+          JOB_REJECTED,
+          JOB_POSTED_ONBEHALF,
         ]
 
     # ── Settings enums (S2) ─────────────────────────────────────────────────────
-    SettingGroup:
-      type: string
-      enum: [WORKER_PROTECTION, COMPLETION, APPLICATION, PLATFORM]
-      description: >
-        Maps to the tabs on the Admin Settings screen (Screen 28).
-        WORKER_PROTECTION settings are core rules — only SUPER_ADMIN may update them.
+    # (SettingGroup removed in S6a-F2 — grouping is a CLIENT concern derived from
+    # the setting key's prefix; the server never returned a group field.)
 
     # ── Shared objects ──────────────────────────────────────────────────────────
     UserSummary:
@@ -494,27 +569,203 @@ components:
 
     ResumeSettings:
       type: object
-      description: >
-        Resume PDF rendering settings. Hidden fields (showPassportNumber = false,
-        showReligion = false) must be ABSENT FROM THE PDF BYTES, not merely hidden
-        in preview. Enforced at PDF generation time (Sprint 7).
+      required: [language, showPhone, showReligion, showFatherName, showPassportNumber]
+      description: |
+        Resume PDF rendering settings (CR-001, frozen in S7-0).
+
+        **These drive the RESUME-VIEW — the product's THIRD viewer context**
+        (after candidate-self and employer-context). Its omissions are decided
+        by THESE toggles, NOT the profile privacy toggles: a candidate may show
+        their passport number on their own resume (their document, their
+        choice) even though the employer context NEVER carries it. The two
+        contexts are distinct by design — this is not a privacy regression.
+
+        **Settings apply at GENERATION TIME.** A PATCH after a PDF was
+        generated does NOT alter the stored PDF — the candidate regenerates to
+        apply the change. Hidden fields (toggle = false) must be ABSENT FROM
+        THE PDF BYTES, not merely hidden in a preview.
+
+        Defaults for a candidate who never opened the settings:
+        showPhone ON, showFatherName ON (confirmed against the S1 data design —
+        candidate_resumes.showFatherName defaults true; the pre-S7 draft of
+        this schema said false and was corrected at freeze), showReligion OFF,
+        showPassportNumber OFF.
       properties:
         language:
           type: string
+          enum: [en]
           default: en
-          example: en
+          description: >
+            The PDF's language (CR-001's `resumeLanguage`). ENGLISH-ONLY at
+            MVP: the enum deliberately lists ONLY `en` — hi/ar rendering is
+            deferred, and their values will be ADDED to this enum when a
+            translated template ships. Representing the constraint in the enum
+            (rather than accepting hi/ar and failing later) means a client
+            cannot request a language the renderer doesn't have.
         showPhone:
           type: boolean
           default: true
+          description: false → `ResumeView.phone` is omitted from the PDF.
         showReligion:
           type: boolean
           default: false
+          description: false (the default) → `ResumeView.religion` is omitted.
         showFatherName:
           type: boolean
-          default: false
+          default: true
+          description: false → `ResumeView.fatherName` is omitted.
         showPassportNumber:
           type: boolean
           default: false
+          description: >
+            false (the default) → `ResumeView.passportNumber` is omitted.
+            Passport EXPIRY/validity is part of the documents summary and is
+            not governed by this toggle — only the number itself is.
+
+    ResumeGeneration:
+      type: object
+      required: [generationId, status]
+      description: |
+        One asynchronous PDF generation (S7-0). Generation is WORKER-SIDE and
+        takes seconds — the client POLLS `GET /candidates/me/resume/status`
+        until READY (the same pending→confirmed discipline as S5 payments;
+        there is no synchronous render).
+
+        READY carries a SHORT-EXPIRY signed R2 GET url. The stored PDF is a
+        SNAPSHOT of the profile + settings at generation time: changing
+        settings after READY does not alter it — regenerate to apply.
+      properties:
+        generationId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, READY, FAILED]
+        resumeId:
+          type: string
+          format: uuid
+          description: Present once READY — the stored resume this render belongs to.
+        downloadUrl:
+          type: string
+          format: uri
+          description: Present once READY — a short-expiry signed R2 GET url.
+        expiresInSeconds:
+          type: integer
+          example: 300
+          description: Present once READY — the signed url's remaining validity.
+        generatedAt:
+          type: string
+          format: date-time
+          description: Present once READY.
+        failureReason:
+          type: string
+          description: Present when FAILED — human-readable; retry by regenerating.
+        view:
+          $ref: '#/components/schemas/ResumeView'
+          description: >
+            Present once READY — the exact field set the PDF was rendered
+            from (the settings snapshot applied). The F1 preview renders this;
+            the B1 template consumes the same shape — one source of truth for
+            what the PDF contains.
+
+    ResumeView:
+      type: object
+      required: [fullName, email, experiences, skills, generatedAt, settingsApplied]
+      description: |
+        **The THIRD viewer context** (S7-0): exactly the field set the resume
+        PDF renders. Omissions are driven by `ResumeSettings` — captured at
+        generation time — never by the profile privacy toggles:
+
+        - `showPhone: false`          → `phone` ABSENT
+        - `showReligion: false`       → `religion` ABSENT (default off)
+        - `showFatherName: false`     → `fatherName` ABSENT
+        - `showPassportNumber: false` → `passportNumber` ABSENT (default off)
+
+        Everything else renders unconditionally when the profile has it.
+        `passportNumber` MAY appear here (the candidate's own document, their
+        explicit opt-in) even though the employer context never carries it —
+        distinct contexts, distinct rules. Do NOT reuse the employer-context
+        mapper for this shape.
+
+        Out of scope, locked at this freeze: the public slug page (the dormant
+        `publicSlug` column stays dormant — no public endpoint exists), the
+        video portfolio section (renders only when a video exists — Phase 2),
+        and hi/ar rendering (see `ResumeSettings.language`).
+      properties:
+        fullName:
+          type: string
+        photoUrl:
+          type: [string, 'null']
+          description: Short-expiry signed url for the profile photo, when uploaded.
+        email:
+          type: string
+          format: email
+          description: Always included — the candidate's own account email.
+        phone:
+          type: string
+          description: "OMITTED when `showPhone: false`."
+        fatherName:
+          type: string
+          description: "OMITTED when `showFatherName: false`."
+        religion:
+          type: string
+          description: "OMITTED when `showReligion: false` (the default)."
+        passportNumber:
+          type: string
+          description: >
+            OMITTED when `showPassportNumber: false` (the default). Never
+            present in any employer-context schema regardless of this toggle.
+        dob:
+          type: [string, 'null']
+          format: date
+        maritalStatus:
+          type: [string, 'null']
+        nationality:
+          type: [string, 'null']
+        currentLocation:
+          type: [string, 'null']
+        languages:
+          type: array
+          items:
+            type: string
+        jobCategory:
+          type: [string, 'null']
+          description: Display name of the candidate's job category.
+        experiences:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkExperience'
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/CandidateSkill'
+        documents:
+          type: array
+          description: >
+            Status-only documents summary (type + validity) — the same
+            discipline as the employer context; keys/urls never appear.
+          items:
+            $ref: '#/components/schemas/CandidateDocumentStatus'
+        generatedAt:
+          type: string
+          format: date-time
+        settingsApplied:
+          $ref: '#/components/schemas/ResumeSettings'
+
+    ResumeDeliveryResult:
+      type: object
+      required: [delivered]
+      description: |
+        The honest enqueue-time answer for a resume delivery (S7-0).
+        `WHATSAPP` — the document send was enqueued to the candidate's OWN
+        verified number. `EMAIL_FALLBACK` — the candidate is not
+        WhatsApp-capable, so the send DEGRADED to email-to-self (a 202, not an
+        error: the resume still reaches them). `EMAIL` — the email-to-self
+        endpoint's normal outcome.
+      properties:
+        delivered:
+          type: string
+          enum: [WHATSAPP, EMAIL_FALLBACK, EMAIL]
 
     # ── Employer schemas (S2) ───────────────────────────────────────────────────
     Company:
@@ -644,7 +895,8 @@ components:
         1. `EMPLOYER_NOT_APPROVED` (403) — company.status must be APPROVED.
         2. `WORKER_PROTECTION_VIOLATION` (422) — accommodation, healthInsurance, and
            transportation must all be true. `meta.violations[]` lists which failed.
-        3. `JOB_QUOTA_EXCEEDED` (422) — Free plan: max 1 ACTIVE job. `meta.planLimit = 1`.
+        3. `JOB_QUOTA_EXCEEDED` (422) — quota = the plan's `maxActiveJobs`
+           (S5): Free 1, Pro unlimited. `meta.planLimit` reflects the plan.
       properties:
         id:
           type: string
@@ -845,35 +1097,51 @@ components:
     # ── Settings schemas (S2) ───────────────────────────────────────────────────
     Setting:
       type: object
-      required: [key, group, label, value, isCoreRule]
+      required: [key, value, isCoreRule, updatedAt]
       description: |
-        Platform configuration setting. Settings where `isCoreRule = true` (the
-        WORKER_PROTECTION group) may only be updated by SUPER_ADMIN — ADMIN callers
-        receive 403 `CORE_RULE_FORBIDDEN` for those keys.
+        Platform configuration setting — EXACTLY the persisted row, no
+        presentation metadata.
+
+        CORRECTED IN S6a-F2: this schema was frozen (S6-0) with `group`, `label`
+        and `description` fields and SCREAMING_CASE keys (`REQUIRE_ACCOMMODATION`)
+        that the real API has never returned — S2-B1 deliberately keeps labels and
+        grouping OUT of the server, because they are localizable UI copy. The real
+        wire shape is the flat row below, with dot-prefixed keys
+        (`worker_protection.accommodation_required`, `jobs.auto_archive_days`,
+        `candidates.min_completion_pct`, `payments.gst_rate_pct`, …).
+
+        The client derives everything presentational:
+        - GROUPING (Screen 28's tabs) from the key prefix — `worker_protection.*`
+          / `jobs.*` / `candidates.*` / `payments.*`.
+        - LABELS and descriptions from its own i18n bundle, keyed by setting key.
+        - The EDITOR TYPE from the runtime type of `value` (boolean → toggle,
+          number → numeric field, array → list editor).
+
+        `isCoreRule = true` (the worker-protection trio) may only be updated by
+        SUPER_ADMIN — other callers receive 403 `CORE_RULE_FORBIDDEN` per key.
       properties:
+        id:
+          type: string
+          format: uuid
         key:
           type: string
-          description: Machine-readable unique key (e.g. REQUIRE_ACCOMMODATION)
-        group:
-          $ref: '#/components/schemas/SettingGroup'
-        label:
-          type: string
-          description: Human-readable label for the admin UI
-        description:
-          type: string
+          description: Machine-readable unique key (e.g. worker_protection.accommodation_required)
         value:
           description: >
-            The current value. Type varies by key: boolean for flags, integer
-            for numeric limits, string for text settings.
+            The current value. Type varies by key: boolean for flags, number for
+            numeric limits, string[] for lists (e.g. candidates.mandatory_documents).
         isCoreRule:
           type: boolean
           description: If true, only SUPER_ADMIN may update this setting
+        version:
+          type: integer
+          description: Bumped on every write (optimistic-concurrency seam)
         updatedAt:
-          type: [string, 'null']
+          type: string
           format: date-time
-        updatedBy:
+        updatedById:
           type: [string, 'null']
-          description: User ID of the last updater
+          description: User ID of the last updater (null when never edited)
 
     # ── Employer profile schemas (S3) ──────────────────────────────────────────
     ProfileChecklist:
@@ -1438,6 +1706,862 @@ components:
         appliedAt:
           type: string
           format: date-time
+
+    # ── S5: Billing ─────────────────────────────────────────────────────────────
+    # MONEY DISCIPLINE (locked): every monetary amount in this contract is an
+    # INTEGER count of currency subunits (paise for INR, cents for USD/AED) in a
+    # field named `*Subunits`, paired with a `currency` ISO-4217 code. A float
+    # money field anywhere in a schema is a contract defect.
+
+    PlanCode:
+      type: string
+      enum: [FREE, PRO_MONTHLY, PRO_YEARLY]
+      description: The seeded three plans. FREE is never purchasable via checkout.
+
+    PaymentGateway:
+      type: string
+      enum: [RAZORPAY, STRIPE]
+      description: >
+        Chosen SERVER-SIDE at checkout — the client never selects or sends a
+        gateway. Routing rule: LOCAL companies → Razorpay domestic (INR + GST);
+        FOREIGN companies → Razorpay International primary, Stripe only when the
+        `payments.stripe_enabled` platform setting is on.
+
+    OrderStatus:
+      type: string
+      enum: [CREATED, PAID, FAILED, EXPIRED]
+      description: >
+        CREATED → PAID/FAILED is driven EXCLUSIVELY by the verified gateway
+        webhook (or admin reconciliation). The client success callback never
+        flips an order. EXPIRED = never completed within the gateway window.
+
+    SubscriptionState:
+      type: string
+      enum: [ACTIVE, GRACE, EXPIRED]
+      description: >
+        ACTIVE until `expiresAt`; then a 7-day GRACE window (`graceEndsAt`)
+        during which everything keeps working and renewal banners show; after
+        grace, EXPIRED — all the company's ACTIVE jobs EXCEPT the most recently
+        published one are paused (Answer 07), returning the company to
+        Free-plan behavior. The FREE plan is always a well-formed ACTIVE state
+        with `expiresAt: null` — never an error.
+
+    Plan:
+      type: object
+      required: [code, name, priceSubunits, currency, period, maxActiveJobs, features]
+      description: >
+        A purchasable (or the free) subscription plan. `priceSubunits` is the
+        base price EXCLUDING GST. For LOCAL (Indian) companies the UI displays
+        price + GST — `gstRatePct` here is a DISPLAY HINT ONLY; the checkout
+        response's `gstSubunits` split is the authoritative figure (server
+        computed, never derived client-side).
+      properties:
+        code:
+          $ref: '#/components/schemas/PlanCode'
+        name:
+          type: string
+          example: Pro Monthly
+        priceSubunits:
+          type: integer
+          minimum: 0
+          description: Base price in integer subunits, EXCLUDING GST (FREE = 0).
+          example: 299900
+        currency:
+          type: string
+          description: ISO-4217 code the price is denominated in.
+          example: INR
+        period:
+          type: [string, 'null']
+          enum: [MONTHLY, YEARLY, null]
+          description: Billing period; null for FREE (never expires).
+        maxActiveJobs:
+          type: [integer, 'null']
+          description: >
+            Concurrent ACTIVE-job quota enforced at publish
+            (`JOB_QUOTA_EXCEEDED`, meta.planLimit). null = unlimited.
+          example: 1
+        gstRatePct:
+          type: integer
+          description: >
+            GST rate hint for LOCAL-company price display (e.g. 18). The
+            checkout response carries the authoritative split.
+          example: 18
+        features:
+          type: array
+          items:
+            type: string
+          description: Marketing feature strings for the plan card.
+
+    SubscriptionStatus:
+      type: object
+      required: [plan, status, startsAt, expiresAt, daysRemaining, renewable]
+      description: >
+        The company's current subscription — the PlanStatusWidget + subscription
+        page source. A company that never purchased anything gets a well-formed
+        FREE state (status ACTIVE, expiresAt null) — NOT a 404.
+
+
+        **Renewal-window semantics:** renewal of the SAME plan EXTENDS the
+        current term (new expiry = current `expiresAt` + one period — paid time
+        is never lost). `renewable` turns true inside the renewal window (the
+        last 7 days before `expiresAt`) and stays true through GRACE and
+        EXPIRED. Attempting a same-plan checkout while `renewable` is false →
+        409 `SUBSCRIPTION_ALREADY_ACTIVE`. A DIFFERENT paid plan may be
+        purchased at any time (an upgrade replaces the term).
+
+
+        **Grace semantics (Answer 07):** after `expiresAt` the status becomes
+        GRACE for 7 days (`graceEndsAt`). After grace, EXPIRED: all the
+        company's ACTIVE jobs except the most recently published one are
+        paused, and quota enforcement returns to the FREE limit.
+      properties:
+        plan:
+          $ref: '#/components/schemas/Plan'
+        status:
+          $ref: '#/components/schemas/SubscriptionState'
+        startsAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: [string, 'null']
+          format: date-time
+          description: null for FREE (never expires).
+        graceEndsAt:
+          type: [string, 'null']
+          format: date-time
+          description: Present (non-null) only while status = GRACE.
+        daysRemaining:
+          type: [integer, 'null']
+          description: >
+            Whole days until `expiresAt` (during ACTIVE) or until `graceEndsAt`
+            (during GRACE); 0 when EXPIRED; null for FREE.
+        renewable:
+          type: boolean
+          description: >
+            True when a same-plan renewal checkout is currently allowed (inside
+            the renewal window, or in GRACE/EXPIRED). False → same-plan checkout
+            returns 409 SUBSCRIPTION_ALREADY_ACTIVE.
+
+    Invoice:
+      type: object
+      required: [id, number, issuedAt, totalSubunits, currency, planName, pdfUrl]
+      description: >
+        A GST-compliant invoice, generated when the webhook confirms payment.
+        `number` is SEQUENTIAL per calendar year in the format
+        `SIC-YYYY-NNNNN` (e.g. `SIC-2026-00042`) — gapless, assigned at
+        generation time, never reused.
+      properties:
+        id:
+          type: string
+          format: uuid
+        number:
+          type: string
+          pattern: '^SIC-\d{4}-\d{5}$'
+          example: SIC-2026-00042
+        issuedAt:
+          type: string
+          format: date-time
+        totalSubunits:
+          type: integer
+          minimum: 0
+          description: Grand total INCLUDING GST, integer subunits.
+        currency:
+          type: string
+          example: INR
+        planName:
+          type: string
+          example: Pro Monthly
+        pdfUrl:
+          type: [string, 'null']
+          description: >
+            SHORT-EXPIRY signed URL (~15 minutes) to the invoice PDF — minted
+            fresh on every list/detail read, so a stale URL is cured by
+            refetching the invoice list. null until the PDF has been generated
+            (generation is async, worker-side).
+
+    CheckoutSession:
+      type: object
+      required: [orderId, gateway, amountSubunits, gstSubunits, totalSubunits, currency]
+      description: >
+        The checkout response — tells the frontend WHICH gateway to launch and
+        with what payload. EXACTLY ONE of `razorpay` / `stripe` is present, and
+        it always matches `gateway`; the frontend branches on `gateway`, it
+        never chooses. `gstSubunits` is the authoritative GST split (0 for
+        FOREIGN companies; server-computed for LOCAL).
+
+
+        **Activation is webhook-only:** completing the gateway flow does NOT
+        activate anything. The frontend must poll `GET /billing/orders/{id}`
+        until the (signature-verified) webhook flips the order to PAID — or
+        surface a "still confirming" timeout UX. A client-side success callback
+        NEVER changes order or subscription state.
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          description: The poll target — `GET /billing/orders/{orderId}`.
+        humanOrderRef:
+          type: string
+          description: Human-readable order reference (support conversations).
+          example: ORD-2026-00107
+        gateway:
+          $ref: '#/components/schemas/PaymentGateway'
+        amountSubunits:
+          type: integer
+          minimum: 0
+          description: Base amount excluding GST, integer subunits.
+        gstSubunits:
+          type: integer
+          minimum: 0
+          description: GST portion, integer subunits (0 when not applicable).
+        totalSubunits:
+          type: integer
+          minimum: 0
+          description: amountSubunits + gstSubunits — what the gateway charges.
+        currency:
+          type: string
+          example: INR
+        razorpay:
+          type: object
+          required: [keyId, gatewayOrderId]
+          description: Present iff gateway = RAZORPAY.
+          properties:
+            keyId:
+              type: string
+              description: Publishable Razorpay key id for Checkout.js.
+            gatewayOrderId:
+              type: string
+              description: The Razorpay order id to open Checkout.js with.
+        stripe:
+          type: object
+          required: [redirectUrl]
+          description: Present iff gateway = STRIPE.
+          properties:
+            redirectUrl:
+              type: string
+              description: Stripe-hosted Checkout URL to redirect the browser to.
+
+    Order:
+      type: object
+      required:
+        [id, planCode, status, gateway, amountSubunits, gstSubunits, totalSubunits,
+         currency, createdAt, subscriptionActivatedAt, invoiceId]
+      description: >
+        A checkout order — THE poll target after the gateway flow. Status moves
+        CREATED → PAID/FAILED only via the verified webhook (or admin
+        reconciliation); polling this endpoint is safe and side-effect-free.
+        On PAID, `subscriptionActivatedAt` and `invoiceId` are set by the same
+        webhook-driven transaction.
+      properties:
+        id:
+          type: string
+          format: uuid
+        humanOrderRef:
+          type: string
+          example: ORD-2026-00107
+        planCode:
+          $ref: '#/components/schemas/PlanCode'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        gateway:
+          $ref: '#/components/schemas/PaymentGateway'
+        amountSubunits:
+          type: integer
+          minimum: 0
+        gstSubunits:
+          type: integer
+          minimum: 0
+        totalSubunits:
+          type: integer
+          minimum: 0
+        currency:
+          type: string
+          example: INR
+        createdAt:
+          type: string
+          format: date-time
+        subscriptionActivatedAt:
+          type: [string, 'null']
+          format: date-time
+          description: Set when the webhook activates the subscription (PAID only).
+        invoiceId:
+          type: [string, 'null']
+          format: uuid
+          description: Set when the invoice is generated (PAID only).
+
+    DocumentUrlGrant:
+      type: object
+      required: [url, expiresInSeconds]
+      description: >
+        A short-expiry signed R2 GET URL for a candidate document (Pro-plan
+        employer feature). EVERY issuance is written to the audit log
+        (who / which candidate / which document type / when) — the URL itself
+        and the object key are never logged.
+      properties:
+        url:
+          type: string
+          description: Signed R2 GET URL. Fetch immediately; do not persist.
+        expiresInSeconds:
+          type: integer
+          description: Seconds until the signed URL stops working (short — e.g. 300).
+          example: 300
+
+    JobCreateRequest:
+      type: object
+      required:
+        [
+          title,
+          market,
+          location,
+          salaryCurrency,
+          accommodation,
+          healthInsurance,
+          transportation,
+        ]
+      properties:
+        title:
+          type: string
+        market:
+          $ref: '#/components/schemas/JobMarket'
+        location:
+          type: string
+        description:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+        salaryMin:
+          type: integer
+          minimum: 0
+        salaryMax:
+          type: integer
+          minimum: 0
+        salaryCurrency:
+          type: string
+          example: AED
+        accommodation:
+          type: boolean
+        healthInsurance:
+          type: boolean
+        transportation:
+          type: boolean
+        workConditions:
+          type: string
+        requirements:
+          type: array
+          items:
+            type: string
+        experienceRequiredYears:
+          type: integer
+          minimum: 0
+        vacancies:
+          type: integer
+          minimum: 1
+        genderPreference:
+          $ref: '#/components/schemas/GenderPreference'
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # S6 — ADMIN CONSOLE
+    #
+    # The admin console is EN-ONLY (locked decision 2): i18n keys still exist so
+    # it can be translated later, but no HI/AR fixtures and no RTL obligations
+    # apply to admin screens.
+    #
+    # RBAC: every admin endpoint declares the PermissionKey it requires. Denial
+    # is 403 FORBIDDEN (`meta.requiredPermission`). Permissions are DATA
+    # (role_permissions rows), not hardcoded roles — a role's effective set is
+    # what the matrix says, so "SUPER_ADMIN-effective" below means "seeded ON for
+    # SUPER_ADMIN and locked OFF for everyone else", not a role check in code.
+    # ══════════════════════════════════════════════════════════════════════════
+
+    OffsetMeta:
+      type: object
+      required: [page, pageSize, total, totalPages]
+      description: The standard offset-pagination envelope used by every admin table.
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+
+    AuditStatus:
+      type: string
+      enum: [SUCCESS, FAILED, BLOCKED, DELIVERED, ERROR]
+      description: Outcome recorded on an audit row.
+
+    PermissionKey:
+      type: string
+      description: |
+        The RBAC permission keys (Screen 27). The first 20 are the S2-seeded set;
+        5 were added by S6 (`logs.export`, `roles.view`, `roles.manage`,
+        `candidates.view_documents`, `jobs.moderate`) and seeded by S6a-B2; and 2
+        more (`settings.view`, `settings.manage`) by S6a-F1.
+
+        The settings pair retires a placeholder: S2-B1 gated `/admin/settings` on
+        `logs.view` because no settings key existed yet, and said so in its own
+        docblock. That meant a MODERATOR — who holds `logs.view` — could WRITE
+        platform settings (auto-archive window, mandatory documents, completion
+        threshold) merely because they were allowed to read the audit log. Read
+        and write are now separate keys, and neither is granted to MODERATOR.
+
+        Deliberately NOT forked into new near-duplicates: candidate purge reuses
+        `candidates.delete` (already SUPER_ADMIN-effective / locked-off
+        elsewhere), suspend/reactivate reuse `candidates.edit`, and on-behalf job
+        creation reuses `jobs.post_admin`.
+      enum:
+        - candidates.view
+        - candidates.edit
+        - candidates.delete
+        - candidates.onboard_manual
+        - candidates.export
+        - employers.view
+        - employers.approve_reject
+        - employers.suspend
+        - employers.delete
+        - jobs.view
+        - jobs.post_admin
+        - jobs.archive
+        - applications.manage
+        - applications.change_status
+        - applications.notes
+        - reports.view
+        - logs.view
+        - billing.manage
+        - subscriptions.manage
+        - admin_users.manage
+        - logs.export
+        - roles.view
+        - roles.manage
+        - settings.view
+        - settings.manage
+        - candidates.view_documents
+        - jobs.moderate
+
+    AuditLogEntry:
+      type: object
+      required: [id, createdAt, module, action, status, meta]
+      description: |
+        One audit row (Screen 29). `meta` is ALREADY REDACTED at write time by
+        the S2-B2 denylist — no raw PII (passport numbers, phones, emails,
+        tokens, OTPs, document keys/URLs) ever reaches this surface, so the
+        client may render it verbatim. Audit rows are append-only and are never
+        cascade-deleted.
+      properties:
+        id:
+          type: string
+          description: >
+            The BigInt primary key rendered as a STRING (it exceeds JS's safe
+            integer range). This is also the keyset cursor.
+          example: '1048576'
+        createdAt:
+          type: string
+          format: date-time
+        module:
+          type: string
+          description: The B2 taxonomy — drives Screen 29's filter chips.
+          example: Payments
+        action:
+          type: string
+          description: Dot-namespaced action.
+          example: subscription.activated
+        actorUserId:
+          type: [string, 'null']
+          format: uuid
+          description: Null for system-driven events (cron sweeps, webhooks).
+        actorRole:
+          oneOf:
+            - $ref: '#/components/schemas/UserRole'
+            - type: 'null'
+          description: Null for system-driven events.
+        targetType:
+          type: [string, 'null']
+          example: Subscription
+        targetId:
+          type: [string, 'null']
+        status:
+          $ref: '#/components/schemas/AuditStatus'
+        meta:
+          type: object
+          additionalProperties: true
+          description: Redaction-safe context (counts, ids, codes) — never raw PII.
+
+    AdminDashboard:
+      type: object
+      required:
+        [counts, revenueThisMonthSubunits, currency, pendingEmployerReviews, pendingJobReviews]
+      description: |
+        Admin overview KPIs. All figures are LIVE aggregates over the existing
+        tables (no honest-zeros remain at S6): candidate/employer/job/application
+        counts come from the same sources as the employer dashboard, and revenue
+        sums PAID orders in the current calendar month.
+      properties:
+        counts:
+          type: object
+          required: [candidates, employers, jobs, applications]
+          properties:
+            candidates:
+              type: integer
+              description: Non-purged candidate profiles.
+            employers:
+              type: object
+              description: Company counts keyed by CompanyStatus.
+              additionalProperties:
+                type: integer
+              example: { PENDING: 4, APPROVED: 37, REJECTED: 2, SUSPENDED: 1 }
+            jobs:
+              type: object
+              description: Job counts keyed by JobStatus.
+              additionalProperties:
+                type: integer
+              example: { DRAFT: 5, PENDING_REVIEW: 3, ACTIVE: 22, PAUSED: 4, ARCHIVED: 11 }
+            applications:
+              type: object
+              description: Application counts keyed by ApplicationStatus.
+              additionalProperties:
+                type: integer
+              example: { PENDING: 40, SHORTLISTED: 12, SELECTED: 5, REJECTED: 9 }
+        revenueThisMonthSubunits:
+          type: integer
+          minimum: 0
+          description: Sum of PAID order totals this calendar month, integer subunits.
+        currency:
+          type: string
+          example: INR
+        pendingEmployerReviews:
+          type: integer
+          description: Companies awaiting approval — the Screen-24 work queue depth.
+        pendingJobReviews:
+          type: integer
+          description: Jobs in PENDING_REVIEW — the Screen-26 work queue depth.
+
+    RbacCell:
+      type: object
+      required: [role, permission, enabled, locked]
+      description: |
+        One cell of the Screen-27 matrix. `locked = true` means IMMUTABLE — the
+        entire SUPER_ADMIN column plus the seeded locked set (e.g.
+        `billing.manage` for non-super roles). A PATCH targeting a locked cell is
+        rejected 423 `PERMISSION_CELL_LOCKED` and writes nothing.
+      properties:
+        role:
+          $ref: '#/components/schemas/UserRole'
+        permission:
+          $ref: '#/components/schemas/PermissionKey'
+        enabled:
+          type: boolean
+        locked:
+          type: boolean
+
+    RbacMatrix:
+      type: object
+      required: [roles, permissions, cells]
+      description: |
+        The full permission matrix. `roles` carries ONLY the admin-side roles —
+        CANDIDATE and EMPLOYER have no rows (they are not admin-console roles and
+        are never rendered as columns).
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRole'
+          example: [SUPER_ADMIN, ADMIN, MODERATOR, SUPPORT]
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionKey'
+        cells:
+          type: array
+          items:
+            $ref: '#/components/schemas/RbacCell'
+
+    AdminMe:
+      type: object
+      required: [role, permissions]
+      description: |
+        The caller's own identity and EFFECTIVE permission set — the source the
+        admin console's navigation and in-screen affordances render from.
+
+        `permissions` is the flat list of keys the caller currently HOLDS (enabled
+        cells only). Locked-ness is irrelevant here: a locked-OFF cell is simply
+        absent, because the caller does not hold it. Screen 27 is where lock state
+        matters; this endpoint answers only "what can I do right now?".
+
+        Consumers MUST treat this as UX input, never as an authorization decision.
+      properties:
+        role:
+          $ref: '#/components/schemas/UserRole'
+        permissions:
+          type: array
+          description: Keys the caller holds. May be empty (a role granted nothing).
+          items:
+            $ref: '#/components/schemas/PermissionKey'
+          example: [candidates.view, employers.view, jobs.view, logs.view, reports.view]
+
+    AdminCandidateCard:
+      type: object
+      required: [id, userId, fullName, status, profileVisible, completionPct, createdAt]
+      description: |
+        Admin-context candidate row (Screen 25) — FULLER than the employer view
+        (contact details and deletion state are included, since admins are the
+        DPDP data controllers) but STILL carries NO document keys or URLs.
+        Document CONTENT is a separate, per-issuance-audited grant
+        (`GET /admin/candidates/{id}/documents/{type}/url`).
+
+        A PURGED candidate is a tombstone: `fullName` is "Deleted user",
+        contact fields are null, `documents` is empty, and `purgedAt` is set.
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        phone:
+          type: [string, 'null']
+          description: Admin context — the candidate's showPhone toggle does NOT hide it.
+        email:
+          type: [string, 'null']
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        profileVisible:
+          type: boolean
+          description: The candidate's own browse-pool visibility toggle.
+        completionPct:
+          type: integer
+        documents:
+          type: array
+          description: Upload STATUS only — never a key or URL.
+          items:
+            $ref: '#/components/schemas/CandidateDocumentStatus'
+        deletionDueAt:
+          type: [string, 'null']
+          format: date-time
+          description: Set when the candidate requested their own 30-day self-deletion.
+        purgedAt:
+          type: [string, 'null']
+          format: date-time
+          description: Set once anonymized (admin purge OR the elapsed self-deletion).
+        createdAt:
+          type: string
+          format: date-time
+
+    AdminCandidateDetail:
+      allOf:
+        - $ref: '#/components/schemas/AdminCandidateCard'
+        - type: object
+          required: [experiences, skills, applicationCount]
+          description: |
+            ADDED IN S6b-B1. The single-candidate admin view (Screen 25's review
+            panel): the card plus experiences, skills and the application count.
+            Same privacy rule as the card — document STATUS only, never keys or
+            URLs. For a PURGED candidate, `experiences` and `skills` are empty
+            (the purge deletes those rows) and the card fields are the tombstone.
+          properties:
+            experiences:
+              type: array
+              items:
+                $ref: '#/components/schemas/WorkExperience'
+            skills:
+              type: array
+              items:
+                $ref: '#/components/schemas/CandidateSkill'
+            applicationCount:
+              type: integer
+              description: >
+                Total applications ever submitted — survives the purge (the
+                applications are tombstoned, not deleted).
+
+    AdminJobRow:
+      type: object
+      required: [id, humanId, title, companyId, companyName, status, isFeatured, isUrgent, createdAt]
+      description: |
+        Admin-context job row (Screen 26) — every status is visible, including
+        DRAFT and PENDING_REVIEW which no employer-facing or public list returns.
+        S6b-B2 added `market`, `views` and `moderationReason` (the reject reason,
+        also employer-visible on their own job row).
+      properties:
+        market:
+          $ref: '#/components/schemas/JobMarket'
+        views:
+          type: integer
+          description: Lifetime job-detail view count.
+        moderationReason:
+          type: [string, 'null']
+          description: >
+            Set when an admin REJECTed the job in review; cleared on approve.
+            Employer-visible by design — it tells them what to fix.
+        id:
+          type: string
+          format: uuid
+        humanId:
+          type: string
+          example: JB-2026-00042
+        title:
+          type: string
+        companyId:
+          type: string
+          format: uuid
+        companyName:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+        isFeatured:
+          type: boolean
+          description: ADMIN-SET (decision 3) — drives the S2-F1 badge + S2-B6 filter.
+        isUrgent:
+          type: boolean
+          description: ADMIN-SET (decision 3) — drives the S2-F1 badge + S2-B6 filter.
+        applicantCount:
+          type: integer
+        publishedAt:
+          type: [string, 'null']
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    NoteEntry:
+      type: object
+      required: [id, authorUserId, authorRole, body, createdAt]
+      description: |
+        An INTERNAL admin note on an application (Screen 26).
+
+        **Internal-only — never surfaced to the candidate or the employer.**
+        Notes are not part of `Application`, `ApplicationDetail`,
+        `ApplicationCard`, `ApplicantCard`, or the candidate-facing
+        `ApplicationTimelineEntry` — the timeline mapper already excludes them
+        and must continue to. Adding a note to any non-admin surface is a
+        contract violation.
+      properties:
+        id:
+          type: string
+          format: uuid
+        authorUserId:
+          type: string
+          format: uuid
+        authorRole:
+          $ref: '#/components/schemas/UserRole'
+        body:
+          type: string
+          maxLength: 2000
+        createdAt:
+          type: string
+          format: date-time
+
+    AdminJobDetail:
+      allOf:
+        - $ref: '#/components/schemas/Job'
+        - type: object
+          required: [humanId, isFeatured, isUrgent, companyStatus]
+          description: |
+            0.8.1 — the moderation detail (GET /admin/jobs/{id}): the full
+            internal `Job` (so Screen 26 can render the job as candidates
+            would see it, whatever its status) plus the admin row facts and
+            `companyStatus` — the panel flags a suspended employer BEFORE the
+            approve attempt rather than letting the 403 announce it.
+          properties:
+            humanId:
+              type: string
+              example: JB-2026-00042
+            isFeatured:
+              type: boolean
+            isUrgent:
+              type: boolean
+            views:
+              type: integer
+              description: Lifetime job-detail view count.
+            moderationReason:
+              type: [string, 'null']
+              description: The reject reason, when the job was returned to DRAFT.
+            companyStatus:
+              $ref: '#/components/schemas/CompanyStatus'
+            # The structured work-condition / optional-benefit columns the S2-B4
+            # implementation actually stores (the base Job schema's freeform
+            # `workConditions` predates them and is never emitted by the API).
+            hoursPerDay:
+              type: integer
+            daysPerWeek:
+              type: integer
+            overtime:
+              type: boolean
+            foodAllowance:
+              type: boolean
+            airTicketArrival:
+              type: boolean
+            airTicketDeparture:
+              type: boolean
+            otherAllowance:
+              type: [string, 'null']
+            contractPeriodMonths:
+              type: [integer, 'null']
+
+    AdminApplicationRow:
+      allOf:
+        - $ref: '#/components/schemas/Application'
+        - type: object
+          description: |
+            0.8.1 — the admin list row (GET /admin/applications): the
+            admin-context application plus the display denormalizations the
+            S4-B3 implementation already returned (`candidateName`,
+            `jobTitle`). `candidateName` is null for a purged candidate's
+            tombstoned application.
+          properties:
+            candidateName:
+              type: [string, 'null']
+            jobTitle:
+              type: [string, 'null']
+
+    AdminTimelineEntry:
+      type: object
+      required: [fromStatus, toStatus, actorRole, isAdminOverride, createdAt]
+      description: |
+        0.8.1 — one transition in the ADMIN serialization of an application's
+        history. Unlike the candidate-facing `ApplicationTimelineEntry`, this
+        carries `overrideReason` — the reason an admin recorded for a
+        corrective move is FOR admins and the audit trail, and this is its
+        only serialization. Never emitted to candidate or employer contexts.
+      properties:
+        fromStatus:
+          oneOf:
+            - $ref: '#/components/schemas/ApplicationStatus'
+            - type: 'null'
+          description: Null on the initial (apply) entry.
+        toStatus:
+          $ref: '#/components/schemas/ApplicationStatus'
+        actorRole:
+          oneOf:
+            - $ref: '#/components/schemas/UserRole'
+            - type: 'null'
+          description: Null when the transition was system-initiated.
+        isAdminOverride:
+          type: boolean
+        overrideReason:
+          type: [string, 'null']
+          description: Present on admin corrective moves. ADMIN CONTEXT ONLY.
+        createdAt:
+          type: string
+          format: date-time
+
+    AdminApplicationDetail:
+      allOf:
+        - $ref: '#/components/schemas/AdminApplicationRow'
+        - type: object
+          required: [timeline]
+          description: |
+            0.8.1 — the Screen 26 application detail
+            (GET /admin/applications/{id}): the admin row plus the FULL
+            timeline (see `AdminTimelineEntry`).
+          properties:
+            timeline:
+              type: array
+              items:
+                $ref: '#/components/schemas/AdminTimelineEntry'
 
 # ─── Paths ───────────────────────────────────────────────────────────────────
 
@@ -2664,12 +3788,24 @@ paths:
                         type: string
                         format: date-time
 
-  # ── Resume ────────────────────────────────────────────────────────────────────
+  # ── Resume (CR-001 — frozen in S7-0) ─────────────────────────────────────────
+  # Settings CRUD, ASYNC generation (trigger + poll), and delivery. All routes
+  # bearerAuth, CANDIDATE role. Out of scope, locked at this freeze: the public
+  # slug page (no public endpoint; the dormant column stays dormant), video
+  # portfolio endpoints, hi/ar rendering (ResumeSettings.language is en-only).
   /candidates/me/resume:
     get:
       operationId: getCandidateMeResume
       tags: [resume]
-      summary: Get resume settings and last-rendered timestamp
+      summary: Resume settings + the CURRENT generation summary
+      description: |
+        The "current" read Screen 12/Step 4 renders from: the candidate's
+        settings (defaults applied when they never set them — religion and
+        passport-number OFF, phone and father's-name ON) and, when a resume has
+        ever been generated, the latest generation's summary ("last generated
+        {date}"). This IS the optional `/resume/current` endpoint from the
+        CR-001 sketch — folded into the existing read rather than added beside
+        it.
       responses:
         '200':
           description: Resume info
@@ -2688,21 +3824,48 @@ paths:
                       lastRenderedAt:
                         type: [string, 'null']
                         format: date-time
+                      current:
+                        oneOf:
+                          - $ref: '#/components/schemas/ResumeGeneration'
+                          - type: 'null'
+                        description: The latest generation, when one exists.
 
   /candidates/me/resume/settings:
     patch:
       operationId: patchCandidateMeResumeSettings
       tags: [resume]
-      summary: Update resume rendering settings
+      summary: Update resume rendering settings (PARTIAL)
+      description: |
+        Body is a PARTIAL `ResumeSettings` — omitted toggles keep their value.
+
+        **Settings apply at GENERATION time.** A change made after a PDF was
+        generated does NOT alter the stored PDF (the S7-B1 byte-extraction
+        tests depend on that snapshot semantics) — the candidate REGENERATES
+        for the change to take effect. `language` accepts only `en` at MVP
+        (enum-enforced).
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ResumeSettings'
+              type: object
+              additionalProperties: false
+              description: Partial ResumeSettings — any subset of its fields.
+              properties:
+                language:
+                  type: string
+                  enum: [en]
+                showPhone:
+                  type: boolean
+                showReligion:
+                  type: boolean
+                showFatherName:
+                  type: boolean
+                showPassportNumber:
+                  type: boolean
       responses:
         '200':
-          description: Settings updated
+          description: Settings updated (the FULL resulting settings)
           content:
             application/json:
               schema:
@@ -2716,10 +3879,19 @@ paths:
     post:
       operationId: postCandidateMeResumeGenerate
       tags: [resume]
-      summary: Enqueue a resume PDF generation
+      summary: Enqueue an ASYNC resume PDF generation
+      description: |
+        **202 — this only ENQUEUES.** The WORKER renders the PDF (Puppeteer,
+        S7-B1); rendering takes seconds. The client POLLS
+        `GET /candidates/me/resume/status` until READY — the same
+        pending→confirmed discipline as S5 payments. There is no synchronous
+        render and no completed URL in this response.
+
+        The PDF snapshots the profile AND the settings AS OF THIS MOMENT —
+        later edits to either require a new generation.
       responses:
         '202':
-          description: Generation enqueued
+          description: Generation enqueued (status starts PENDING)
           content:
             application/json:
               schema:
@@ -2728,17 +3900,63 @@ paths:
                 properties:
                   data:
                     type: object
-                    required: [generationId]
+                    required: [generationId, status]
                     properties:
                       generationId:
                         type: string
                         format: uuid
+                      status:
+                        type: string
+                        enum: [PENDING]
+
+  /candidates/me/resume/status:
+    get:
+      operationId: getCandidateMeResumeStatus
+      tags: [resume]
+      summary: THE POLL TARGET — the latest generation's status
+      description: |
+        Returns the candidate's LATEST generation. PENDING while the worker
+        renders; READY carries a SHORT-EXPIRY signed R2 GET url (re-mint via
+        `GET /candidates/me/resume/download` if it expires before the click);
+        FAILED carries a human-readable `failureReason` — retry by
+        regenerating.
+
+        A settings change AFTER a generation went READY does NOT retroactively
+        alter the stored PDF — `settingsApplied` on the rendered view is the
+        snapshot that PDF was built from.
+      responses:
+        '200':
+          description: The latest generation
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ResumeGeneration'
+        '404':
+          description: No generation was ever triggered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Not Found
+                status: 404
+                detail: No resume has been generated yet.
+                code: RESUME_NOT_FOUND
 
   /candidates/me/resume/download:
     get:
       operationId: getCandidateMeResumeDownload
       tags: [resume]
-      summary: Get a signed download URL for the candidate's resume PDF
+      summary: Re-mint a signed download URL for the latest READY resume
+      description: >
+        The refresh affordance for an expired signed url (~5 min expiry is the
+        system working, not breaking). 404 `RESUME_NOT_FOUND` when no READY
+        resume exists.
       responses:
         '200':
           description: Signed download URL
@@ -2759,7 +3977,7 @@ paths:
                         type: integer
                         example: 300
         '404':
-          description: No resume generated yet
+          description: No READY resume yet
           content:
             application/json:
               schema:
@@ -2769,13 +3987,26 @@ paths:
     post:
       operationId: postCandidateMeResumeSendWhatsapp
       tags: [resume]
-      summary: Send resume PDF via WhatsApp to the candidate
+      summary: Send the latest resume PDF to the candidate's OWN WhatsApp
       description: |
-        Rate-limited: 5 sends / day / candidate.
-        **409 WHATSAPP_NOT_CAPABLE** — candidate's `whatsappCapable = false`.
+        Sends the latest READY resume as a WhatsApp DOCUMENT to the
+        candidate's OWN verified number — no destination field exists or is
+        accepted. The API enqueues; the WORKER owns the send. Audited
+        server-side.
+
+        - **Requires a READY resume** → 422 `RESUME_NOT_READY` when none (or
+          the latest generation is PENDING/FAILED).
+        - **`whatsappCapable: false` DEGRADES, it does not fail**: the send
+          falls back to email-to-self and the 202 says so —
+          `{ delivered: "EMAIL_FALLBACK" }` (S7-0 replaced the pre-freeze
+          draft's 409 `WHATSAPP_NOT_CAPABLE`; a candidate without WhatsApp
+          still gets their resume, and the honest answer is a success with the
+          real channel, not an error).
+        - **Rate-limited 5 sends/day/candidate** (CR-001) → 429
+          `RESUME_SEND_LIMIT_EXCEEDED`.
       responses:
         '202':
-          description: Send enqueued
+          description: Delivery enqueued — the real channel stated
           content:
             application/json:
               schema:
@@ -2783,38 +4014,47 @@ paths:
                 required: [data]
                 properties:
                   data:
-                    type: object
-                    required: [sent]
-                    properties:
-                      sent:
-                        type: boolean
-        '409':
-          description: Candidate is not WhatsApp capable
+                    $ref: '#/components/schemas/ResumeDeliveryResult'
+        '422':
+          description: No READY resume to send
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 type: about:blank
-                title: WhatsApp not capable
-                status: 409
-                detail: This account is not linked to a WhatsApp number. Please use email delivery.
-                code: WHATSAPP_NOT_CAPABLE
+                title: Unprocessable Entity
+                status: 422
+                detail: Generate your resume before sending it.
+                code: RESUME_NOT_READY
         '429':
           description: Daily send limit reached (5/day)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Too Many Requests
+                status: 429
+                detail: You've reached today's resume send limit. Try again tomorrow.
+                code: RESUME_SEND_LIMIT_EXCEEDED
 
   /candidates/me/resume/send-email:
     post:
       operationId: postCandidateMeResumeSendEmail
       tags: [resume]
-      summary: Send resume PDF via email to the candidate
+      summary: Email the latest resume PDF to the candidate's own address
       description: |
-        Sends to the candidate's own registered account email ONLY — no `to`
-        field is accepted. Rate-limited: 5 sends / day.
+        Sends ONLY to the candidate's registered account email — no `to` field
+        exists or is accepted (the hard rule: "email to myself" can never
+        become "email to an arbitrary address"). Requires a READY resume →
+        422 `RESUME_NOT_READY`.
+
+        NO dedicated daily cap (stated deliberately — email-to-self is cheap
+        and self-limiting); only the global authenticated rate limit applies.
+        The pre-freeze draft's 5/day on this endpoint moved to the WhatsApp
+        send where the cost lives.
       responses:
         '202':
           description: Email enqueued
@@ -2825,13 +4065,9 @@ paths:
                 required: [data]
                 properties:
                   data:
-                    type: object
-                    required: [sent]
-                    properties:
-                      sent:
-                        type: boolean
-        '429':
-          description: Daily send limit reached
+                    $ref: '#/components/schemas/ResumeDeliveryResult'
+        '422':
+          description: No READY resume to send
           content:
             application/json:
               schema:
@@ -3633,6 +4869,88 @@ paths:
                 detail: Candidate not found.
                 code: NOT_FOUND
 
+  # ── Employer: candidate document access — the Pro gate (S5) ──────────────────
+  /employers/candidates/{id}/documents/{type}/url:
+    get:
+      operationId: getEmployersCandidateDocumentUrl
+      tags: [employer]
+      summary: Get a signed candidate-document URL — Pro-plan gate (S5)
+      description: |
+        Issues a SHORT-EXPIRY signed R2 GET URL for one of the candidate's
+        uploaded documents. This is the S3 decision-2 landing: the employer
+        context exposed document STATUS only — actual document ACCESS is the
+        Pro-plan feature.
+
+        **Plan gate:** requires an APPROVED employer on an ACTIVE (or GRACE)
+        Pro plan. Free-plan callers get 403 `PLAN_UPGRADE_REQUIRED` — the
+        upsell driver; the UI routes it to the pricing page.
+
+        **Privacy inheritance (S3 rules apply unchanged):**
+        - A `profileVisible = false` candidate returns 404 IDENTICAL to
+          nonexistent — a Pro employer probing an invisible candidate learns
+          nothing (the S3 indistinguishability discipline).
+        - Only document types the candidate has actually uploaded resolve;
+          an absent document type is the SAME 404.
+        - The Pro gate never bypasses `profileVisible` — the 404 checks run
+          regardless of plan.
+
+        **Audit:** EVERY issuance is written to the audit log (employer user,
+        candidate, document type, timestamp). The signed URL and the object
+        key are never logged.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DocumentType'
+      responses:
+        '200':
+          description: Short-expiry signed URL grant (issuance audited)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DocumentUrlGrant'
+        '403':
+          description: >
+            `EMPLOYER_NOT_APPROVED` (company not approved) or
+            `PLAN_UPGRADE_REQUIRED` (Free plan — the upsell driver). Branch on
+            `code`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Forbidden
+                status: 403
+                detail: Document access is a Pro feature. Upgrade to view candidate documents.
+                code: PLAN_UPGRADE_REQUIRED
+        '404':
+          description: >
+            Candidate not found, profile hidden (profileVisible = false), or
+            this document type not uploaded — all byte-identical
+            (indistinguishable to the caller).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Not found
+                status: 404
+                detail: Not found.
+                code: NOT_FOUND
+
   # ══════════════════════════════════════════════════════════════════════════════
   # JOBS — S2 FULL DETAIL
   # ══════════════════════════════════════════════════════════════════════════════
@@ -3735,64 +5053,14 @@ paths:
         1. EMPLOYER_NOT_APPROVED (403) — enforced at publish only if company status changes.
         2. WORKER_PROTECTION_VIOLATION (422) — accommodation, healthInsurance, and
            transportation must all be `true`. `meta.violations[]` lists which rules failed.
-        3. JOB_QUOTA_EXCEEDED (422) — Free plan: max 1 ACTIVE job. `meta.planLimit = 1`.
+        3. JOB_QUOTA_EXCEEDED (422) — quota = the plan's `maxActiveJobs` (S5):
+           Free 1, Pro unlimited. `meta.planLimit` reflects the plan.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                [
-                  title,
-                  market,
-                  location,
-                  salaryCurrency,
-                  accommodation,
-                  healthInsurance,
-                  transportation,
-                ]
-              properties:
-                title:
-                  type: string
-                market:
-                  $ref: '#/components/schemas/JobMarket'
-                location:
-                  type: string
-                description:
-                  type: string
-                categoryId:
-                  type: string
-                  format: uuid
-                salaryMin:
-                  type: integer
-                  minimum: 0
-                salaryMax:
-                  type: integer
-                  minimum: 0
-                salaryCurrency:
-                  type: string
-                  example: AED
-                accommodation:
-                  type: boolean
-                healthInsurance:
-                  type: boolean
-                transportation:
-                  type: boolean
-                workConditions:
-                  type: string
-                requirements:
-                  type: array
-                  items:
-                    type: string
-                experienceRequiredYears:
-                  type: integer
-                  minimum: 0
-                vacancies:
-                  type: integer
-                  minimum: 1
-                genderPreference:
-                  $ref: '#/components/schemas/GenderPreference'
+              $ref: '#/components/schemas/JobCreateRequest'
       responses:
         '201':
           description: Job created (DRAFT)
@@ -3985,9 +5253,12 @@ paths:
            `meta.violations[]` listing which fields failed (e.g.
            `["accommodation", "healthInsurance"]`).
 
-        3. **JOB_QUOTA_EXCEEDED (422)** — Free plan employers may have at most 1
-           ACTIVE job at a time. Returns 422 with `meta.planLimit = 1` and
-           `meta.activeCount = N`.
+        3. **JOB_QUOTA_EXCEEDED (422)** — the ACTIVE-job quota comes from the
+           company's subscription plan (`Plan.maxActiveJobs`; S5): Free = 1,
+           Pro = unlimited (null). Returns 422 with `meta.planLimit` set to the
+           plan's limit and `meta.activeCount = N`. An ACTIVE/GRACE Pro
+           subscription lifts the quota; after grace expires the FREE limit
+           re-applies (Answer 07).
       parameters:
         - name: id
           in: path
@@ -4337,6 +5608,42 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /admin/employers/{id}:
+    get:
+      operationId: getAdminEmployer
+      tags: [admin]
+      summary: One employer company by id (admin review detail)
+      description: >
+        **RBAC: `employers.view`** (same key as the list — reading one row is not
+        a wider grant than reading the table). ADDED IN S6a-F2: Screen 24's
+        review detail needs a single company, and no admin endpoint returned one.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The company
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Company'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Company not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /admin/employers/{id}/approve:
     post:
       operationId: postAdminEmployerApprove
@@ -4428,7 +5735,10 @@ paths:
       summary: Suspend an employer company (admin)
       description: >
         Sets the employer's company status to SUSPENDED. All their ACTIVE jobs
-        are paused automatically. Requires `employers.approve_reject` permission.
+        are paused automatically. Requires `employers.suspend` permission — a
+        SEPARATE, higher grant than `employers.approve_reject` (MODERATOR holds
+        approve/reject but not this; corrected in S6a-F2, the description
+        previously named the wrong key).
       parameters:
         - name: id
           in: path
@@ -4454,14 +5764,57 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /admin/employers/{id}/reactivate:
+    post:
+      operationId: postAdminEmployerReactivate
+      tags: [admin]
+      summary: Reactivate a suspended employer (admin)
+      description: >
+        SUSPENDED → APPROVED only. Requires `employers.approve_reject`.
+        ADDED IN S6a-F2: the endpoint has existed since S2-B4
+        (AdminEmployerController) but was never frozen into the contract.
+        The employer's paused jobs are NOT auto-resumed — the employer resumes
+        them manually (a suspension is not erased by ending it).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Employer reactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Company'
+        '404':
+          description: Employer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Company is not currently SUSPENDED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /admin/settings:
     get:
       operationId: getAdminSettings
       tags: [admin]
       summary: Get platform settings (admin)
       description: >
-        Returns all platform settings grouped by SettingGroup (matches the tabs
-        on Screen 28). Requires admin bearer token.
+        **RBAC: `settings.view`.** Returns ALL platform settings as a flat list
+        ordered by key. The client groups them into Screen 28's tabs by key
+        prefix (worker_protection.* / jobs.* / candidates.* / payments.*).
       responses:
         '200':
           description: All platform settings
@@ -4486,11 +5839,14 @@ paths:
       tags: [admin]
       summary: Update platform settings (admin; core rules require SUPER_ADMIN)
       description: |
-        Updates one or more settings by key. Settings where `isCoreRule = true`
-        (WORKER_PROTECTION group) require SUPER_ADMIN — ADMIN callers receive
-        403 CORE_RULE_FORBIDDEN for those keys.
+        **RBAC: `settings.manage`.** Updates one or more settings by key.
+        Settings where `isCoreRule = true` (the worker_protection.* trio) require
+        SUPER_ADMIN regardless of settings.manage — other callers receive 403
+        CORE_RULE_FORBIDDEN for those keys.
 
-        Send only the keys to update; other settings remain unchanged.
+        Batch-atomic, validate-all-first: every entry is checked (type + core-rule
+        gate) before ANY write; a single failure rejects the whole batch with no
+        side effects. Send only the keys to update.
       requestBody:
         required: true
         content:
@@ -4877,173 +6233,609 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  # ── Payments (Sprint 5) ───────────────────────────────────────────────────────
+  # ══════════════════════════════════════════════════════════════════════════════
+  # BILLING — S5 FULL DETAIL
+  # Money = integer subunits everywhere. Gateway routing is server-side.
+  # Activation is webhook-only. See the S5 block in `info.description`.
+  # ══════════════════════════════════════════════════════════════════════════════
+
   /billing/plans:
     get:
       operationId: getBillingPlans
       tags: [payments]
-      summary: '[S5] List available subscription plans'
-      description: '**Sprint 5 — not yet implemented.**'
-      security: []
-      responses:
-        '501':
-          description: Not implemented
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 5.
-                code: NOT_IMPLEMENTED
+      summary: List available subscription plans (S5)
+      description: |
+        The seeded three plans (FREE / PRO_MONTHLY ₹2,999.00 = 299900 paise /
+        PRO_YEARLY ₹24,999.00 = 2499900 paise), each with code, name,
+        `priceSubunits` (base, EXCLUDING GST), period, `maxActiveJobs`
+        (null = unlimited) and marketing `features[]`.
 
-  /billing/checkout:
-    post:
-      operationId: postBillingCheckout
-      tags: [payments]
-      summary: '[S5] Create a checkout session'
-      description: >
-        **Sprint 5 — not yet implemented.** Accepts `Idempotency-Key` header
-        (Redis, 24 h).
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
+        **GST display choice (locked):** the plan list carries `gstRatePct` as
+        a DISPLAY HINT so the pricing page can show "₹2,999 + 18% GST" for
+        LOCAL companies without a checkout round-trip. The AUTHORITATIVE split
+        is the checkout response's `gstSubunits` — the client never computes
+        tax itself. FOREIGN companies display the base price only.
+
+        Caller: any authenticated EMPLOYER (approval not required to browse
+        pricing).
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: The available plans
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 5.
-                code: NOT_IMPLEMENTED
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Plan'
 
   /billing/subscription:
     get:
       operationId: getBillingSubscription
       tags: [payments]
-      summary: '[S5] Get current subscription status'
-      description: '**Sprint 5 — not yet implemented.**'
+      summary: Get current subscription status (S5)
+      description: |
+        The PlanStatusWidget + subscription page source. ALWAYS returns a
+        well-formed `SubscriptionStatus` — a company that never purchased
+        anything gets the FREE state (plan FREE, status ACTIVE,
+        `expiresAt: null`), NOT a 404.
+
+        Grace semantics (Answer 07) and the renewal-window rule are documented
+        on the `SubscriptionStatus` schema: 7-day grace after expiry; after
+        grace, all ACTIVE jobs except the most recently published one are
+        paused; same-plan renewal EXTENDS the current term and is allowed only
+        while `renewable` is true.
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Current subscription state (FREE is a real state, not an error)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 5.
-                code: NOT_IMPLEMENTED
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SubscriptionStatus'
 
   /billing/invoices:
     get:
       operationId: getBillingInvoices
       tags: [payments]
-      summary: '[S5] List invoices'
-      description: '**Sprint 5 — not yet implemented.**'
+      summary: List invoices (S5)
+      description: |
+        Offset-paginated invoice history, newest first. `number` is the
+        sequential GST-compliant format `SIC-YYYY-NNNNN` (per-year, gapless —
+        e.g. `SIC-2026-00042`). `pdfUrl` is a SHORT-EXPIRY signed URL
+        (~15 min), minted fresh on every read and null until the async PDF
+        generation completes — refetch the list to cure a stale URL.
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PageSizeParam'
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Invoice page
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Invoice'
+                  meta:
+                    type: object
+                    required: [page, pageSize, total, totalPages]
+                    properties:
+                      page:
+                        type: integer
+                      pageSize:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+
+  /billing/checkout:
+    post:
+      operationId: postBillingCheckout
+      tags: [payments]
+      summary: Create a checkout session (S5)
+      description: |
+        Starts a purchase. The request carries `{ planCode }` and NOTHING else —
+        **no gateway field exists on the request**; routing is decided
+        server-side from the company:
+
+        - LOCAL (Indian) company → Razorpay domestic (INR, GST added)
+        - FOREIGN company → Razorpay International primary; Stripe ONLY when
+          the `payments.stripe_enabled` platform setting is on
+
+        A client cannot force a gateway. The response's `gateway` +
+        single matching gateway block tell the frontend what to launch.
+
+        **Idempotency:** send an `Idempotency-Key` header (UUID per checkout
+        intent). Retries with the same key replay the original response —
+        never a second order.
+
+        **Activation is webhook-only:** after the gateway flow, poll
+        `GET /billing/orders/{orderId}` until PAID (webhook-driven) or show a
+        timeout UX. The client success callback changes NOTHING server-side.
+
+        Error ladder:
+        1. `EMPLOYER_NOT_APPROVED` (403) — company must be APPROVED.
+        2. `PLAN_NOT_PURCHASABLE` (422) — FREE or an inactive plan.
+        3. `SUBSCRIPTION_ALREADY_ACTIVE` (409) — same plan already active and
+           not yet renewable. Same-plan renewal EXTENDS the term (new expiry =
+           current expiry + one period) and is allowed only inside the renewal
+           window (last 7 days) or during GRACE/EXPIRED — see
+           `SubscriptionStatus.renewable`.
+        4. `GATEWAY_UNAVAILABLE` (503) — no usable gateway for this company
+           (e.g. FOREIGN + Stripe disabled + Razorpay International
+           unavailable). The honest failure: surface "try again later", never
+           silently fall back to a wrong gateway.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [planCode]
+              additionalProperties: false
+              properties:
+                planCode:
+                  $ref: '#/components/schemas/PlanCode'
+      responses:
+        '201':
+          description: >
+            Checkout session created — exactly one gateway block present,
+            matching `gateway`.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CheckoutSession'
+              examples:
+                localRazorpay:
+                  summary: LOCAL company → Razorpay domestic with GST split
+                  value:
+                    data:
+                      orderId: 4f6d2c1e-9b7a-4c3d-8e2f-1a2b3c4d5e6f
+                      humanOrderRef: ORD-2026-00107
+                      gateway: RAZORPAY
+                      amountSubunits: 299900
+                      gstSubunits: 53982
+                      totalSubunits: 353882
+                      currency: INR
+                      razorpay:
+                        keyId: rzp_test_mock
+                        gatewayOrderId: order_MockRzp001
+                stripeForeign:
+                  summary: FOREIGN company with stripe_enabled → Stripe redirect
+                  value:
+                    data:
+                      orderId: 7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d
+                      humanOrderRef: ORD-2026-00108
+                      gateway: STRIPE
+                      amountSubunits: 299900
+                      gstSubunits: 0
+                      totalSubunits: 299900
+                      currency: INR
+                      stripe:
+                        redirectUrl: https://checkout.stripe.com/c/pay/mock
+        '403':
+          description: Company not approved
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 5.
-                code: NOT_IMPLEMENTED
+                title: Forbidden
+                status: 403
+                detail: Your company must be approved before purchasing a plan.
+                code: EMPLOYER_NOT_APPROVED
+        '409':
+          description: Same plan already active and not yet renewable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Conflict
+                status: 409
+                detail: Your Pro Monthly plan is already active. Renewal opens 7 days before expiry.
+                code: SUBSCRIPTION_ALREADY_ACTIVE
+        '422':
+          description: Plan not purchasable (FREE or inactive)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Unprocessable Entity
+                status: 422
+                detail: The FREE plan cannot be purchased.
+                code: PLAN_NOT_PURCHASABLE
+        '503':
+          description: No usable payment gateway for this company right now
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Service Unavailable
+                status: 503
+                detail: International payments are temporarily unavailable. Please try again later.
+                code: GATEWAY_UNAVAILABLE
+
+  /billing/orders/{id}:
+    get:
+      operationId: getBillingOrderById
+      tags: [payments]
+      summary: Get order status — the post-checkout poll target (S5)
+      description: |
+        THE poll target. After the gateway flow the frontend polls this
+        endpoint until `status` becomes PAID (webhook-driven) or FAILED, or
+        gives up into a "still confirming — we'll email you" timeout UX.
+
+        **A client callback NEVER flips an order.** Only the
+        signature-verified gateway webhook (or admin reconciliation) moves
+        CREATED → PAID/FAILED. Polling is safe and side-effect-free
+        (idempotent read). On PAID the same webhook transaction sets
+        `subscriptionActivatedAt` and `invoiceId`.
+
+        404 for an order that does not exist OR belongs to another company —
+        indistinguishable.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The order (poll until PAID / FAILED)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found (or not this company's — indistinguishable)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ══════════════════════════════════════════════════════════════════════════════
+  # PAYMENT WEBHOOKS — S5, SERVER-TO-SERVER ONLY
+  #
+  # These endpoints are called by the payment gateways, never by the web app,
+  # and are DELIBERATELY EXCLUDED from the MSW handlers — the browser mocks
+  # simulate their EFFECT instead (the delayed CREATED→PAID order flip on
+  # `GET /billing/orders/{id}`), so the frontend is forced to build the real
+  # polling UX rather than assume instant activation.
+  # ══════════════════════════════════════════════════════════════════════════════
+
+  /webhooks/razorpay:
+    post:
+      operationId: postWebhookRazorpay
+      tags: [webhooks]
+      summary: Razorpay payment webhook (S5 — server-to-server, NOT mocked)
+      security: []
+      description: |
+        **The signature IS the auth** (hence `security: []` — no bearer token).
+
+        Processing contract (locked, shared with `/webhooks/stripe`):
+        1. **Verify BEFORE parse:** the `X-Razorpay-Signature` HMAC is checked
+           against the RAW request body (raw-body middleware on webhook routes
+           only) BEFORE any JSON parsing. Unsigned or bad-signature requests →
+           401, logged — never processed.
+        2. **Dedupe on `(provider, eventId)`** via the `webhook_events` table —
+           gateway retries of an already-processed event are acknowledged (200)
+           and skipped.
+        3. **Respond 200 FAST, then enqueue:** the handler persists the event
+           and enqueues a BullMQ job; activation (order → PAID, subscription
+           activation, invoice generation, notifications) happens in the
+           WORKER, never inline.
+        4. **Out-of-order reconciliation:** events may arrive late or out of
+           order. State transitions reconcile against current order state —
+           a `payment.captured` for an already-PAID order is a no-op; a
+           `payment.failed` arriving after `payment.captured` never regresses
+           PAID → FAILED.
+      requestBody:
+        required: true
+        description: Raw Razorpay event JSON. Parsed only AFTER signature verification.
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Razorpay event envelope (opaque to this contract).
+      responses:
+        '200':
+          description: Event accepted (persisted + enqueued, or deduped as already seen)
+        '401':
+          description: Missing or invalid signature — logged, never processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /webhooks/stripe:
+    post:
+      operationId: postWebhookStripe
+      tags: [webhooks]
+      summary: Stripe payment webhook (S5 — server-to-server, NOT mocked)
+      security: []
+      description: |
+        **The signature IS the auth** (`Stripe-Signature` header verified
+        against the RAW body before parsing). Identical processing contract to
+        `/webhooks/razorpay`: verify-before-parse → `(provider, eventId)`
+        dedupe via `webhook_events` → 200 fast + BullMQ enqueue (all heavy
+        work in the worker) → out-of-order reconciliation against current
+        order state (PAID never regresses).
+
+        Server-to-server only: not consumed by the web app and NOT present in
+        the MSW handlers — the mocks simulate the webhook's EFFECT via the
+        delayed order flip.
+      requestBody:
+        required: true
+        description: Raw Stripe event JSON. Parsed only AFTER signature verification.
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Stripe event envelope (opaque to this contract).
+      responses:
+        '200':
+          description: Event accepted (persisted + enqueued, or deduped as already seen)
+        '401':
+          description: Missing or invalid signature — logged, never processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   # ── Admin: full moderation (Sprint 6) ─────────────────────────────────────────
+  # ══════════════════════════════════════════════════════════════════════════
+  # S6 — ADMIN CONSOLE (EN-only). Every endpoint declares its RBAC PermissionKey;
+  # denial is 403 FORBIDDEN with `meta.requiredPermission`.
+  # ══════════════════════════════════════════════════════════════════════════
+
+  /admin/me/permissions:
+    get:
+      operationId: getAdminMePermissions
+      tags: [admin]
+      summary: The caller's own effective permissions (S6a-F1)
+      description: |
+        **RBAC: none beyond an admin-side role** — this is self-introspection, and
+        asking "what am I allowed to do?" cannot itself require a grant (a role
+        with no permissions must still be able to discover that, or the console
+        cannot render at all). Authenticated + role in
+        {SUPER_ADMIN, ADMIN, MODERATOR, SUPPORT}; anyone else gets 403.
+
+        **Why this endpoint exists.** The admin console's navigation is driven by
+        the caller's EFFECTIVE PERMISSION SET, never by their role. Screen 27 lets
+        a Super Admin grant or revoke permissions at RUNTIME — so if the client
+        inferred capability from the role name, a freshly-granted permission would
+        change what a role CAN do without changing what it SEES, and the two would
+        silently drift. The client must therefore ask the server what it holds; it
+        may never derive it locally.
+
+        The set returned is exactly what `PermissionsGuard` will enforce on the
+        next request — same source (`role_permissions`), same role-scoped cache.
+        After a Screen-27 write the affected role's cache is invalidated, so a
+        refetch here reflects the change immediately.
+
+        This is UX INPUT ONLY. Hiding a nav item is a courtesy; the 403 on the
+        endpoint is the control. A forced URL must still be refused server-side.
+      responses:
+        '200':
+          description: The caller's role and effective permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminMe'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+
   /admin/dashboard:
     get:
       operationId: getAdminDashboard
       tags: [admin]
-      summary: '[S6] Admin overview dashboard'
-      description: '**Sprint 6 — not yet implemented.**'
+      summary: Admin overview dashboard (S6)
+      description: |
+        **RBAC: `reports.view`.**
+
+        Live platform KPIs — candidate/employer/job/application counts, this
+        month's PAID-order revenue, and the two work-queue depths that drive the
+        Screen-24 / Screen-26 badges. Every figure is a live aggregate over
+        existing tables; nothing here is an honest-zero placeholder.
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Dashboard KPIs
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminDashboard'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+
+  /admin/employers/{id}/certificate/url:
+    get:
+      operationId: getAdminEmployerCertificateUrl
+      tags: [admin]
+      summary: Signed URL for an employer's registration certificate (S6)
+      description: |
+        **RBAC: `employers.view`.**
+
+        S2-B4's admin employer list carries only the certificate REFERENCE; an
+        admin must actually READ the document to approve or reject a company.
+        This mints a SHORT-EXPIRY signed R2 GET URL for it.
+
+        **Every issuance is audited** (`document.viewed`: actor, company, when).
+        The object key and the signed URL itself are NEVER written to the audit
+        meta — only the fact of the grant.
+
+        404 when the company does not exist OR has no certificate uploaded —
+        indistinguishable.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Short-expiry signed URL grant (issuance audited)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DocumentUrlGrant'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Company not found, or no certificate on file (indistinguishable)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
 
   /admin/candidates:
     get:
       operationId: getAdminCandidates
       tags: [admin]
-      summary: '[S6] List all candidates (admin)'
-      description: '**Sprint 6 — not yet implemented.**'
+      summary: List candidates (admin) — Screen 25 (S6)
+      description: |
+        **RBAC: `candidates.view`.**
+
+        Offset-paginated admin candidate table. The admin card is FULLER than the
+        employer view (contact details and deletion state are included — admins
+        are the DPDP data controllers) but still carries **no document keys or
+        URLs**; document CONTENT is a separate, per-issuance-audited grant.
+
+        Purged candidates appear as tombstones (`fullName` = "Deleted user",
+        contacts null, `purgedAt` set) — they are not hidden, so the audit trail
+        stays navigable.
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PageSizeParam'
-        - $ref: '#/components/parameters/SortParam'
+        - name: search
+          in: query
+          description: Matches name, email, or phone.
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserStatus'
+        - name: visibility
+          in: query
+          description: Filter on the candidate's own profileVisible toggle.
+          schema:
+            type: boolean
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Candidate page
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminCandidateCard'
+                  meta:
+                    $ref: '#/components/schemas/OffsetMeta'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
 
-  /admin/jobs:
+  /admin/candidates/{id}:
     get:
-      operationId: getAdminJobs
+      operationId: getAdminCandidate
       tags: [admin]
-      summary: '[S6] List all job postings (admin)'
-      description: '**Sprint 6 — not yet implemented.**'
+      summary: Candidate detail (admin) — Screen 25 (S6)
+      description: |
+        **RBAC: `candidates.view`** — reading one candidate is not a wider grant
+        than reading the table (same reasoning as `/admin/employers/{id}`).
+
+        ADDED IN S6b-B1: the review panel needs ONE candidate by id and no admin
+        endpoint returned it. Admins are NOT subject to `profileVisible`, and a
+        PURGED candidate IS returned — as the tombstone the purge left behind.
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/PageSizeParam'
-        - $ref: '#/components/parameters/SortParam'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Candidate detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminCandidateDetail'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Candidate not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
 
-  /admin/jobs/{id}:
-    patch:
-      operationId: patchAdminJobById
+  /admin/candidates/{id}/suspend:
+    post:
+      operationId: postAdminCandidateSuspend
       tags: [admin]
-      summary: '[S6] Moderate a job posting'
-      description: '**Sprint 6 — not yet implemented.**'
+      summary: Suspend a candidate account (S6)
+      description: |
+        **RBAC: `candidates.edit`.**
+
+        Sets the user to SUSPENDED (they can no longer log in or apply; their
+        refresh sessions are revoked and they leave the employer browse pool
+        immediately). A `reason` is MANDATORY and is written to the audit row.
+        Reversible via `/reactivate` — this is NOT the purge.
+
+        Only an ACTIVE candidate can be suspended (S6b-B1 guard): suspending a
+        PENDING_DELETION user would silently cancel a DPDP erasure → 409
+        `CANDIDATE_NOT_ACTIVE`; a purged tombstone → 409 `CANDIDATE_PURGED`.
       parameters:
         - name: id
           in: path
@@ -5052,24 +6844,689 @@ paths:
             type: string
             format: uuid
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               type: object
+              required: [reason]
+              additionalProperties: false
+              properties:
+                reason:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Suspended
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminCandidateCard'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Candidate not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Not suspendable — not ACTIVE, or already purged
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
+                title: Conflict
+                status: 409
+                detail: Only an active candidate can be suspended.
+                code: CANDIDATE_NOT_ACTIVE
 
+  /admin/candidates/{id}/reactivate:
+    post:
+      operationId: postAdminCandidateReactivate
+      tags: [admin]
+      summary: Reactivate a suspended candidate (S6)
+      description: |
+        **RBAC: `candidates.edit`.** Returns a SUSPENDED user to ACTIVE. Audited.
+        A PURGED candidate can never be reactivated (409 `CANDIDATE_PURGED`) —
+        the purge is irreversible. A user who is not SUSPENDED (S6b-B1 guard:
+        reactivation is not a deletion-cancel path) → 409
+        `CANDIDATE_NOT_SUSPENDED`.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Reactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminCandidateCard'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Candidate not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Candidate is purged — irreversible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Conflict
+                status: 409
+                detail: This candidate has been purged and cannot be reactivated.
+                code: CANDIDATE_PURGED
+
+  /admin/candidates/{id}/documents/{type}/url:
+    get:
+      operationId: getAdminCandidateDocumentUrl
+      tags: [admin]
+      summary: Signed URL for a candidate document (admin) — S6
+      description: |
+        **RBAC: `candidates.view_documents`** (locked decision 5 — admins may
+        read candidate DOCUMENTS, not just employer certificates).
+
+        Mints a SHORT-EXPIRY signed R2 GET URL. **Every issuance is audited**
+        (`document.viewed`: actor, candidate, document TYPE, when) — the object
+        key and the signed URL are never in the audit meta. This is the DPDP
+        who-saw-whose-passport trail, and it is the reason this permission is a
+        separate key rather than being folded into `candidates.view`.
+
+        **404 discipline (differs from the employer gate — read carefully):**
+        an admin is NOT subject to `profileVisible`, so a hidden candidate is
+        still readable. The single 404 covers: candidate does not exist, the
+        candidate is PURGED (documents are gone), or this document type was
+        never uploaded. Those three are indistinguishable.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DocumentType'
+      responses:
+        '200':
+          description: Short-expiry signed URL grant (issuance audited)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DocumentUrlGrant'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: >
+            Candidate not found, purged, or this document type not uploaded —
+            all indistinguishable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/candidates/{id}/purge:
+    post:
+      operationId: postAdminCandidatePurge
+      tags: [admin]
+      summary: Purge (anonymize) a candidate — IRREVERSIBLE (S6)
+      description: |
+        **RBAC: `candidates.delete`** (SUPER_ADMIN-effective: seeded ON+locked for
+        SUPER_ADMIN, locked OFF for ADMIN/MODERATOR/SUPPORT). Deliberately reuses
+        the existing key rather than forking a new `candidates.purge`.
+
+        **Immediate and IRREVERSIBLE.** On success the purge worker anonymizes
+        the profile in place: name → "Deleted user", contact fields nulled,
+        documents deleted from R2, photo/video removed. `purgedAt` is set. The
+        user row is TOMBSTONED, not row-deleted, so financial records and audit
+        rows (which are never cascade-deleted) keep their referential integrity —
+        applications survive with a null-candidate tombstone, which is exactly the
+        S4 null-candidate applicant-card path.
+
+        **Relationship to self-deletion:** a candidate's own account deletion sets
+        `deletionDueAt = now + 30 days` and the SAME purge worker anonymizes them
+        when it elapses. This endpoint is the ADMIN trigger for that identical
+        worker — the difference is the trigger and the timing (immediate, no
+        30-day grace), not the effect.
+
+        **Confirmation is mandatory:** `confirm` must be exactly `true` and a
+        `reason` must be supplied. A body missing either → 422
+        `PURGE_NOT_CONFIRMED`; a mis-click must never anonymize a human being.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason, confirm]
+              additionalProperties: false
+              properties:
+                reason:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                  description: Written to the audit row. Mandatory.
+                confirm:
+                  type: boolean
+                  const: true
+                  description: Must be exactly true — the anti-mis-click gate.
+      responses:
+        '202':
+          description: Purge accepted — anonymization runs immediately
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [purgeScheduledFor]
+                    properties:
+                      purgeScheduledFor:
+                        type: string
+                        format: date-time
+                        description: Now — the admin purge has no grace period.
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Candidate not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Already purged, or a purge is already pending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Conflict
+                status: 409
+                detail: This candidate has already been purged.
+                code: CANDIDATE_ALREADY_PURGED
+        '422':
+          description: Missing confirmation or reason
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Unprocessable Entity
+                status: 422
+                detail: Purge requires an explicit confirmation and a reason.
+                code: PURGE_NOT_CONFIRMED
+
+  /admin/jobs:
+    get:
+      operationId: getAdminJobs
+      tags: [admin]
+      summary: List all job postings (admin) — Screen 26 (S6)
+      description: |
+        **RBAC: `jobs.view`.**
+
+        Offset-paginated. Unlike every employer-facing or public list, this
+        returns EVERY status — including DRAFT and PENDING_REVIEW, which is what
+        makes the moderation queue possible.
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/JobStatus'
+        - name: employerId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: search
+          in: query
+          description: Matches job title or company name.
+          schema:
+            type: string
+        - name: featured
+          in: query
+          description: Filter on the admin-set Featured flag (S6b-B2).
+          schema:
+            type: boolean
+        - name: urgent
+          in: query
+          description: Filter on the admin-set Urgent flag (S6b-B2).
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Job page
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminJobRow'
+                  meta:
+                    $ref: '#/components/schemas/OffsetMeta'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+    post:
+      operationId: postAdminJob
+      tags: [admin]
+      summary: Create a job ON BEHALF of an employer (S6)
+      description: |
+        **RBAC: `jobs.post_admin`** (locked decision 4 — reuses the existing key
+        rather than forking `jobs.create_onbehalf`).
+
+        Minimal on-behalf posting: the standard job-create shape plus the
+        `employerId` it is being created FOR. The job belongs to that employer.
+
+        **The publish gates STILL apply, unchanged.** An admin cannot launder a
+        job past them: on publish, the S2-B5 ladder runs against the TARGET
+        employer exactly as it would for the employer themselves —
+        `EMPLOYER_NOT_APPROVED` (403), `WORKER_PROTECTION_VIOLATION` (422), then
+        `JOB_QUOTA_EXCEEDED` (422) against that employer's plan. Creating a DRAFT
+        is always allowed; publishing a protection-violating or over-quota job on
+        someone's behalf is not.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - type: object
+                  required: [employerId]
+                  properties:
+                    employerId:
+                      type: string
+                      format: uuid
+                      description: The company this job is created for.
+                    publish:
+                      type: boolean
+                      description: >
+                        S6b-B2: when true, the job is published immediately —
+                        AFTER the full gate ladder passes against the target
+                        employer. The admin is the reviewer, so a passing
+                        on-behalf publish goes straight to ACTIVE (never
+                        PENDING_REVIEW). Omitted/false → DRAFT.
+                - $ref: '#/components/schemas/JobCreateRequest'
+      responses:
+        '201':
+          description: Job created (DRAFT unless publish was requested and passed the gates)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Job'
+        '403':
+          description: Missing `jobs.post_admin`, or the target employer is not APPROVED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: >
+            `WORKER_PROTECTION_VIOLATION` or `JOB_QUOTA_EXCEEDED` — the target
+            employer's publish gates, applied to the admin's request unchanged.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/jobs/{id}:
+    get:
+      operationId: getAdminJob
+      tags: [admin]
+      summary: One job, in full, for the moderation detail (S6b-F2)
+      description: |
+        **RBAC: `jobs.view`.**
+
+        Added in 0.8.1: Screen 26's review detail must render the job **as
+        candidates would see it** (description, salary, requirements, and the
+        worker-protection benefits) for ANY status — but the public
+        `GET /jobs/{id}` is ACTIVE-only by design, so a PENDING_REVIEW job had
+        no read surface at all. This is that surface: the full internal `Job`
+        shape plus the admin row facts (humanId, flags, views,
+        moderationReason) and `companyStatus`, so the panel can flag a
+        suspended employer BEFORE the admin attempts an approval instead of
+        letting them discover it via the 403.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The admin job detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminJobDetail'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/jobs/{id}/review:
+    post:
+      operationId: postAdminJobReview
+      tags: [admin]
+      summary: Resolve a PENDING_REVIEW job (S6)
+      description: |
+        **RBAC: `jobs.moderate`.**
+
+        The resolution half of the S2-B5 seam: when the
+        `jobs.require_admin_approval` setting is ON, publishing puts a job into
+        PENDING_REVIEW and it stops there. This endpoint resolves it.
+
+        - `APPROVE` → **RE-RUNS the full publish gate ladder** (corrected in
+          S6b-B2 — an earlier revision claimed the gates "were already enforced
+          at publish time", but a job can sit in review for days while the
+          employer is suspended, a worker-protection rule is switched back ON,
+          or their plan expires; the admin must not be able to click past the
+          platform's safety gate). Gate failures return their own codes:
+          `EMPLOYER_NOT_APPROVED` (403), `WORKER_PROTECTION_VIOLATION` (422),
+          `JOB_QUOTA_EXCEEDED` (422). On pass the job goes ACTIVE with the same
+          post-publish work as a direct publish (`publishedAt`, auto-archive
+          schedule, search-cache invalidation) and the employer is notified
+          (JOB_APPROVED: email + in-app).
+        - `REJECT` → the job returns to DRAFT with the `reason` recorded
+          (`moderationReason`, employer-visible) and the employer notified
+          (JOB_REJECTED: email + in-app, reason included), so they can fix and
+          resubmit.
+
+        `reason` is required for REJECT. Both outcomes are audited. 409 if the
+        job is not in PENDING_REVIEW — there is nothing to resolve.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              additionalProperties: false
+              properties:
+                decision:
+                  type: string
+                  enum: [APPROVE, REJECT]
+                reason:
+                  type: string
+                  maxLength: 500
+                  description: Required when decision = REJECT; shown to the employer.
+      responses:
+        '200':
+          description: Review resolved
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminJobRow'
+        '403':
+          description: >
+            Missing `jobs.moderate` — or, on APPROVE, `EMPLOYER_NOT_APPROVED`
+            (the employer was suspended/rejected while the job sat in review).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Job is not in PENDING_REVIEW
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Conflict
+                status: 409
+                detail: This job is not awaiting review.
+                code: JOB_NOT_PENDING_REVIEW
+        '422':
+          description: >
+            REJECT without a reason (`REVIEW_REASON_REQUIRED`) — or, on APPROVE,
+            a re-run publish gate failing: `WORKER_PROTECTION_VIOLATION` (a rule
+            switched ON during review) or `JOB_QUOTA_EXCEEDED` (the employer's
+            plan expired during review).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Unprocessable Entity
+                status: 422
+                detail: A reason is required when rejecting a job.
+                code: REVIEW_REASON_REQUIRED
+
+  /admin/jobs/{id}/pause:
+    post:
+      operationId: postAdminJobPause
+      tags: [admin]
+      summary: Pause any job (admin) — S6
+      description: |
+        **RBAC: `jobs.moderate`.** Admins may act on ANY employer's job (the
+        employer-facing pause is scoped to their own). ACTIVE → PAUSED. Audited
+        (with the optional reason); emits the same `job.paused` event, so the
+        search cache invalidates.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+                  description: Optional — written to the audit row (S6b-B2).
+      responses:
+        '200':
+          description: Paused
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminJobRow'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Illegal transition from the job's current status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/jobs/{id}/archive:
+    post:
+      operationId: postAdminJobArchive
+      tags: [admin]
+      summary: Archive any job (admin) — S6
+      description: |
+        **RBAC: `jobs.moderate`.** ACTIVE or PAUSED → ARCHIVED, on any employer's
+        job. Terminal. Audited (with the optional reason); emits `job.archived`.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+                  description: Optional — written to the audit row (S6b-B2).
+      responses:
+        '200':
+          description: Archived
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminJobRow'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Illegal transition from the job's current status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/jobs/{id}/flags:
+    patch:
+      operationId: patchAdminJobFlags
+      tags: [admin]
+      summary: Set the Featured / Urgent flags (S6)
+      description: |
+        **RBAC: `jobs.moderate`.**
+
+        Featured and Urgent are **ADMIN-SET ONLY** (locked decision 3) — an
+        employer can never set them on their own job, which is what keeps them
+        meaningful. They drive the S2-F1 job-card badges and the S2-B6 search
+        filters (`?badge=featured|urgent`).
+
+        Omitted fields are left unchanged. Audited.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              minProperties: 1
+              properties:
+                featured:
+                  type: boolean
+                urgent:
+                  type: boolean
+      responses:
+        '200':
+          description: Flags updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminJobRow'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /admin/applications:
     get:
       operationId: getAdminApplications
@@ -5095,6 +7552,13 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: search
+          in: query
+          description: >
+            Matches the application humanId or the candidate's name (0.8.1 —
+            documents what the S4-B3 implementation already supported).
+          schema:
+            type: string
       responses:
         '200':
           description: Applications page (admin context)
@@ -5107,7 +7571,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Application'
+                      $ref: '#/components/schemas/AdminApplicationRow'
                   meta:
                     type: object
                     required: [page, pageSize, total, totalPages]
@@ -5122,6 +7586,52 @@ paths:
                         type: integer
         '403':
           description: Missing the applications-read permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/applications/{id}:
+    get:
+      operationId: getAdminApplication
+      tags: [admin]
+      summary: One application, in full, for Screen 26's detail (S6b-F2)
+      description: |
+        **RBAC: `applications.manage`.**
+
+        Added in 0.8.1: the admin detail's defining content is the FULL
+        transition record — every timeline entry **including
+        `overrideReason`** (which the candidate-facing timeline deliberately
+        excludes). That record existed in the database since S4-B2 but had no
+        admin read surface; the list returns only the application's current
+        state. This endpoint is the record's surface: the admin-context
+        application row plus `timeline` with per-entry override reasons.
+
+        The timeline here is the ONLY serialization that carries
+        `overrideReason` per entry. Candidate and employer contexts continue
+        to receive the shaped `ApplicationTimelineEntry` without it.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The admin application detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminApplicationDetail'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Application not found
           content:
             application/json:
               schema:
@@ -5200,81 +7710,521 @@ paths:
                 detail: A corrective status change requires a reason.
                 code: OVERRIDE_REASON_REQUIRED
 
-  /admin/roles/{role}/permissions:
+  /admin/applications/{id}/notes:
     get:
-      operationId: getAdminRolePermissions
+      operationId: getAdminApplicationNotes
       tags: [admin]
-      summary: '[S6] Get permissions for a role'
-      description: '**Sprint 6 — not yet implemented.**'
+      summary: List internal notes on an application (S6)
+      description: |
+        **RBAC: `applications.notes`.**
+
+        **INTERNAL ONLY.** Notes exist for the admin/support team and are NEVER
+        surfaced to the candidate or the employer — they are absent from
+        `Application`, `ApplicationDetail`, `ApplicationCard`, `ApplicantCard`,
+        and the candidate-facing status timeline. The timeline mapper already
+        excludes them; adding them to any non-admin surface is a contract
+        violation, not a feature.
       parameters:
-        - name: role
+        - name: id
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/UserRole'
+            type: string
+            format: uuid
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Notes, oldest first
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NoteEntry'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Application not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
-    patch:
-      operationId: patchAdminRolePermissions
+    post:
+      operationId: postAdminApplicationNote
       tags: [admin]
-      summary: '[S6] Update permissions for a role (Super-Admin only)'
-      description: '**Sprint 6 — not yet implemented.**'
+      summary: Add an internal note to an application (S6)
+      description: '**RBAC: `applications.notes`.** Internal-only (see GET). Audited.'
       parameters:
-        - name: role
+        - name: id
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/UserRole'
+            type: string
+            format: uuid
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               type: object
+              required: [body]
+              additionalProperties: false
+              properties:
+                body:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
       responses:
-        '501':
-          description: Not implemented
+        '201':
+          description: Note created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/NoteEntry'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/applications/{id}/notes/{noteId}:
+    delete:
+      operationId: deleteAdminApplicationNote
+      tags: [admin]
+      summary: Delete an internal note (S6)
+      description: '**RBAC: `applications.notes`.** Audited.'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: noteId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Note not found on this application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/applications/{id}/resend-whatsapp:
+    post:
+      operationId: postAdminApplicationResendWhatsapp
+      tags: [admin]
+      summary: Manually resend the "Selected" WhatsApp (S6)
+      description: |
+        **RBAC: `applications.change_status`.**
+
+        The support escape hatch for the once-per-application WhatsApp guard.
+        S4-B2 fires `wa.selected` exactly ONCE per application (guarded by
+        `selectedNotifiedAt`); when a candidate genuinely never received it,
+        support needs a way to send it again. This is the `bypassGuard` seam:
+        it re-sends `wa.selected` DESPITE `selectedNotifiedAt` being set.
+
+        **Valid only for SELECTED applications** — resending a "you've been
+        selected" message to someone who wasn't is the exact harm the guard
+        exists to prevent, so a non-SELECTED application is 422
+        `APPLICATION_NOT_SELECTED`.
+
+        **Rate-limited: 3 resends per application per 24h** (and the standard
+        authed limit applies). Exceeding it → 429. Every resend is audited with
+        the acting admin — this bypass is never anonymous.
+
+        **A `reason` is MANDATORY** (added in S6b-B2 — consistent with every
+        other admin corrective action: reject, suspend, override, purge). It is
+        written to the audit row; a phone number never is.
+
+        `selectedNotifiedAt` is NOT overwritten — it records when the FIRST
+        automated notification fired (the guard), and the candidate's receipt
+        stays truthful about that moment. The resend itself is recorded as a
+        new `whatsapp_messages` row by the worker.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              additionalProperties: false
+              properties:
+                reason:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+      responses:
+        '202':
+          description: Resend enqueued (the worker owns the external send)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [resentAt, channel]
+                    properties:
+                      resentAt:
+                        type: string
+                        format: date-time
+                      channel:
+                        type: string
+                        enum: [whatsapp, email_fallback]
+                        description: >
+                          The honest enqueue-time answer: `whatsapp` when the
+                          candidate is WhatsApp-capable; `email_fallback` when
+                          the S2-B3 downgrade means only email/in-app will go
+                          out. Delivery status lands in the message log.
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Application is not SELECTED
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
+                title: Unprocessable Entity
+                status: 422
+                detail: Only SELECTED applications can have the WhatsApp resent.
+                code: APPLICATION_NOT_SELECTED
+        '429':
+          description: Resend cap for this application exceeded (3 / 24h)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Too Many Requests
+                status: 429
+                detail: This application has reached its resend limit. Try again later.
+                code: RATE_LIMITED
+
+  /admin/roles/matrix:
+    get:
+      operationId: getAdminRolesMatrix
+      tags: [admin]
+      summary: The RBAC permission matrix — Screen 27 (S6)
+      description: |
+        **RBAC: `roles.view`.**
+
+        The full role × permission grid. `locked` cells are IMMUTABLE: the entire
+        SUPER_ADMIN column plus the seeded locked set (e.g. `billing.manage` for
+        non-super roles). The FE renders locked cells as disabled — and the
+        server enforces it anyway (423), because a disabled checkbox is not a
+        security control.
+
+        Only admin-side roles are columns; CANDIDATE and EMPLOYER have no rows.
+      responses:
+        '200':
+          description: The matrix
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RbacMatrix'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+    patch:
+      operationId: patchAdminRolesMatrix
+      tags: [admin]
+      summary: Toggle one permission cell (S6)
+      description: |
+        **RBAC: `roles.manage`** (SUPER_ADMIN-effective — seeded ON+locked for
+        SUPER_ADMIN, locked OFF for everyone else).
+
+        Flips exactly ONE cell. A locked cell → **423 `PERMISSION_CELL_LOCKED`**
+        and NO write occurs (the guard is server-side, not merely a disabled
+        checkbox).
+
+        **Cache note (mechanism, not a client concern):** a successful write
+        INVALIDATES the permission cache for the affected role, so the next
+        request by any user of that role re-reads the matrix. The client does not
+        need to do anything — it just refetches the matrix to re-render.
+        Every change is audited (who flipped which cell, from what to what).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role, permission, enabled]
+              additionalProperties: false
+              properties:
+                role:
+                  $ref: '#/components/schemas/UserRole'
+                permission:
+                  $ref: '#/components/schemas/PermissionKey'
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: Cell updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RbacCell'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '404':
+          description: |
+            The role/permission pair is valid but has no seeded cell. PATCH flips
+            EXISTING cells — it never creates them, because a permission key is a
+            code + seed change, not a runtime one. In practice this means the DB
+            was not re-seeded after a new key landed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Not found
+                status: 404
+                detail: No such role/permission cell.
+                code: PERMISSION_NOT_FOUND
+        '422':
+          description: |
+            The change is structurally valid but would leave the platform
+            unadministrable, so it is refused (S6a-B2):
+
+            - `SELF_LOCKOUT_FORBIDDEN` — the caller tried to revoke `roles.manage`
+              from their OWN role. They would be locked out of the very screen
+              they are standing on, with no way back in.
+            - `LAST_MANAGER_FORBIDDEN` — the change would strip `roles.manage`
+              from the LAST role holding it, freezing the matrix permanently.
+
+            Nothing is written on either rejection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Unprocessable Entity
+                status: 422
+                detail: You cannot revoke your own ability to manage roles.
+                code: SELF_LOCKOUT_FORBIDDEN
+        '423':
+          description: |
+            The cell is locked and can NEVER be changed — the entire SUPER_ADMIN
+            column (last-administrator protection, enforced in code so no DB state
+            can unlock it) plus the seeded locked set. Nothing is written and
+            nothing is audited.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Locked
+                status: 423
+                detail: This permission is locked and cannot be changed.
+                code: PERMISSION_CELL_LOCKED
 
   /admin/logs:
     get:
       operationId: getAdminLogs
       tags: [admin]
-      summary: '[S6] Get audit logs'
-      description: '**Sprint 6 — not yet implemented.** Audit logs are never cascade-deleted.'
+      summary: Query the audit log — Screen 29 (S6)
+      description: |
+        **RBAC: `logs.view`.**
+
+        KEYSET-paginated over the BigInt primary key, newest first (an offset
+        scan over an append-only table this large degrades badly). `nextCursor`
+        is the last row's `id`; pass it back as `?cursor=`. Audit rows are
+        append-only and are NEVER cascade-deleted.
+
+        `meta` on every row is ALREADY REDACTED at write time (S2-B2's denylist),
+        so no raw PII — passport numbers, phones, emails, tokens, OTPs, document
+        keys or URLs — can reach this screen. The client renders it verbatim.
+
+        **The query itself is audited** — reading the audit log is an audited
+        event. Watching the watchers is the point.
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/PageSizeParam'
-        - $ref: '#/components/parameters/SortParam'
+        - $ref: '#/components/parameters/CursorParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: module
+          in: query
+          description: The B2 taxonomy chip (Auth, Jobs, Payments, …).
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: actorId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/AuditStatus'
+        - name: from
+          in: query
+          description: Inclusive lower bound on createdAt.
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: Inclusive upper bound on createdAt.
+          schema:
+            type: string
+            format: date-time
+        - name: q
+          in: query
+          description: Free-text match on action / targetId.
+          schema:
+            type: string
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: A page of audit rows, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, nextCursor]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLogEntry'
+                  nextCursor:
+                    type: [string, 'null']
+                    description: The last row's id; null when the feed is exhausted.
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+
+  /admin/logs/export:
+    get:
+      operationId: getAdminLogsExport
+      tags: [admin]
+      summary: Export the audit log as CSV (S6)
+      description: |
+        **RBAC: `logs.export`** — a SEPARATE, higher-privilege key than
+        `logs.view`. Reading a page on screen and walking out with the whole
+        table are different acts, and the matrix must be able to grant one
+        without the other.
+
+        Same filters as `GET /admin/logs`. Returns `text/csv` with a
+        `Content-Disposition: attachment` header.
+
+        **Bounded — the cap is part of the contract:** at most **10,000 rows** per
+        export, and the date range may not exceed **90 days**. A request that
+        would exceed either → 422 `EXPORT_TOO_LARGE` (`meta.maxRows`,
+        `meta.maxRangeDays`) telling the caller to narrow the filters. An
+        unbounded export of an append-only audit table is a memory incident
+        waiting to happen.
+
+        **The export writes its own audit row** (`logs.exported`: who, which
+        filters, how many rows) — an export is exactly the kind of event the log
+        exists to record.
+      parameters:
+        - name: module
+          in: query
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: actorId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/AuditStatus'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: CSV export (the export action is itself audited)
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              example: attachment; filename="audit-log-2026-07-12.csv"
+          content:
+            text/csv:
+              schema:
+                type: string
+              example: |
+                id,createdAt,module,action,actorUserId,actorRole,targetType,targetId,status
+                1048576,2026-07-12T09:14:02Z,Payments,subscription.activated,,SUPER_ADMIN,Subscription,7a8b…,SUCCESS
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+        '422':
+          description: The export exceeds the row cap or the date-range cap
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 type: about:blank
-                title: Not implemented
-                status: 501
-                detail: This endpoint is planned for Sprint 6.
-                code: NOT_IMPLEMENTED
+                title: Unprocessable Entity
+                status: 422
+                detail: This export is too large. Narrow the date range or filters.
+                code: EXPORT_TOO_LARGE
+                meta:
+                  maxRows: 10000
+                  maxRangeDays: 90

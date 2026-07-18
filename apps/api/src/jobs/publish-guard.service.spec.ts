@@ -36,6 +36,7 @@ import { SettingsService } from '../settings/settings.service';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS } from '../audit/audit.types';
 import { EmployerService } from '../employer/employer.service';
+import { SubscriptionReadService } from '../payments/subscription-read.service';
 import { PublishGuardService } from './publish-guard.service';
 
 jest.setTimeout(180_000);
@@ -126,6 +127,7 @@ beforeAll(async () => {
       employerService,
       settingsService,
       auditService,
+      new SubscriptionReadService(prismaClient as unknown as PrismaService, settingsService),
       new EventEmitter2(),
     );
   } catch (err: unknown) {

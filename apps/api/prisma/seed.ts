@@ -16,6 +16,7 @@ import {
   SubscriptionStatus,
   DeliveryStatus,
   WaMessageKind,
+  ResumeGenerationStatus,
   ResumeTrigger,
   AuditStatus,
 } from '@prisma/client';
@@ -36,8 +37,14 @@ async function main(): Promise<void> {
     throw new Error('Refusing to run seed in production.');
   }
 
-  if (ALL_PERMS.length !== 20) {
-    throw new Error(`Expected 20 permission keys, got ${ALL_PERMS.length}.`);
+  // 20 seeded in S2 + 2 by S6a-B1 (logs.export, candidates.view_documents)
+  // + 3 by S6a-B2 (jobs.moderate, roles.view, roles.manage)
+  // + 2 by S6a-F1 (settings.view, settings.manage — retiring S2-B1's logs.view
+  //   placeholder, which had let any MODERATOR write platform settings).
+  // This assertion is the tripwire that stops a key being DECLARED in code but
+  // never granted to anyone — a permission with no matrix rows is a dead grant.
+  if (ALL_PERMS.length !== 27) {
+    throw new Error(`Expected 27 permission keys, got ${ALL_PERMS.length}.`);
   }
   const permSet = new Set(ALL_PERMS);
 
@@ -58,6 +65,10 @@ async function main(): Promise<void> {
     ['candidates.min_completion_pct', 70, false],
     ['candidates.video_max_minutes', 5, false],
     ['candidates.video_max_mb', 500, false],
+    // S5-B1: Payments — GST for the LOCAL checkout split; Stripe routing flag
+    // for FOREIGN companies (off = Razorpay International, the locked primary).
+    ['payments.gst_rate_pct', 18, false],
+    ['payments.stripe_enabled', false, false],
   ];
   for (const [key, value, isCoreRule] of settings) {
     await prisma.setting.upsert({
@@ -170,8 +181,13 @@ async function main(): Promise<void> {
     });
   }
 
-  // ── 5. ROLE-PERMISSION MATRIX (Screen 27, exactly the 20 keys) ───────────────
-  // SUPER_ADMIN: all enabled + locked. CANDIDATE/EMPLOYER: NO rows seeded.
+  // ── 5. ROLE-PERMISSION MATRIX (Screen 27, all 25 keys × 4 admin roles) ───────
+  // SUPER_ADMIN: all enabled + locked. CANDIDATE/EMPLOYER: NO rows seeded — they
+  // are not admin-console roles and are never matrix columns.
+  //
+  // The grid must be COMPLETE (every role × every key). S6a-B2's GET synthesises
+  // a missing cell as enabled:false so the FE never renders a hole, but PATCHing
+  // one 404s — a synthesised cell means this seed did not run after a key landed.
   const on = { enabled: true, locked: false };
   const off = { enabled: false, locked: false };
   const lockedOff = { enabled: false, locked: true };
@@ -185,6 +201,7 @@ async function main(): Promise<void> {
       'candidates.delete': off,
       'candidates.onboard_manual': on,
       'candidates.export': on,
+      'candidates.view_documents': on,
       'employers.view': on,
       'employers.approve_reject': on,
       'employers.suspend': on,
@@ -192,14 +209,26 @@ async function main(): Promise<void> {
       'jobs.view': on,
       'jobs.post_admin': on,
       'jobs.archive': on,
+      'jobs.moderate': on,
       'applications.manage': on,
       'applications.change_status': on,
       'applications.notes': on,
       'reports.view': on,
       'logs.view': on,
+      // S6a-B1: ADMIN may bulk-export the audit trail; MODERATOR may not.
+      'logs.export': on,
       'billing.manage': lockedOff,
       'subscriptions.manage': lockedOff,
       'admin_users.manage': lockedOff,
+      // S6a-B2: ADMIN can SEE the matrix but never CHANGE it. roles.manage is
+      // SUPER_ADMIN-effective — locked OFF here, so no amount of console
+      // clicking can escalate an ADMIN into a role administrator.
+      'roles.view': on,
+      'roles.manage': lockedOff,
+      // S6a-F1: ADMIN administers platform settings. Core rules (worker
+      // protection) stay SUPER_ADMIN-gated inside SettingsService regardless.
+      'settings.view': on,
+      'settings.manage': on,
     },
     MODERATOR: {
       'candidates.view': on,
@@ -207,6 +236,8 @@ async function main(): Promise<void> {
       'candidates.delete': off,
       'candidates.onboard_manual': off,
       'candidates.export': off,
+      // Moderators do NOT read passports — the doc grant is its own key.
+      'candidates.view_documents': off,
       'employers.view': on,
       'employers.approve_reject': on,
       'employers.suspend': off,
@@ -214,14 +245,27 @@ async function main(): Promise<void> {
       'jobs.view': on,
       'jobs.post_admin': off,
       'jobs.archive': on,
+      // A moderator's job IS moderating: approve/reject PENDING_REVIEW postings.
+      'jobs.moderate': on,
       'applications.manage': off,
       'applications.change_status': off,
       'applications.notes': on,
       'reports.view': on,
       'logs.view': on,
+      // THE two-key boundary, live: a MODERATOR can READ the audit log on screen
+      // but cannot bulk-extract it (S6a-B1 proves this with a 403 test).
+      'logs.export': off,
       'billing.manage': lockedOff,
       'subscriptions.manage': lockedOff,
       'admin_users.manage': lockedOff,
+      // Not locked, just off — a normal, flippable cell (the one S6a-B2's
+      // cache-invalidation test grants and revokes at runtime).
+      'roles.view': off,
+      'roles.manage': lockedOff,
+      // S6a-F1: a moderator moderates content; they do not tune the platform.
+      // Until now they could, because settings rode on logs.view — which they hold.
+      'settings.view': off,
+      'settings.manage': off,
     },
     SUPPORT: {
       'candidates.view': on,
@@ -229,6 +273,7 @@ async function main(): Promise<void> {
       'candidates.delete': lockedOff,
       'candidates.onboard_manual': off,
       'candidates.export': off,
+      'candidates.view_documents': off,
       'employers.view': on,
       'employers.approve_reject': off,
       'employers.suspend': off,
@@ -236,14 +281,20 @@ async function main(): Promise<void> {
       'jobs.view': on,
       'jobs.post_admin': off,
       'jobs.archive': off,
+      'jobs.moderate': off,
       'applications.manage': off,
       'applications.change_status': off,
       'applications.notes': off,
       'reports.view': on,
       'logs.view': off,
+      'logs.export': off,
       'billing.manage': lockedOff,
       'subscriptions.manage': lockedOff,
       'admin_users.manage': lockedOff,
+      'roles.view': off,
+      'roles.manage': lockedOff,
+      'settings.view': off,
+      'settings.manage': off,
     },
   };
 
@@ -619,13 +670,19 @@ async function main(): Promise<void> {
     create: {
       id: sid('rg:ramesh'),
       resumeId: resume.id,
+      // S7-B1 added the generation LIFECYCLE; this seeded row carries render
+      // output, so it must say READY. Left at the PENDING default it becomes a
+      // generation that no worker will ever finish — and S7-B2's double-tap
+      // dedupe would hand that dead row back on every Generate.
+      status: ResumeGenerationStatus.READY,
+      generatedAt: now,
       contentHash: 'seedhash',
       r2Key: 'seed/ramesh/resume.pdf',
       sizeBytes: 153600,
       trigger: ResumeTrigger.DOWNLOAD,
       settingsSnapshot: {} as never,
     },
-    update: {},
+    update: { status: ResumeGenerationStatus.READY, generatedAt: now },
   });
 
   // ── 9. JOBS (each status, multiple currencies) ────────────────────────────────
@@ -982,6 +1039,28 @@ async function main(): Promise<void> {
       },
     ],
   });
+
+  // The seed writes role_permissions DIRECTLY, bypassing RbacMatrixService's
+  // post-commit invalidation — so a RUNNING api/worker keeps serving the old
+  // grants from Redis for up to the 300s TTL (a re-seeded permission "doesn't
+  // work" for five confusing minutes). Best-effort flush; the seed must still
+  // succeed when Redis is down or REDIS_URL is unset.
+  if (process.env.REDIS_URL) {
+    try {
+      const { Redis } = await import('ioredis');
+      const redis = new Redis(process.env.REDIS_URL, { lazyConnect: true });
+      await redis.connect();
+      const keys = await redis.keys('rbac:perms:*');
+      if (keys.length > 0) await redis.del(...keys);
+      redis.disconnect();
+      console.log(`RBAC cache flushed (${keys.length} role keys)`);
+    } catch (err) {
+      console.warn(
+        'RBAC cache flush skipped (Redis unavailable) — a running API may serve stale grants for up to 300s:',
+        err instanceof Error ? err.message : String(err),
+      );
+    }
+  }
 
   console.log('Seed complete ✓');
 }
