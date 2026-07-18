@@ -111,6 +111,18 @@ jobs:
       GOOGLE_OAUTH_CLIENT_SECRET: ci-dummy-client-secret
       GOOGLE_OAUTH_CALLBACK_URL: http://localhost:3001/api/v1/auth/google/callback
       WEB_APP_URL: http://localhost:3000
+      # Dummy values so validateEnv() passes at API boot — R2 (S3) and Razorpay
+      # (S5) are REQUIRED in the env schema. The smoke spec never hits R2/Razorpay
+      # networks (R2 presign is local signing; Razorpay clients only construct),
+      # so placeholder credentials are sufficient to boot and serve /health.
+      R2_ACCOUNT_ID: ci-dummy-account
+      R2_ACCESS_KEY_ID: ci-dummy-access-key
+      R2_SECRET_ACCESS_KEY: ci-dummy-secret-key
+      R2_BUCKET: ci-dummy-bucket
+      R2_ENDPOINT: https://ci-dummy.r2.cloudflarestorage.com
+      RAZORPAY_KEY_ID: rzp_test_ci_dummy
+      RAZORPAY_KEY_SECRET: ci-dummy-razorpay-secret
+      RAZORPAY_WEBHOOK_SECRET: ci-dummy-razorpay-webhook-secret
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
