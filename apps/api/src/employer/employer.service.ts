@@ -201,16 +201,6 @@ export class EmployerService {
     return { id: doc.id, r2Key: doc.r2Key };
   }
 
-  /** Latest uploaded certificate key — the contract's `Company.registrationCertKey`. */
-  async getRegistrationCertKey(companyId: string): Promise<string | null> {
-    const doc = await this.prisma.companyDocument.findFirst({
-      where: { companyId },
-      orderBy: { uploadedAt: 'desc' },
-      select: { r2Key: true },
-    });
-    return doc?.r2Key ?? null;
-  }
-
   /**
    * Shared gate for both cert paths (confirm + register-with-key): the key
    * must sit under the caller's own prefix, and the object must exist in R2

@@ -29,6 +29,13 @@ jobs:
     steps: # Docker is available on ubuntu-latest
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
+      # The S7 PDF worker specs (pdf/browser-pool.spec.ts) launch REAL Chromium
+      # via Puppeteer with no CHROMIUM_EXECUTABLE_PATH, so they need Puppeteer's
+      # OWN browser. Install the system libraries Chromium needs (via Playwright),
+      # then Puppeteer's Chrome (pnpm doesn't run puppeteer's browser-download
+      # postinstall by default).
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm --filter ./apps/api exec puppeteer browsers install chrome
       - run: pnpm test
 
   build:
