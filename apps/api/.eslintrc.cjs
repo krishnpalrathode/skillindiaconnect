@@ -328,6 +328,32 @@ module.exports = {
             message:
               'Employer approval is an S2-B4 mutation surface — S6a-B1 is read-only; do not import.',
           },
+          // ── Resume module (S7-B1/B2) ─────────────────────────────────────
+          // The rendering half is WORKER-ONLY: PdfModule carries Chromium, so
+          // an API-side import would put a browser in every API replica. The
+          // structural spec proves the closure; this zone catches it at lint
+          // time, where the fix is cheap.
+          {
+            target: './src/resume/resume.module.ts',
+            from: './src/pdf',
+            message:
+              'Chromium is worker-only — the API-side ResumeModule must never import PdfModule.',
+          },
+          {
+            target: './src/resume/resume.controller.ts',
+            from: './src/resume/resume-render.service.ts',
+            message: 'The renderer runs in the worker — the controller enqueues, never renders.',
+          },
+          {
+            target: './src/candidate',
+            from: './src/resume/resume.controller.ts',
+            message: 'Use ResumeService — never import the resume controller directly.',
+          },
+          {
+            target: './src/notifications',
+            from: './src/resume/resume.controller.ts',
+            message: 'Use ResumeService — never import the resume controller directly.',
+          },
         ],
       },
     ],

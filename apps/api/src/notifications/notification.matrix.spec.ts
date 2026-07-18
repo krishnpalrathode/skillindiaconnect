@@ -143,6 +143,15 @@ describe('NOTIFICATION_MATRIX — Phase-1 §6 locked spec', () => {
     expect(e.email).toBe(false);
   });
 
+  // ── RESUME_READY (S7-B2) ───────────────────────────────────────────────────
+
+  it('RESUME_READY → inApp ✓ ONLY (no whatsapp, no email — deliberate)', () => {
+    const e = NOTIFICATION_MATRIX[NotificationType.RESUME_READY];
+    expect(e.inApp).toBe(true);
+    expect(e.whatsapp).toBe(false);
+    expect(e.email).toBe(false);
+  });
+
   // ── Structural invariants ─────────────────────────────────────────────────
 
   it('every whatsapp=true entry has a whatsappTemplate', () => {

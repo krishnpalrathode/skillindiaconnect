@@ -111,6 +111,10 @@ export const AUDIT_ACTIONS = {
   APPLICATION_WHATSAPP_RESENT: 'application.whatsapp.resent',
   // S7-B1 (worker renders — meta is ids/counts only, never profile content)
   RESUME_GENERATED: 'resume.generated',
+  // S7-B2 deliveries. Meta carries the CHANNEL ACTUALLY USED and ids only —
+  // never the phone number or the email address (no-PII-in-logs).
+  RESUME_SENT: 'resume.sent',
+  RESUME_EMAILED: 'resume.emailed',
   INVOICE_PDF_RENDERED: 'invoice.pdf.rendered',
 } as const;
 

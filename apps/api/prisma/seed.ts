@@ -16,6 +16,7 @@ import {
   SubscriptionStatus,
   DeliveryStatus,
   WaMessageKind,
+  ResumeGenerationStatus,
   ResumeTrigger,
   AuditStatus,
 } from '@prisma/client';
@@ -669,13 +670,19 @@ async function main(): Promise<void> {
     create: {
       id: sid('rg:ramesh'),
       resumeId: resume.id,
+      // S7-B1 added the generation LIFECYCLE; this seeded row carries render
+      // output, so it must say READY. Left at the PENDING default it becomes a
+      // generation that no worker will ever finish — and S7-B2's double-tap
+      // dedupe would hand that dead row back on every Generate.
+      status: ResumeGenerationStatus.READY,
+      generatedAt: now,
       contentHash: 'seedhash',
       r2Key: 'seed/ramesh/resume.pdf',
       sizeBytes: 153600,
       trigger: ResumeTrigger.DOWNLOAD,
       settingsSnapshot: {} as never,
     },
-    update: {},
+    update: { status: ResumeGenerationStatus.READY, generatedAt: now },
   });
 
   // ── 9. JOBS (each status, multiple currencies) ────────────────────────────────

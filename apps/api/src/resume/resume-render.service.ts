@@ -9,6 +9,7 @@ import {
   ResumeRenderSettings,
   toResumeView,
 } from './resume-view.mapper';
+import { toStoredResumeView } from './resume-view.wire';
 import { renderResumeHtml } from './templates/resume.template';
 
 export interface RenderResumeResult {
@@ -103,6 +104,11 @@ export class ResumeRenderService {
           generatedAt,
           failureReason: null,
           settingsSnapshot: settings as unknown as Prisma.InputJsonValue,
+          // The EXACT view these bytes came from (S7-B2 serves it on the poll).
+          viewSnapshot: toStoredResumeView(
+            view,
+            source.photoKey,
+          ) as unknown as Prisma.InputJsonValue,
         },
       }),
       this.prisma.candidateResume.update({

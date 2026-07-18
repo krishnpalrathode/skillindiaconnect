@@ -232,6 +232,7 @@ export class CandidateReadService {
         user: { select: { email: true } },
         experiences: {
           select: {
+            id: true,
             type: true,
             country: true,
             companyName: true,
@@ -243,7 +244,7 @@ export class CandidateReadService {
           },
           orderBy: { createdAt: 'desc' },
         },
-        skills: { select: { name: true }, orderBy: { name: 'asc' } },
+        skills: { select: { id: true, name: true }, orderBy: { name: 'asc' } },
         documents: { select: { type: true, expiryDate: true, documentNumber: true } },
       },
     });
@@ -660,6 +661,7 @@ export interface ResumeSource {
   jobCategory: { nameEn: string } | null;
   user: { email: string };
   experiences: {
+    id: string;
     type: string;
     country: string;
     companyName: string;
@@ -669,7 +671,7 @@ export interface ResumeSource {
     startDate: Date | null;
     endDate: Date | null;
   }[];
-  skills: { name: string }[];
+  skills: { id: string; name: string }[];
   documents: { type: DocumentType; expiryDate: Date | null; documentNumber: string | null }[];
 }
 

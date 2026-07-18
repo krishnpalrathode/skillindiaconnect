@@ -17,6 +17,7 @@ import {
 } from './dto/list-notifications.dto';
 import { MarkReadDto } from './dto/mark-read.dto';
 import { NotificationDto, toNotificationDto } from './notification.mapper';
+import { isWhatsappDeliverable } from './whatsapp-deliverability';
 
 export interface NotifyOptions {
   /** Skip the WhatsApp channel even when the type's matrix row enables it. */
@@ -107,6 +108,41 @@ export class NotificationService {
         data: (payload.data as Prisma.InputJsonValue) ?? {},
       },
     });
+  }
+
+  /**
+   * Enqueue an EMAIL for a channel the CALLER chose explicitly — not a matrix
+   * fan-out (S7-B2 "email my resume to myself"). The matrix answers "which
+   * channels does this EVENT use"; a candidate tapping "Email it to me" has
+   * already answered that question, so no matrix row governs it.
+   *
+   * The in-app receipt is written too, so the send is visible in the feed.
+   * The worker consumes the same job the matrix path produces — one send path.
+   */
+  async enqueueEmail(userId: string, type: NotificationType, payload: NotifyPayload): Promise<void> {
+    await this.notifyInApp(userId, type, payload);
+    await this.notificationQueue.add(
+      JOB_NAMES.SEND_NOTIFICATION,
+      { userId, type, payload, channel: 'email' } satisfies NotificationJobData,
+      {
+        attempts: NOTIFICATION_JOB_ATTEMPTS,
+        backoff: { type: 'exponential', delay: NOTIFICATION_JOB_BACKOFF_MS },
+      },
+    );
+  }
+
+  /**
+   * Will a WhatsApp send actually be ATTEMPTED for this user? The API asks
+   * before promising a channel; the worker applies the SAME predicate when it
+   * decides to send or downgrade (whatsapp-deliverability.ts is the one
+   * definition). Non-candidates have no WhatsApp target — false.
+   */
+  async isWhatsappDeliverableFor(userId: string): Promise<boolean> {
+    const profile = await this.prisma.candidateProfile.findFirst({
+      where: { userId },
+      select: { phone: true, whatsappCapable: true, waNotifications: true },
+    });
+    return isWhatsappDeliverable(profile);
   }
 
   // ── Candidate read endpoints ────────────────────────────────────────────────

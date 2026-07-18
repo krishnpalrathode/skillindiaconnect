@@ -132,4 +132,14 @@ export const NOTIFICATION_MATRIX: Record<NotificationType, MatrixEntry> = {
     whatsappKind: WaMessageKind.RESUME_DOCUMENT,
     email: false,
   },
+  // S7-B2: the render finished. IN-APP ONLY, deliberately: the candidate is
+  // normally sitting on the poll screen and sees it immediately; the feed row
+  // exists for the one who navigated away. An email saying "your PDF is ready"
+  // (when they must return to the app to do anything with it anyway) is noise
+  // on a channel we ask workers to trust for things that matter.
+  RESUME_READY: {
+    inApp: true,
+    whatsapp: false,
+    email: false,
+  },
 };

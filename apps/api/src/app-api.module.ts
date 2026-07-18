@@ -18,6 +18,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { JobsSearchModule } from './jobs-search/jobs-search.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { PaymentsModule } from './payments/payments.module';
+import { ResumeModule } from './resume/resume.module';
 import { JwtAuthGuard } from './auth/guards/auth.guard';
 import { PermissionsGuard } from './auth/rbac/permissions.guard';
 
@@ -42,6 +43,10 @@ import { PermissionsGuard } from './auth/rbac/permissions.guard';
     JobsSearchModule,
     ApplicationsModule,
     PaymentsModule,
+    // S7-B2: resume settings/generate/poll/deliver. The API half ONLY — it
+    // enqueues onto RESUME_RENDER and never imports PdfModule (Chromium is
+    // worker-only, S7-B1).
+    ResumeModule,
     // S6a-B1: the admin read surfaces. AuditQueryModule carries Screen 29's
     // log query/export (API-only — the worker root must never load controllers);
     // AdminModule carries the dashboard + document grants and owns no tables.

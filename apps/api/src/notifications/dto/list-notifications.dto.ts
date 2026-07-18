@@ -22,6 +22,7 @@ export const FILTER_BUCKETS: Record<NotificationFilter, NotificationType[]> = {
     NotificationType.JOB_CLOSING_SOON,
     NotificationType.CANDIDATE_MATCHES,
     NotificationType.RESUME_SENT,
+    NotificationType.RESUME_READY,
   ],
   [NotificationFilter.PROFILE]: [
     NotificationType.PROFILE_REMINDER,

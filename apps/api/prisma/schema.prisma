@@ -148,6 +148,9 @@ enum NotificationType {
   // the employer's dashboard would be confusing (decision 4)
   JOB_POSTED_ONBEHALF
   RESUME_SENT
+  // S7-B2: "your resume PDF is ready" — fired when a generation flips READY so
+  // a candidate who navigated away mid-render still learns it finished.
+  RESUME_READY
 }
 
 enum DeliveryStatus {
@@ -383,6 +386,12 @@ model ResumeGeneration {
   sizeBytes        Int?
   trigger          ResumeTrigger
   settingsSnapshot Json
+  // S7-B2: the EXACT view the PDF was rendered from (the S7-0 `ResumeView`,
+  // photoKey in place of the inlined photo). The status poll serves THIS —
+  // rebuilding it from the live profile would drift from the stored bytes the
+  // moment the candidate edits their profile, and the contract states the view
+  // IS what the PDF contains. Null for pre-S7-B2 rows.
+  viewSnapshot     Json?
   createdAt        DateTime      @default(now())
   generatedAt      DateTime?
   resume CandidateResume @relation(fields: [resumeId], references: [id], onDelete: Cascade)

@@ -720,7 +720,7 @@ const candidateMeNotifications = http.get(`${BASE}/candidates/me/notifications`,
   // Mirror the backend FILTER_BUCKETS (apps/api/.../list-notifications.dto.ts).
   const filterMap: Record<string, string[]> = {
     applications: ['APPLICATION_SELECTED', 'APPLICATION_SHORTLISTED', 'APPLICATION_REJECTED'],
-    jobs: ['NEW_JOB_MATCH', 'JOB_CLOSING_SOON', 'CANDIDATE_MATCHES', 'RESUME_SENT'],
+    jobs: ['NEW_JOB_MATCH', 'JOB_CLOSING_SOON', 'CANDIDATE_MATCHES', 'RESUME_SENT', 'RESUME_READY'],
     profile: ['PROFILE_REMINDER', 'PASSPORT_EXPIRY', 'PROFILE_VIEWED'],
     system: [
       'EMPLOYER_APPROVED',

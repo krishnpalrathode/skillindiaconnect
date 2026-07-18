@@ -53,6 +53,7 @@ const source: ResumeSource = {
   user: { email: 'suresh@example.com' },
   experiences: [
     {
+      id: 'exp-1',
       type: 'FOREIGN',
       country: 'Oman',
       companyName: 'Gulf Wiring LLC',
@@ -63,7 +64,10 @@ const source: ResumeSource = {
       endDate: null,
     },
   ],
-  skills: [{ name: 'Panel Installation' }, { name: 'Circuit Testing' }],
+  skills: [
+    { id: 'sk-1', name: 'Panel Installation' },
+    { id: 'sk-2', name: 'Circuit Testing' },
+  ],
   documents: [
     { type: 'PASSPORT', expiryDate: new Date('2031-01-01'), documentNumber: PASSPORT_NUMBER },
     { type: 'EXPERIENCE_CERT', expiryDate: null, documentNumber: null },

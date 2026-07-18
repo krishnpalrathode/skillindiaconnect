@@ -76,7 +76,7 @@ function skillsSection(view: ResumeViewDto): string {
   if (view.skills.length === 0) return '';
   return `<section>
     <h2>Skills</h2>
-    <p class="skills">${view.skills.map((s) => `<span>${esc(s)}</span>`).join(' ')}</p>
+    <p class="skills">${view.skills.map((s) => `<span>${esc(s.name)}</span>`).join(' ')}</p>
   </section>`;
 }
 

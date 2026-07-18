@@ -3,8 +3,10 @@ import { QueueModule } from '../queue/queue.module';
 import { R2Module } from '../core/storage/r2.module';
 import { PdfModule } from '../pdf/pdf.module';
 import { CandidateReadService } from '../candidate/candidate-read.service';
+import { NotificationService } from '../notifications/notification.service';
 import { ResumeRenderService } from './resume-render.service';
 import { ResumeRenderProcessor } from './resume-render.processor';
+import { ResumeSubscriber } from './resume.subscriber';
 
 /**
  * Worker-process side of the Resume module (S7-B1) — the module that OWNS
@@ -17,6 +19,15 @@ import { ResumeRenderProcessor } from './resume-render.processor';
  */
 @Module({
   imports: [QueueModule, R2Module, PdfModule],
-  providers: [CandidateReadService, ResumeRenderService, ResumeRenderProcessor],
+  providers: [
+    CandidateReadService,
+    ResumeRenderService,
+    ResumeRenderProcessor,
+    // S7-B2: the RESUME_READY notification. Registered HERE because
+    // EventEmitter2 is per-process and `resume.generated` is emitted by the
+    // processor above — an API-side subscriber would never fire.
+    NotificationService,
+    ResumeSubscriber,
+  ],
 })
 export class ResumeWorkerModule {}

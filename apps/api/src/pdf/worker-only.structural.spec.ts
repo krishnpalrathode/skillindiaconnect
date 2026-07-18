@@ -54,6 +54,17 @@ describe('worker-only Chromium (structural)', () => {
     expect(puppeteerImporters.map((f) => path.relative(SRC, f))).toEqual([]);
   });
 
+  it('the API DOES serve the resume endpoints but reaches NO renderer (S7-B2 split)', () => {
+    const closure = importClosure('app-api.module.ts');
+    // Without this the pdf-absence assertion above could pass vacuously —
+    // an unwired ResumeModule reaches nothing at all.
+    expect(closure.has(path.resolve(SRC, 'resume', 'resume.controller.ts'))).toBe(true);
+    // ...and the API half stops exactly at the queue boundary: the render
+    // service and its processor are the worker's, not ours.
+    expect(closure.has(path.resolve(SRC, 'resume', 'resume-render.service.ts'))).toBe(false);
+    expect(closure.has(path.resolve(SRC, 'resume', 'resume-render.processor.ts'))).toBe(false);
+  });
+
   it('the WORKER module graph DOES reach the pool (the renderer lives where it should)', () => {
     const closure = importClosure('app-worker.module.ts');
     const poolFile = path.resolve(SRC, 'pdf', 'browser-pool.service.ts');

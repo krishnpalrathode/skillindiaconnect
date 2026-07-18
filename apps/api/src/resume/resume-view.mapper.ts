@@ -28,15 +28,18 @@ export interface ResumeViewDto {
   languages: string[];
   jobCategory: string | null;
   experiences: {
+    id: string;
     type: string;
     country: string;
     companyName: string;
     role: string;
     years: number;
     months: number;
+    startDate: string | null;
+    endDate: string | null;
   }[];
-  skills: string[];
-  documents: { type: string; passportValid?: boolean }[];
+  skills: { id: string; name: string }[];
+  documents: { type: string; uploaded: boolean; passportValid?: boolean }[];
   /** Data URI when a working video exists — Phase 2; null at MVP. */
   hasVideo: boolean;
   generatedAt: string;
@@ -87,16 +90,22 @@ export function toResumeView(
     languages: source.languages,
     jobCategory: source.jobCategory?.nameEn ?? null,
     experiences: source.experiences.map((e) => ({
+      id: e.id,
       type: e.type,
       country: e.country,
       companyName: e.companyName,
       role: e.role,
       years: e.years,
       months: e.months,
+      startDate: e.startDate ? e.startDate.toISOString().slice(0, 10) : null,
+      endDate: e.endDate ? e.endDate.toISOString().slice(0, 10) : null,
     })),
-    skills: source.skills.map((s) => s.name),
+    skills: source.skills.map((s) => ({ id: s.id, name: s.name })),
     documents: source.documents.map((d) => ({
       type: d.type,
+      // Every row in this list IS an upload — the resume never lists a document
+      // the candidate hasn't provided. The flag exists for the wire shape.
+      uploaded: true,
       ...(d.type === 'PASSPORT'
         ? { passportValid: d.expiryDate ? d.expiryDate > now : false }
         : {}),
