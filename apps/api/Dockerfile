@@ -8,6 +8,9 @@
 FROM node:22-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+# S7-B1: puppeteer must NOT download its own ~170MB Chrome inside the image —
+# the runtime stage installs Alpine's chromium package instead (see runner).
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 # python3 + make + g++ are required for argon2's native bindings (node-gyp).
 RUN corepack enable && apk add --no-cache python3 make g++
 
@@ -45,6 +48,19 @@ RUN pnpm deploy --filter @skillindiaconnect/api --prod /deploy
 FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+# S7-B1: Chromium runtime for the WORKER's PDF rendering (Puppeteer). The
+# binary ships in BOTH services' image (one image, two CMDs) but ONLY the
+# worker process ever launches it — the API never imports the pool.
+#   chromium            the browser itself (Alpine build)
+#   nss                 certificate/security libs Chromium links against
+#   freetype/harfbuzz   font rasterization + shaping
+#   ca-certificates     TLS roots (Chromium refuses to start sanely without)
+#   ttf-freefont        a real Latin font so text actually renders (EN MVP;
+#                       Devanagari/Arabic fonts are added with HI/AR in Phase 2)
+# The app finds it via CHROMIUM_EXECUTABLE_PATH (set below) because the npm
+# install skipped puppeteer's bundled download (PUPPETEER_SKIP_DOWNLOAD).
+RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont
+ENV CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 RUN addgroup -S nodejs -g 1001 && adduser -S nestjs -u 1001 -G nodejs
 COPY --from=deployer --chown=nestjs:nodejs /deploy ./
 COPY --from=builder  --chown=nestjs:nodejs /repo/apps/api/dist ./dist

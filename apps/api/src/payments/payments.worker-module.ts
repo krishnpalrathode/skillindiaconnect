@@ -9,6 +9,9 @@ import { SearchCacheService } from '../jobs-search/search-cache.service';
 import { SearchCacheSubscriber } from '../jobs-search/search-cache.subscriber';
 import { SubscriptionLifecycleCron } from './subscription-lifecycle.cron';
 import { SubscriptionLifecycleProcessor } from './subscription-lifecycle.processor';
+import { PdfModule } from '../pdf/pdf.module';
+import { InvoiceRenderService } from './invoice-render.service';
+import { InvoiceRenderProcessor } from './invoice-render.processor';
 
 /**
  * Worker-process side of the Payments module (S5-B3).
@@ -34,9 +37,10 @@ import { SubscriptionLifecycleProcessor } from './subscription-lifecycle.process
  */
 @Module({
   imports: [
-    QueueModule, // registers SUBSCRIPTION_LIFECYCLE + NOTIFICATION queues
+    QueueModule, // registers SUBSCRIPTION_LIFECYCLE + NOTIFICATION + INVOICE_RENDER queues
     RedisModule, // REDIS_CLIENT for SearchCacheService
-    R2Module, // StorageService for EmployerService
+    R2Module, // StorageService for EmployerService + the PDF upload
+    PdfModule, // S7-B1: Chromium — WORKER-ONLY by construction
   ],
   providers: [
     NotificationService,
@@ -46,6 +50,9 @@ import { SubscriptionLifecycleProcessor } from './subscription-lifecycle.process
     SearchCacheSubscriber,
     SubscriptionLifecycleCron,
     SubscriptionLifecycleProcessor,
+    // S7-B1: the invoice-PDF debt closer (render + daily backfill sweep).
+    InvoiceRenderService,
+    InvoiceRenderProcessor,
   ],
 })
 export class PaymentsWorkerModule {}

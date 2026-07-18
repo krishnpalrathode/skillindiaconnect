@@ -57,6 +57,45 @@ export class StorageService {
     return getSignedUrl(this.client, command, { expiresIn });
   }
 
+  /**
+   * S7-B1: server-side upload (the PDF render pipeline — the WORKER writes the
+   * rendered bytes itself; there is no client to presign for).
+   */
+  async putObject(key: string, body: Buffer, contentType: string): Promise<void> {
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: body,
+        ContentType: contentType,
+      }),
+    );
+  }
+
+  /**
+   * S7-B1: server-side read (embedding the profile photo as a data URI at
+   * render time — the template must never make Chromium fetch a live URL).
+   */
+  async getObjectBuffer(
+    key: string,
+  ): Promise<{ body: Buffer; contentType: string } | null> {
+    try {
+      const response = await this.client.send(
+        new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+      );
+      const bytes = await response.Body?.transformToByteArray();
+      if (!bytes) return null;
+      return {
+        body: Buffer.from(bytes),
+        contentType: response.ContentType ?? 'application/octet-stream',
+      };
+    } catch (err: unknown) {
+      const e = err as { name?: string; $metadata?: { httpStatusCode?: number } };
+      if (e.name === 'NoSuchKey' || e.$metadata?.httpStatusCode === 404) return null;
+      throw err;
+    }
+  }
+
   async headObject(key: string): Promise<{ sizeBytes: number; contentType: string } | null> {
     try {
       const response = await this.client.send(

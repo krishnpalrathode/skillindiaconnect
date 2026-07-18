@@ -49,6 +49,16 @@ export const envSchema = z.object({
     (v) => (v === '' ? undefined : v),
     z.string().min(1).optional(),
   ),
+
+  // S7-B1: WORKER-only Chromium. OPTIONAL — when absent, puppeteer uses its
+  // own downloaded Chrome (local dev). The alpine container sets it to the
+  // apk-installed binary (/usr/bin/chromium-browser) because the image build
+  // skips puppeteer's download (PUPPETEER_SKIP_DOWNLOAD). Read only by the
+  // worker's BrowserPoolService; the API process never launches a browser.
+  CHROMIUM_EXECUTABLE_PATH: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().min(1).optional(),
+  ),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import {
   NotificationType,
   OrderStatus,
@@ -14,6 +16,7 @@ import { EmployerService } from '../employer/employer.service';
 import { NotificationService } from '../notifications/notification.service';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
+import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
 import { InvoiceService } from './invoice.service';
 
 /** Emitted post-commit when a subscription activates (B3's quota cache etc.). */
@@ -66,6 +69,8 @@ export class ActivationService {
     private readonly notificationService: NotificationService,
     private readonly auditService: AuditService,
     private readonly eventEmitter: EventEmitter2,
+    // S7-B1: the API ENQUEUES invoice rendering; the worker's Chromium renders.
+    @InjectQueue(QUEUE_NAMES.INVOICE_RENDER) private readonly invoiceRenderQueue: Queue,
   ) {}
 
   async activate(orderId: string, ctx: ActivationContext): Promise<ActivationResult> {
@@ -203,6 +208,25 @@ export class ActivationService {
     //    NotificationService enqueues; the WORKER sends, per
     //    worker-and-external-sends). A notification hiccup never un-activates.
     this.eventEmitter.emit(PAYMENT_EVENTS.SUBSCRIPTION_ACTIVATED, committed.payload);
+
+    // 7b. S7-B1 (the S5-B2 debt): enqueue the invoice-PDF render for the row
+    //     step 5 just created with pdfKey NULL. Post-commit and fire-safe —
+    //     a queue hiccup never un-activates, and the daily backfill sweep is
+    //     the safety net that re-enqueues any invoice still unrendered.
+    //     Deterministic jobId ('-' not ':', BullMQ v5) dedupes double enqueues.
+    try {
+      await this.invoiceRenderQueue.add(
+        JOB_NAMES.RENDER_INVOICE,
+        { invoiceId: committed.payload.invoiceId },
+        { jobId: `render-invoice-${committed.payload.invoiceId}` },
+      );
+    } catch (err) {
+      this.logger.error(
+        `invoice render enqueue failed for ${committed.payload.invoiceId}: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
     try {
       const employerUserId = await this.employerService.getPrimaryUserIdForCompany(
         committed.payload.companyId,

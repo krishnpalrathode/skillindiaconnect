@@ -3,6 +3,7 @@ import { EmployerModule } from '../employer/employer.module';
 import { SettingsModule } from '../settings/settings.module';
 import { NotificationModule } from '../notifications/notification.module';
 import { GatewaysModule } from './gateways/gateways.module';
+import { QueueModule } from '../queue/queue.module';
 import { RoutingService } from './routing.service';
 import { CheckoutService } from './checkout.service';
 import { BillingController } from './billing.controller';
@@ -27,7 +28,9 @@ import { WebhookController } from './webhooks/webhook.controller';
  * is the ONLY place a CREATED order becomes PAID.
  */
 @Module({
-  imports: [EmployerModule, SettingsModule, NotificationModule, GatewaysModule],
+  // QueueModule (S7-B1): ActivationService enqueues RENDER_INVOICE post-commit
+  // — the API only ever produces onto the queue; the worker's Chromium renders.
+  imports: [EmployerModule, SettingsModule, NotificationModule, GatewaysModule, QueueModule],
   controllers: [BillingController, WebhookController],
   providers: [
     RoutingService,

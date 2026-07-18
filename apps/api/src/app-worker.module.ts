@@ -7,6 +7,7 @@ import { NotificationWorkerModule } from './notifications/notification.worker-mo
 import { JobsWorkerModule } from './jobs/jobs.worker-module';
 import { CandidateWorkerModule } from './candidate/candidate.worker-module';
 import { PaymentsWorkerModule } from './payments/payments.worker-module';
+import { ResumeWorkerModule } from './resume/resume.worker-module';
 
 // Loads: CoreModule (config + Redis) + ScheduleModule (cron runner).
 // Must NOT import AppApiModule or any HTTP controllers.
@@ -20,6 +21,9 @@ import { PaymentsWorkerModule } from './payments/payments.worker-module';
     JobsWorkerModule,
     CandidateWorkerModule,
     PaymentsWorkerModule,
+    // S7-B1: Puppeteer renders (resume). Chromium lives HERE and only here —
+    // AppApiModule must never import ResumeWorkerModule or PdfModule.
+    ResumeWorkerModule,
   ],
 })
 export class AppWorkerModule {}

@@ -211,6 +211,8 @@ beforeAll(async () => {
       notifications,
       audit,
       new EventEmitter2(),
+      // S7-B1: the post-commit invoice-render enqueue — inert here.
+      { add: jest.fn().mockResolvedValue(undefined) } as never,
     );
     const handler = new PaymentEventsHandler(prismaSvc, activation, audit);
     service = new WebhookService(prismaSvc, handler, audit, razorpay, stripe);

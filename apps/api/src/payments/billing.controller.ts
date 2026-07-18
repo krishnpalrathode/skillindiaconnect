@@ -13,6 +13,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -24,6 +25,7 @@ import {
   BillingPlanDto,
   CheckoutService,
   CheckoutSessionDto,
+  InvoiceDto,
   OrderDto,
   SubscriptionStatusDto,
 } from './checkout.service';
@@ -89,6 +91,26 @@ export class BillingController {
   ): Promise<{ data: SubscriptionStatusDto }> {
     this.assertEmployer(user.role);
     return { data: await this.checkoutService.getSubscription(user.userId) };
+  }
+
+  /**
+   * S7-B1: the S5 contract's invoices list, implemented at last (found
+   * missing while wiring the pdfKey population it exists to serve). `pdfUrl`
+   * presigns fresh per read; null until the worker renders.
+   */
+  @Get('invoices')
+  async listInvoices(
+    @CurrentUser() user: CurrentUserPayload,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ): Promise<{
+    data: InvoiceDto[];
+    meta: { page: number; pageSize: number; total: number; totalPages: number };
+  }> {
+    this.assertEmployer(user.role);
+    const p = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const size = Math.min(100, Math.max(1, parseInt(pageSize ?? '20', 10) || 20));
+    return this.checkoutService.listInvoices(user.userId, p, size);
   }
 
   /**

@@ -122,7 +122,8 @@ export class PurgeService {
     if (profile.videoR2Key) keys.add(profile.videoR2Key);
     for (const d of profile.documents) keys.add(d.r2Key);
     if (profile.resume?.lastRenderKey) keys.add(profile.resume.lastRenderKey);
-    for (const g of profile.resume?.generations ?? []) keys.add(g.r2Key);
+    // r2Key is null while a generation is PENDING/FAILED (S7-B1) — nothing to destroy yet.
+    for (const g of profile.resume?.generations ?? []) if (g.r2Key) keys.add(g.r2Key);
     return [...keys];
   }
 

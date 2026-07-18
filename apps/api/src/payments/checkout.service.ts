@@ -10,6 +10,7 @@ import {
 import { Gateway, Order, OrderStatus, Plan, PlanPeriod, UserRole } from '@prisma/client';
 import { Redis } from 'ioredis';
 import { PrismaService } from '../core/prisma/prisma.service';
+import { StorageService } from '../core/storage/storage.service';
 import { REDIS_CLIENT } from '../core/redis/redis.provider';
 import { EmployerService } from '../employer/employer.service';
 import { SettingsService } from '../settings/settings.service';
@@ -87,6 +88,20 @@ export interface OrderDto {
   invoiceId: string | null;
 }
 
+/** The contract's `Invoice` (S5-0; the endpoint went live in S7-B1). */
+export interface InvoiceDto {
+  id: string;
+  number: string;
+  issuedAt: string;
+  totalSubunits: number;
+  currency: string;
+  planName: string;
+  pdfUrl: string | null;
+}
+
+/** Contract: "~15 minutes" for invoice pdf links, minted fresh per read. */
+export const INVOICE_PDF_URL_EXPIRY_SECONDS = 15 * 60;
+
 /**
  * Checkout — routing + server-derived money + the order row + idempotency.
  *
@@ -108,6 +123,8 @@ export class CheckoutService {
     private readonly settings: SettingsService,
     private readonly routing: RoutingService,
     private readonly audit: AuditService,
+    // S7-B1: presigns invoice pdfKeys on the list read (R2Module is @Global).
+    private readonly storage: StorageService,
     @Inject(RAZORPAY_GATEWAY) private readonly razorpay: PaymentGatewayPort,
     @Inject(STRIPE_GATEWAY) private readonly stripe: PaymentGatewayPort,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
@@ -281,6 +298,57 @@ export class CheckoutService {
     if (!withinWindow) {
       throw new ConflictException({ code: 'SUBSCRIPTION_ALREADY_ACTIVE' });
     }
+  }
+
+  // ── GET /billing/invoices (S7-B1 — the S5 contract's endpoint, now real) ────
+
+  /**
+   * The company's invoices, newest first, offset-paginated. `pdfUrl` is a
+   * SHORT-EXPIRY (15 min) signed url minted fresh per read from the row's
+   * pdfKey — null until the worker has rendered the PDF (S5-F2's UI is
+   * null-safe by design). The S5 contract specified this endpoint; the S7-B1
+   * pass found it was never implemented — wired here alongside the pdfKey
+   * population it exists to serve.
+   */
+  async listInvoices(
+    userId: string,
+    page: number,
+    pageSize: number,
+  ): Promise<{
+    data: InvoiceDto[];
+    meta: { page: number; pageSize: number; total: number; totalPages: number };
+  }> {
+    const company = await this.employerService.getCompanyForEmployerUser(userId);
+    const where = { order: { companyId: company.id } };
+    const [rows, total] = await Promise.all([
+      this.prisma.invoice.findMany({
+        where,
+        include: { order: { include: { plan: true } } },
+        orderBy: { issuedAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.invoice.count({ where }),
+    ]);
+
+    const data = await Promise.all(
+      rows.map(async (inv) => ({
+        id: inv.id,
+        number: inv.number,
+        issuedAt: inv.issuedAt.toISOString(),
+        totalSubunits: inv.order.totalSubunits,
+        currency: inv.order.currency,
+        planName: inv.order.plan.name,
+        pdfUrl: inv.pdfKey
+          ? await this.storage.presignGet(inv.pdfKey, INVOICE_PDF_URL_EXPIRY_SECONDS)
+          : null,
+      })),
+    );
+
+    return {
+      data,
+      meta: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) },
+    };
   }
 
   // ── GET /billing/plans ───────────────────────────────────────────────────────

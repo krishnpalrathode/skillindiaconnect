@@ -109,6 +109,9 @@ export const AUDIT_ACTIONS = {
   APPLICATION_NOTE_DELETED: 'application.note.deleted',
   // The manual WhatsApp resend (S6b-B2) — actor + reason, never a phone number.
   APPLICATION_WHATSAPP_RESENT: 'application.whatsapp.resent',
+  // S7-B1 (worker renders — meta is ids/counts only, never profile content)
+  RESUME_GENERATED: 'resume.generated',
+  INVOICE_PDF_RENDERED: 'invoice.pdf.rendered',
 } as const;
 
 export type AuditActionName = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

@@ -177,6 +177,8 @@ beforeAll(async () => {
       { notify: jest.fn().mockResolvedValue(undefined) } as unknown as NotificationService,
       audit,
       new EventEmitter2(),
+      // S7-B1: the post-commit invoice-render enqueue — inert here.
+      { add: jest.fn().mockResolvedValue(undefined) } as never,
     );
     const handler = new PaymentEventsHandler(prismaSvc, activation, audit);
     webhooks = new WebhookService(

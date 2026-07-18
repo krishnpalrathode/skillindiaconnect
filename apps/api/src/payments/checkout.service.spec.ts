@@ -196,6 +196,8 @@ beforeEach(() => {
     settingsStub,
     routing,
     { log: auditLog } as unknown as AuditService,
+    // S7-B1: presigns invoice pdf links — unused by the checkout paths here.
+    { presignGet: jest.fn().mockResolvedValue('https://r2.example/inv.pdf?sig=t') } as never,
     razorpayPort,
     stripePort,
     redis as unknown as Redis,

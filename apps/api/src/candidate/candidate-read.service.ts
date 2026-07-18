@@ -202,6 +202,54 @@ export class CandidateReadService {
     return { total, active };
   }
 
+  // ── S7-B1: the resume-render source (worker-side) ─────────────────────────
+
+  /**
+   * Everything the resume-view mapper needs, in ONE read — the Rule-4 seam
+   * the resume module renders through (it owns candidate_resumes /
+   * resume_generations, never candidate_profiles). Selected here, not shaped:
+   * the SHAPING (settings-driven omission) is the resume-view mapper's job.
+   * `documentNumber` is selected ONLY here — no employer-context select ever
+   * includes it.
+   */
+  async getResumeSource(candidateId: string): Promise<ResumeSource | null> {
+    const row = await this.prisma.candidateProfile.findUnique({
+      where: { id: candidateId },
+      select: {
+        id: true,
+        fullName: true,
+        fatherName: true,
+        dob: true,
+        phone: true,
+        maritalStatus: true,
+        religion: true,
+        languages: true,
+        currentLocation: true,
+        nationality: true,
+        photoKey: true,
+        videoR2Key: true,
+        jobCategory: { select: { nameEn: true } },
+        user: { select: { email: true } },
+        experiences: {
+          select: {
+            type: true,
+            country: true,
+            companyName: true,
+            role: true,
+            years: true,
+            months: true,
+            startDate: true,
+            endDate: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+        skills: { select: { name: true }, orderBy: { name: 'asc' } },
+        documents: { select: { type: true, expiryDate: true, documentNumber: true } },
+      },
+    });
+    return row as ResumeSource | null;
+  }
+
   // ── S6b-B1: Admin-context reads (Screen 25's data) ───────────────────────
 
   /**
@@ -593,6 +641,36 @@ export interface AdminCandidateDetailSource extends AdminCandidateSource {
     endDate: Date | null;
   }[];
   skills: { id: string; name: string }[];
+}
+
+/** S7-B1: the raw material the resume-view mapper shapes (worker-side read). */
+export interface ResumeSource {
+  id: string;
+  fullName: string;
+  fatherName: string | null;
+  dob: Date | null;
+  phone: string | null;
+  maritalStatus: string | null;
+  religion: string | null;
+  languages: string[];
+  currentLocation: string | null;
+  nationality: string | null;
+  photoKey: string | null;
+  videoR2Key: string | null;
+  jobCategory: { nameEn: string } | null;
+  user: { email: string };
+  experiences: {
+    type: string;
+    country: string;
+    companyName: string;
+    role: string;
+    years: number;
+    months: number;
+    startDate: Date | null;
+    endDate: Date | null;
+  }[];
+  skills: { name: string }[];
+  documents: { type: DocumentType; expiryDate: Date | null; documentNumber: string | null }[];
 }
 
 // ── Return-type interfaces (exported for Employer module mappers) ────────────

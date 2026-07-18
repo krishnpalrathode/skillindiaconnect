@@ -330,6 +330,10 @@ model CandidateDocument {
   mimeType    String
   sizeBytes   Int
   expiryDate  DateTime?    @db.Date
+  // S7-B1: the document's own number (passport number for PASSPORT). The home
+  // the S7-0 freeze flagged as missing — the resume-view renders it ONLY when
+  // showPassportNumber is on; the employer context NEVER selects it.
+  documentNumber String?   @db.VarChar(50)
   uploadedAt  DateTime     @default(now())
   candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   @@unique([candidateId, type])
@@ -368,15 +372,28 @@ model CandidateResume {
 model ResumeGeneration {
   id               String        @id @default(uuid())
   resumeId         String
-  contentHash      String
-  r2Key            String
-  sizeBytes        Int
+  // S7-B1: the generation LIFECYCLE the S7-0 poll serves. The row is created
+  // PENDING at enqueue (S7-B2); the worker flips it READY (render fields set)
+  // or FAILED (failureReason set). Render fields became nullable because they
+  // simply don't exist before the render completes.
+  status           ResumeGenerationStatus @default(PENDING)
+  failureReason    String?
+  contentHash      String?
+  r2Key            String?
+  sizeBytes        Int?
   trigger          ResumeTrigger
   settingsSnapshot Json
   createdAt        DateTime      @default(now())
+  generatedAt      DateTime?
   resume CandidateResume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   @@index([resumeId, createdAt])
   @@map("resume_generations")
+}
+
+enum ResumeGenerationStatus {
+  PENDING
+  READY
+  FAILED
 }
 
 // ───────── EMPLOYER ─────────
