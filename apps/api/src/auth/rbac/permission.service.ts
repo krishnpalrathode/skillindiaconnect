@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { Redis } from 'ioredis';
 import { PrismaService } from '../../core/prisma/prisma.service';
@@ -12,14 +12,44 @@ function cacheKey(role: UserRole): string {
 
 @Injectable()
 export class PermissionService {
+  private readonly logger = new Logger(PermissionService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
+  /**
+   * Resolve a role's grants: Redis first, Postgres as the source of truth.
+   *
+   * CHAOS-001 (S8-H3) — REDIS IS AN OPTIMISATION HERE, NOT A DEPENDENCY.
+   * A cache read/write failure must never decide an authorization outcome, so
+   * both are wrapped and fall through to the DB. The safety argument:
+   *
+   *  - `role_permissions` is the AUTHORITATIVE grant table. Falling back to it
+   *    yields the correct answer, not a permissive one — this degrades
+   *    performance (a query per request while Redis is down), never security.
+   *  - A cache MISS and a cache ERROR are therefore treated identically.
+   *  - If the DB is also unreachable the query throws, the guard never returns
+   *    true, and the request is denied. FAIL CLOSED is preserved on every path;
+   *    there is no branch here that can grant a permission the DB does not.
+   *
+   * Before this, an unbounded Redis command left the request hanging rather
+   * than resolving either way — see redis.provider.ts.
+   */
   async getPermissionsForRole(role: UserRole): Promise<Set<string>> {
     const key = cacheKey(role);
-    const cached = await this.redis.get(key);
+
+    let cached: string | null = null;
+    try {
+      cached = await this.redis.get(key);
+    } catch (err) {
+      this.logger.warn(
+        `permission cache read failed for ${role} — falling back to the database: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
     if (cached !== null) {
       return new Set<string>(JSON.parse(cached) as string[]);
     }
@@ -29,7 +59,14 @@ export class PermissionService {
       select: { permissionKey: true },
     });
     const keys = rows.map((r: { permissionKey: string }) => r.permissionKey);
-    await this.redis.setex(key, CACHE_TTL_SECONDS, JSON.stringify(keys));
+
+    try {
+      await this.redis.setex(key, CACHE_TTL_SECONDS, JSON.stringify(keys));
+    } catch {
+      // Repopulating the cache is best-effort; the answer above is already
+      // authoritative. Not logged at warn — the read failure above already
+      // reported the outage, and one line per request would flood the log.
+    }
     return new Set<string>(keys);
   }
 
@@ -53,6 +90,12 @@ export class PermissionService {
    * MODERATOR's cached grants and stampede the DB on every unrelated request.
    */
   async invalidateRoleCache(role: UserRole): Promise<void> {
+    // Deliberately NOT wrapped: a failed invalidation must propagate. If the
+    // grant landed in the DB but the stale cache entry survived, callers would
+    // keep seeing the OLD permission set for up to the TTL — for a REVOKE that
+    // is a silent, time-boxed security hole. The caller (RbacMatrixService)
+    // needs to know, so this is the one Redis call here that is allowed to fail
+    // the request.
     await this.redis.del(cacheKey(role));
   }
 }

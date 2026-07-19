@@ -1,4 +1,11 @@
-import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis';
@@ -36,6 +43,8 @@ function hashToken(token: string): string {
 
 @Injectable()
 export class TokenService {
+  private readonly logger = new Logger(TokenService.name);
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -164,9 +173,47 @@ export class TokenService {
     await this.redis.setex(`blacklist:access:${jti}`, ttlSeconds, '1');
   }
 
+  /**
+   * Is this access token revoked (logged out)?
+   *
+   * CHAOS-003 (S8-H3) — THIS ONE FAILS CLOSED ON PURPOSE, and unlike the
+   * permission cache it CANNOT degrade to the database.
+   *
+   * The revocation list lives only in Redis: there is no other record that a
+   * given jti was logged out. So when Redis is unreachable there are exactly
+   * two choices, and they are not close:
+   *
+   *   - fail OPEN  → every logged-out token silently works again for the
+   *                  duration of the outage. Logout would stop meaning logout
+   *                  precisely when the platform is least healthy.
+   *   - fail CLOSED → authenticated requests are refused until Redis returns.
+   *
+   * Fail closed is the only defensible answer for a revocation check, so the
+   * throw is deliberate. What changed here is HONESTY, not the outcome: the
+   * unguarded `exists()` used to surface as `500 INTERNAL_ERROR`, which reads
+   * as "the API has a bug" and pages the wrong people. It is now an explicit
+   * `503 SESSION_VERIFICATION_UNAVAILABLE` — the accurate statement that we
+   * cannot verify the session right now, retriable, and routed to whoever owns
+   * the cache rather than whoever owns the code.
+   *
+   * Operational consequence, stated plainly: a Redis outage makes the
+   * AUTHENTICATED API unavailable while public routes keep serving. That is a
+   * real availability dependency and it is documented in the runbook as such,
+   * with removing it (a signed short-TTL revocation scheme, or a DB-backed
+   * revocation table) recorded as the follow-up.
+   */
   async isAccessJtiBlacklisted(jti: string): Promise<boolean> {
-    const result = await this.redis.exists(`blacklist:access:${jti}`);
-    return result === 1;
+    try {
+      const result = await this.redis.exists(`blacklist:access:${jti}`);
+      return result === 1;
+    } catch (err) {
+      this.logger.error(
+        `session revocation check unavailable — failing CLOSED: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+      throw new ServiceUnavailableException({ code: 'SESSION_VERIFICATION_UNAVAILABLE' });
+    }
   }
 
   /** Exposed for AuthGuard to verify an access token. */

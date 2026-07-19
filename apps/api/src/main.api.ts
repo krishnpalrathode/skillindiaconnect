@@ -7,14 +7,31 @@ import helmet from 'helmet';
 import { AppApiModule } from './app-api.module';
 import { validationProblemFactory } from './core/http-problem.filter';
 import { applyScopedBodyParsers } from './payments/webhooks/raw-body.middleware';
+import { initErrorTracking } from './core/observability/error-tracking';
+import { requestContextMiddleware } from './core/observability/request-context';
+import {
+  StructuredLogger,
+  shouldUseStructuredLogging,
+} from './core/observability/structured-logger';
 
 async function bootstrap(): Promise<void> {
+  // S8-H3: error tracking is initialised BEFORE the app is created, so a
+  // failure during module construction is still reported. Inert without a DSN.
+  initErrorTracking();
+
   // bodyParser: false — body parsing is re-wired by applyScopedBodyParsers so
   // the two webhook routes receive the UNTOUCHED raw byte buffer (signature
   // verification runs on those exact bytes) while every other route keeps
   // normal JSON parsing. See raw-body.middleware.ts for the mechanism.
-  const app = await NestFactory.create(AppApiModule, { bodyParser: false });
+  const app = await NestFactory.create(AppApiModule, {
+    bodyParser: false,
+    ...(shouldUseStructuredLogging() ? { logger: new StructuredLogger() } : {}),
+  });
   applyScopedBodyParsers(app);
+
+  // S8-H3: establishes the per-request correlation id. Mounted FIRST so every
+  // later middleware, guard, handler and log line runs inside the context.
+  app.use(requestContextMiddleware);
 
   // Parse cookies — required for the httpOnly refresh-token cookie.
   app.use(cookieParser());
@@ -58,7 +75,17 @@ async function bootstrap(): Promise<void> {
 
   // Global prefix for all routes except /health (used by load balancers).
   app.setGlobalPrefix('api', {
-    exclude: [{ path: 'health', method: RequestMethod.GET }],
+    // S8-H3: liveness/readiness are excluded alongside the business health
+    // view. `exclude` matches EXACT paths, not prefixes, so each subpath must
+    // be listed — otherwise they would land at /api/health/live and the
+    // deployment platform's probes would 404.
+    exclude: [
+      { path: 'health', method: RequestMethod.GET },
+      { path: 'health/live', method: RequestMethod.GET },
+      { path: 'health/ready', method: RequestMethod.GET },
+      // S8-H3: the scrape target must not move when the business API is versioned.
+      { path: 'metrics', method: RequestMethod.GET },
+    ],
   });
 
   // URI versioning: /api/v1/...

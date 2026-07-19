@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { HttpProblemFilter } from './core/http-problem.filter';
+import { ObservabilityModule } from './core/observability/observability.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CoreModule } from './core/core.module';
@@ -31,6 +32,7 @@ import { PermissionsGuard } from './auth/rbac/permissions.guard';
 @Module({
   imports: [
     CoreModule,
+    ObservabilityModule,
     HealthModule,
     AuthModule,
     R2Module,

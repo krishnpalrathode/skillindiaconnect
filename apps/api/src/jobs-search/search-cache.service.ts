@@ -17,7 +17,7 @@
  *   - Job detail is cached with a shorter TTL for SSR warm-up.
  */
 import { createHash } from 'crypto';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import { REDIS_CLIENT } from '../core/redis/redis.provider';
 
@@ -44,6 +44,7 @@ const VERSION_MEMO_MS = 1_000;
 
 @Injectable()
 export class SearchCacheService {
+  private readonly logger = new Logger(SearchCacheService.name);
   private memoVersion: { value: number; readAt: number } | null = null;
 
   constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
@@ -69,9 +70,23 @@ export class SearchCacheService {
     if (this.memoVersion && now - this.memoVersion.readAt < VERSION_MEMO_MS) {
       return this.memoVersion.value;
     }
-    const v = await this.redis.get(CACHE_VER_KEY);
-    const value = v ? parseInt(v, 10) : 0;
-    this.memoVersion = { value, readAt: now };
+    // CHAOS-001: a cache outage must not break the public feed. Version 0 is
+    // the same value a never-bumped deployment uses, so the request proceeds to
+    // the DB exactly as a cold cache would. NOT memoized on failure — otherwise
+    // one blip would pin version 0 for the memo window and could serve entries
+    // from a stale generation once Redis returned.
+    let value = 0;
+    try {
+      const v = await this.redis.get(CACHE_VER_KEY);
+      value = v ? parseInt(v, 10) : 0;
+      this.memoVersion = { value, readAt: now };
+    } catch (err) {
+      this.logger.warn(
+        `search cache version read failed — serving from the database: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
     return value;
   }
 
@@ -104,9 +119,14 @@ export class SearchCacheService {
     return `job:detail:${jobId}`;
   }
 
+  /** A cache ERROR is treated as a cache MISS — the DB is the source of truth. */
   async getSearch<T>(key: string): Promise<T | null> {
-    const raw = await this.redis.get(key);
-    return raw ? (JSON.parse(raw) as T) : null;
+    try {
+      const raw = await this.redis.get(key);
+      return raw ? (JSON.parse(raw) as T) : null;
+    } catch {
+      return null; // CHAOS-001 — miss through to Postgres
+    }
   }
 
   async setSearch<T>(key: string, value: T): Promise<void> {
@@ -114,18 +134,37 @@ export class SearchCacheService {
     // so this only ever lengthens cache lifetime; it cannot make results staler
     // than the documented ceiling by more than the jitter window.
     const ttl = SEARCH_TTL_S + Math.floor(Math.random() * SEARCH_TTL_JITTER_S);
-    await this.redis.setex(key, ttl, JSON.stringify(value));
+    try {
+      await this.redis.setex(key, ttl, JSON.stringify(value));
+    } catch {
+      // CHAOS-001: failing to POPULATE the cache must not fail the request the
+      // caller already computed successfully.
+    }
   }
 
   async getDetail<T>(jobId: string): Promise<T | null> {
-    const raw = await this.redis.get(this.detailCacheKey(jobId));
-    return raw ? (JSON.parse(raw) as T) : null;
+    try {
+      const raw = await this.redis.get(this.detailCacheKey(jobId));
+      return raw ? (JSON.parse(raw) as T) : null;
+    } catch {
+      return null; // CHAOS-001 — miss through to Postgres
+    }
   }
 
   async setDetail<T>(jobId: string, value: T): Promise<void> {
-    await this.redis.setex(this.detailCacheKey(jobId), DETAIL_TTL_S, JSON.stringify(value));
+    try {
+      await this.redis.setex(this.detailCacheKey(jobId), DETAIL_TTL_S, JSON.stringify(value));
+    } catch {
+      // CHAOS-001 — best-effort populate; never fails the caller's request.
+    }
   }
 
+  /**
+   * Deliberately NOT wrapped — same reasoning as PermissionService's
+   * invalidateRoleCache. A failed detail invalidation means a paused or
+   * archived job keeps being served as live until the TTL lapses, so the
+   * caller must hear about it rather than have it swallowed.
+   */
   async invalidateJobDetail(jobId: string): Promise<void> {
     await this.redis.del(this.detailCacheKey(jobId));
   }

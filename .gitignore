@@ -46,3 +46,6 @@ load/results/
 
 # S8-H2 security probe artifacts (the scripts are checked in; their output is not)
 security/probes/out/
+
+# S8-H3 chaos run artifacts (scripts are checked in; their output is not)
+chaos/out/

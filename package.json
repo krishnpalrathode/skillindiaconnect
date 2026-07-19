@@ -42,7 +42,15 @@
     "security:webhook": "pnpm --filter ./apps/api exec tsx ../../security/probes/webhook-probes.ts",
     "security:authconfig": "pnpm --filter ./apps/api exec tsx ../../security/probes/auth-config-probes.ts",
     "security:all": "pnpm security:authz && pnpm security:idor && pnpm security:privacy && pnpm security:injection && pnpm security:webhook && pnpm security:authconfig",
-    "security:matrix": "pnpm --filter ./apps/api exec tsx ../../security/probes/render-authz-matrix.ts"
+    "security:matrix": "pnpm --filter ./apps/api exec tsx ../../security/probes/render-authz-matrix.ts",
+    "chaos:typecheck": "tsc -p chaos/tsconfig.json --noEmit",
+    "chaos:redis": "pnpm --filter ./apps/api exec tsx ../../chaos/redis-down.ts",
+    "chaos:gateway": "pnpm --filter ./apps/api exec tsx ../../chaos/gateway-down.ts",
+    "chaos:storage": "pnpm --filter ./apps/api exec tsx ../../chaos/storage-down.ts",
+    "chaos:worker": "pnpm --filter ./apps/api exec tsx ../../chaos/worker-crash.ts",
+    "chaos:nofalsesuccess": "pnpm --filter ./apps/api exec tsx ../../chaos/no-false-success.ts",
+    "chaos:all": "pnpm chaos:redis && pnpm chaos:gateway && pnpm chaos:storage && pnpm chaos:worker && pnpm chaos:nofalsesuccess",
+    "chaos:drill": "pnpm --filter ./apps/api exec tsx ../../chaos/backup-restore-drill.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.0",

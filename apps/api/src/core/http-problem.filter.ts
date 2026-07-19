@@ -9,6 +9,7 @@ import {
   ValidationError,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { captureError } from './observability/error-tracking';
 
 /**
  * The RFC-7807-style error envelope mandated by api-conventions.md and the
@@ -158,6 +159,10 @@ export class HttpProblemFilter implements ExceptionFilter {
       const msg = exception instanceof Error ? exception.message : String(exception);
       const stack = exception instanceof Error ? exception.stack : undefined;
       this.logger.error(`Unhandled exception: ${msg}`, stack);
+      // S8-H3: report to the error tracker with correlation context. Only
+      // genuinely unexpected failures are sent — HttpExceptions above are
+      // deliberate domain outcomes (a 404, a 403) and would be pure noise.
+      captureError(exception);
     }
 
     const title = TITLES[status] ?? 'Error';
