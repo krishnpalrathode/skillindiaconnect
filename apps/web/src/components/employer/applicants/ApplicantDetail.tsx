@@ -110,7 +110,7 @@ export function ApplicantDetail({
         </div>
 
         <div className="mb-3 flex items-center justify-between gap-2">
-          <span className="text-xs text-neutral-500">
+          <span className="text-xs text-neutral-600">
             {a.humanId} · {t('appliedAgo', { ago: formatPostedAgo(a.appliedAt, locale) })}
           </span>
           <MatchBreakdownPopover

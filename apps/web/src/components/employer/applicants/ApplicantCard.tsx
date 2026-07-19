@@ -78,7 +78,7 @@ export function ApplicantCard({
             <Badge variant={APPLICANT_STATUS_VARIANT[a.status]}>{t(`status.${a.status}`)}</Badge>
             {hasForeign && <Badge variant="primary">{t('gulfBadge')}</Badge>}
           </div>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-neutral-500">
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-neutral-600">
             {a.age != null && <span>{t('ageYears', { age: a.age })}</span>}
             {a.currentLocation && (
               <span className="flex items-center gap-1">
@@ -90,7 +90,7 @@ export function ApplicantCard({
           </p>
           {/* Phone renders ONLY when present — hidden-phone (showPhone=false) → absent. */}
           {a.phone && (
-            <p className="mt-0.5 flex items-center gap-1 text-sm text-neutral-500">
+            <p className="mt-0.5 flex items-center gap-1 text-sm text-neutral-600">
               <Phone className="size-3.5" aria-hidden="true" />
               {a.phone}
             </p>
@@ -117,7 +117,7 @@ export function ApplicantCard({
                 'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs',
                 uploaded && !expired
                   ? 'bg-success-bg text-success-fg'
-                  : 'bg-neutral-100 text-neutral-500',
+                  : 'bg-neutral-100 text-neutral-600',
               )}
             >
               {uploaded && !expired ? (
@@ -153,7 +153,7 @@ export function ApplicantCard({
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs text-neutral-400">
+        <span className="text-xs text-neutral-600">
           {a.humanId} · {t('appliedAgo', { ago: formatPostedAgo(a.appliedAt, locale) })}
         </span>
         <div className="flex items-center gap-2">

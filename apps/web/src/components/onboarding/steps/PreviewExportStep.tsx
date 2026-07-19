@@ -52,7 +52,7 @@ export function PreviewExportStep({ profile, onBack }: PreviewExportStepProps) {
     <div className="flex flex-col gap-6">
       <div className="text-center">
         <h2 className="text-xl font-bold text-neutral-900">{t('title')}</h2>
-        <p className="mt-1 text-sm text-neutral-500">{t('subtitle')}</p>
+        <p className="mt-1 text-sm text-neutral-600">{t('subtitle')}</p>
       </div>
 
       {/* S7-F1 export hub: completion ring + live preview + Download PDF (async). */}
@@ -61,10 +61,10 @@ export function PreviewExportStep({ profile, onBack }: PreviewExportStepProps) {
       {/* Video slot (Coming Soon — B6) */}
       <div className="flex flex-col gap-2 p-4 rounded-lg border border-dashed border-neutral-200 bg-neutral-50">
         <div className="flex items-center gap-2">
-          <Video className="size-4 text-neutral-400" aria-hidden="true" />
-          <p className="text-sm font-medium text-neutral-500">{t('videoTitle')}</p>
+          <Video className="size-4 text-neutral-600" aria-hidden="true" />
+          <p className="text-sm font-medium text-neutral-600">{t('videoTitle')}</p>
         </div>
-        <p className="text-xs text-neutral-400">{t('videoComingSoon')}</p>
+        <p className="text-xs text-neutral-600">{t('videoComingSoon')}</p>
       </div>
 
       {error && (

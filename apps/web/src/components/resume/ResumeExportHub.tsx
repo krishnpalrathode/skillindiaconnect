@@ -96,7 +96,7 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
       {settings ? (
         <ResumePreview profile={profile} settings={settings} />
       ) : (
-        <p className="text-sm text-neutral-500">{t('previewUnavailable')}</p>
+        <p className="text-sm text-neutral-600">{t('previewUnavailable')}</p>
       )}
 
       {/* Download PDF — the async generate→poll→download UX. A fresh generation

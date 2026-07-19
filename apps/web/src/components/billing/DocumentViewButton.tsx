@@ -66,14 +66,14 @@ export function DocumentViewButton({
   return (
     <div ref={containerRef} className="relative">
       {viewState === 'unavailable' ? (
-        <span className="inline-flex min-h-[44px] items-center text-xs text-neutral-400">
+        <span className="inline-flex min-h-[44px] items-center text-xs text-neutral-600">
           {t('docUnavailable')}
         </span>
       ) : viewState === 'retry' ? (
         <button
           type="button"
           onClick={() => setViewState('idle')}
-          className="inline-flex min-h-[44px] items-center gap-1 rounded text-xs font-medium text-neutral-500 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+          className="inline-flex min-h-[44px] items-center gap-1 rounded text-xs font-medium text-neutral-600 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >
           {t('docExpiredRetry')}
         </button>

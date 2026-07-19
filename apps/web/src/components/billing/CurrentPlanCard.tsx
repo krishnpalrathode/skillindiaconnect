@@ -66,7 +66,7 @@ export function CurrentPlanCard({ subscription }: CurrentPlanCardProps) {
             ) : isGrace ? (
               <Clock className="size-4 text-warning-fg" aria-hidden="true" />
             ) : (
-              <AlertCircle className="size-4 text-neutral-400" aria-hidden="true" />
+              <AlertCircle className="size-4 text-neutral-600" aria-hidden="true" />
             )}
           </span>
           <div>
@@ -74,7 +74,7 @@ export function CurrentPlanCard({ subscription }: CurrentPlanCardProps) {
               {isFree ? t('statusFree') : plan.name}
             </p>
             {isActive && expiresAt && (
-              <p className="mt-0.5 text-xs text-neutral-500">
+              <p className="mt-0.5 text-xs text-neutral-600">
                 {t('expiresOn', { date: formatDate(expiresAt, locale) })}
               </p>
             )}
@@ -82,7 +82,7 @@ export function CurrentPlanCard({ subscription }: CurrentPlanCardProps) {
               <p
                 className={cn(
                   'mt-0.5 text-xs font-medium',
-                  daysRemaining <= 7 ? 'text-warning-fg' : 'text-neutral-500',
+                  daysRemaining <= 7 ? 'text-warning-fg' : 'text-neutral-600',
                 )}
               >
                 {t('daysRemaining', { count: daysRemaining })}
@@ -93,8 +93,8 @@ export function CurrentPlanCard({ subscription }: CurrentPlanCardProps) {
                 {t('graceDaysLeft', { count: daysRemaining ?? 0 })}
               </p>
             )}
-            {isExpired && <p className="mt-0.5 text-xs text-neutral-500">{t('expiredHint')}</p>}
-            {isFree && <p className="mt-0.5 text-xs text-neutral-500">{t('freeHint')}</p>}
+            {isExpired && <p className="mt-0.5 text-xs text-neutral-600">{t('expiredHint')}</p>}
+            {isFree && <p className="mt-0.5 text-xs text-neutral-600">{t('freeHint')}</p>}
           </div>
         </div>
 

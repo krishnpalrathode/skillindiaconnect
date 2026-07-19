@@ -111,7 +111,7 @@ export function CheckoutLauncher({
   return (
     <div className="flex flex-col items-center gap-3 rounded-lg border border-neutral-200 bg-white p-8 text-center">
       <Spinner size={28} label={t('launchingTitle')} />
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-neutral-600">
         {session.gateway === 'STRIPE' ? t('redirectingStripe') : t('launchingRazorpay')}
       </p>
     </div>

@@ -49,7 +49,7 @@ export function GenerationStatus({
           <Spinner size={28} label={t('generatingTitle')} />
           <div>
             <p className="text-sm font-semibold text-neutral-900">{t('generatingTitle')}</p>
-            <p className="mt-1 text-xs text-neutral-500">{t('generatingBody')}</p>
+            <p className="mt-1 text-xs text-neutral-600">{t('generatingBody')}</p>
           </div>
         </>
       )}
@@ -59,7 +59,7 @@ export function GenerationStatus({
           <CheckCircle2 className="size-9 text-success-fg" aria-hidden="true" />
           <div>
             <p className="text-sm font-semibold text-neutral-900">{t('readyTitle')}</p>
-            <p className="mt-1 text-xs text-neutral-500">{t('readyBody')}</p>
+            <p className="mt-1 text-xs text-neutral-600">{t('readyBody')}</p>
           </div>
           <Button
             type="button"
@@ -79,7 +79,7 @@ export function GenerationStatus({
           <XCircle className="size-9 text-error-fg" aria-hidden="true" />
           <div>
             <p className="text-sm font-semibold text-neutral-900">{t('failedTitle')}</p>
-            <p className="mt-1 text-xs text-neutral-500">{t('failedBody')}</p>
+            <p className="mt-1 text-xs text-neutral-600">{t('failedBody')}</p>
           </div>
           <Button type="button" variant="primary" size="md" onClick={onRetry}>
             {t('retry')}
@@ -92,7 +92,7 @@ export function GenerationStatus({
           <Clock className="size-9 text-warning-fg" aria-hidden="true" />
           <div>
             <p className="text-sm font-semibold text-neutral-900">{t('timeoutTitle')}</p>
-            <p className="mt-1 text-xs text-neutral-500">{t('timeoutBody')}</p>
+            <p className="mt-1 text-xs text-neutral-600">{t('timeoutBody')}</p>
           </div>
           <Button type="button" variant="primary" size="md" onClick={onRetry}>
             {t('retry')}

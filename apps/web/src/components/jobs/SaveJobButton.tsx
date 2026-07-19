@@ -73,7 +73,7 @@ export function SaveJobButton({
         title={label}
         className={cn(
           'inline-flex size-11 shrink-0 items-center justify-center rounded-md transition-colors',
-          'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700',
+          'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-700',
           'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
           'disabled:opacity-50',
           saved && 'text-primary-600',

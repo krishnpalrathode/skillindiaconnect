@@ -24,9 +24,9 @@ interface PersonalInfoSectionProps {
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <dt className="text-xs font-medium text-neutral-500">{label}</dt>
+      <dt className="text-xs font-medium text-neutral-600">{label}</dt>
       <dd className="text-sm text-neutral-900">
-        {value || <span className="text-neutral-400">—</span>}
+        {value || <span className="text-neutral-600">—</span>}
       </dd>
     </div>
   );

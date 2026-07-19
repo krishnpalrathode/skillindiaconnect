@@ -176,7 +176,7 @@ export function OnBehalfJobForm() {
           <h2 id="employer-picker-heading" className="text-base font-semibold text-neutral-900">
             {t('employerHeading')}
           </h2>
-          <p className="mt-0.5 text-sm text-neutral-500">{t('employerSubtitle')}</p>
+          <p className="mt-0.5 text-sm text-neutral-600">{t('employerSubtitle')}</p>
         </div>
 
         {employer ? (
@@ -213,7 +213,7 @@ export function OnBehalfJobForm() {
 
             {employerResults === null && <Spinner size={18} label={t('employerLoading')} />}
             {employerResults !== null && employerResults.length === 0 && (
-              <p role="status" className="text-sm text-neutral-500">
+              <p role="status" className="text-sm text-neutral-600">
                 {t('employerNoResults')}
               </p>
             )}
@@ -230,7 +230,7 @@ export function OnBehalfJobForm() {
                       className="flex min-h-[44px] w-full items-center justify-between gap-2 px-3 py-2 text-start text-sm hover:bg-primary-50/50 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
                     >
                       <span className="font-medium text-neutral-900">{c.name}</span>
-                      <span className="text-xs text-neutral-500">{c.location}</span>
+                      <span className="text-xs text-neutral-600">{c.location}</span>
                     </button>
                   </li>
                 ))}
@@ -388,7 +388,7 @@ export function OnBehalfJobForm() {
           {t('publishNow')}
         </Button>
         {/* No bypass: the same gates as the employer's own publish. */}
-        <p className="w-full text-xs text-neutral-500">{t('gatesNote')}</p>
+        <p className="w-full text-xs text-neutral-600">{t('gatesNote')}</p>
       </div>
     </form>
   );

@@ -20,7 +20,7 @@ function Row({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null;
   return (
     <div className="flex gap-2 text-sm">
-      <dt className="w-32 shrink-0 text-neutral-500">{label}</dt>
+      <dt className="w-32 shrink-0 text-neutral-600">{label}</dt>
       <dd className="flex-1 text-neutral-900">{value}</dd>
     </div>
   );
@@ -84,7 +84,7 @@ export function ResumePreview({ profile, settings }: ResumePreviewProps) {
         <section className="mt-4">
           <h4 className="text-sm font-semibold text-neutral-700">{t('experience')}</h4>
           {v.experiences.length === 0 ? (
-            <p className="mt-1 text-sm text-neutral-400">{t('noExperience')}</p>
+            <p className="mt-1 text-sm text-neutral-600">{t('noExperience')}</p>
           ) : (
             <ul className="mt-1.5 flex flex-col gap-2">
               {v.experiences.map((exp) => (
@@ -93,8 +93,8 @@ export function ResumePreview({ profile, settings }: ResumePreviewProps) {
                   {exp.companyName && (
                     <span className="text-neutral-600"> · {exp.companyName}</span>
                   )}
-                  {exp.country && <span className="text-neutral-500"> · {exp.country}</span>}
-                  <span className="text-neutral-500">
+                  {exp.country && <span className="text-neutral-600"> · {exp.country}</span>}
+                  <span className="text-neutral-600">
                     {' '}
                     · {t('years', { years: exp.years ?? 0, months: exp.months ?? 0 })}
                   </span>
@@ -108,7 +108,7 @@ export function ResumePreview({ profile, settings }: ResumePreviewProps) {
         <section className="mt-4">
           <h4 className="text-sm font-semibold text-neutral-700">{t('skills')}</h4>
           {v.skills.length === 0 ? (
-            <p className="mt-1 text-sm text-neutral-400">{t('noSkills')}</p>
+            <p className="mt-1 text-sm text-neutral-600">{t('noSkills')}</p>
           ) : (
             <ul className="mt-1.5 flex flex-wrap gap-1.5">
               {v.skills.map((s) => (

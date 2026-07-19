@@ -56,7 +56,7 @@ function QueueCard({
       <span
         className={cn(
           'flex size-12 shrink-0 items-center justify-center rounded-lg',
-          waiting ? 'bg-warning-fg/10 text-warning-fg' : 'bg-neutral-100 text-neutral-500',
+          waiting ? 'bg-warning-fg/10 text-warning-fg' : 'bg-neutral-100 text-neutral-600',
         )}
         aria-hidden="true"
       >
@@ -69,20 +69,20 @@ function QueueCard({
           aria-hidden="true"
           className={cn(
             'block text-3xl font-bold tabular-nums',
-            waiting ? 'text-warning-fg' : 'text-neutral-400',
+            waiting ? 'text-warning-fg' : 'text-neutral-600',
           )}
         >
           {count}
         </span>
         {!waiting && (
-          <span aria-hidden="true" className="block text-xs text-neutral-500">
+          <span aria-hidden="true" className="block text-xs text-neutral-600">
             {emptyLabel}
           </span>
         )}
       </span>
 
       <ChevronRight
-        className="size-5 shrink-0 text-neutral-400 transition-transform group-hover:translate-x-0.5"
+        className="size-5 shrink-0 text-neutral-600 transition-transform group-hover:translate-x-0.5"
         aria-hidden="true"
       />
     </Link>

@@ -90,9 +90,14 @@ export function SettingRow({
           <p id={`${rowId}-label`} className="text-sm font-medium text-neutral-900">
             {label}
           </p>
-          <p className="mt-0.5 text-xs text-neutral-500">{description}</p>
+          <p className="mt-0.5 text-xs text-neutral-600">{description}</p>
           {disabledReason && (
-            <p className="mt-1 text-xs font-medium text-neutral-500">{disabledReason}</p>
+            <p
+              // eslint-disable-next-line no-restricted-syntax -- explains a DISABLED control; WCAG 1.4.3 exempts disabled UI.
+              className="mt-1 text-xs font-medium text-neutral-500"
+            >
+              {disabledReason}
+            </p>
           )}
         </div>
 

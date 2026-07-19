@@ -187,7 +187,8 @@
     "otpPlaceholder": "OTP दर्ज करें",
     "verifyOtp": "OTP सत्यापित करें",
     "resendOtp": "OTP फिर से भेजें",
-    "resendIn": "{seconds} सेकंड में फिर से भेजें"
+    "resendIn": "{seconds} सेकंड में फिर से भेजें",
+    "methodTabsLabel": "साइन-इन विधि"
   },
   "profile": {
     "title": "मेरी प्रोफ़ाइल",

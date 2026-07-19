@@ -64,7 +64,7 @@ export function CoreRuleCell({
   return (
     <div className="relative">
       {!isSuperAdmin && (
-        <div className="absolute end-0 top-4 flex items-center gap-1 text-neutral-500">
+        <div className="absolute end-0 top-4 flex items-center gap-1 text-neutral-600">
           <Lock className="size-3.5" aria-hidden="true" />
           <span className="text-xs font-medium">{t('coreRule.superAdminOnly')}</span>
         </div>

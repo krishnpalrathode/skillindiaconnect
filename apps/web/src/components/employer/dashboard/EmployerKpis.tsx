@@ -84,7 +84,7 @@ export function EmployerKpis({ kpis }: EmployerKpisProps) {
             >
               {value}
             </dd>
-            <dt className="text-xs text-neutral-500 mt-0.5">{label}</dt>
+            <dt className="text-xs text-neutral-600 mt-0.5">{label}</dt>
           </div>
         </div>
       ))}

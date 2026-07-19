@@ -56,14 +56,14 @@ export function CandidateBrowseCard({ candidate }: CandidateBrowseCardProps) {
           <p className="truncate font-semibold text-neutral-900 group-hover:text-primary-700">
             {candidate.fullName}
           </p>
-          {categoryLabel && <p className="truncate text-sm text-neutral-500">{categoryLabel}</p>}
+          {categoryLabel && <p className="truncate text-sm text-neutral-600">{categoryLabel}</p>}
         </div>
         {/* Availability — text-backed, not colour-only */}
         <span
           className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
             candidate.isAvailable
               ? 'bg-success-bg text-success-fg'
-              : 'bg-neutral-100 text-neutral-500'
+              : 'bg-neutral-100 text-neutral-600'
           }`}
         >
           <span
@@ -74,7 +74,7 @@ export function CandidateBrowseCard({ candidate }: CandidateBrowseCardProps) {
         </span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-500">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-600">
         {candidate.currentLocation && (
           <span className="flex items-center gap-1">
             <MapPin className="size-3.5" aria-hidden="true" />

@@ -23,12 +23,12 @@ export function LogMetaViewer({ meta }: { meta: unknown }) {
     meta == null || (typeof meta === 'object' && Object.keys(meta as object).length === 0);
 
   if (isEmpty) {
-    return <p className="text-xs text-neutral-500">{t('metaEmpty')}</p>;
+    return <p className="text-xs text-neutral-600">{t('metaEmpty')}</p>;
   }
 
   return (
     <div className="flex flex-col gap-1">
-      <p className="text-xs font-medium text-neutral-500">{t('metaLabel')}</p>
+      <p className="text-xs font-medium text-neutral-600">{t('metaLabel')}</p>
       <pre className="max-h-64 overflow-auto rounded-lg bg-neutral-50 p-3 text-xs leading-relaxed text-neutral-800">
         {JSON.stringify(meta, null, 2)}
       </pre>

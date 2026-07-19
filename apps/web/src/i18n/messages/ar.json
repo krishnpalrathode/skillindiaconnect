@@ -187,7 +187,8 @@
     "otpPlaceholder": "أدخل رمز التحقق",
     "verifyOtp": "التحقق من الرمز",
     "resendOtp": "إعادة إرسال الرمز",
-    "resendIn": "إعادة الإرسال خلال {seconds} ثانية"
+    "resendIn": "إعادة الإرسال خلال {seconds} ثانية",
+    "methodTabsLabel": "طريقة تسجيل الدخول"
   },
   "profile": {
     "title": "ملفي الشخصي",

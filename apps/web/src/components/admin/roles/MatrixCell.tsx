@@ -42,7 +42,7 @@ export function MatrixCell({
         role="img"
         aria-label={`${baseName} — ${t('cell.lockedReason')}`}
         title={t('cell.lockedReason')}
-        className="inline-flex size-11 items-center justify-center rounded-lg text-neutral-400"
+        className="inline-flex size-11 items-center justify-center rounded-lg text-neutral-600"
       >
         {cell.enabled ? (
           <Check className="size-4" aria-hidden="true" />
@@ -85,7 +85,7 @@ export function MatrixCell({
         'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
         cell.enabled
           ? 'border-success-fg/30 bg-success-bg text-success-fg hover:border-success-fg/60'
-          : 'border-neutral-200 text-neutral-300 hover:border-neutral-400 hover:text-neutral-500',
+          : 'border-neutral-200 text-neutral-300 hover:border-neutral-400 hover:text-neutral-600',
       )}
     >
       {cell.enabled ? (

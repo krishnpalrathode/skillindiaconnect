@@ -50,7 +50,7 @@ export function ExperienceList({ experiences, onExperiencesChange }: ExperienceL
   return (
     <div className="flex flex-col gap-3">
       {experiences.length === 0 && !adding && (
-        <p className="text-sm text-neutral-500 text-center py-4 rounded-lg border border-dashed border-neutral-200">
+        <p className="text-sm text-neutral-600 text-center py-4 rounded-lg border border-dashed border-neutral-200">
           {t('noExperience')}
         </p>
       )}
@@ -78,11 +78,11 @@ export function ExperienceList({ experiences, onExperiencesChange }: ExperienceL
 
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-neutral-800 truncate">{exp.role ?? '—'}</p>
-              <p className="text-xs text-neutral-500 truncate">
+              <p className="text-xs text-neutral-600 truncate">
                 {[exp.companyName, exp.country].filter(Boolean).join(', ')}
               </p>
               {(exp.years !== undefined || exp.months !== undefined) && (
-                <p className="text-xs text-neutral-400 mt-0.5">
+                <p className="text-xs text-neutral-600 mt-0.5">
                   {[exp.years && `${exp.years}y`, exp.months && `${exp.months}m`]
                     .filter(Boolean)
                     .join(' ')}

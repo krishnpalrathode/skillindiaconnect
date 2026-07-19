@@ -49,3 +49,6 @@ security/probes/out/
 
 # S8-H3 chaos run artifacts (scripts are checked in; their output is not)
 chaos/out/
+
+# S8-H4 a11y audit artifacts (the harness is checked in; its output is not)
+a11y/out/

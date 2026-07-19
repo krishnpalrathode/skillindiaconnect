@@ -9,6 +9,7 @@ import { Field } from '@/components/ui/field';
 import { OtpEntry } from '@/components/auth/OtpEntry';
 import { postOtpSend, postOtpVerify } from '@/lib/api/candidate';
 import { ApiRequestError } from '@/lib/api/client';
+import { Ltr } from '@/components/common/Ltr';
 
 const RESEND_COOLDOWN_SEC = 60;
 
@@ -108,12 +109,14 @@ export function PhoneVerify({
         <CheckCircle2 className="size-5 text-success-fg shrink-0" aria-hidden="true" />
         <div>
           <p className="text-sm font-medium text-success-fg">{t('phoneVerified')}</p>
-          <p className="text-xs text-neutral-600">{phone}</p>
+          <p className="text-xs text-neutral-600">
+            <Ltr>{phone}</Ltr>
+          </p>
         </div>
         <button
           type="button"
           onClick={() => setStage('input')}
-          className="ms-auto text-xs text-neutral-500 underline hover:text-neutral-700"
+          className="ms-auto text-xs text-neutral-600 underline hover:text-neutral-700"
         >
           {t('phoneVerify')}
         </button>
@@ -127,7 +130,7 @@ export function PhoneVerify({
         <Phone className="size-4 text-primary-600 shrink-0" aria-hidden="true" />
         <p className="text-sm font-semibold text-neutral-800">{t('phoneVerifyTitle')}</p>
       </div>
-      <p className="text-xs text-neutral-500">{t('phoneVerifySubtitle')}</p>
+      <p className="text-xs text-neutral-600">{t('phoneVerifySubtitle')}</p>
 
       {stage === 'input' && (
         <div className="flex gap-2">

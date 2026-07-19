@@ -122,13 +122,13 @@ export function ResendWhatsAppDialog({
         {/* The consequence, plainly. */}
         <p className="text-sm text-neutral-700">{t('consequence', { candidate })}</p>
         {/* The truth about history. */}
-        <p className="text-xs text-neutral-500">{t('originalDateUnchanged')}</p>
+        <p className="text-xs text-neutral-600">{t('originalDateUnchanged')}</p>
 
         <div>
           <label htmlFor="resend-reason" className="text-sm font-medium text-neutral-800">
             {t('reasonLabel')}
           </label>
-          <p className="mt-0.5 text-xs text-neutral-500">{t('reasonAudited')}</p>
+          <p className="mt-0.5 text-xs text-neutral-600">{t('reasonAudited')}</p>
           <textarea
             id="resend-reason"
             value={reason}

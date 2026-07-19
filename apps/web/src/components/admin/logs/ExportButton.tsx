@@ -80,7 +80,7 @@ export function ExportButton({
           )}
           {t('button', { count: approximateCount })}
         </Button>
-        <p className="text-xs text-neutral-400">{t('selfAuditNote')}</p>
+        <p className="text-xs text-neutral-600">{t('selfAuditNote')}</p>
 
         {tooLarge && (
           <p

@@ -77,7 +77,7 @@ export function CertificateUpload({
         )}
       </div>
 
-      <p className="text-xs text-neutral-500">{t('certHint')}</p>
+      <p className="text-xs text-neutral-600">{t('certHint')}</p>
 
       <button
         type="button"
@@ -103,15 +103,15 @@ export function CertificateUpload({
             ? 'border-success-fg/40 bg-success-bg/30 text-success-fg'
             : state.status === 'error' || error
               ? 'border-error/50 bg-error-bg/30 text-error-fg cursor-pointer hover:bg-error-bg/50'
-              : 'border-border bg-neutral-50 text-neutral-500 hover:border-primary-400 hover:bg-primary-50 cursor-pointer',
+              : 'border-border bg-neutral-50 text-neutral-600 hover:border-primary-400 hover:bg-primary-50 cursor-pointer',
           isActive && 'cursor-wait pointer-events-none',
         )}
       >
         {state.status === 'idle' && (
           <>
-            <Upload className="size-5 text-neutral-400" aria-hidden="true" />
+            <Upload className="size-5 text-neutral-600" aria-hidden="true" />
             <span>{tUpload('dropzoneHint')}</span>
-            <span className="text-xs text-neutral-400">{tUpload('maxSize', { size: MAX_MB })}</span>
+            <span className="text-xs text-neutral-600">{tUpload('maxSize', { size: MAX_MB })}</span>
           </>
         )}
 
@@ -132,7 +132,7 @@ export function CertificateUpload({
                 style={{ width: `${state.progress}%` }}
               />
             </div>
-            <span className="text-xs text-neutral-500">
+            <span className="text-xs text-neutral-600">
               {tUpload('uploading', { pct: state.progress })}
             </span>
           </div>
@@ -149,7 +149,7 @@ export function CertificateUpload({
                 reset();
                 inputRef.current?.click();
               }}
-              className="text-xs text-neutral-500 underline hover:text-neutral-700"
+              className="text-xs text-neutral-600 underline hover:text-neutral-700"
             >
               {tUpload('changeFile')}
             </button>

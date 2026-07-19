@@ -48,7 +48,7 @@ export function ProfileSummaryCard({ profile, completion }: ProfileSummaryCardPr
 
       <CompletionRing pct={completion.pct} size={80} strokeWidth={8} />
 
-      <p className="text-sm text-neutral-500 text-center">
+      <p className="text-sm text-neutral-600 text-center">
         {t('profileSummary.completion', { pct: completion.pct })}
       </p>
 

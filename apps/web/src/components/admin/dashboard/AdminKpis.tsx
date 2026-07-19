@@ -17,7 +17,7 @@ function Kpi({ label, value }: { label: string; value: string | number }) {
       <CardContent className="p-4">
         <p
           aria-hidden="true"
-          className="text-xs font-medium uppercase tracking-wide text-neutral-500"
+          className="text-xs font-medium uppercase tracking-wide text-neutral-600"
         >
           {label}
         </p>
@@ -48,7 +48,7 @@ function Breakdown({ counts }: { counts: Record<string, number> | undefined }) {
   if (entries.length === 0) return null;
 
   return (
-    <p className="mt-1 text-xs text-neutral-500">
+    <p className="mt-1 text-xs text-neutral-600">
       {entries.map(([status, n], i) => (
         <span key={status}>
           {i > 0 && <span aria-hidden="true"> · </span>}
@@ -87,7 +87,7 @@ export function AdminKpis({ data }: { data: AdminDashboard }) {
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-600">
               {t('employersByStatus')}
             </p>
             <Breakdown counts={employers} />
@@ -95,7 +95,7 @@ export function AdminKpis({ data }: { data: AdminDashboard }) {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-600">
               {t('jobsByStatus')}
             </p>
             <Breakdown counts={jobs} />
@@ -103,7 +103,7 @@ export function AdminKpis({ data }: { data: AdminDashboard }) {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-600">
               {t('applicationsByStatus')}
             </p>
             <Breakdown counts={applications} />

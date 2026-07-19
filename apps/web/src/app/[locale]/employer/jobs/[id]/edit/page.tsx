@@ -59,7 +59,7 @@ export default function EditJobPage() {
   if (job.status === 'ARCHIVED') {
     return (
       <div className="max-w-lg mx-auto pt-8 text-center flex flex-col items-center gap-4">
-        <p className="text-sm text-neutral-500">{t('editPage.archivedNotice')}</p>
+        <p className="text-sm text-neutral-600">{t('editPage.archivedNotice')}</p>
         <Button variant="outline" onClick={() => router.push(`/${locale}/employer/jobs`)}>
           {t('editPage.backToJobs')}
         </Button>
@@ -71,7 +71,7 @@ export default function EditJobPage() {
     <div className="max-w-6xl">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-neutral-900">{t('editPage.title')}</h1>
-        <p className="mt-1 text-sm text-neutral-500">{t('editPage.subtitle')}</p>
+        <p className="mt-1 text-sm text-neutral-600">{t('editPage.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-8 items-start">

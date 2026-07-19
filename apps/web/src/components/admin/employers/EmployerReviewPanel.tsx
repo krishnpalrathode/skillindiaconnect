@@ -38,7 +38,7 @@ const STATUS_BADGE: Record<Company['status'], 'warning' | 'success' | 'error' | 
 function Fact({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <dt className="text-xs font-medium uppercase tracking-wide text-neutral-500">{label}</dt>
+      <dt className="text-xs font-medium uppercase tracking-wide text-neutral-600">{label}</dt>
       <dd className="text-sm text-neutral-900">{value || '—'}</dd>
     </div>
   );
@@ -232,7 +232,7 @@ export function EmployerReviewPanel({ companyId }: { companyId: string }) {
           </dl>
           {company.description && (
             <div className="mt-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+              <p className="text-xs font-medium uppercase tracking-wide text-neutral-600">
                 {t('fact.description')}
               </p>
               <p className="mt-1 text-sm text-neutral-700">{company.description}</p>

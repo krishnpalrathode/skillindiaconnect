@@ -41,7 +41,7 @@ export default function CandidatesPage() {
           <AlertCircle className="size-7 text-warning-fg" aria-hidden="true" />
         </div>
         <h1 className="text-xl font-bold text-neutral-900">{t('approvalGate.title')}</h1>
-        <p className="text-sm text-neutral-500">{t('approvalGate.body')}</p>
+        <p className="text-sm text-neutral-600">{t('approvalGate.body')}</p>
         <Button variant="outline" onClick={() => router.push(`/${locale}/employer/dashboard`)}>
           {t('approvalGate.backToDashboard')}
         </Button>
@@ -53,7 +53,7 @@ export default function CandidatesPage() {
     <div className="max-w-6xl">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-neutral-900">{t('title')}</h1>
-        <p className="mt-1 text-sm text-neutral-500">{t('subtitle')}</p>
+        <p className="mt-1 text-sm text-neutral-600">{t('subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr] items-start">

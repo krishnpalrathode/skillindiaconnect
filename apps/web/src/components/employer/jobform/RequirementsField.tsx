@@ -56,7 +56,7 @@ export function RequirementsField({ value, onChange, error, className }: Require
                 type="button"
                 onClick={() => removeItem(idx)}
                 aria-label={t('removeAriaLabel', { item })}
-                className="shrink-0 rounded p-0.5 text-neutral-400 hover:text-error-fg hover:bg-error-bg/30 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+                className="shrink-0 rounded p-0.5 text-neutral-600 hover:text-error-fg hover:bg-error-bg/30 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
               >
                 <X className="size-4" aria-hidden="true" />
               </button>
@@ -66,7 +66,7 @@ export function RequirementsField({ value, onChange, error, className }: Require
       )}
 
       {/* Empty state */}
-      {value.length === 0 && <p className="text-sm text-neutral-400 italic">{t('emptyHint')}</p>}
+      {value.length === 0 && <p className="text-sm text-neutral-600 italic">{t('emptyHint')}</p>}
 
       {/* Add new item */}
       {value.length < MAX_ITEMS && (
@@ -84,7 +84,7 @@ export function RequirementsField({ value, onChange, error, className }: Require
             className={cn(
               'flex h-10 flex-1 rounded-md border bg-background px-3 py-2 text-sm outline-none',
               'focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-primary-600',
-              'placeholder:text-neutral-400 ps-3 pe-3',
+              'placeholder:text-neutral-600 ps-3 pe-3',
               error ? 'border-error ring-[3px] ring-error/25' : 'border-input',
             )}
           />
@@ -106,7 +106,7 @@ export function RequirementsField({ value, onChange, error, className }: Require
           {error}
         </p>
       )}
-      <p className="text-xs text-neutral-400">
+      <p className="text-xs text-neutral-600">
         {t('countHint', { count: value.length, max: MAX_ITEMS })}
       </p>
     </div>

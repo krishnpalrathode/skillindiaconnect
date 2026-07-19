@@ -65,7 +65,7 @@ export function ApplicationTimeline({ timeline, appliedAt, locale }: Application
             </div>
             <div className={cn('pb-5', last && 'pb-0')}>
               <p className="text-sm font-medium text-neutral-800">{s.label}</p>
-              <p className="text-xs text-neutral-500">{s.date}</p>
+              <p className="text-xs text-neutral-600">{s.date}</p>
             </div>
           </li>
         );

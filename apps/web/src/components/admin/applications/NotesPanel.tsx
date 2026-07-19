@@ -100,7 +100,7 @@ export function NotesPanel({ applicationId }: { applicationId: string }) {
         )}
 
         {notes !== null && notes.length === 0 && (
-          <p role="status" className="text-sm text-neutral-500">
+          <p role="status" className="text-sm text-neutral-600">
             {t('empty')}
           </p>
         )}
@@ -110,7 +110,7 @@ export function NotesPanel({ applicationId }: { applicationId: string }) {
             {notes.map((n) => (
               <li key={n.id} className="flex items-start justify-between gap-3 py-2.5">
                 <div className="min-w-0">
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-neutral-600">
                     {t('byline', {
                       role: n.authorRole,
                       date: new Date(n.createdAt).toLocaleDateString('en-IN', {
@@ -162,7 +162,7 @@ export function NotesPanel({ applicationId }: { applicationId: string }) {
           />
           <div className="flex items-center justify-between gap-2">
             {/* The length counter — a cap without a counter is a surprise. */}
-            <span className="text-xs tabular-nums text-neutral-400" aria-live="polite">
+            <span className="text-xs tabular-nums text-neutral-600" aria-live="polite">
               {t('counter', { used: draft.length, max: MAX_NOTE_LENGTH })}
             </span>
             <Button type="submit" size="sm" disabled={busy || draft.trim().length === 0}>

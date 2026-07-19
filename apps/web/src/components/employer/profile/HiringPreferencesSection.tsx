@@ -141,30 +141,30 @@ export function HiringPreferencesSection({ profile, onUpdated }: HiringPreferenc
       prefs.notes);
 
   const viewContent = !hasPrefs ? (
-    <p className="text-sm text-neutral-500">{t('emptyHint')}</p>
+    <p className="text-sm text-neutral-600">{t('emptyHint')}</p>
   ) : (
     <div className="flex flex-col gap-3">
       {(prefs?.preferredCategories?.length ?? 0) > 0 && (
         <div>
-          <span className="text-xs text-neutral-500">{t('categoriesLabel')}</span>
+          <span className="text-xs text-neutral-600">{t('categoriesLabel')}</span>
           <ChipList items={prefs!.preferredCategories!.map(nameForId)} />
         </div>
       )}
       {(prefs?.preferredNationalities?.length ?? 0) > 0 && (
         <div>
-          <span className="text-xs text-neutral-500">{t('nationalitiesLabel')}</span>
+          <span className="text-xs text-neutral-600">{t('nationalitiesLabel')}</span>
           <ChipList items={prefs!.preferredNationalities!} />
         </div>
       )}
       {(prefs?.minExperience ?? 0) > 0 && (
         <div>
-          <span className="text-xs text-neutral-500">{t('minExperienceLabel')}</span>
+          <span className="text-xs text-neutral-600">{t('minExperienceLabel')}</span>
           <p className="text-sm text-neutral-900">{prefs!.minExperience}+</p>
         </div>
       )}
       {prefs?.notes && (
         <div>
-          <span className="text-xs text-neutral-500">{t('notesLabel')}</span>
+          <span className="text-xs text-neutral-600">{t('notesLabel')}</span>
           <p className="text-sm text-neutral-900 whitespace-pre-line">{prefs.notes}</p>
         </div>
       )}
@@ -175,9 +175,9 @@ export function HiringPreferencesSection({ profile, onUpdated }: HiringPreferenc
     <div className="flex flex-col gap-4">
       <fieldset>
         <legend className="text-sm font-medium text-neutral-700">{t('categoriesLabel')}</legend>
-        <p className="text-xs text-neutral-500 mt-0.5 mb-2">{t('categoriesHint')}</p>
+        <p className="text-xs text-neutral-600 mt-0.5 mb-2">{t('categoriesHint')}</p>
         {categories.length === 0 ? (
-          <p className="text-xs text-neutral-400">{t('categoriesLoading')}</p>
+          <p className="text-xs text-neutral-600">{t('categoriesLoading')}</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
@@ -222,7 +222,7 @@ export function HiringPreferencesSection({ profile, onUpdated }: HiringPreferenc
           value={draft.notes}
           onChange={set('notes')}
           placeholder={t('notesPlaceholder')}
-          className="flex w-full rounded-md border border-input bg-background ps-3 pe-3 py-2 text-base text-foreground placeholder:text-neutral-400 transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-primary-600 resize-y"
+          className="flex w-full rounded-md border border-input bg-background ps-3 pe-3 py-2 text-base text-foreground placeholder:text-neutral-600 transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-primary-600 resize-y"
         />
       </Field>
       {error && (

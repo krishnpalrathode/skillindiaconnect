@@ -31,7 +31,7 @@ export default function EmployerOnboardingPage() {
         <h1 className="text-2xl font-bold text-neutral-900">
           {isResubmit ? t('resubmitPageTitle') : t('pageTitle')}
         </h1>
-        <p className="text-sm text-neutral-500 mt-1">
+        <p className="text-sm text-neutral-600 mt-1">
           {isResubmit ? t('resubmitPageSubtitle') : t('pageSubtitle')}
         </p>
       </div>

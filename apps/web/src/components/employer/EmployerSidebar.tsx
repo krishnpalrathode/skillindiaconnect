@@ -27,6 +27,7 @@ function NavItem({ href, icon, label, active, disabled, disabledReason, onClick 
         aria-disabled="true"
         aria-label={disabledReason ? `${label} — ${disabledReason}` : label}
         title={disabledReason}
+        // eslint-disable-next-line no-restricted-syntax -- DISABLED control — WCAG 1.4.3 explicitly exempts disabled UI, and darkening it would stop it reading as unavailable.
         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-neutral-400 cursor-not-allowed select-none min-h-[44px]"
       >
         <span className="size-5 shrink-0 opacity-50" aria-hidden="true">

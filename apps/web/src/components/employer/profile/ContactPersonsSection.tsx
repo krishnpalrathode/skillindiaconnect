@@ -64,16 +64,16 @@ function ContactCard({ contact, onEdit, onDelete, deletingId }: ContactCardProps
             </Badge>
           )}
         </div>
-        <p className="text-xs text-neutral-500 mt-0.5">{contact.role}</p>
+        <p className="text-xs text-neutral-600 mt-0.5">{contact.role}</p>
         <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
           {contact.phone && (
-            <span className="flex items-center gap-1 text-xs text-neutral-500">
+            <span className="flex items-center gap-1 text-xs text-neutral-600">
               <Phone className="size-3" aria-hidden="true" />
               {contact.phone}
             </span>
           )}
           {contact.email && (
-            <span className="flex items-center gap-1 text-xs text-neutral-500">
+            <span className="flex items-center gap-1 text-xs text-neutral-600">
               <Mail className="size-3" aria-hidden="true" />
               {contact.email}
             </span>
@@ -87,7 +87,7 @@ function ContactCard({ contact, onEdit, onDelete, deletingId }: ContactCardProps
           size="sm"
           onClick={() => onEdit(contact)}
           aria-label={`${t('edit')} ${contact.name}`}
-          className="text-neutral-500 hover:text-neutral-700"
+          className="text-neutral-600 hover:text-neutral-700"
         >
           {t('edit')}
         </Button>
@@ -153,7 +153,7 @@ function ContactForm({ mode, draft, onChange, onSave, onCancel, saving, error }:
           className="size-4 rounded border-neutral-300 text-primary-600 focus-visible:ring-[3px] focus-visible:ring-ring/70"
         />
         <span className="text-sm text-neutral-700">{t('makePrimary')}</span>
-        <span className="text-xs text-neutral-400">({t('primaryHintNote')})</span>
+        <span className="text-xs text-neutral-600">({t('primaryHintNote')})</span>
       </label>
       {error && (
         <p className="text-xs text-error-fg font-medium" role="alert">
@@ -280,7 +280,7 @@ export function ContactPersonsSection({ contacts, onUpdated }: ContactPersonsSec
         {contacts.length === 0 && !formMode && (
           <div className="flex flex-col items-center gap-2 py-6 text-center">
             <UserCircle2 className="size-10 text-neutral-200" aria-hidden="true" />
-            <p className="text-sm text-neutral-500">{t('emptyHint')}</p>
+            <p className="text-sm text-neutral-600">{t('emptyHint')}</p>
             <Button type="button" variant="outline" size="sm" onClick={openAdd} className="mt-1">
               <Plus className="size-3.5" aria-hidden="true" />
               {t('addContact')}

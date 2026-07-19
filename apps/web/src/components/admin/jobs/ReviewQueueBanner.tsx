@@ -54,7 +54,7 @@ export function ReviewQueueBanner({
         aria-hidden="true"
         className={cn(
           'flex size-10 shrink-0 items-center justify-center rounded-lg',
-          waiting ? 'bg-warning-fg/10 text-warning-fg' : 'bg-neutral-100 text-neutral-500',
+          waiting ? 'bg-warning-fg/10 text-warning-fg' : 'bg-neutral-100 text-neutral-600',
         )}
       >
         <Briefcase className="size-5" />

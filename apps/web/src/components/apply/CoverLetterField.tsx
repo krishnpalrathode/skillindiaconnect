@@ -35,14 +35,14 @@ export function CoverLetterField({ value, onChange, disabled }: CoverLetterField
         aria-describedby="apply-cover-letter-counter"
         className={cn(
           'w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900',
-          'placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
+          'placeholder:text-neutral-600 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
           'disabled:cursor-not-allowed disabled:opacity-60',
         )}
       />
       <p
         id="apply-cover-letter-counter"
         aria-live="polite"
-        className={cn('text-xs text-end', atLimit ? 'text-warning-fg' : 'text-neutral-500')}
+        className={cn('text-xs text-end', atLimit ? 'text-warning-fg' : 'text-neutral-600')}
       >
         {t('counter', { n: value.length, max: COVER_LETTER_MAX })}
       </p>

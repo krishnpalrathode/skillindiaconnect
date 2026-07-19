@@ -23,7 +23,7 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
   const t = useTranslations('employer.profile.companyInfo');
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xs text-neutral-500">{label}</span>
+      <span className="text-xs text-neutral-600">{label}</span>
       <span className="text-sm text-neutral-900">{value || t('notSet')}</span>
     </div>
   );
@@ -106,7 +106,7 @@ export function CompanyInfoSection({ company, onUpdated }: CompanyInfoSectionPro
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <InfoRow label={t('nameLabel')} value={company.name} />
       <div className="flex flex-col gap-0.5">
-        <span className="text-xs text-neutral-500">{t('typeLabel')}</span>
+        <span className="text-xs text-neutral-600">{t('typeLabel')}</span>
         <Badge variant="neutral" className="w-fit">
           {typeLabel}
         </Badge>
@@ -131,7 +131,7 @@ export function CompanyInfoSection({ company, onUpdated }: CompanyInfoSectionPro
         <Badge variant="neutral" className="w-fit">
           {typeLabel}
         </Badge>
-        <p className="text-xs text-neutral-500">{t('typeReadOnlyHint')}</p>
+        <p className="text-xs text-neutral-600">{t('typeReadOnlyHint')}</p>
       </div>
 
       {/* Registration number — read-only after approval */}
@@ -140,7 +140,7 @@ export function CompanyInfoSection({ company, onUpdated }: CompanyInfoSectionPro
         <span className="text-sm text-neutral-900">
           {company.registrationNumber ?? t('notSet')}
         </span>
-        <p className="text-xs text-neutral-500">{t('registrationNumberReadOnlyHint')}</p>
+        <p className="text-xs text-neutral-600">{t('registrationNumberReadOnlyHint')}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -188,7 +188,7 @@ export function CompanyInfoSection({ company, onUpdated }: CompanyInfoSectionPro
               value={draft.description}
               onChange={set('description')}
               placeholder={t('descriptionPlaceholder')}
-              className="flex w-full rounded-md border border-input bg-background ps-3 pe-3 py-2 text-base text-foreground placeholder:text-neutral-400 transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-primary-600 resize-y"
+              className="flex w-full rounded-md border border-input bg-background ps-3 pe-3 py-2 text-base text-foreground placeholder:text-neutral-600 transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-primary-600 resize-y"
             />
           </Field>
         </div>

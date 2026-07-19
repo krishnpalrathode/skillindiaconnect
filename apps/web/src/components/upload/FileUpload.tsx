@@ -95,7 +95,7 @@ export function FileUpload({
         )}
       </div>
 
-      {hint && <p className="text-xs text-neutral-500">{hint}</p>}
+      {hint && <p className="text-xs text-neutral-600">{hint}</p>}
 
       {/* Drop zone / trigger — div+role to avoid <button> nesting in done/error states */}
       <div
@@ -134,7 +134,7 @@ export function FileUpload({
             ? 'border-success-fg/40 bg-success-bg/30 text-success-fg'
             : state.status === 'error'
               ? 'border-error/50 bg-error-bg/30 text-error-fg cursor-pointer hover:bg-error-bg/50'
-              : 'border-border bg-neutral-50 text-neutral-500 hover:border-primary-400 hover:bg-primary-50 cursor-pointer',
+              : 'border-border bg-neutral-50 text-neutral-600 hover:border-primary-400 hover:bg-primary-50 cursor-pointer',
           isActive && 'cursor-wait pointer-events-none',
           disabled &&
             !isActive &&
@@ -143,9 +143,9 @@ export function FileUpload({
       >
         {state.status === 'idle' && (
           <>
-            <Upload className="size-5 text-neutral-400" aria-hidden="true" />
+            <Upload className="size-5 text-neutral-600" aria-hidden="true" />
             <span>{t('dropzoneHint')}</span>
-            <span className="text-xs text-neutral-400">{t('maxSize', { size: maxMb })}</span>
+            <span className="text-xs text-neutral-600">{t('maxSize', { size: maxMb })}</span>
           </>
         )}
 
@@ -166,7 +166,7 @@ export function FileUpload({
                 style={{ width: `${state.progress}%` }}
               />
             </div>
-            <span className="text-xs text-neutral-500">
+            <span className="text-xs text-neutral-600">
               {t('uploading', { pct: state.progress })}
             </span>
           </div>
@@ -183,7 +183,7 @@ export function FileUpload({
                 reset();
                 inputRef.current?.click();
               }}
-              className="text-xs text-neutral-500 underline hover:text-neutral-700"
+              className="text-xs text-neutral-600 underline hover:text-neutral-700"
             >
               {t('changeFile')}
             </button>

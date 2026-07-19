@@ -22,6 +22,7 @@ function NavItem({ href, icon, label, active, disabled }: NavItemProps) {
     return (
       <span
         aria-label={`${label} — coming soon`}
+        // eslint-disable-next-line no-restricted-syntax -- DISABLED control — WCAG 1.4.3 explicitly exempts disabled UI, and darkening it would stop it reading as unavailable.
         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-neutral-400 cursor-not-allowed select-none"
       >
         <span className="size-5 shrink-0 opacity-50">{icon}</span>
@@ -182,6 +183,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           item.disabled ? (
             <span
               key={item.href}
+              // eslint-disable-next-line no-restricted-syntax -- DISABLED control — WCAG 1.4.3 explicitly exempts disabled UI, and darkening it would stop it reading as unavailable.
               className="flex flex-col items-center gap-0.5 px-2 py-1 text-neutral-400 cursor-not-allowed select-none"
             >
               <span className="size-5 opacity-50">{item.icon}</span>
@@ -195,7 +197,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               className={cn(
                 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg min-h-[44px] justify-center',
                 'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
-                item.active ? 'text-primary-700' : 'text-neutral-500',
+                item.active ? 'text-primary-700' : 'text-neutral-600',
               )}
             >
               {item.icon}

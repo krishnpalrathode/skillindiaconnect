@@ -66,7 +66,7 @@ export function PlanStatusWidget() {
             <p
               className={cn(
                 'text-xs mt-0.5',
-                nearExpiry ? 'text-warning-fg font-medium' : 'text-neutral-500',
+                nearExpiry ? 'text-warning-fg font-medium' : 'text-neutral-600',
               )}
             >
               {nearExpiry && (
@@ -90,7 +90,7 @@ export function PlanStatusWidget() {
           )}
 
           {(isFree || isExpired) && (
-            <p className="text-xs text-neutral-500 mt-0.5">{t('plan.freeHint')}</p>
+            <p className="text-xs text-neutral-600 mt-0.5">{t('plan.freeHint')}</p>
           )}
         </div>
       </div>

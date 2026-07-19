@@ -84,7 +84,7 @@ export function PasswordField({
         {startIcon && (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-neutral-400"
+            className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-neutral-600"
           >
             {startIcon}
           </span>
@@ -109,8 +109,11 @@ export function PasswordField({
           aria-label={visible ? 'Hide password' : 'Show password'}
           onClick={() => setVisible((v) => !v)}
           className={cn(
-            'absolute inset-y-0 end-0 flex items-center pe-3',
-            'text-neutral-500 hover:text-neutral-700',
+            // A11Y-002: the hit area was the icon's own box (~16px wide). It
+            // now spans a 44px-wide column across the field's full height, so
+            // the touch target meets the minimum without moving the icon.
+            'absolute inset-y-0 end-0 flex w-11 items-center justify-center',
+            'text-neutral-600 hover:text-neutral-800',
             'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded',
           )}
           tabIndex={0}
@@ -143,7 +146,7 @@ export function PasswordField({
             ))}
           </div>
           {meta.label && (
-            <p className="text-xs text-neutral-500 mt-0.5">
+            <p className="text-xs text-neutral-600 mt-0.5">
               {strengthLabels
                 ? ((
                     {

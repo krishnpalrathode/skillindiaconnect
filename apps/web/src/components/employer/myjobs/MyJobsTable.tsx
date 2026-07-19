@@ -94,7 +94,7 @@ export function MyJobsTable() {
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="relative w-full sm:max-w-xs">
           <Search
-            className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-neutral-400 pointer-events-none"
+            className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-neutral-600 pointer-events-none"
             aria-hidden="true"
           />
           <Input
@@ -130,7 +130,7 @@ export function MyJobsTable() {
             className={`px-3 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 ${
               statusFilter === tab.value
                 ? 'border-primary-600 text-primary-700'
-                : 'border-transparent text-neutral-500 hover:text-neutral-800'
+                : 'border-transparent text-neutral-600 hover:text-neutral-800'
             }`}
           >
             {t(`tabs.${tab.labelKey}`)}
@@ -159,11 +159,11 @@ export function MyJobsTable() {
       {!isLoading && !error && jobs.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center gap-4">
           <div className="size-14 rounded-full bg-neutral-100 flex items-center justify-center">
-            <Briefcase className="size-7 text-neutral-400" aria-hidden="true" />
+            <Briefcase className="size-7 text-neutral-600" aria-hidden="true" />
           </div>
           <div>
             <p className="text-base font-semibold text-neutral-700">{t('emptyTitle')}</p>
-            <p className="text-sm text-neutral-400 mt-1">{t('emptyBody')}</p>
+            <p className="text-sm text-neutral-600 mt-1">{t('emptyBody')}</p>
           </div>
           <Link
             href={`/${locale}/employer/jobs/new`}
@@ -206,7 +206,7 @@ export function MyJobsTable() {
                 <tr key={job.id} className="hover:bg-neutral-50 transition-colors">
                   <td className="px-4 py-3">
                     <p className="font-medium text-neutral-900 leading-snug">{job.title}</p>
-                    <p className="text-xs text-neutral-400">{job.location}</p>
+                    <p className="text-xs text-neutral-600">{job.location}</p>
                   </td>
                   <td className="px-3 py-3">
                     <Badge variant={job.market === 'GULF' ? 'primary' : 'accent'}>
@@ -226,7 +226,7 @@ export function MyJobsTable() {
                       {job.applicantCount ?? 0}
                     </Link>
                   </td>
-                  <td className="px-3 py-3 text-neutral-500">
+                  <td className="px-3 py-3 text-neutral-600">
                     {job.publishedAt
                       ? formatPostedAgo(job.publishedAt, locale)
                       : job.status === 'DRAFT'
@@ -249,7 +249,7 @@ export function MyJobsTable() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-neutral-500">
+        <div className="flex items-center justify-between text-sm text-neutral-600">
           <span>{t('pageInfo', { page, totalPages })}</span>
           <div className="flex gap-2">
             <Button

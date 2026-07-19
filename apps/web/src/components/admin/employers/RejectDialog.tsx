@@ -80,7 +80,7 @@ export function RejectDialog({
           ) : (
             <span />
           )}
-          <span className="text-xs text-neutral-400" aria-hidden="true">
+          <span className="text-xs text-neutral-600" aria-hidden="true">
             {reason.length}/{REASON_MAX}
           </span>
         </div>

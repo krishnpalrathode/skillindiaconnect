@@ -58,7 +58,7 @@ export function LogTable({
 
   if (!entries || entries.length === 0) {
     return (
-      <p role="status" className="py-10 text-center text-sm text-neutral-500">
+      <p role="status" className="py-10 text-center text-sm text-neutral-600">
         {t('empty')}
       </p>
     );
@@ -114,7 +114,7 @@ export function LogTable({
           {t('loadMore')}
         </Button>
       ) : (
-        <p role="status" className="py-2 text-center text-xs text-neutral-400">
+        <p role="status" className="py-2 text-center text-xs text-neutral-600">
           {t('endOfResults')}
         </p>
       )}

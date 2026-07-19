@@ -123,7 +123,7 @@ export function PurgeDialog({
 
         {/* The disabled-confirm reason, conveyed in text for everyone. */}
         {!ready && (
-          <p id="purge-confirm-requirements" className="text-xs text-neutral-500">
+          <p id="purge-confirm-requirements" className="text-xs text-neutral-600">
             {t('requirements')}
           </p>
         )}

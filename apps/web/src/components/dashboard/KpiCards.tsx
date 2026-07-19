@@ -37,8 +37,8 @@ function KpiCard({ label, value, href, caption, srLabel, loading }: KpiCardProps
           {value}
         </span>
       )}
-      <span className="text-sm text-neutral-500 leading-snug">{label}</span>
-      {caption && <span className="text-xs text-neutral-400 leading-snug">{caption}</span>}
+      <span className="text-sm text-neutral-600 leading-snug">{label}</span>
+      {caption && <span className="text-xs text-neutral-600 leading-snug">{caption}</span>}
     </div>
   );
   if (href) {

@@ -67,11 +67,11 @@ export default function ApplicationDetailPage() {
       )}
 
       {state === 'notfound' && (
-        <p className="py-16 text-center text-sm text-neutral-500">{t('notFound')}</p>
+        <p className="py-16 text-center text-sm text-neutral-600">{t('notFound')}</p>
       )}
 
       {state === 'error' && (
-        <p className="py-16 text-center text-sm text-neutral-500">{t('error')}</p>
+        <p className="py-16 text-center text-sm text-neutral-600">{t('error')}</p>
       )}
 
       {state === 'ready' && app && (
@@ -92,12 +92,12 @@ export default function ApplicationDetailPage() {
             <div>
               <h1 className="text-lg font-semibold text-neutral-900">{app.job.title}</h1>
               <p className="text-sm text-neutral-600">{app.job.companyName}</p>
-              <p className="mt-1 flex items-center gap-1 text-sm text-neutral-500">
+              <p className="mt-1 flex items-center gap-1 text-sm text-neutral-600">
                 <MapPin className="size-4 shrink-0" aria-hidden="true" />
                 {app.job.location}
               </p>
             </div>
-            <p className="text-xs font-medium text-neutral-400">{app.humanId}</p>
+            <p className="text-xs font-medium text-neutral-600">{app.humanId}</p>
             {app.selectedNotifiedAt && (
               <WhatsAppReceipt notifiedAt={app.selectedNotifiedAt} locale={locale} />
             )}

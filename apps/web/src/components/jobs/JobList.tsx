@@ -50,14 +50,14 @@ export function JobList({ initialData, filters, locale }: JobListProps) {
     return (
       <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-neutral-300 py-16 text-center">
         <p className="text-base font-medium text-neutral-700">{t('empty.title')}</p>
-        <p className="text-sm text-neutral-500">{t('empty.body')}</p>
+        <p className="text-sm text-neutral-600">{t('empty.body')}</p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-neutral-500" data-testid="job-result-count">
+      <p className="text-sm text-neutral-600" data-testid="job-result-count">
         {t('resultCount', { count: jobs.length })}
       </p>
 

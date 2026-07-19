@@ -138,7 +138,7 @@ export function EmployerProfileHero({ profile, onProfileUpdate }: EmployerProfil
 
           {isApproved && <p className="text-xs text-success-fg mt-0.5">{t('approvedBadge')}</p>}
 
-          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-sm text-neutral-500">
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-sm text-neutral-600">
             {company.industryType && <span>{company.industryType}</span>}
             {company.location && <span>{company.location}</span>}
           </div>
@@ -152,7 +152,7 @@ export function EmployerProfileHero({ profile, onProfileUpdate }: EmployerProfil
             <p className="text-xs text-success-fg mt-1">{t('uploadDone')}</p>
           )}
 
-          <p className="text-xs text-neutral-400 mt-1">{t('typeHint')}</p>
+          <p className="text-xs text-neutral-600 mt-1">{t('typeHint')}</p>
         </div>
       </div>
 

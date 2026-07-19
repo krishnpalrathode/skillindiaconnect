@@ -56,7 +56,7 @@ export function CandidateFacts({ candidate }: CandidateFactsProps) {
       <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
         {rows.map((row) => (
           <div key={row.key} className="flex flex-col gap-0.5">
-            <dt className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+            <dt className="text-xs font-medium uppercase tracking-wide text-neutral-600">
               {row.label}
             </dt>
             <dd className="text-sm text-neutral-900">{row.value}</dd>

@@ -181,7 +181,7 @@ export function LogFilters({
 
       {/* The default-window disclosure — prevents "where are my old logs?" */}
       {noDateRange && (
-        <p role="note" className="flex items-center gap-1.5 text-xs text-neutral-500">
+        <p role="note" className="flex items-center gap-1.5 text-xs text-neutral-600">
           <Info className="size-3.5 shrink-0" aria-hidden="true" />
           {t('defaultWindowNote', { days: DEFAULT_WINDOW_DAYS })}
         </p>

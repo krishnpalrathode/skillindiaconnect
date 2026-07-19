@@ -35,7 +35,7 @@ export function RichTextField({ id, value, onChange, error, className }: RichTex
         className={cn(
           'flex w-full rounded-md border bg-background px-3 py-2.5 text-sm outline-none resize-y',
           'focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-primary-600',
-          'placeholder:text-neutral-400 ps-3 pe-3 min-h-[160px]',
+          'placeholder:text-neutral-600 ps-3 pe-3 min-h-[160px]',
           error ? 'border-error ring-[3px] ring-error/25' : 'border-input',
         )}
       />
@@ -49,7 +49,7 @@ export function RichTextField({ id, value, onChange, error, className }: RichTex
           id={countId}
           className={cn(
             'ms-auto text-xs',
-            remaining < 100 ? 'text-warning-fg' : 'text-neutral-400',
+            remaining < 100 ? 'text-warning-fg' : 'text-neutral-600',
           )}
           aria-live="polite"
           aria-atomic="true"

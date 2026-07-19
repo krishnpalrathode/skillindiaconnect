@@ -44,7 +44,7 @@ export function Stepper({ current, className }: StepperProps) {
                     'w-8 h-8 text-sm font-semibold transition-colors',
                     done && 'bg-primary-600 text-white',
                     active && 'bg-accent-500 text-neutral-900 ring-2 ring-accent-300',
-                    !done && !active && 'bg-neutral-200 text-neutral-500',
+                    !done && !active && 'bg-neutral-200 text-neutral-600',
                   )}
                   aria-hidden="true"
                 >
@@ -53,7 +53,7 @@ export function Stepper({ current, className }: StepperProps) {
                 <span
                   className={cn(
                     'hidden sm:block text-xs font-medium text-center leading-tight max-w-[72px] truncate',
-                    active ? 'text-accent-700' : done ? 'text-primary-600' : 'text-neutral-400',
+                    active ? 'text-accent-700' : done ? 'text-primary-600' : 'text-neutral-600',
                   )}
                 >
                   {t(key)}

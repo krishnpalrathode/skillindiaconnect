@@ -39,7 +39,7 @@ export default function SignupPage() {
     <div className="flex flex-col gap-6 rounded-2xl border border-neutral-200/80 bg-white px-5 py-8 shadow-[0_12px_40px_-12px_rgba(15,61,145,0.18)] sm:px-9 sm:py-9">
       <div className="text-center">
         <h1 className="text-2xl font-bold text-[#0F3D91] sm:text-3xl">{t('signupTitle')}</h1>
-        <p className="mt-1.5 text-sm text-neutral-500 sm:text-base">{t('signupSubtitle')}</p>
+        <p className="mt-1.5 text-sm text-neutral-600 sm:text-base">{t('signupSubtitle')}</p>
       </div>
 
       {/* Google OAuth — candidates only; UI note included */}
@@ -48,13 +48,13 @@ export default function SignupPage() {
           label={t('googleSignup')}
           className="h-12 rounded-xl border-neutral-300 font-semibold hover:border-neutral-400"
         />
-        <p className="text-center text-xs text-neutral-400">{t('googleCandidateOnly')}</p>
+        <p className="text-center text-xs text-neutral-600">{t('googleCandidateOnly')}</p>
       </div>
 
       {/* Divider */}
       <div className="relative flex items-center gap-3">
         <div className="flex-1 border-t border-neutral-200" />
-        <span className="text-xs text-neutral-400 lowercase">{t('orDivider')}</span>
+        <span className="text-xs text-neutral-600 lowercase">{t('orDivider')}</span>
         <div className="flex-1 border-t border-neutral-200" />
       </div>
 

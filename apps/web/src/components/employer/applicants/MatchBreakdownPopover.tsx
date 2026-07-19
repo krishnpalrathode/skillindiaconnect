@@ -121,7 +121,7 @@ export function MatchBreakdownPopover({
                       style={{ inlineSize: `${pct}%` }}
                     />
                   </div>
-                  {r.note && <p className={cn('text-[11px] text-neutral-500')}>{r.note}</p>}
+                  {r.note && <p className={cn('text-[11px] text-neutral-600')}>{r.note}</p>}
                 </li>
               );
             })}

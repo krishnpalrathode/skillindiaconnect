@@ -52,8 +52,8 @@ function DocRow({ doc, label }: { doc: CandidateDocument; label: string }) {
   return (
     <div className="flex flex-col gap-1.5">
       <p className="text-sm font-medium text-neutral-800 truncate">{label}</p>
-      <div className="flex items-center gap-2 text-xs text-neutral-500">
-        <FileText className="size-3.5 shrink-0 text-neutral-400" aria-hidden="true" />
+      <div className="flex items-center gap-2 text-xs text-neutral-600">
+        <FileText className="size-3.5 shrink-0 text-neutral-600" aria-hidden="true" />
         <span className="truncate">{fileName}</span>
       </div>
       <div className="flex flex-wrap gap-1.5">
@@ -114,7 +114,7 @@ export function DocumentsSection({
             ) : (
               <div className="flex flex-col gap-1">
                 <p className="text-sm font-medium text-neutral-700">{label}</p>
-                <p className="text-xs text-neutral-400">{t('notUploaded')}</p>
+                <p className="text-xs text-neutral-600">{t('notUploaded')}</p>
               </div>
             )}
           </div>
@@ -123,14 +123,14 @@ export function DocumentsSection({
 
       {/* Video — B6 placeholder */}
       <div className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-neutral-200 bg-neutral-50">
-        <Video className="size-4 text-neutral-400 shrink-0" aria-hidden="true" />
+        <Video className="size-4 text-neutral-600 shrink-0" aria-hidden="true" />
         <div>
           <p className="text-sm font-medium text-neutral-600">{t('videoIntro')}</p>
-          <p className="text-xs text-neutral-400">{t('videoComingSoon')}</p>
+          <p className="text-xs text-neutral-600">{t('videoComingSoon')}</p>
         </div>
       </div>
 
-      <p className="text-xs text-neutral-500 font-medium">{t('count', { count: uploadedCount })}</p>
+      <p className="text-xs text-neutral-600 font-medium">{t('count', { count: uploadedCount })}</p>
     </div>
   );
 
@@ -148,7 +148,7 @@ export function DocumentsSection({
           <div key={type} className="flex flex-col gap-2">
             {existingDoc && (
               <div className="flex items-center gap-2 p-2 rounded-lg bg-neutral-50 border border-neutral-200">
-                <FileText className="size-4 text-neutral-400 shrink-0" aria-hidden="true" />
+                <FileText className="size-4 text-neutral-600 shrink-0" aria-hidden="true" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-neutral-600 truncate">
                     {existingDoc.key.split('/').pop()}
@@ -187,10 +187,10 @@ export function DocumentsSection({
 
       {/* Video — B6 placeholder */}
       <div className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-neutral-200 bg-neutral-50">
-        <Video className="size-4 text-neutral-400 shrink-0" aria-hidden="true" />
+        <Video className="size-4 text-neutral-600 shrink-0" aria-hidden="true" />
         <div>
           <p className="text-sm font-medium text-neutral-600">{t('videoIntro')}</p>
-          <p className="text-xs text-neutral-400">{t('videoComingSoon')}</p>
+          <p className="text-xs text-neutral-600">{t('videoComingSoon')}</p>
         </div>
       </div>
     </div>

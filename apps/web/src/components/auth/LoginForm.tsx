@@ -68,7 +68,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         <div className="relative">
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-neutral-400"
+            className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-neutral-600"
           >
             <Mail className="size-4" />
           </span>

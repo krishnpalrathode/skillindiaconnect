@@ -33,7 +33,7 @@ export function RecommendedJobs({ jobs }: RecommendedJobsProps) {
       </div>
 
       {jobs.length === 0 ? (
-        <p className="text-sm text-neutral-500 py-4">{t('empty')}</p>
+        <p className="text-sm text-neutral-600 py-4">{t('empty')}</p>
       ) : (
         <ul className="flex flex-col gap-3" aria-label={t('title')}>
           {jobs.map((job) => (

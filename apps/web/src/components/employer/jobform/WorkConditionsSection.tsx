@@ -33,7 +33,7 @@ export function WorkConditionsSection({ values, errors, onChange }: WorkConditio
         <h3 id="conditions-heading" className="text-base font-semibold text-neutral-900">
           {t('heading')}
         </h3>
-        <p className="mt-0.5 text-sm text-neutral-500">{t('subtitle')}</p>
+        <p className="mt-0.5 text-sm text-neutral-600">{t('subtitle')}</p>
       </div>
 
       {/* Structured working hours — map to hoursPerDay / daysPerWeek columns */}

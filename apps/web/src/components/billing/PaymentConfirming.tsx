@@ -141,7 +141,7 @@ export function PaymentConfirming({
           <Spinner size={32} label={t('confirmingTitle')} />
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">{t('confirmingTitle')}</h2>
-            <p className="text-sm text-neutral-500 mt-1 max-w-sm">{t('confirmingBody')}</p>
+            <p className="text-sm text-neutral-600 mt-1 max-w-sm">{t('confirmingBody')}</p>
           </div>
         </>
       )}
@@ -151,7 +151,7 @@ export function PaymentConfirming({
           <CheckCircle2 className="size-12 text-success-fg" aria-hidden="true" />
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">{t('successTitle')}</h2>
-            <p className="text-sm text-neutral-500 mt-1 max-w-sm">{t('successBody')}</p>
+            <p className="text-sm text-neutral-600 mt-1 max-w-sm">{t('successBody')}</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button variant="primary" size="md" onClick={onPostJob}>
@@ -169,7 +169,7 @@ export function PaymentConfirming({
           <XCircle className="size-12 text-error-fg" aria-hidden="true" />
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">{t('failedTitle')}</h2>
-            <p className="text-sm text-neutral-500 mt-1 max-w-sm">{t('failedBody')}</p>
+            <p className="text-sm text-neutral-600 mt-1 max-w-sm">{t('failedBody')}</p>
           </div>
           <Button variant="primary" size="md" onClick={onRetry}>
             {t('failedRetry')}
@@ -182,7 +182,7 @@ export function PaymentConfirming({
           <Clock className="size-12 text-warning-fg" aria-hidden="true" />
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">{t('timeoutTitle')}</h2>
-            <p className="text-sm text-neutral-500 mt-1 max-w-sm">{t('timeoutBody')}</p>
+            <p className="text-sm text-neutral-600 mt-1 max-w-sm">{t('timeoutBody')}</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <Button variant="primary" size="md" onClick={manualRefresh} loading={refreshing}>

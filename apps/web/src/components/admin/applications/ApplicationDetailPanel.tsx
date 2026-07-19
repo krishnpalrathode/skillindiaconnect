@@ -75,7 +75,7 @@ export function ApplicationDetailPanel({ applicationId }: { applicationId: strin
   }
   if (error instanceof ApiRequestError && error.error.status === 404) {
     return (
-      <p role="alert" className="py-10 text-center text-sm text-neutral-500">
+      <p role="alert" className="py-10 text-center text-sm text-neutral-600">
         {t('notFound')}
       </p>
     );
@@ -127,9 +127,9 @@ export function ApplicationDetailPanel({ applicationId }: { applicationId: strin
             {candidate}
           </Link>
         ) : (
-          <span className="text-neutral-500">{candidate}</span>
+          <span className="text-neutral-600">{candidate}</span>
         )}
-        <ArrowRight className="size-4 text-neutral-400" aria-hidden="true" />
+        <ArrowRight className="size-4 text-neutral-600" aria-hidden="true" />
         <Link
           href={`/${locale}/admin/jobs/${detail.jobId}`}
           className="font-medium text-primary-700 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
@@ -151,21 +151,21 @@ export function ApplicationDetailPanel({ applicationId }: { applicationId: strin
               </h2>
               <span className="text-lg font-bold tabular-nums text-neutral-900">
                 {detail.matchScore}
-                <span className="text-sm font-normal text-neutral-400">/100</span>
+                <span className="text-sm font-normal text-neutral-600">/100</span>
               </span>
             </div>
             {/* Snapshot semantics stated: computed once at apply, never recomputed. */}
-            <p className="text-xs text-neutral-500">{t('match.snapshotNote')}</p>
+            <p className="text-xs text-neutral-600">{t('match.snapshotNote')}</p>
             <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {BREAKDOWN_KEYS.map((key) => {
                 const part = breakdown[key];
                 if (!part || part.score === undefined) return null;
                 return (
                   <div key={key} className="rounded-lg bg-neutral-50 p-2">
-                    <dt className="text-xs text-neutral-500">{t(`match.${key}`)}</dt>
+                    <dt className="text-xs text-neutral-600">{t(`match.${key}`)}</dt>
                     <dd className="text-sm font-semibold tabular-nums text-neutral-900">
                       {part.score}
-                      <span className="font-normal text-neutral-400">/{part.max ?? '—'}</span>
+                      <span className="font-normal text-neutral-600">/{part.max ?? '—'}</span>
                     </dd>
                   </div>
                 );
@@ -183,11 +183,11 @@ export function ApplicationDetailPanel({ applicationId }: { applicationId: strin
             </h2>
             <dl className="flex flex-col gap-1.5 text-sm">
               <div className="flex justify-between gap-2">
-                <dt className="text-neutral-500">{t('facts.applied')}</dt>
+                <dt className="text-neutral-600">{t('facts.applied')}</dt>
                 <dd className="text-neutral-900">{formatDate(detail.appliedAt)}</dd>
               </div>
               <div className="flex justify-between gap-2">
-                <dt className="text-neutral-500">{t('facts.docs')}</dt>
+                <dt className="text-neutral-600">{t('facts.docs')}</dt>
                 <dd className="text-neutral-900">
                   {t('facts.docsValue', {
                     complete: detail.docsCompleteCount,
@@ -196,7 +196,7 @@ export function ApplicationDetailPanel({ applicationId }: { applicationId: strin
                 </dd>
               </div>
               <div className="flex justify-between gap-2">
-                <dt className="text-neutral-500">{t('facts.passport')}</dt>
+                <dt className="text-neutral-600">{t('facts.passport')}</dt>
                 <dd className={detail.passportValidAtApply ? 'text-success-fg' : 'text-error-fg'}>
                   {detail.passportValidAtApply
                     ? t('facts.passportValid')
@@ -205,7 +205,7 @@ export function ApplicationDetailPanel({ applicationId }: { applicationId: strin
               </div>
               {/* What the candidate has ACTUALLY received. */}
               <div className="flex justify-between gap-2">
-                <dt className="text-neutral-500">{t('facts.whatsapp')}</dt>
+                <dt className="text-neutral-600">{t('facts.whatsapp')}</dt>
                 <dd className="text-neutral-900">
                   {detail.selectedNotifiedAt
                     ? t('facts.whatsappSentOn', { date: formatDate(detail.selectedNotifiedAt) })
@@ -216,7 +216,7 @@ export function ApplicationDetailPanel({ applicationId }: { applicationId: strin
 
             {detail.coverLetter && (
               <div className="mt-1 border-t border-neutral-100 pt-2">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-600">
                   {t('facts.coverLetter')}
                 </h3>
                 <p className="mt-1 whitespace-pre-line text-sm text-neutral-700">
@@ -234,10 +234,10 @@ export function ApplicationDetailPanel({ applicationId }: { applicationId: strin
             <h2 id="timeline-heading" className="text-sm font-semibold text-neutral-900">
               {t('timeline.heading')}
             </h2>
-            <p className="text-xs text-neutral-500">{t('timeline.adminViewNote')}</p>
+            <p className="text-xs text-neutral-600">{t('timeline.adminViewNote')}</p>
 
             {detail.timeline.length === 0 && (
-              <p role="status" className="text-sm text-neutral-500">
+              <p role="status" className="text-sm text-neutral-600">
                 {t('timeline.empty')}
               </p>
             )}
@@ -260,7 +260,7 @@ export function ApplicationDetailPanel({ applicationId }: { applicationId: strin
                           })
                         : t('timeline.initial', { to: t(`status.${entry.toStatus}`) })}
                     </p>
-                    <p className="text-xs text-neutral-500">
+                    <p className="text-xs text-neutral-600">
                       {t('timeline.byline', {
                         role: entry.actorRole ?? t('timeline.system'),
                         date: formatDate(entry.createdAt),

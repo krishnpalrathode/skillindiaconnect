@@ -33,7 +33,7 @@ export function PublishErrorHandler({ error, onDismiss }: PublishErrorHandlerPro
             type="button"
             onClick={onDismiss}
             aria-label={t('dismiss')}
-            className="shrink-0 text-neutral-400 hover:text-neutral-600"
+            className="shrink-0 text-neutral-600 hover:text-neutral-600"
           >
             ×
           </button>
@@ -70,7 +70,7 @@ export function PublishErrorHandler({ error, onDismiss }: PublishErrorHandlerPro
             type="button"
             onClick={onDismiss}
             aria-label={t('dismiss')}
-            className="shrink-0 text-neutral-400 hover:text-neutral-600"
+            className="shrink-0 text-neutral-600 hover:text-neutral-600"
           >
             ×
           </button>
@@ -104,7 +104,7 @@ export function PublishErrorHandler({ error, onDismiss }: PublishErrorHandlerPro
             type="button"
             onClick={onDismiss}
             aria-label={t('dismiss')}
-            className="shrink-0 text-neutral-400 hover:text-neutral-600"
+            className="shrink-0 text-neutral-600 hover:text-neutral-600"
           >
             ×
           </button>
@@ -126,7 +126,7 @@ export function PublishErrorHandler({ error, onDismiss }: PublishErrorHandlerPro
           type="button"
           onClick={onDismiss}
           aria-label={t('dismiss')}
-          className="shrink-0 text-neutral-400 hover:text-neutral-600"
+          className="shrink-0 text-neutral-600 hover:text-neutral-600"
         >
           ×
         </button>

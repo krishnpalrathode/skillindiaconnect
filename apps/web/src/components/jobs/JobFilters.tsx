@@ -64,7 +64,9 @@ export function JobFilters({ filters, locale }: JobFiltersProps) {
                 aria-pressed={selected}
                 onClick={() => go({ category: selected ? null : cat.id })}
                 className={cn(
-                  'min-h-9 rounded-full border px-3 text-sm font-medium transition-colors',
+                  // A11Y-002: was min-h-9 (36px). These category chips are the
+                  // primary way a candidate narrows the job list on a phone.
+                  'min-h-11 rounded-full border px-3 text-sm font-medium transition-colors',
                   'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
                   selected
                     ? 'border-primary-600 bg-primary-50 text-primary-700'

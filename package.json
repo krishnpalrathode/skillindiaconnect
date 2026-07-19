@@ -50,14 +50,19 @@
     "chaos:worker": "pnpm --filter ./apps/api exec tsx ../../chaos/worker-crash.ts",
     "chaos:nofalsesuccess": "pnpm --filter ./apps/api exec tsx ../../chaos/no-false-success.ts",
     "chaos:all": "pnpm chaos:redis && pnpm chaos:gateway && pnpm chaos:storage && pnpm chaos:worker && pnpm chaos:nofalsesuccess",
-    "chaos:drill": "pnpm --filter ./apps/api exec tsx ../../chaos/backup-restore-drill.ts"
+    "chaos:drill": "pnpm --filter ./apps/api exec tsx ../../chaos/backup-restore-drill.ts",
+    "a11y:audit": "playwright test -c a11y/playwright.config.ts",
+    "a11y:typecheck": "tsc -p a11y/tsconfig.json --noEmit",
+    "a11y:contrast": "node a11y/contrast-tokens.cjs"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.44.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
+    "axe-core": "^4.12.1",
     "concurrently": "^8.2.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.0.0",

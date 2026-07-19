@@ -53,12 +53,12 @@ export function ApplicationCard({ application: a, locale }: ApplicationCardProps
 
       <h3 className="mt-2 text-base font-semibold text-neutral-900">{a.job.title}</h3>
       <p className="text-sm text-neutral-600">{a.job.companyName}</p>
-      <p className="mt-1 flex items-center gap-1 text-sm text-neutral-500">
+      <p className="mt-1 flex items-center gap-1 text-sm text-neutral-600">
         <MapPin className="size-4 shrink-0" aria-hidden="true" />
         {a.job.location}
       </p>
 
-      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-500">
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-600">
         <span className="font-medium">{a.humanId}</span>
         <span>{t('appliedAgo', { ago: formatPostedAgo(a.appliedAt, locale) })}</span>
       </div>
@@ -72,7 +72,7 @@ export function ApplicationCard({ application: a, locale }: ApplicationCardProps
 
       {/* Rejected + feedback → a one-line preview (constructive, not a wall of red). */}
       {a.status === 'REJECTED' && a.rejectionFeedback && (
-        <p className="mt-2 line-clamp-1 text-xs italic text-neutral-500">
+        <p className="mt-2 line-clamp-1 text-xs italic text-neutral-600">
           &ldquo;{a.rejectionFeedback}&rdquo;
         </p>
       )}

@@ -151,7 +151,7 @@ export function AdminCandidateProfile({ candidateId }: { candidateId: string }) 
             aria-hidden="true"
             className={
               purged
-                ? 'flex size-12 items-center justify-center rounded-full bg-neutral-200 text-lg font-semibold text-neutral-400'
+                ? 'flex size-12 items-center justify-center rounded-full bg-neutral-200 text-lg font-semibold text-neutral-600'
                 : 'flex size-12 items-center justify-center rounded-full bg-primary-50 text-lg font-semibold text-primary-700'
             }
           >
@@ -166,7 +166,7 @@ export function AdminCandidateProfile({ candidateId }: { candidateId: string }) 
                   {detail.profileVisible ? t('visibleToEmployers') : t('hiddenFromEmployers')}
                 </Badge>
               )}
-              <span className="text-xs text-neutral-500">
+              <span className="text-xs text-neutral-600">
                 {t('memberSince', {
                   date: new Date(detail.createdAt).toLocaleDateString('en-IN', {
                     month: 'short',
@@ -212,16 +212,16 @@ export function AdminCandidateProfile({ candidateId }: { candidateId: string }) 
         </h2>
         <dl className="mt-2 grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
           <div className="flex justify-between gap-4 sm:block">
-            <dt className="text-neutral-500">{t('phone')}</dt>
+            <dt className="text-neutral-600">{t('phone')}</dt>
             <dd className="font-medium text-neutral-900">{detail.phone ?? '—'}</dd>
           </div>
           <div className="flex justify-between gap-4 sm:block">
-            <dt className="text-neutral-500">{t('email')}</dt>
+            <dt className="text-neutral-600">{t('email')}</dt>
             <dd className="font-medium text-neutral-900">{detail.email ?? '—'}</dd>
           </div>
         </dl>
         {/* A quiet, honest line — accountability, not a scare banner. */}
-        <p role="note" className="mt-3 text-xs text-neutral-500">
+        <p role="note" className="mt-3 text-xs text-neutral-600">
           {t('adminViewNote')}
         </p>
       </section>
@@ -236,26 +236,26 @@ export function AdminCandidateProfile({ candidateId }: { candidateId: string }) 
         </h2>
         <dl className="mt-2 grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-3">
           <div>
-            <dt className="text-neutral-500">{t('completion')}</dt>
+            <dt className="text-neutral-600">{t('completion')}</dt>
             <dd className="font-medium text-neutral-900">{detail.completionPct}%</dd>
           </div>
           <div>
-            <dt className="text-neutral-500">{t('applications')}</dt>
+            <dt className="text-neutral-600">{t('applications')}</dt>
             <dd className="font-medium text-neutral-900">{detail.applicationCount}</dd>
           </div>
           <div>
-            <dt className="text-neutral-500">{t('skills')}</dt>
+            <dt className="text-neutral-600">{t('skills')}</dt>
             <dd className="font-medium text-neutral-900">
               {detail.skills.length > 0 ? detail.skills.map((s) => s.name).join(', ') : '—'}
             </dd>
           </div>
         </dl>
 
-        <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+        <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-neutral-600">
           {t('experienceHeading')}
         </h3>
         {detail.experiences.length === 0 ? (
-          <p className="mt-1 text-sm text-neutral-500">
+          <p className="mt-1 text-sm text-neutral-600">
             {purged ? t('experiencePurged') : t('experienceNone')}
           </p>
         ) : (

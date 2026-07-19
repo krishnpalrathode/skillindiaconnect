@@ -144,7 +144,7 @@ export function PhoneLoginFlow({ onSuccess }: PhoneLoginFlowProps) {
 
       <OtpEntry onComplete={handleOtpComplete} disabled={loading} />
 
-      <p className="text-xs text-neutral-500">{t('otpDidntGet')}</p>
+      <p className="text-xs text-neutral-600">{t('otpDidntGet')}</p>
 
       <div className="flex items-center justify-between">
         <button

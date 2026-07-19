@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin } from 'lucide-react';
 import { formatSalaryRange } from '@/lib/jobs/format';
 import { formToPreview, type JobFormValues } from '@/lib/jobs/jobFormState';
+import { Ltr } from '@/components/common/Ltr';
 
 interface JobLivePreviewProps {
   values: JobFormValues;
@@ -30,12 +31,12 @@ export function JobLivePreview({ values, companyName, locale }: JobLivePreviewPr
   return (
     <div className="sticky top-6 flex flex-col gap-3" aria-label={t('panelLabel')} role="region">
       <div className="flex items-center gap-2">
-        <Eye className="size-4 text-neutral-400" aria-hidden="true" />
+        <Eye className="size-4 text-neutral-600" aria-hidden="true" />
         <h3 className="text-sm font-semibold text-neutral-600 uppercase tracking-wide">
           {t('heading')}
         </h3>
       </div>
-      <p className="text-xs text-neutral-400">{t('subtitle')}</p>
+      <p className="text-xs text-neutral-600">{t('subtitle')}</p>
 
       {/* Preview card — matches S2-F1 JobCard layout exactly (single source) */}
       <div
@@ -61,16 +62,20 @@ export function JobLivePreview({ values, companyName, locale }: JobLivePreviewPr
             <p className="text-sm text-neutral-600">{preview.companyName}</p>
           </div>
 
-          <p className="flex items-center gap-1 text-sm text-neutral-500">
+          <p className="flex items-center gap-1 text-sm text-neutral-600">
             <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
             {preview.location}
           </p>
 
-          {salary && <p className="text-sm font-medium text-neutral-900">{salary}</p>}
+          {salary && (
+            <p className="text-sm font-medium text-neutral-900">
+              <Ltr>{salary}</Ltr>
+            </p>
+          )}
 
           <BenefitChips job={preview} />
 
-          <p className="mt-auto text-xs text-neutral-400">{t('justPosted')}</p>
+          <p className="mt-auto text-xs text-neutral-600">{t('justPosted')}</p>
         </div>
 
         {/* Card footer */}
@@ -79,7 +84,7 @@ export function JobLivePreview({ values, companyName, locale }: JobLivePreviewPr
         </div>
       </div>
 
-      <p className="text-xs text-neutral-400 italic">{t('previewNote')}</p>
+      <p className="text-xs text-neutral-600 italic">{t('previewNote')}</p>
     </div>
   );
 }

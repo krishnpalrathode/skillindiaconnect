@@ -103,7 +103,7 @@ export default function OnboardingPage() {
       {/* Page title + step counter */}
       <div>
         <h1 className="text-2xl font-bold text-neutral-900 text-center">{t('pageTitle')}</h1>
-        <p className="text-sm text-neutral-500 text-center mt-1">
+        <p className="text-sm text-neutral-600 text-center mt-1">
           {t('stepOf', { current: step, total: 4 })}
         </p>
       </div>
