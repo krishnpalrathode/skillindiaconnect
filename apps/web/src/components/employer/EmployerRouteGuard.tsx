@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/auth-context';
+import { roleHome } from '@/lib/auth/role-home';
 import { Spinner } from '@/components/ui/spinner';
 
 interface EmployerRouteGuardProps {
@@ -20,8 +21,9 @@ export function EmployerRouteGuard({ children }: EmployerRouteGuardProps) {
     if (!user) {
       router.replace(`/${locale}/login?next=/${locale}/employer/dashboard`);
     } else if (user.role !== 'EMPLOYER') {
-      // Candidate or admin → redirect to their home
-      router.replace(`/${locale}/profile`);
+      // Candidate → their profile; admin → admin console. Sending an admin to
+      // /profile loops (profile bounces non-candidates right back here).
+      router.replace(user.role === 'CANDIDATE' ? `/${locale}/profile` : roleHome(user.role, locale));
     }
   }, [user, isLoading, router, locale]);
 

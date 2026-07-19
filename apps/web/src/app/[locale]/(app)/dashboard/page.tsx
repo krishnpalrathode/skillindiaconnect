@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter, useParams } from 'next/navigation';
 import type { components } from '@skillindiaconnect/shared-types';
 import { useAuth } from '@/lib/auth/auth-context';
+import { roleHome } from '@/lib/auth/role-home';
 import { getCandidateProfile, getCandidateCompletion } from '@/lib/api/candidate';
 import { getCandidateStats } from '@/lib/api/dashboard';
 import { getProfileViews, type ProfileViewsSummary } from '@/lib/api/profile-views';
@@ -54,7 +55,9 @@ export default function DashboardPage() {
     if (!user) return;
 
     if (user.role !== 'CANDIDATE') {
-      router.replace(`/${locale}/employer/onboarding`);
+      router.replace(
+        user.role === 'EMPLOYER' ? `/${locale}/employer/onboarding` : roleHome(user.role, locale),
+      );
       return;
     }
 

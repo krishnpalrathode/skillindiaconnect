@@ -14,6 +14,7 @@ import { SkillsSection } from '@/components/profile/sections/SkillsSection';
 import { AccountSettingsSection } from '@/components/profile/sections/AccountSettingsSection';
 import { getCandidateProfile, getCandidateCompletion } from '@/lib/api/candidate';
 import { useAuth } from '@/lib/auth/auth-context';
+import { roleHome } from '@/lib/auth/role-home';
 import { ApiRequestError } from '@/lib/api/client';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
@@ -43,7 +44,9 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user) return;
     if (user.role !== 'CANDIDATE') {
-      router.replace(`/${locale}/employer/onboarding`);
+      router.replace(
+        user.role === 'EMPLOYER' ? `/${locale}/employer/onboarding` : roleHome(user.role, locale),
+      );
       return;
     }
 

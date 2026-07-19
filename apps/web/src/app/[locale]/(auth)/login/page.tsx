@@ -9,6 +9,7 @@ import { GoogleButton } from '@/components/auth/GoogleButton';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { PhoneLoginFlow } from '@/components/auth/PhoneLoginFlow';
 import { useAuth } from '@/lib/auth/auth-context';
+import { roleHome } from '@/lib/auth/role-home';
 
 type Method = 'email' | 'phone';
 
@@ -23,13 +24,16 @@ export default function LoginPage() {
   // candidate back to where they were instead of always landing on /dashboard.
   const next = searchParams.get('next');
 
-  // Already authenticated — redirect to dashboard.
+  // Already authenticated (or just logged in — the auth context sets `user`,
+  // which re-runs this effect) — redirect to the ROLE'S home, not blindly to
+  // the candidate dashboard: sending an admin/employer to /dashboard chains
+  // wrong-role guard bounces into an infinite redirect loop.
   // Must run in an effect, not during render: calling router.replace() while
   // LoginPage is rendering updates the Router component mid-render, which
   // React flags as "Cannot update a component while rendering a different component".
   useEffect(() => {
     if (user) {
-      router.replace(next || '/dashboard');
+      router.replace(next || roleHome(user.role));
     }
   }, [user, next, router]);
 
@@ -38,7 +42,9 @@ export default function LoginPage() {
   }
 
   function handleSuccess() {
-    router.replace(next || '/dashboard');
+    // No-op: login/verify set `user` in the auth context, and the effect above
+    // performs the role-aware redirect. Redirecting here too would race it with
+    // a hardcoded (possibly wrong-role) destination.
   }
 
   return (
