@@ -17,7 +17,7 @@
  *   - Job detail is cached with a shorter TTL for SSR warm-up.
  */
 import { createHash } from 'crypto';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import { REDIS_CLIENT } from '../core/redis/redis.provider';
 
@@ -25,17 +25,77 @@ const CACHE_VER_KEY = 'search:ver';
 const SEARCH_TTL_S = 60;
 const DETAIL_TTL_S = 30;
 
+/**
+ * S8-H1 — TTL JITTER. Every key written in the same burst used to carry exactly
+ * SEARCH_TTL_S, so a burst of traffic created a cohort of keys that all expired
+ * in the SAME second. Load testing reproduced the consequence twice: the request
+ * wave arriving just after a cohort expiry found every shape uncached at once and
+ * ran the full FTS query concurrently — p95 jumped from ~106ms to ~5.5s while
+ * neighbouring load levels were fine. Spreading expiry over a window breaks the
+ * cohort up so misses trickle instead of arriving all at once.
+ */
+const SEARCH_TTL_JITTER_S = 15;
+
+/**
+ * S8-H1 — how long a process may reuse the cache version without re-reading it.
+ * See getSearchVersion below.
+ */
+const VERSION_MEMO_MS = 1_000;
+
 @Injectable()
 export class SearchCacheService {
+  private readonly logger = new Logger(SearchCacheService.name);
+  private memoVersion: { value: number; readAt: number } | null = null;
+
   constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
+  /**
+   * The cache version, memoized in-process for VERSION_MEMO_MS.
+   *
+   * Why: every cached search costs TWO SEQUENTIAL Redis round-trips — read the
+   * version, then read the result keyed by it (the second key is not knowable
+   * until the first returns, so they cannot be pipelined). Worse, `search:ver`
+   * does not exist until the first job state change ever bumps it, so on a fresh
+   * deployment that first round-trip is a GUARANTEED MISS on every single search
+   * request — measured as a flat ~50% Redis keyspace hit rate on this path that
+   * was purely the version lookup, not the result cache.
+   *
+   * The memo halves the round-trips. It costs up to VERSION_MEMO_MS of delay in
+   * noticing an invalidation — which is immaterial, because a cached RESULT is
+   * already allowed to be up to SEARCH_TTL_S (60s) stale. One second of extra
+   * version staleness cannot make the feed staler than the TTL already permits.
+   */
   async getSearchVersion(): Promise<number> {
-    const v = await this.redis.get(CACHE_VER_KEY);
-    return v ? parseInt(v, 10) : 0;
+    const now = Date.now();
+    if (this.memoVersion && now - this.memoVersion.readAt < VERSION_MEMO_MS) {
+      return this.memoVersion.value;
+    }
+    // CHAOS-001: a cache outage must not break the public feed. Version 0 is
+    // the same value a never-bumped deployment uses, so the request proceeds to
+    // the DB exactly as a cold cache would. NOT memoized on failure — otherwise
+    // one blip would pin version 0 for the memo window and could serve entries
+    // from a stale generation once Redis returned.
+    let value = 0;
+    try {
+      const v = await this.redis.get(CACHE_VER_KEY);
+      value = v ? parseInt(v, 10) : 0;
+      this.memoVersion = { value, readAt: now };
+    } catch (err) {
+      this.logger.warn(
+        `search cache version read failed — serving from the database: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+    return value;
   }
 
   async bumpSearchVersion(): Promise<void> {
     await this.redis.incr(CACHE_VER_KEY);
+    // Drop this process's memo immediately so the bumping process at least
+    // never serves its own stale version. Other replicas converge within
+    // VERSION_MEMO_MS.
+    this.memoVersion = null;
   }
 
   /**
@@ -59,24 +119,52 @@ export class SearchCacheService {
     return `job:detail:${jobId}`;
   }
 
+  /** A cache ERROR is treated as a cache MISS — the DB is the source of truth. */
   async getSearch<T>(key: string): Promise<T | null> {
-    const raw = await this.redis.get(key);
-    return raw ? (JSON.parse(raw) as T) : null;
+    try {
+      const raw = await this.redis.get(key);
+      return raw ? (JSON.parse(raw) as T) : null;
+    } catch {
+      return null; // CHAOS-001 — miss through to Postgres
+    }
   }
 
   async setSearch<T>(key: string, value: T): Promise<void> {
-    await this.redis.setex(key, SEARCH_TTL_S, JSON.stringify(value));
+    // Jittered TTL — see SEARCH_TTL_JITTER_S. Never shorter than SEARCH_TTL_S,
+    // so this only ever lengthens cache lifetime; it cannot make results staler
+    // than the documented ceiling by more than the jitter window.
+    const ttl = SEARCH_TTL_S + Math.floor(Math.random() * SEARCH_TTL_JITTER_S);
+    try {
+      await this.redis.setex(key, ttl, JSON.stringify(value));
+    } catch {
+      // CHAOS-001: failing to POPULATE the cache must not fail the request the
+      // caller already computed successfully.
+    }
   }
 
   async getDetail<T>(jobId: string): Promise<T | null> {
-    const raw = await this.redis.get(this.detailCacheKey(jobId));
-    return raw ? (JSON.parse(raw) as T) : null;
+    try {
+      const raw = await this.redis.get(this.detailCacheKey(jobId));
+      return raw ? (JSON.parse(raw) as T) : null;
+    } catch {
+      return null; // CHAOS-001 — miss through to Postgres
+    }
   }
 
   async setDetail<T>(jobId: string, value: T): Promise<void> {
-    await this.redis.setex(this.detailCacheKey(jobId), DETAIL_TTL_S, JSON.stringify(value));
+    try {
+      await this.redis.setex(this.detailCacheKey(jobId), DETAIL_TTL_S, JSON.stringify(value));
+    } catch {
+      // CHAOS-001 — best-effort populate; never fails the caller's request.
+    }
   }
 
+  /**
+   * Deliberately NOT wrapped — same reasoning as PermissionService's
+   * invalidateRoleCache. A failed detail invalidation means a paused or
+   * archived job keeps being served as live until the TTL lapses, so the
+   * caller must hear about it rather than have it swallowed.
+   */
   async invalidateJobDetail(jobId: string): Promise<void> {
     await this.redis.del(this.detailCacheKey(jobId));
   }

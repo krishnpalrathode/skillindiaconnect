@@ -3,20 +3,67 @@ import { NestFactory } from '@nestjs/core';
 import { RequestMethod, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { AppApiModule } from './app-api.module';
 import { validationProblemFactory } from './core/http-problem.filter';
 import { applyScopedBodyParsers } from './payments/webhooks/raw-body.middleware';
+import { initErrorTracking } from './core/observability/error-tracking';
+import { requestContextMiddleware } from './core/observability/request-context';
+import {
+  StructuredLogger,
+  shouldUseStructuredLogging,
+} from './core/observability/structured-logger';
 
 async function bootstrap(): Promise<void> {
+  // S8-H3: error tracking is initialised BEFORE the app is created, so a
+  // failure during module construction is still reported. Inert without a DSN.
+  initErrorTracking();
+
   // bodyParser: false — body parsing is re-wired by applyScopedBodyParsers so
   // the two webhook routes receive the UNTOUCHED raw byte buffer (signature
   // verification runs on those exact bytes) while every other route keeps
   // normal JSON parsing. See raw-body.middleware.ts for the mechanism.
-  const app = await NestFactory.create(AppApiModule, { bodyParser: false });
+  const app = await NestFactory.create(AppApiModule, {
+    bodyParser: false,
+    ...(shouldUseStructuredLogging() ? { logger: new StructuredLogger() } : {}),
+  });
   applyScopedBodyParsers(app);
+
+  // S8-H3: establishes the per-request correlation id. Mounted FIRST so every
+  // later middleware, guard, handler and log line runs inside the context.
+  app.use(requestContextMiddleware);
 
   // Parse cookies — required for the httpOnly refresh-token cookie.
   app.use(cookieParser());
+
+  /**
+   * SEC-005 (S8-H2) — security response headers.
+   *
+   * The API shipped with NONE of these and additionally advertised
+   * `X-Powered-By: Express`. This is a JSON API, so the browser-facing risk is
+   * narrower than for an HTML app, but two of these matter directly:
+   *
+   *  - `X-Content-Type-Options: nosniff` stops a browser from MIME-sniffing a
+   *    JSON response containing attacker-supplied text (a cover letter, a
+   *    company description) into HTML and executing it.
+   *  - HSTS keeps the refresh cookie off plaintext HTTP.
+   *
+   * `contentSecurityPolicy` is disabled: helmet's default CSP is written for
+   * HTML documents and would do nothing for JSON responses except add bytes to
+   * every payload. The web app sets its own CSP; that is where it belongs.
+   *
+   * `crossOriginResourcePolicy` is disabled because it would contradict the
+   * deliberately-scoped CORS configured just below — CORS is the control here.
+   */
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginResourcePolicy: false,
+    }),
+  );
+  // Do not advertise the framework (helmet hides it, but Nest sets it again on
+  // some paths — disabling it at the adapter is the reliable removal).
+  app.getHttpAdapter().getInstance().disable('x-powered-by');
 
   const configService = app.get(ConfigService);
 
@@ -28,7 +75,17 @@ async function bootstrap(): Promise<void> {
 
   // Global prefix for all routes except /health (used by load balancers).
   app.setGlobalPrefix('api', {
-    exclude: [{ path: 'health', method: RequestMethod.GET }],
+    // S8-H3: liveness/readiness are excluded alongside the business health
+    // view. `exclude` matches EXACT paths, not prefixes, so each subpath must
+    // be listed — otherwise they would land at /api/health/live and the
+    // deployment platform's probes would 404.
+    exclude: [
+      { path: 'health', method: RequestMethod.GET },
+      { path: 'health/live', method: RequestMethod.GET },
+      { path: 'health/ready', method: RequestMethod.GET },
+      // S8-H3: the scrape target must not move when the business API is versioned.
+      { path: 'metrics', method: RequestMethod.GET },
+    ],
   });
 
   // URI versioning: /api/v1/...

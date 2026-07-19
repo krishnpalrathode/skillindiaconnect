@@ -9,6 +9,7 @@ import {
   ValidationError,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { captureError } from './observability/error-tracking';
 
 /**
  * The RFC-7807-style error envelope mandated by api-conventions.md and the
@@ -82,6 +83,21 @@ const DEFAULT_CODES: Record<number, string> = {
  * logged server-side (message + stack only — never the request body, per the
  * no-PII rule) and the client gets NO internal detail.
  */
+/**
+ * An express-layer error carrying an HTTP status (SEC-003). `body-parser`
+ * throws these for oversized, malformed, or wrongly-encoded bodies:
+ * `PayloadTooLargeError` (413), `EntityParseError` (400), `UnsupportedMediaType`
+ * (415). They are plain Errors with a `status`/`statusCode`, not HttpExceptions.
+ */
+function isHttpishError(e: unknown): e is Error & { status?: number; statusCode?: number } {
+  if (e === null || typeof e !== 'object') return false;
+  const o = e as { status?: unknown; statusCode?: unknown };
+  const s = typeof o.status === 'number' ? o.status : typeof o.statusCode === 'number' ? o.statusCode : null;
+  // Only trust a plausible HTTP status — never let an arbitrary numeric field
+  // on some unrelated error object choose the response code.
+  return s !== null && s >= 400 && s <= 599;
+}
+
 @Catch()
 export class HttpProblemFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpProblemFilter.name);
@@ -116,12 +132,37 @@ export class HttpProblemFilter implements ExceptionFilter {
           detail = (o['message'] as string[]).join('; ');
         }
       }
+    } else if (isHttpishError(exception)) {
+      // SEC-003 (S8-H2): body-parser and other express-layer errors are NOT
+      // HttpExceptions, but they DO carry the correct HTTP status. Without this
+      // branch they fell through to the generic 500 below — so an over-limit
+      // body answered `500 INTERNAL_ERROR` instead of `413 PAYLOAD_TOO_LARGE`,
+      // misreporting a client mistake as a server fault (and logging it at
+      // ERROR, which lets an unauthenticated caller flood the logs by POSTing
+      // oversized bodies).
+      //
+      // Only the STATUS is taken from the error. The message is deliberately
+      // NOT used as `detail` — express error text can carry request specifics —
+      // so the client still receives the generic per-status envelope.
+      status = exception.status ?? exception.statusCode ?? HttpStatus.INTERNAL_SERVER_ERROR;
+      if (status >= 500) {
+        const msg = exception instanceof Error ? exception.message : String(exception);
+        this.logger.error(`Unhandled exception: ${msg}`, exception instanceof Error ? exception.stack : undefined);
+      } else {
+        // A 4xx here is a malformed client request, not an incident. Log it at
+        // warn without a stack so real errors stay visible in the noise.
+        this.logger.warn(`Client request rejected (${status}): ${(exception as Error).message}`);
+      }
     } else {
       // Programming error / infrastructure failure. Log the truth server-side;
       // the client gets a generic envelope with zero internal detail.
       const msg = exception instanceof Error ? exception.message : String(exception);
       const stack = exception instanceof Error ? exception.stack : undefined;
       this.logger.error(`Unhandled exception: ${msg}`, stack);
+      // S8-H3: report to the error tracker with correlation context. Only
+      // genuinely unexpected failures are sent — HttpExceptions above are
+      // deliberate domain outcomes (a 404, a 403) and would be pure noise.
+      captureError(exception);
     }
 
     const title = TITLES[status] ?? 'Error';

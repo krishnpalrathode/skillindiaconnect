@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { BenefitChips } from './BenefitChips';
 import { SaveJobButton } from './SaveJobButton';
 import { formatPostedAgo, formatSalaryRange, isNewJob } from '@/lib/jobs/format';
+import { Ltr } from '@/components/common/Ltr';
 import type { JobCard as JobCardType } from '@/lib/api/jobs';
 
 interface JobCardProps {
@@ -47,16 +48,21 @@ export function JobCard({ job, locale }: JobCardProps) {
           <p className="text-sm text-neutral-600">{job.companyName}</p>
         </div>
 
-        <p className="flex items-center gap-1 text-sm text-neutral-500">
+        <p className="flex items-center gap-1 text-sm text-neutral-600">
           <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
           {job.location}
         </p>
 
-        {salary && <p className="text-sm font-medium text-neutral-900">{salary}</p>}
+        {/* RTL-001: bidi-isolated so the range bounds cannot swap in Arabic. */}
+        {salary && (
+          <p className="text-sm font-medium text-neutral-900">
+            <Ltr>{salary}</Ltr>
+          </p>
+        )}
 
         <BenefitChips job={job} />
 
-        <p className="mt-auto text-xs text-neutral-400">{formatPostedAgo(job.createdAt, locale)}</p>
+        <p className="mt-auto text-xs text-neutral-600">{formatPostedAgo(job.createdAt, locale)}</p>
       </CardContent>
 
       <CardFooter>

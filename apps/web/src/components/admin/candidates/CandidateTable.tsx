@@ -181,7 +181,7 @@ export function CandidateTable() {
       )}
 
       {rows !== null && rows.length === 0 && (
-        <p role="status" className="py-10 text-center text-sm text-neutral-500">
+        <p role="status" className="py-10 text-center text-sm text-neutral-600">
           {t(`empty.${activeTab}`)}
         </p>
       )}
@@ -224,7 +224,7 @@ export function CandidateTable() {
                     key={c.id}
                     className={cn(
                       'border-b border-neutral-100 last:border-0',
-                      purged && 'bg-neutral-50 text-neutral-400',
+                      purged && 'bg-neutral-50 text-neutral-600',
                     )}
                   >
                     <td className="p-3">
@@ -236,7 +236,7 @@ export function CandidateTable() {
                           className={cn(
                             'flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
                             purged
-                              ? 'bg-neutral-200 text-neutral-400'
+                              ? 'bg-neutral-200 text-neutral-600'
                               : 'bg-primary-50 text-primary-700',
                           )}
                         >
@@ -246,12 +246,12 @@ export function CandidateTable() {
                           <p
                             className={cn(
                               'font-medium',
-                              purged ? 'text-neutral-500' : 'text-neutral-900',
+                              purged ? 'text-neutral-600' : 'text-neutral-900',
                             )}
                           >
                             {c.fullName}
                           </p>
-                          <p className="text-xs text-neutral-500">{c.email ?? '—'}</p>
+                          <p className="text-xs text-neutral-600">{c.email ?? '—'}</p>
                         </div>
                       </div>
                     </td>

@@ -105,6 +105,7 @@ export function SkillChips({ skills, onSkillsChange, placeholder, className }: S
             onBlur={() => input.trim() && addSkill(input)}
             disabled={busy}
             placeholder={skills.length === 0 ? (placeholder ?? t('skillsPlaceholder')) : ''}
+            // eslint-disable-next-line no-restricted-syntax -- PLACEHOLDER text — 1.4.3 applies to content, and darkening it would read as a filled value.
             className="flex-1 min-w-[120px] bg-transparent text-sm outline-none placeholder:text-neutral-400 disabled:opacity-50"
             aria-label={t('skillsLabel')}
           />
@@ -124,7 +125,7 @@ export function SkillChips({ skills, onSkillsChange, placeholder, className }: S
         </button>
       )}
 
-      <p className="text-xs text-neutral-500">{t('skillsHint')}</p>
+      <p className="text-xs text-neutral-600">{t('skillsHint')}</p>
     </div>
   );
 }

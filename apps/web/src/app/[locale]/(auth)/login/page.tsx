@@ -69,16 +69,31 @@ export default function LoginPage() {
       {/* Divider */}
       <div className="relative flex items-center gap-3">
         <div className="flex-1 border-t border-neutral-200" />
-        <span className="text-xs text-neutral-400 uppercase tracking-wider">{t('orDivider')}</span>
+        <span className="text-xs text-neutral-600 uppercase tracking-wider">{t('orDivider')}</span>
         <div className="flex-1 border-t border-neutral-200" />
       </div>
 
-      {/* Method tabs */}
-      <div className="flex overflow-hidden rounded-xl border border-neutral-200 text-sm">
+      {/*
+        Method tabs.
+
+        A11Y-001 (S8-H4): these carried role="tab" with NO role="tablist"
+        parent — an invalid ARIA structure (axe `aria-required-parent`, WCAG
+        1.3.1). A screen reader announced "tab" with no group context and no
+        position, so a user could not tell there were two choices or which they
+        were on. The panel below is now bound with aria-controls/aria-labelledby
+        so the relationship is programmatic, not just visual.
+      */}
+      <div
+        role="tablist"
+        aria-label={t('methodTabsLabel')}
+        className="flex overflow-hidden rounded-xl border border-neutral-200 text-sm"
+      >
         <button
           type="button"
           role="tab"
+          id="login-tab-email"
           aria-selected={method === 'email'}
+          aria-controls="login-panel-email"
           onClick={() => setMethod('email')}
           className={[
             'h-11 flex-1 font-semibold transition-colors',
@@ -93,7 +108,9 @@ export default function LoginPage() {
         <button
           type="button"
           role="tab"
+          id="login-tab-phone"
           aria-selected={method === 'phone'}
+          aria-controls="login-panel-phone"
           onClick={() => setMethod('phone')}
           className={[
             'h-11 flex-1 font-semibold transition-colors',
@@ -107,10 +124,15 @@ export default function LoginPage() {
         </button>
       </div>
 
+      {/* A11Y-001: the panel each tab controls, named by its own tab. */}
       {method === 'email' ? (
-        <LoginForm onSuccess={handleSuccess} />
+        <div role="tabpanel" id="login-panel-email" aria-labelledby="login-tab-email">
+          <LoginForm onSuccess={handleSuccess} />
+        </div>
       ) : (
-        <PhoneLoginFlow onSuccess={handleSuccess} />
+        <div role="tabpanel" id="login-panel-phone" aria-labelledby="login-tab-phone">
+          <PhoneLoginFlow onSuccess={handleSuccess} />
+        </div>
       )}
 
       <p className="text-center text-sm text-neutral-600">

@@ -224,8 +224,12 @@ describe('NotificationProcessor', () => {
       waSendSpy.mockRejectedValue(new Error('Meta API error'));
       emailSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'email-fallback' });
 
-      // Simulate last attempt: attemptsMade === attempts
-      const job = makeJob('whatsapp', { attemptsMade: 3, opts: { attempts: 3 } });
+      // CHAOS-004: BullMQ increments attemptsMade when an attempt FAILS, so
+      // while the FINAL attempt of a 3-attempt job is executing the counter
+      // reads 2, not 3. These tests previously used 3 — a value the runtime
+      // never produces inside the processor — which is why they passed while
+      // the fallback was dead in production.
+      const job = makeJob('whatsapp', { attemptsMade: 2, opts: { attempts: 3 } });
 
       await expect(processor.process(job)).rejects.toThrow('Meta API error');
 
@@ -237,7 +241,7 @@ describe('NotificationProcessor', () => {
       waSendSpy.mockRejectedValue(new Error('Meta API error'));
       emailSendSpy.mockResolvedValue({ ok: true });
 
-      const job = makeJob('whatsapp', { attemptsMade: 3, opts: { attempts: 3 } });
+      const job = makeJob('whatsapp', { attemptsMade: 2, opts: { attempts: 3 } });
       await expect(processor.process(job)).rejects.toThrow();
 
       const updateCalls = prismaMock.whatsappMessage.update.mock.calls;
@@ -249,7 +253,7 @@ describe('NotificationProcessor', () => {
       waSendSpy.mockRejectedValue(new Error('Meta API error'));
       emailSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'fallback-email' });
 
-      const job = makeJob('whatsapp', { attemptsMade: 3, opts: { attempts: 3 } });
+      const job = makeJob('whatsapp', { attemptsMade: 2, opts: { attempts: 3 } });
       await expect(processor.process(job)).rejects.toThrow();
 
       expect(emailSendSpy).toHaveBeenCalledTimes(1);
@@ -265,11 +269,44 @@ describe('NotificationProcessor', () => {
       expect(emailSendSpy).not.toHaveBeenCalled();
     });
 
+    /**
+     * CHAOS-004 regression. The bug was an off-by-one that made the fallback
+     * unreachable for EVERY attempt count, so this walks the boundary across
+     * several configurations rather than trusting one hand-picked pair.
+     *
+     * BullMQ's contract: inside the processor, `attemptsMade` is the number of
+     * attempts that have already FAILED, so the attempt currently running is
+     * `attemptsMade + 1`. The fallback must fire on exactly the last one.
+     */
+    it.each([
+      { attempts: 1, attemptsMade: 0, isLast: true },
+      { attempts: 2, attemptsMade: 0, isLast: false },
+      { attempts: 2, attemptsMade: 1, isLast: true },
+      { attempts: 3, attemptsMade: 0, isLast: false },
+      { attempts: 3, attemptsMade: 1, isLast: false },
+      { attempts: 3, attemptsMade: 2, isLast: true },
+    ])(
+      'email fallback fires only on the FINAL attempt (attempts=$attempts, attemptsMade=$attemptsMade → last=$isLast)',
+      async ({ attempts, attemptsMade, isLast }) => {
+        waSendSpy.mockRejectedValue(new Error('Meta API error'));
+        emailSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'fallback' });
+
+        const job = makeJob('whatsapp', { attemptsMade, opts: { attempts } });
+        await expect(processor.process(job)).rejects.toThrow();
+
+        expect({ attempts, attemptsMade, fellBack: emailSendSpy.mock.calls.length > 0 }).toEqual({
+          attempts,
+          attemptsMade,
+          fellBack: isLast,
+        });
+      },
+    );
+
     it('audits NOTIFICATION_FAILED on retry exhaustion', async () => {
       waSendSpy.mockRejectedValue(new Error('Meta API error'));
       emailSendSpy.mockResolvedValue({ ok: true });
 
-      const job = makeJob('whatsapp', { attemptsMade: 3, opts: { attempts: 3 } });
+      const job = makeJob('whatsapp', { attemptsMade: 2, opts: { attempts: 3 } });
       await expect(processor.process(job)).rejects.toThrow();
 
       expect(auditLogSpy).toHaveBeenCalledWith(

@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ApproveRejectActions, type ReviewOutcome } from './ApproveRejectActions';
 import { FlagsControl } from './FlagsControl';
+import { Ltr } from '@/components/common/Ltr';
 
 /**
  * The moderation detail: the job AS CANDIDATES WOULD SEE IT (same single-source
@@ -89,7 +90,7 @@ export function JobReviewPanel({ jobId }: { jobId: string }) {
   }
   if (error instanceof ApiRequestError && error.error.status === 404) {
     return (
-      <p role="alert" className="py-10 text-center text-sm text-neutral-500">
+      <p role="alert" className="py-10 text-center text-sm text-neutral-600">
         {t('notFound')}
       </p>
     );
@@ -136,7 +137,7 @@ export function JobReviewPanel({ jobId }: { jobId: string }) {
         {job.isFeatured && <Badge variant="primary">{t('featuredChip')}</Badge>}
         {job.isUrgent && <Badge variant="accent">{t('urgentChip')}</Badge>}
       </div>
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-neutral-600">
         {job.humanId} · {job.companyName}
       </p>
 
@@ -177,7 +178,7 @@ export function JobReviewPanel({ jobId }: { jobId: string }) {
             </Badge>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-500">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-600">
             <span className="flex items-center gap-1">
               <MapPin className="size-4 shrink-0" aria-hidden="true" />
               {job.location}
@@ -196,7 +197,11 @@ export function JobReviewPanel({ jobId }: { jobId: string }) {
             )}
           </div>
 
-          {salary && <p className="text-lg font-semibold text-neutral-900">{salary}</p>}
+          {salary && (
+            <p className="text-lg font-semibold text-neutral-900">
+              <Ltr>{salary}</Ltr>
+            </p>
+          )}
 
           {/* Single source: the SAME chips candidates see on the public card. */}
           <BenefitChips job={job} />
@@ -247,7 +252,7 @@ export function JobReviewPanel({ jobId }: { jobId: string }) {
             </h2>
             <dl className="flex flex-col gap-1.5 text-sm">
               <div className="flex justify-between gap-2">
-                <dt className="text-neutral-500">{t('facts.employer')}</dt>
+                <dt className="text-neutral-600">{t('facts.employer')}</dt>
                 <dd className="text-end font-medium text-neutral-900">
                   <Link
                     href={`/${locale}/admin/employers/${job.companyId}`}
@@ -258,7 +263,7 @@ export function JobReviewPanel({ jobId }: { jobId: string }) {
                 </dd>
               </div>
               <div className="flex justify-between gap-2">
-                <dt className="text-neutral-500">{t('facts.employerStatus')}</dt>
+                <dt className="text-neutral-600">{t('facts.employerStatus')}</dt>
                 <dd
                   className={
                     employerNotApproved ? 'font-semibold text-warning-fg' : 'text-neutral-900'
@@ -268,7 +273,7 @@ export function JobReviewPanel({ jobId }: { jobId: string }) {
                 </dd>
               </div>
               <div className="flex justify-between gap-2">
-                <dt className="text-neutral-500">{t('facts.submitted')}</dt>
+                <dt className="text-neutral-600">{t('facts.submitted')}</dt>
                 <dd className="text-neutral-900">
                   {new Date(job.createdAt).toLocaleDateString('en-IN', {
                     day: 'numeric',
@@ -278,13 +283,13 @@ export function JobReviewPanel({ jobId }: { jobId: string }) {
                 </dd>
               </div>
               <div className="flex justify-between gap-2">
-                <dt className="text-neutral-500">{t('facts.applicants')}</dt>
+                <dt className="text-neutral-600">{t('facts.applicants')}</dt>
                 <dd className="text-neutral-900">{job.applicantCount ?? 0}</dd>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <dt className="text-neutral-500">{t('facts.views')}</dt>
+                <dt className="text-neutral-600">{t('facts.views')}</dt>
                 <dd className="flex items-center gap-1 text-neutral-900">
-                  <Eye className="size-3.5 text-neutral-400" aria-hidden="true" />
+                  <Eye className="size-3.5 text-neutral-600" aria-hidden="true" />
                   {job.views ?? 0}
                 </dd>
               </div>
@@ -292,7 +297,7 @@ export function JobReviewPanel({ jobId }: { jobId: string }) {
 
             {/* The protection readout — exactly what rung 2 will re-check. */}
             <div className="mt-1 border-t border-neutral-100 pt-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-600">
                 {tBenefits('heading')}
               </h3>
               <ul className="mt-1.5 flex flex-col gap-1">

@@ -78,7 +78,7 @@ export function CompletionRing({
       {/* Central label */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-2xl font-bold text-neutral-900 leading-none">{clamped}%</span>
-        <span className="text-xs text-neutral-500 mt-0.5">complete</span>
+        <span className="text-xs text-neutral-600 mt-0.5">complete</span>
       </div>
     </div>
   );

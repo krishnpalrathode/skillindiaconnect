@@ -93,7 +93,7 @@ export default function EmployerProfilePage() {
   if (error) {
     return (
       <div className="flex flex-col items-center gap-4 py-24 text-center">
-        <p className="text-sm text-neutral-500">{error}</p>
+        <p className="text-sm text-neutral-600">{error}</p>
         <Button variant="outline" size="sm" onClick={refetch}>
           {t('retry')}
         </Button>

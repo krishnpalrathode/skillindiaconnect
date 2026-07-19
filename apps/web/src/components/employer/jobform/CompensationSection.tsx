@@ -33,7 +33,7 @@ export function CompensationSection({ values, errors, onChange }: CompensationSe
         <h3 id="compensation-heading" className="text-base font-semibold text-neutral-900">
           {t('heading')}
         </h3>
-        <p className="mt-0.5 text-sm text-neutral-500">{t('subtitle')}</p>
+        <p className="mt-0.5 text-sm text-neutral-600">{t('subtitle')}</p>
       </div>
 
       {/* Currency selector */}
@@ -80,7 +80,7 @@ export function CompensationSection({ values, errors, onChange }: CompensationSe
           />
         </Field>
       </div>
-      <p className="text-xs text-neutral-400">{t('salaryHint', { currency })}</p>
+      <p className="text-xs text-neutral-600">{t('salaryHint', { currency })}</p>
     </section>
   );
 }

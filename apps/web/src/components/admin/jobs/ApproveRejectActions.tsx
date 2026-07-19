@@ -113,7 +113,7 @@ export function ApproveRejectActions({
             {t('heading')}
           </h2>
           {/* The re-run is stated up front — an admin should know approval is a gate, not a rubber stamp. */}
-          <p className="mt-0.5 text-xs text-neutral-500">{t('gatesNote')}</p>
+          <p className="mt-0.5 text-xs text-neutral-600">{t('gatesNote')}</p>
         </div>
 
         {conflict && (
@@ -173,7 +173,7 @@ export function ApproveRejectActions({
               {t('rejectDialog.reasonLabel')}
             </label>
             {/* The truth about visibility, BEFORE they type: the employer reads this. */}
-            <p className="mt-0.5 text-xs text-neutral-500">{t('rejectDialog.employerVisible')}</p>
+            <p className="mt-0.5 text-xs text-neutral-600">{t('rejectDialog.employerVisible')}</p>
             <textarea
               id="reject-reason"
               value={reason}

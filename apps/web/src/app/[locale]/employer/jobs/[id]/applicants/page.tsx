@@ -194,7 +194,7 @@ export default function ApplicantsPage() {
           <AlertCircle className="size-7 text-warning-fg" aria-hidden="true" />
         </div>
         <h1 className="text-xl font-bold text-neutral-900">{t('approvalGate.title')}</h1>
-        <p className="text-sm text-neutral-500">{t('approvalGate.body')}</p>
+        <p className="text-sm text-neutral-600">{t('approvalGate.body')}</p>
         <Link href={`/${locale}/employer/dashboard`}>
           <Button variant="outline">{t('approvalGate.back')}</Button>
         </Link>
@@ -206,7 +206,7 @@ export default function ApplicantsPage() {
     <div className="mx-auto flex max-w-3xl flex-col gap-4">
       <Link
         href={`/${locale}/employer/jobs`}
-        className="inline-flex items-center gap-1.5 rounded text-sm font-medium text-neutral-500 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+        className="inline-flex items-center gap-1.5 rounded text-sm font-medium text-neutral-600 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
       >
         <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
         {t('backToJobs')}
@@ -214,14 +214,14 @@ export default function ApplicantsPage() {
 
       <h1 className="text-xl font-bold text-neutral-900">
         {t('title')}
-        {jobTitle && <span className="text-neutral-400"> · {jobTitle}</span>}
+        {jobTitle && <span className="text-neutral-600"> · {jobTitle}</span>}
       </h1>
 
       {phase === 'notFound' ? (
-        <p className="py-16 text-center text-sm text-neutral-500">{t('notFound')}</p>
+        <p className="py-16 text-center text-sm text-neutral-600">{t('notFound')}</p>
       ) : phase === 'error' ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <p className="text-sm text-neutral-500">{t('error')}</p>
+          <p className="text-sm text-neutral-600">{t('error')}</p>
           <Button variant="outline" onClick={() => void load()} className="min-h-11">
             {t('retry')}
           </Button>

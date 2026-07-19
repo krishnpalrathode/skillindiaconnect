@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@prisma/client": ["../../apps/api/node_modules/@prisma/client"],
+      "@nestjs/*": ["../../apps/api/node_modules/@nestjs/*"],
+      "ioredis": ["../../apps/api/node_modules/ioredis"],
+      "bullmq": ["../../apps/api/node_modules/bullmq"]
+    },
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "types": ["node"],
+    "lib": ["ES2022", "DOM"]
+  },
+  "include": ["**/*.ts"]
+}

@@ -39,7 +39,7 @@ export function ForbiddenState({
       <p className="max-w-md text-sm text-neutral-600">{t('body')}</p>
 
       {requiredPermission && (
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-neutral-600">
           {t('requires')}{' '}
           <code className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono">
             {requiredPermission}

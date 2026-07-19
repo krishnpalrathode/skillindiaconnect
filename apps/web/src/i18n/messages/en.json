@@ -187,7 +187,8 @@
     "otpPlaceholder": "Enter OTP",
     "verifyOtp": "Verify OTP",
     "resendOtp": "Resend OTP",
-    "resendIn": "Resend in {seconds}s"
+    "resendIn": "Resend in {seconds}s",
+    "methodTabsLabel": "Sign-in method"
   },
   "profile": {
     "title": "My Profile",

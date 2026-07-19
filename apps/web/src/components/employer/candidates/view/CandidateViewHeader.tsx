@@ -48,7 +48,7 @@ export function CandidateViewHeader({ candidate, locale }: CandidateViewHeaderPr
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-xl font-bold text-neutral-900">{candidate.fullName}</h1>
           {typeof candidate.age === 'number' && (
-            <span className="text-sm text-neutral-500">
+            <span className="text-sm text-neutral-600">
               {t('view.ageYears', { age: candidate.age })}
             </span>
           )}
@@ -56,7 +56,7 @@ export function CandidateViewHeader({ candidate, locale }: CandidateViewHeaderPr
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
               candidate.isAvailable
                 ? 'bg-success-bg text-success-fg'
-                : 'bg-neutral-100 text-neutral-500'
+                : 'bg-neutral-100 text-neutral-600'
             }`}
           >
             <span
@@ -67,7 +67,7 @@ export function CandidateViewHeader({ candidate, locale }: CandidateViewHeaderPr
           </span>
         </div>
 
-        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-neutral-500">
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-neutral-600">
           {categoryLabel && <span>{categoryLabel}</span>}
           {candidate.currentLocation && (
             <span className="flex items-center gap-1">

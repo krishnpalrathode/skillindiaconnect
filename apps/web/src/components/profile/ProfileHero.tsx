@@ -60,6 +60,7 @@ export function ProfileHero({ profile, completion }: ProfileHeroProps) {
               disabled
               title={t('photoComingSoon')}
               aria-label={t('changePhoto')}
+              // eslint-disable-next-line no-restricted-syntax -- DISABLED control — WCAG 1.4.3 explicitly exempts disabled UI, and darkening it would stop it reading as unavailable.
               className="absolute -end-1 -bottom-1 flex items-center justify-center size-7 rounded-full bg-white border border-neutral-200 shadow-sm text-neutral-400 cursor-not-allowed"
             >
               <span className="text-xs" aria-hidden="true">
@@ -99,7 +100,7 @@ export function ProfileHero({ profile, completion }: ProfileHeroProps) {
             <CompletionRing pct={completion.pct} size={80} strokeWidth={7} />
           </div>
 
-          <div className="flex flex-col gap-1.5 text-sm text-neutral-500 min-w-0">
+          <div className="flex flex-col gap-1.5 text-sm text-neutral-600 min-w-0">
             {profile.currentLocation && (
               <span className="flex items-center gap-1.5">
                 <MapPin className="size-3.5 shrink-0" aria-hidden="true" />

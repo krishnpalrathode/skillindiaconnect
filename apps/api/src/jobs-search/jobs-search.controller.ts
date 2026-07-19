@@ -21,6 +21,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { RATE_LIMITS } from '../core/config/rate-limits';
 import { UserRole } from '@prisma/client';
 import { Public } from '../auth/decorators/public.decorator';
 import {
@@ -46,7 +47,7 @@ export class JobsSearchController {
   @Get()
   @Public()
   @OptionalAuth()
-  @Throttle({ default: { ttl: 60_000, limit: 30 } })
+  @Throttle({ default: RATE_LIMITS.search })
   async search(
     @Query() query: SearchQueryDto,
     @CurrentUserOptional() user: CurrentUserPayload | null,

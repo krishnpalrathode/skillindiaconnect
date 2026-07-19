@@ -200,7 +200,7 @@ export function JobRowActions({ job, onJobUpdated, onJobCreated }: JobRowActions
             onClick={() => run('archive', () => archiveJob(job.id))}
             disabled={busy}
             aria-label={t('archiveLabel', { title: job.title })}
-            className="min-h-[36px] text-neutral-500 hover:text-error-fg"
+            className="min-h-[36px] text-neutral-600 hover:text-error-fg"
           >
             {isLoading('archive') ? (
               <Spinner size={14} label="" />

@@ -38,7 +38,7 @@ function LockedToggle({ label, description }: { label: string; description: stri
             Required
           </span>
         </div>
-        <p className="mt-0.5 text-xs text-neutral-500">{description}</p>
+        <p className="mt-0.5 text-xs text-neutral-600">{description}</p>
       </div>
       {/* Visually shows locked-on state; aria-disabled + aria-checked convey it to SR */}
       <div
@@ -83,7 +83,7 @@ function OptionalToggle({
     >
       <div className="flex-1 min-w-0">
         <span className="text-sm font-medium text-neutral-900 block">{label}</span>
-        {description && <span className="text-xs text-neutral-500">{description}</span>}
+        {description && <span className="text-xs text-neutral-600">{description}</span>}
       </div>
       <input
         id={id}
@@ -105,7 +105,7 @@ export function BenefitsSection({ values, onChange }: BenefitsSectionProps) {
         <h3 id="benefits-heading" className="text-base font-semibold text-neutral-900">
           {t('heading')}
         </h3>
-        <p className="mt-0.5 text-sm text-neutral-500">{t('subtitle')}</p>
+        <p className="mt-0.5 text-sm text-neutral-600">{t('subtitle')}</p>
       </div>
 
       {/* Policy banner */}
@@ -122,7 +122,7 @@ export function BenefitsSection({ values, onChange }: BenefitsSectionProps) {
 
       {/* Mandatory locked benefits */}
       <div className="flex flex-col gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600">
           {t('mandatoryLabel')}
         </p>
         <LockedToggle label={t('accommodation')} description={t('accommodationHint')} />
@@ -132,7 +132,7 @@ export function BenefitsSection({ values, onChange }: BenefitsSectionProps) {
 
       {/* Optional benefits */}
       <div className="flex flex-col gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600">
           {t('optionalLabel')}
         </p>
         <OptionalToggle
@@ -150,7 +150,7 @@ export function BenefitsSection({ values, onChange }: BenefitsSectionProps) {
         <div className="rounded-lg border border-neutral-200 bg-white p-3 flex flex-col gap-2">
           <label htmlFor="benefit-other" className={cn('text-sm font-medium text-neutral-900')}>
             {t('otherAllowance')}
-            <span className="ms-1 text-xs font-normal text-neutral-400">({t('optional')})</span>
+            <span className="ms-1 text-xs font-normal text-neutral-600">({t('optional')})</span>
           </label>
           <input
             id="benefit-other"

@@ -45,7 +45,7 @@ export function RecentViewersCard({ summary }: RecentViewersCardProps) {
       {rows.length === 0 ? (
         <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
           <p className="text-sm font-medium text-neutral-700">{t('emptyTitle')}</p>
-          <p className="text-xs text-neutral-500">{t('emptyBody')}</p>
+          <p className="text-xs text-neutral-600">{t('emptyBody')}</p>
           <Link
             href={`/${locale}/profile`}
             className="mt-1 inline-flex min-h-[44px] items-center rounded-md px-3 text-sm font-medium text-primary-600 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
@@ -60,7 +60,7 @@ export function RecentViewersCard({ summary }: RecentViewersCardProps) {
               key={`${view.companyName}-${view.viewedAt}-${i}`}
               className="flex items-center gap-3 px-4 sm:px-5 py-3"
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-600">
                 <Building2 className="size-4" aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
@@ -68,7 +68,7 @@ export function RecentViewersCard({ summary }: RecentViewersCardProps) {
               </div>
               <time
                 dateTime={view.viewedAt}
-                className="shrink-0 text-xs text-neutral-400 tabular-nums"
+                className="shrink-0 text-xs text-neutral-600 tabular-nums"
               >
                 {formatRelativeTime(view.viewedAt, locale)}
               </time>

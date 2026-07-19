@@ -33,9 +33,21 @@ function signInAs(userId: string) {
 /** Render inside a real AdminProvider and wait for /admin/me/permissions to land. */
 async function renderWithAdmin(ui: React.ReactElement) {
   const result = render(<AdminProvider>{ui}</AdminProvider>);
-  // The nav is empty until the permission set arrives; wait for Dashboard (the
-  // always-present item) so assertions run against the resolved nav.
-  await waitFor(() => expect(screen.getByText('Dashboard')).toBeInTheDocument());
+
+  // Wait for a PERMISSION-GATED item, not for "Dashboard".
+  //
+  // AdminSidebar renders `ADMIN_NAV.filter(i => i.permission === null || has(i.permission))`,
+  // and Dashboard is the `permission === null` entry — so it paints on the FIRST
+  // render, before the permission fetch resolves. Gating on it therefore proved
+  // only that the component had mounted, and let the assertions race the fetch:
+  // under full-suite load the synchronous `getByRole('link', …)` for "Employers"
+  // could run against a nav that still held Dashboard alone. That surfaced as an
+  // intermittent failure here and in CI, passing in isolation every time.
+  //
+  // "Employers" is gated on `employers.view`, which every admin role exercised in
+  // this file holds (SUPER_ADMIN, ADMIN, MODERATOR) — so its appearance is a
+  // sound, role-agnostic signal that the permission set has actually landed.
+  await waitFor(() => expect(screen.getByText('Employers')).toBeInTheDocument());
   return result;
 }
 

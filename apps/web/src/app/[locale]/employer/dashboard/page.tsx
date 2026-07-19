@@ -121,7 +121,7 @@ export default function EmployerDashboardPage() {
   if (error) {
     return (
       <div className="flex flex-col items-center gap-4 py-24 text-center">
-        <p className="text-sm text-neutral-500">{error}</p>
+        <p className="text-sm text-neutral-600">{error}</p>
         <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
           {t('retry')}
         </Button>
@@ -137,7 +137,7 @@ export default function EmployerDashboardPage() {
     <div className="max-w-5xl flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">{greeting}</h1>
-        <p className="text-sm text-neutral-500 mt-0.5">{company.name}</p>
+        <p className="text-sm text-neutral-600 mt-0.5">{company.name}</p>
       </div>
 
       <EmployerKpis kpis={dashboard.kpis} />

@@ -54,3 +54,36 @@
     line-height: 1.3;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   A11Y-004 (S8-H4) — prefers-reduced-motion.
+
+   The audit found NO reduced-motion support anywhere, against 84 transition/
+   animation utilities in the components — including the profile completion
+   ring, the match-reveal bars, and 8 spinners.
+
+   Honouring this is not decorative for this audience: vestibular disorders make
+   sweeping motion genuinely sickening, and the users least able to work around
+   it are the ones on the cheapest devices, where the same animation also
+   stutters.
+
+   Motion is REDUCED, not removed. Animations collapse to a near-instant
+   duration rather than `animation: none`, because some components rely on an
+   animation running to signal activity — a spinner that never "runs" reads as
+   a frozen UI. The end state arrives immediately; the movement between states
+   is what goes away.
+   ──────────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}

@@ -60,7 +60,7 @@ export function MatchRevealCard({ application, jobMarket, locale }: MatchRevealC
         <p className="text-2xl font-bold text-neutral-900">
           {t('score', { score: application.matchScore })}
         </p>
-        <p className="text-xs font-medium text-neutral-500">{application.humanId}</p>
+        <p className="text-xs font-medium text-neutral-600">{application.humanId}</p>
       </div>
 
       <ul className="flex flex-col gap-3 text-start">
@@ -80,7 +80,7 @@ export function MatchRevealCard({ application, jobMarket, locale }: MatchRevealC
                   style={{ inlineSize: `${pct}%` }}
                 />
               </div>
-              {r.note && <p className="text-xs text-neutral-500">{r.note}</p>}
+              {r.note && <p className="text-xs text-neutral-600">{r.note}</p>}
             </li>
           );
         })}

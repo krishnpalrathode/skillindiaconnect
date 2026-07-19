@@ -134,12 +134,12 @@ export function NotificationList() {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-12 text-sm text-neutral-400">
+        <div className="flex items-center justify-center py-12 text-sm text-neutral-600">
           {t('loading')}
         </div>
       ) : error ? (
         <div className="flex flex-col items-center gap-3 py-12">
-          <p className="text-sm text-neutral-500">{error}</p>
+          <p className="text-sm text-neutral-600">{error}</p>
           <button
             type="button"
             onClick={() => fetchPage(undefined, true)}
@@ -149,7 +149,7 @@ export function NotificationList() {
           </button>
         </div>
       ) : groups.length === 0 ? (
-        <p className="text-sm text-neutral-500 py-12 text-center">
+        <p className="text-sm text-neutral-600 py-12 text-center">
           {t(`empty.${emptyKey}` as Parameters<typeof t>[0])}
         </p>
       ) : (
@@ -158,7 +158,7 @@ export function NotificationList() {
             <section key={group} aria-labelledby={`group-${group}`}>
               <h2
                 id={`group-${group}`}
-                className="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-2 px-1"
+                className="text-xs font-semibold text-neutral-600 uppercase tracking-wide mb-2 px-1"
               >
                 {t(`dateGroups.${group}` as Parameters<typeof t>[0])}
               </h2>

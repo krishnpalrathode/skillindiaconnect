@@ -10,10 +10,7 @@
  *
  * PublishGuardService is mocked — it is tested in its own spec.
  */
-import {
-  ForbiddenException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import {
   CompanyStatus,
   CompanyType,
@@ -273,13 +270,16 @@ describe('JobsService', () => {
       expect(updated.title).toBe('Senior Mason');
     });
 
-    it('throws 403 when employer tries to update another company\'s job', async () => {
+    // SEC-001 (S8-H2): was `.toThrow(ForbiddenException)`. A 403 here confirmed
+    // the job existed, making this endpoint a cross-tenant enumeration oracle.
+    // Ownership failure is now indistinguishable from a nonexistent job.
+    it('throws 404 when employer tries to update another company\'s job', async () => {
       if (dockerUnavailable) return;
 
       const job = await service.create(baseDto(), EMPLOYER_USER_ID, UserRole.EMPLOYER);
       await expect(
         service.update(job.id, { title: 'Hack' }, OTHER_EMPLOYER_USER_ID, UserRole.EMPLOYER),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -316,13 +316,14 @@ describe('JobsService', () => {
       });
     });
 
-    it('throws 403 when employer publishes another company\'s job', async () => {
+    // SEC-001 (S8-H2): was 403 — see the update case above.
+    it('throws 404 when employer publishes another company\'s job', async () => {
       if (dockerUnavailable) return;
 
       const job = await service.create(baseDto(), EMPLOYER_USER_ID, UserRole.EMPLOYER);
       await expect(
         service.publish(job.id, OTHER_EMPLOYER_USER_ID, UserRole.EMPLOYER),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('propagates 422 WORKER_PROTECTION_VIOLATION from the publish guard', async () => {
@@ -366,13 +367,14 @@ describe('JobsService', () => {
       expect(copy.publishedAt).toBeNull();
     });
 
-    it('throws 403 when duplicating another company\'s job', async () => {
+    // SEC-001 (S8-H2): was 403 — see the update case above.
+    it('throws 404 when duplicating another company\'s job', async () => {
       if (dockerUnavailable) return;
 
       const job = await service.create(baseDto(), EMPLOYER_USER_ID, UserRole.EMPLOYER);
       await expect(
         service.duplicate(job.id, OTHER_EMPLOYER_USER_ID, UserRole.EMPLOYER),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -419,6 +421,72 @@ describe('JobsService', () => {
       const pausedEmits = emitSpy.mock.calls.filter(([evt]) => evt === JOB_EVENTS.PAUSED);
       expect(pausedEmits).toHaveLength(2);
       emitSpy.mockRestore();
+    });
+  });
+
+  // ── SEC-001 (S8-H2): cross-tenant job access must not be an enumeration oracle
+  //
+  // A job owned by ANOTHER company must be reported EXACTLY as a job that does
+  // not exist. Before this fix, ownership failure threw 403 JOB_NOT_OWNED while
+  // a missing job threw 404 JOB_NOT_FOUND — the difference let an authenticated
+  // employer walk uuids and learn which ones were real jobs on the platform,
+  // including competitors' unpublished DRAFTS.
+  describe('SEC-001 — cross-tenant existence hiding', () => {
+    async function expectIndistinguishable(
+      label: string,
+      call: (jobId: string) => Promise<unknown>,
+    ): Promise<void> {
+      const foreign = await service.create(baseDto(), OTHER_EMPLOYER_USER_ID, UserRole.EMPLOYER);
+      const ghostId = '00000000-0000-4000-8000-00000000dead';
+
+      const foreignErr = await call(foreign.id).then(
+        () => null,
+        (e: unknown) => e as { status?: number; response?: { code?: string } },
+      );
+      const ghostErr = await call(ghostId).then(
+        () => null,
+        (e: unknown) => e as { status?: number; response?: { code?: string } },
+      );
+
+      // Both must throw, with the SAME status and the SAME machine-readable code.
+      expect({ label, threw: foreignErr !== null }).toEqual({ label, threw: true });
+      expect({ label, threw: ghostErr !== null }).toEqual({ label, threw: true });
+      expect({ label, status: foreignErr!.status, code: foreignErr!.response?.code }).toEqual({
+        label,
+        status: 404,
+        code: 'JOB_NOT_FOUND',
+      });
+      expect({ label, status: ghostErr!.status, code: ghostErr!.response?.code }).toEqual({
+        label,
+        status: 404,
+        code: 'JOB_NOT_FOUND',
+      });
+    }
+
+    it("another company's job reads as 404, identical to a nonexistent id", async () => {
+      if (dockerUnavailable) return;
+      await expectIndistinguishable('findOne', (id) => service.findOne(id, EMPLOYER_USER_ID));
+    });
+
+    it("another company's job cannot be probed via update", async () => {
+      if (dockerUnavailable) return;
+      await expectIndistinguishable('update', (id) =>
+        service.update(id, { title: 'probe' }, EMPLOYER_USER_ID, UserRole.EMPLOYER),
+      );
+    });
+
+    it("another company's job cannot be probed via publish", async () => {
+      if (dockerUnavailable) return;
+      await expectIndistinguishable('publish', (id) =>
+        service.publish(id, EMPLOYER_USER_ID, UserRole.EMPLOYER),
+      );
+    });
+
+    it("another company's job cannot be probed via duplicate", async () => {
+      if (dockerUnavailable) return;
+      await expectIndistinguishable('duplicate', (id) =>
+        service.duplicate(id, EMPLOYER_USER_ID, UserRole.EMPLOYER),
+      );
     });
   });
 });

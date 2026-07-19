@@ -45,7 +45,7 @@ export function SkillsSection({
 
   const viewContent =
     skills.length === 0 ? (
-      <p className="text-sm text-neutral-500 text-center py-4">{t('softBlockSkills')}</p>
+      <p className="text-sm text-neutral-600 text-center py-4">{t('softBlockSkills')}</p>
     ) : (
       <div className="flex flex-wrap gap-1.5">
         {skills.map((skill, idx) => (

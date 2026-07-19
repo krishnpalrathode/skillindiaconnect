@@ -109,6 +109,59 @@ export class JobsSearchService {
     return result;
   }
 
+  /**
+   * S8-H1 — SINGLE-FLIGHT (request coalescing) for first-page searches.
+   *
+   * In-flight uncached searches, keyed by the SAME cache key. When N requests
+   * for one key miss together, only the first runs the FTS query; the rest await
+   * its promise and share the result.
+   *
+   * Measured motivation: with a cold cache, a wave of concurrent requests each
+   * ran their own copy of the full FTS query. p95 on that path went from ~66ms
+   * warm to >12s, while the cache hit rate collapsed — every request paid for a
+   * query its neighbours were already running. Note what did NOT fix this: TTL
+   * jitter was tried first on a synchronised-expiry hypothesis and the cliff
+   * survived it unchanged, because the misses are concurrent rather than
+   * simultaneous-on-expiry. Coalescing is the mitigation that matches the cause.
+   *
+   * Scope is deliberately per-process, not a distributed lock: it needs no Redis
+   * round-trip and no lock lifetime to get wrong, and with N API replicas it
+   * still cuts concurrent duplicate queries by roughly the per-replica
+   * concurrency factor. Entries are always removed in `finally`, so a failed
+   * query is never cached as a poisoned promise.
+   */
+  private readonly inFlight = new Map<string, Promise<{ data: JobCard[]; nextCursor: string | null }>>();
+
+  private async runSearchCoalesced(
+    cacheKey: string,
+    dto: SearchQueryDto,
+  ): Promise<{ data: JobCard[]; nextCursor: string | null }> {
+    // ⚠️ EVERY caller gets its OWN clone — waiters included, which is why the
+    // clone wraps this lookup rather than sitting only on the producer's path.
+    // Coalescing resolves all waiters with the SAME object, and applySavedState
+    // MUTATES the returned cards to stamp the viewer's isSaved. Handing two
+    // viewers one instance would leak one candidate's saved-jobs state into the
+    // other's response — a privacy bug, not just an aliasing bug. The
+    // non-coalesced paths are safe because each builds fresh objects (or
+    // JSON.parses them from Redis), which is the invariant applySavedState
+    // documents.
+    const existing = this.inFlight.get(cacheKey);
+    if (existing) return structuredClone(await existing);
+
+    const promise = (async () => {
+      const result = await this.runSearch(dto);
+      await this.cache.setSearch(cacheKey, result);
+      return result;
+    })();
+
+    this.inFlight.set(cacheKey, promise);
+    try {
+      return structuredClone(await promise);
+    } finally {
+      this.inFlight.delete(cacheKey);
+    }
+  }
+
   private async searchPublic(
     dto: SearchQueryDto,
   ): Promise<{ data: JobCard[]; nextCursor: string | null }> {
@@ -131,9 +184,8 @@ export class JobsSearchService {
       const cached = await this.cache.getSearch<{ data: JobCard[]; nextCursor: string | null }>(cacheKey);
       if (cached) return cached;
 
-      const result = await this.runSearch(dto);
-      await this.cache.setSearch(cacheKey, result);
-      return result;
+      // Miss: coalesce with any identical search already running (S8-H1).
+      return this.runSearchCoalesced(cacheKey, dto);
     }
 
     return this.runSearch(dto);
@@ -226,8 +278,23 @@ export class JobsSearchService {
       // FTS primary match OR trgm similarity for typo tolerance.
       // websearch_to_tsquery parses user input without syntax errors (safer than to_tsquery).
       // q is a bound parameter ($N) — never interpolated.
+      //
+      // S8-H1 — `title % ${q}`, NOT `similarity(j.title, ${q}) > 0.3`.
+      // Semantically identical; the plans are not. `similarity(...) > 0.3` is a
+      // function call, and no operator class can index it — Postgres had to
+      // Seq Scan `jobs` and evaluate similarity() on EVERY row, which is O(corpus)
+      // and measured 256ms over 10k jobs. `%` IS the indexable trgm operator, so
+      // the planner can BitmapOr the two GIN indexes (jobs_searchVector_idx +
+      // jobs_title_idx): same 445 rows, 47ms, and the cost now scales with the
+      // number of MATCHES rather than the size of the corpus.
+      //
+      // `%` takes its threshold from pg_trgm.similarity_threshold, whose Postgres
+      // default is 0.3 — exactly the literal it replaces, so behaviour is
+      // unchanged. If that default ever needs pinning, it is a database-level
+      // setting (`ALTER DATABASE … SET pg_trgm.similarity_threshold = 0.3`), not
+      // a code change. See docs/performance-report.md.
       filters.push(
-        Prisma.sql`(j."searchVector" @@ websearch_to_tsquery('english', ${q}) OR similarity(j.title, ${q}) > 0.3)`,
+        Prisma.sql`(j."searchVector" @@ websearch_to_tsquery('english', ${q}) OR j.title % ${q})`,
       );
     }
     if (dto.market) {

@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
     <div className="flex flex-col gap-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold text-neutral-900">{t('forgotTitle')}</h1>
-        <p className="mt-1 text-sm text-neutral-500">{t('forgotSubtitle')}</p>
+        <p className="mt-1 text-sm text-neutral-600">{t('forgotSubtitle')}</p>
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">

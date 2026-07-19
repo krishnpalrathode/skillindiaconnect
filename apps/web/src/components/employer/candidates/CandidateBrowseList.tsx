@@ -106,7 +106,7 @@ export function CandidateBrowseList({ filters }: CandidateBrowseListProps) {
   if (phase === 'error') {
     return (
       <div className="flex flex-col items-center gap-4 rounded-xl border border-neutral-200 bg-white py-16 text-center">
-        <p className="text-sm text-neutral-500">{t('loadError')}</p>
+        <p className="text-sm text-neutral-600">{t('loadError')}</p>
         <Button variant="outline" size="sm" onClick={loadFirstPage}>
           {t('retry')}
         </Button>
@@ -118,11 +118,11 @@ export function CandidateBrowseList({ filters }: CandidateBrowseListProps) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-xl border border-neutral-200 bg-white py-16 px-4 text-center">
         <span className="flex size-12 items-center justify-center rounded-full bg-neutral-100">
-          <Users className="size-6 text-neutral-400" aria-hidden="true" />
+          <Users className="size-6 text-neutral-600" aria-hidden="true" />
         </span>
         <div>
           <p className="text-sm font-medium text-neutral-700">{t('empty.title')}</p>
-          <p className="mt-1 text-xs text-neutral-500">{t('empty.body')}</p>
+          <p className="mt-1 text-xs text-neutral-600">{t('empty.body')}</p>
         </div>
       </div>
     );

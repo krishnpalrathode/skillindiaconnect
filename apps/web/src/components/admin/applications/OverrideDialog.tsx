@@ -129,7 +129,7 @@ export function OverrideDialog({
             {t('reasonLabel')}
           </label>
           {/* The truth about visibility — stated before the admin types a word. */}
-          <p className="mt-0.5 text-xs text-neutral-500">{t('reasonVisibility')}</p>
+          <p className="mt-0.5 text-xs text-neutral-600">{t('reasonVisibility')}</p>
           <textarea
             id="override-reason"
             value={reason}

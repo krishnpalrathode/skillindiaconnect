@@ -1,0 +1,179 @@
+# S8-H3 — alerting rules (Prometheus / Alertmanager format).
+#
+# Every rule here traces to a failure mode that S8-H1 (load), S8-H2 (security)
+# or S8-H3 (chaos) actually demonstrated. Nothing is speculative, and nothing
+# fires on a metric that has never mattered.
+#
+# The organising principle: ALERT BEFORE THE FAILURE where the metric allows it.
+# Worker memory is the clearest case — H1 established that an OOM there kills
+# payment webhooks and notifications along with renders, so the useful alert is
+# "approaching the ceiling", not "the worker died".
+#
+# Apply with:  --rules.file=observability/alerts.yml
+# Scrape target: GET /metrics on each API and worker instance.
+
+groups:
+  # ───────────────────────────────────────────────────────────────────────────
+  - name: worker-health
+    rules:
+      # H1: peak worker RSS measured 515–680MB at the default pool cap against a
+      # 1GB budget. 80% is the point where a burst can still push it over, and
+      # it leaves room to act (scale the container, drop pool concurrency)
+      # before the OOM killer does it for us.
+      - alert: WorkerMemoryApproachingCeiling
+        expr: sic_process_resident_memory_bytes{role="worker"} > 800e6
+        for: 2m
+        labels: { severity: warning, runbook: "docs/runbook.md#worker-memory" }
+        annotations:
+          summary: "Worker RSS {{ $value | humanize1024 }}B — approaching the 1GB ceiling"
+          description: >-
+            H1 established that an OOM in the worker takes payment webhooks and
+            notifications down with renders. Act before the kill: check the
+            Chromium pool cap and the render queue depth.
+
+      - alert: WorkerMemoryCritical
+        expr: sic_process_resident_memory_bytes{role="worker"} > 920e6
+        for: 30s
+        labels: { severity: critical, runbook: "docs/runbook.md#worker-memory" }
+        annotations:
+          summary: "Worker RSS {{ $value | humanize1024 }}B — OOM imminent"
+
+      # A restart resets uptime. Repeated resets mean a crash loop, which the
+      # durability guarantees survive but which still stalls all queues.
+      - alert: WorkerRestartLoop
+        expr: sic_process_uptime_seconds{role="worker"} < 120
+        for: 5m
+        labels: { severity: critical, runbook: "docs/runbook.md#worker-crash" }
+        annotations:
+          summary: "Worker uptime keeps resetting — crash loop"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  - name: queue-health
+    rules:
+      # THE BLAST-RADIUS ALERT (H1). Render pressure starving other consumers
+      # shows up as the notification or webhook queue ageing. Depth alone hides
+      # this — a queue can sit shallow while its oldest job ages for an hour —
+      # so the alert is on AGE.
+      - alert: NotificationQueueStarving
+        expr: sic_queue_oldest_waiting_age_ms{queue="notification"} > 300000
+        for: 2m
+        labels: { severity: critical, runbook: "docs/runbook.md#queue-backup" }
+        annotations:
+          summary: "Notifications waiting >5min — the worker's other consumers may be starved"
+          description: >-
+            H1's blast-radius scenario. Check render queue depth and worker
+            memory; renders and notifications share one worker process.
+
+      - alert: RenderQueueBackingUp
+        expr: sic_queue_depth{queue="resume-render",state="waiting"} > 100
+        for: 5m
+        labels: { severity: warning, runbook: "docs/runbook.md#queue-backup" }
+        annotations:
+          summary: "Resume renders backing up ({{ $value }} waiting)"
+
+      # The money path. An invoice render or activation follow-up stuck in the
+      # queue is revenue-affecting and legally relevant (GST invoices).
+      - alert: InvoiceRenderQueueStalled
+        expr: sic_queue_oldest_waiting_age_ms{queue="invoice-render"} > 900000
+        for: 5m
+        labels: { severity: warning, runbook: "docs/runbook.md#payments" }
+        annotations:
+          summary: "Invoice renders stalled >15min"
+
+      # Failed jobs accumulating means retries are exhausting — the point at
+      # which BullMQ stops protecting us and the work is genuinely lost.
+      - alert: DeadLetterAccumulating
+        expr: sum by (queue) (sic_queue_depth{state="failed"}) > 20
+        for: 10m
+        labels: { severity: warning, runbook: "docs/runbook.md#queue-backup" }
+        annotations:
+          summary: "{{ $value }} permanently-failed jobs on {{ $labels.queue }}"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  - name: api-health
+    rules:
+      - alert: ElevatedServerErrorRate
+        expr: >-
+          sum(rate(sic_http_server_errors_total[5m]))
+          / clamp_min(sum(rate(sic_http_requests_total[5m])), 0.001) > 0.02
+        for: 5m
+        labels: { severity: critical, runbook: "docs/runbook.md#elevated-5xx" }
+        annotations:
+          summary: "5xx rate above 2% for 5 minutes"
+
+      # H1 measured public search saturating at ~1000 rps with p95 well under
+      # 200ms. A p95 above 1s means something structural has changed — a lost
+      # index, a cold cache, or DB contention.
+      - alert: ApiLatencyDegraded
+        expr: >-
+          histogram_quantile(0.95, sum by (le) (rate(sic_http_request_duration_ms_bucket[5m]))) > 1000
+        for: 10m
+        labels: { severity: warning, runbook: "docs/runbook.md#latency" }
+        annotations:
+          summary: "API p95 latency above 1s"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  - name: payments
+    rules:
+      # A payment that fails to activate is money taken without service given.
+      # There is no acceptable steady-state rate for this.
+      - alert: PaymentActivationFailures
+        expr: increase(sic_payment_activations_total{outcome="failed"}[15m]) > 0
+        for: 0m
+        labels: { severity: critical, runbook: "docs/runbook.md#payments" }
+        annotations:
+          summary: "{{ $value }} subscription activation failure(s) in 15 minutes"
+          description: >-
+            Money may have been captured without a subscription. Reconcile the
+            order against the gateway dashboard before anything else.
+
+      - alert: WebhookProcessingSlow
+        expr: >-
+          histogram_quantile(0.95, sum by (le) (rate(sic_webhook_processing_ms_bucket[10m]))) > 3000
+        for: 10m
+        labels: { severity: warning, runbook: "docs/runbook.md#payments" }
+        annotations:
+          summary: "Webhook p95 processing above 3s — gateways will start retrying"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  - name: auth-and-abuse
+    rules:
+      # H2's brute-force concern made observable. A spike in auth failures is
+      # either an attack or a broken client; both need eyes.
+      - alert: AuthFailureSpike
+        expr: sum(rate(sic_auth_failures_total[5m])) > 5
+        for: 5m
+        labels: { severity: warning, runbook: "docs/runbook.md#auth-spike" }
+        annotations:
+          summary: "Auth failures at {{ $value | printf \"%.1f\" }}/s — possible credential attack"
+
+      - alert: RateLimitSaturation
+        expr: sum(rate(sic_rate_limit_hits_total[5m])) > 10
+        for: 5m
+        labels: { severity: warning, runbook: "docs/runbook.md#auth-spike" }
+        annotations:
+          summary: "Rate limiter rejecting {{ $value | printf \"%.1f\" }}/s"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  - name: availability
+    rules:
+      # CHAOS-003: the session-revocation check cannot degrade, so a Redis
+      # outage makes the AUTHENTICATED API unavailable. That is a deliberate
+      # fail-closed choice and it needs to page.
+      - alert: ApiInstanceNotReady
+        expr: up{job="skillindiaconnect-api"} == 0
+        for: 2m
+        labels: { severity: critical, runbook: "docs/runbook.md#api-down" }
+        annotations:
+          summary: "API instance unreachable by the scraper"
+
+      # DB pool exhaustion (H1) manifests as latency that looks like an
+      # application bug. Alerting on saturation names it correctly.
+      # NOTE: requires DATABASE_URL to set an explicit connection_limit and the
+      # pool gauge to be exported — see the runbook's open items.
+      - alert: DatabasePoolNearExhaustion
+        expr: sic_db_pool_in_use / clamp_min(sic_db_pool_size, 1) > 0.9
+        for: 5m
+        labels: { severity: warning, runbook: "docs/runbook.md#db-pool" }
+        annotations:
+          summary: "DB connection pool above 90% utilisation"

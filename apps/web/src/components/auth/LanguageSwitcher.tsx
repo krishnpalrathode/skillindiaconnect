@@ -58,11 +58,20 @@ export function LanguageSwitcher({ className, variant = 'dark' }: LanguageSwitch
             aria-pressed={currentLocale === code}
             aria-label={`Switch language to ${code}`}
             className={cn(
-              'px-2.5 h-9 rounded text-sm font-medium transition-colors',
+              // A11Y-002 (S8-H4): was h-9 (36px), below the product's 44px
+              // minimum. This is the single most important target in the
+              // product for the audience that needs it — an Arabic-reading
+              // user on a cheap Android phone cannot switch the interface into
+              // their language if they cannot hit the control. It appeared on
+              // every screen, so this one line was the most-repeated target
+              // failure in the audit.
+              'px-2.5 h-11 rounded text-sm font-medium transition-colors',
               'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
               currentLocale === code
                 ? 'text-[#0F3D91] font-semibold underline underline-offset-4 decoration-2'
-                : 'text-neutral-500 hover:text-neutral-800',
+                : // A11Y-003: was text-neutral-500 (3.52:1 on white) — below the
+                  // 4.5:1 body-text minimum. neutral-600 is 5.9:1.
+                  'text-neutral-600 hover:text-neutral-800',
             )}
           >
             {fullLabel}

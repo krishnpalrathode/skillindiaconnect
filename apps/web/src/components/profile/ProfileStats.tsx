@@ -16,7 +16,7 @@ function StatItem({ value, label }: { value: string | number; label: string }) {
   return (
     <div className="flex flex-col items-center gap-0.5 min-w-0">
       <span className="text-xl font-bold text-neutral-900 tabular-nums">{value}</span>
-      <span className="text-xs text-neutral-500 text-center leading-tight">{label}</span>
+      <span className="text-xs text-neutral-600 text-center leading-tight">{label}</span>
     </div>
   );
 }

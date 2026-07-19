@@ -32,7 +32,7 @@ export function SettingToggleRow({
     <div className="flex items-start justify-between gap-4 border-b border-neutral-100 py-3 last:border-0">
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-neutral-800">{label}</p>
-        {note && <p className="mt-0.5 text-xs text-neutral-500">{note}</p>}
+        {note && <p className="mt-0.5 text-xs text-neutral-600">{note}</p>}
       </div>
       <Toggle
         checked={checked}

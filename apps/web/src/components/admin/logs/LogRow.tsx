@@ -38,7 +38,7 @@ export function LogRow({ entry }: { entry: AuditLogEntry }) {
             aria-controls={detailId}
             aria-label={t('toggleMetaAria', { action: entry.action })}
             onClick={() => setOpen((o) => !o)}
-            className="flex size-11 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+            className="flex size-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
             <ChevronRight
               className={cn('size-4 transition-transform', open && 'rotate-90')}
@@ -62,16 +62,16 @@ export function LogRow({ entry }: { entry: AuditLogEntry }) {
           {entry.actorUserId ? (
             <>
               <span className="block max-w-[12rem] truncate font-mono">{entry.actorUserId}</span>
-              {entry.actorRole && <span className="text-neutral-400">{entry.actorRole}</span>}
+              {entry.actorRole && <span className="text-neutral-600">{entry.actorRole}</span>}
             </>
           ) : (
-            <span className="text-neutral-400">{t('systemActor')}</span>
+            <span className="text-neutral-600">{t('systemActor')}</span>
           )}
         </td>
         <td className="p-2 text-xs text-neutral-600">
           {entry.targetType ? (
             <>
-              <span className="text-neutral-400">{entry.targetType} </span>
+              <span className="text-neutral-600">{entry.targetType} </span>
               <span className="font-mono">{entry.targetId ?? '—'}</span>
             </>
           ) : (

@@ -7,6 +7,7 @@ import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
 import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
 import { InvoiceRenderService } from './invoice-render.service';
+import { RENDER_TUNING } from '../pdf/render-tuning';
 
 /** Payload of a RENDER_INVOICE job. */
 export interface RenderInvoiceJobData {
@@ -35,7 +36,12 @@ export const INVOICE_RENDER_JOB_OPTS = {
  * set — a second sweep run renders nothing twice.
  */
 @Injectable()
-@Processor(QUEUE_NAMES.INVOICE_RENDER)
+@Processor(QUEUE_NAMES.INVOICE_RENDER, {
+  // S8-H1: explicit and tunable (was BullMQ's implicit 1). Invoice renders share
+  // the SAME Chromium pool as resume renders — the two concurrencies together
+  // must stay within the pool cap. See pdf/render-tuning.ts.
+  concurrency: RENDER_TUNING.invoiceRenderConcurrency,
+})
 export class InvoiceRenderProcessor extends WorkerHost {
   private readonly logger = new Logger(InvoiceRenderProcessor.name);
 

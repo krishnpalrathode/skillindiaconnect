@@ -175,7 +175,7 @@ export function AdminApplicationsTable() {
       )}
 
       {rows !== null && rows.length === 0 && (
-        <p role="status" className="py-10 text-center text-sm text-neutral-500">
+        <p role="status" className="py-10 text-center text-sm text-neutral-600">
           {t('empty')}
         </p>
       )}
@@ -220,7 +220,7 @@ export function AdminApplicationsTable() {
                   </td>
                   <td className="p-3 text-neutral-900">
                     {a.candidateName ?? (
-                      <span className="text-neutral-400">{t('deletedUser')}</span>
+                      <span className="text-neutral-600">{t('deletedUser')}</span>
                     )}
                   </td>
                   <td className="p-3 text-neutral-600">{a.jobTitle ?? '—'}</td>

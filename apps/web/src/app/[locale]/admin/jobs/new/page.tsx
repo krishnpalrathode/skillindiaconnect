@@ -20,7 +20,7 @@ export default function AdminJobNewPage() {
       <div className="flex max-w-3xl flex-col gap-6">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900">{t('title')}</h1>
-          <p className="mt-1 text-sm text-neutral-500">{t('subtitle')}</p>
+          <p className="mt-1 text-sm text-neutral-600">{t('subtitle')}</p>
         </div>
         <OnBehalfJobForm />
       </div>

@@ -12,6 +12,7 @@ import { ApplyButton } from '@/components/apply/ApplyButton';
 import { formatPostedAgo, formatSalaryRange, isNewJob } from '@/lib/jobs/format';
 import { useAuth } from '@/lib/auth/auth-context';
 import type { JobDetail as JobDetailType } from '@/lib/api/jobs';
+import { Ltr } from '@/components/common/Ltr';
 
 interface JobDetailProps {
   job: JobDetailType;
@@ -49,7 +50,7 @@ export function JobDetail({ job, locale }: JobDetailProps) {
               <p className="text-base text-neutral-600">{job.companyName}</p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-500">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-600">
               <span className="flex items-center gap-1">
                 <MapPin className="size-4 shrink-0" aria-hidden="true" />
                 {job.location}
@@ -57,7 +58,11 @@ export function JobDetail({ job, locale }: JobDetailProps) {
               <span>{formatPostedAgo(job.createdAt, locale)}</span>
             </div>
 
-            {salary && <p className="text-lg font-semibold text-neutral-900">{salary}</p>}
+            {salary && (
+              <p className="text-lg font-semibold text-neutral-900">
+                <Ltr>{salary}</Ltr>
+              </p>
+            )}
 
             <BenefitChips job={job} />
 
@@ -94,8 +99,8 @@ export function JobDetail({ job, locale }: JobDetailProps) {
             <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {job.experienceRequiredYears != null && (
                 <div className="flex items-center gap-2 text-sm">
-                  <Briefcase className="size-4 shrink-0 text-neutral-400" aria-hidden="true" />
-                  <dt className="text-neutral-500">{t('experience')}</dt>
+                  <Briefcase className="size-4 shrink-0 text-neutral-600" aria-hidden="true" />
+                  <dt className="text-neutral-600">{t('experience')}</dt>
                   <dd className="font-medium text-neutral-900">
                     {t('experienceYears', { count: job.experienceRequiredYears })}
                   </dd>
@@ -103,14 +108,14 @@ export function JobDetail({ job, locale }: JobDetailProps) {
               )}
               {job.vacancies != null && (
                 <div className="flex items-center gap-2 text-sm">
-                  <Users className="size-4 shrink-0 text-neutral-400" aria-hidden="true" />
-                  <dt className="text-neutral-500">{t('vacancies')}</dt>
+                  <Users className="size-4 shrink-0 text-neutral-600" aria-hidden="true" />
+                  <dt className="text-neutral-600">{t('vacancies')}</dt>
                   <dd className="font-medium text-neutral-900">{job.vacancies}</dd>
                 </div>
               )}
               {job.genderPreference && job.genderPreference !== 'ANY' && (
                 <div className="flex items-center gap-2 text-sm">
-                  <dt className="text-neutral-500">{t('genderPreference')}</dt>
+                  <dt className="text-neutral-600">{t('genderPreference')}</dt>
                   <dd className="font-medium text-neutral-900">
                     {t(`gender.${job.genderPreference}`)}
                   </dd>

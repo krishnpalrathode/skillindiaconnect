@@ -188,7 +188,7 @@ export function EmployerQueueTable() {
       )}
 
       {rows !== null && rows.length === 0 && (
-        <p role="status" className="py-10 text-center text-sm text-neutral-500">
+        <p role="status" className="py-10 text-center text-sm text-neutral-600">
           {t(`empty.${activeTab}`)}
         </p>
       )}

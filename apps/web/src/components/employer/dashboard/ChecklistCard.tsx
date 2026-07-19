@@ -62,7 +62,7 @@ export function ChecklistCard({ hint }: ChecklistCardProps) {
         type="button"
         onClick={dismiss}
         aria-label={t('dismiss')}
-        className="absolute end-2 top-2 flex size-8 items-center justify-center rounded-md text-neutral-400 hover:bg-primary-100 hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+        className="absolute end-2 top-2 flex size-8 items-center justify-center rounded-md text-neutral-600 hover:bg-primary-100 hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
       >
         <X className="size-4" aria-hidden="true" />
       </button>

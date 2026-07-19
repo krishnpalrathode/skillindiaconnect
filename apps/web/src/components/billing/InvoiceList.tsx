@@ -66,7 +66,7 @@ export function InvoiceList() {
 
       {error && (
         <div className="flex flex-col items-center gap-3 py-6 text-center">
-          <p className="text-sm text-neutral-500">{t('invoicesLoadError')}</p>
+          <p className="text-sm text-neutral-600">{t('invoicesLoadError')}</p>
           <Button variant="outline" size="sm" onClick={load}>
             {t('retry')}
           </Button>
@@ -76,7 +76,7 @@ export function InvoiceList() {
       {!isLoading && !error && invoices !== null && invoices.length === 0 && (
         <div className="flex flex-col items-center gap-2 py-8 text-center">
           <FileText className="size-8 text-neutral-300" aria-hidden="true" />
-          <p className="text-sm text-neutral-400">{t('invoicesEmpty')}</p>
+          <p className="text-sm text-neutral-600">{t('invoicesEmpty')}</p>
         </div>
       )}
 
@@ -87,26 +87,26 @@ export function InvoiceList() {
               <tr className="border-b border-neutral-100 text-start">
                 <th
                   scope="col"
-                  className="pb-2 text-start text-xs font-medium text-neutral-500 pe-4"
+                  className="pb-2 text-start text-xs font-medium text-neutral-600 pe-4"
                 >
                   {t('invoiceNumber')}
                 </th>
                 <th
                   scope="col"
-                  className="pb-2 text-start text-xs font-medium text-neutral-500 pe-4"
+                  className="pb-2 text-start text-xs font-medium text-neutral-600 pe-4"
                 >
                   {t('invoiceDate')}
                 </th>
                 <th
                   scope="col"
-                  className="pb-2 text-start text-xs font-medium text-neutral-500 pe-4"
+                  className="pb-2 text-start text-xs font-medium text-neutral-600 pe-4"
                 >
                   {t('invoicePlan')}
                 </th>
-                <th scope="col" className="pb-2 text-end text-xs font-medium text-neutral-500">
+                <th scope="col" className="pb-2 text-end text-xs font-medium text-neutral-600">
                   {t('invoiceAmount')}
                 </th>
-                <th scope="col" className="pb-2 ps-4 text-end text-xs font-medium text-neutral-500">
+                <th scope="col" className="pb-2 ps-4 text-end text-xs font-medium text-neutral-600">
                   <span className="sr-only">{t('invoiceActions')}</span>
                 </th>
               </tr>
@@ -131,7 +131,7 @@ function InvoiceRow({ invoice, locale }: { invoice: Invoice; locale: string }) {
       <td className="py-3 pe-4 font-mono text-xs text-neutral-700 tabular-nums">
         {invoice.number}
       </td>
-      <td className="py-3 pe-4 text-xs text-neutral-500">{formatDate(invoice.issuedAt, locale)}</td>
+      <td className="py-3 pe-4 text-xs text-neutral-600">{formatDate(invoice.issuedAt, locale)}</td>
       <td className="py-3 pe-4 text-xs text-neutral-700">{invoice.planName}</td>
       <td className="py-3 text-end text-xs font-medium text-neutral-900 tabular-nums">
         {formatSubunits(invoice.totalSubunits, invoice.currency, locale)}
@@ -150,7 +150,7 @@ function InvoiceRow({ invoice, locale }: { invoice: Invoice; locale: string }) {
             {t('downloadPdf')}
           </a>
         ) : (
-          <span className="inline-flex items-center gap-1 text-xs text-neutral-400">
+          <span className="inline-flex items-center gap-1 text-xs text-neutral-600">
             <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
             {t('pdfPending')}
           </span>

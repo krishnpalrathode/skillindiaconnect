@@ -460,4 +460,61 @@ describe('JobsSearchService (integration)', () => {
     expect(second.data.length).toBeGreaterThanOrEqual(2);
     expect(second.data.some((j) => j.title === 'New Job After Invalidation')).toBe(true);
   });
+
+  // ── 13. S8-H1: single-flight coalescing of concurrent cold-cache searches ──
+
+  it('coalesces concurrent identical cold searches into ONE database query', async () => {
+    if (dockerUnavailable) return;
+
+    await createJob({ title: 'Coalesce Target' });
+    await redis.flushdb(); // guarantee a cold cache for every caller below
+
+    // Count only the raw FTS statements — the coalesced work is the $queryRaw,
+    // not the hydration findMany.
+    const rawSpy = jest.spyOn(prismaClient, '$queryRaw');
+    const before = rawSpy.mock.calls.length;
+
+    const results = await Promise.all(
+      Array.from({ length: 10 }, () => searchService.search({ q: 'Coalesce' })),
+    );
+
+    // Ten simultaneous identical misses, one query. Without coalescing this is 10.
+    expect(rawSpy.mock.calls.length - before).toBe(1);
+    for (const r of results) {
+      expect(r.data.some((j) => j.title === 'Coalesce Target')).toBe(true);
+    }
+    rawSpy.mockRestore();
+  });
+
+  it('gives each coalesced caller its OWN objects, so isSaved cannot leak between viewers', async () => {
+    if (dockerUnavailable) return;
+
+    await createJob({ title: 'Isolation Target' });
+    await redis.flushdb();
+
+    // THREE callers, not two. With two, the producer and the single waiter take
+    // different code paths, so a clone applied to only ONE of those paths still
+    // passes — which is exactly the bug this originally missed. Three forces at
+    // least two callers down the waiter path and compares them to each other.
+    const results = await Promise.all([
+      searchService.search({ q: 'Isolation' }),
+      searchService.search({ q: 'Isolation' }),
+      searchService.search({ q: 'Isolation' }),
+    ]);
+
+    // Same values, but every pair must be distinct instances: applySavedState
+    // stamps the viewer's isSaved onto these objects in place, so a shared
+    // instance means viewer A's saved-jobs state appearing in viewer B's response.
+    for (let i = 0; i < results.length; i++) {
+      for (let j = i + 1; j < results.length; j++) {
+        expect(results[i]!.data[0]).toEqual(results[j]!.data[0]);
+        expect(results[i]!.data[0]).not.toBe(results[j]!.data[0]);
+      }
+    }
+
+    // Mutating one caller's card must not be visible to any other caller.
+    results[0]!.data[0]!.isSaved = true;
+    expect(results[1]!.data[0]!.isSaved).not.toBe(true);
+    expect(results[2]!.data[0]!.isSaved).not.toBe(true);
+  });
 });

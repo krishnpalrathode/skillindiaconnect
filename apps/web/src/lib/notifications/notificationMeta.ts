@@ -167,6 +167,7 @@ export const notificationMeta: Record<NotificationType, NotificationMeta> = {
 /** Fallback for any type not in the map (defensive against future enum additions). */
 export const fallbackNotificationMeta: NotificationMeta = {
   Icon: Info,
+  // eslint-disable-next-line no-restricted-syntax -- ICON colour, not text: WCAG 1.4.11 needs 3:1 and neutral-500 is 3.52:1.
   colorClass: 'text-neutral-500',
   bgClass: 'bg-neutral-100',
 };

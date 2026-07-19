@@ -160,7 +160,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
           <h3 id="basic-heading" className="text-base font-semibold text-neutral-900">
             {t('basic.heading')}
           </h3>
-          <p className="mt-0.5 text-sm text-neutral-500">{t('basic.subtitle')}</p>
+          <p className="mt-0.5 text-sm text-neutral-600">{t('basic.subtitle')}</p>
         </div>
 
         <Field id="job-title" label={t('basic.titleLabel')} required error={errors.title}>
@@ -263,7 +263,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
           <h3 id="desc-heading" className="text-base font-semibold text-neutral-900">
             {t('description.heading')}
           </h3>
-          <p className="mt-0.5 text-sm text-neutral-500">{t('description.subtitle')}</p>
+          <p className="mt-0.5 text-sm text-neutral-600">{t('description.subtitle')}</p>
         </div>
         <RichTextField
           id="job-description"
@@ -289,7 +289,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
           <h3 id="req-heading" className="text-base font-semibold text-neutral-900">
             {t('requirements.heading')}
           </h3>
-          <p className="mt-0.5 text-sm text-neutral-500">{t('requirements.subtitle')}</p>
+          <p className="mt-0.5 text-sm text-neutral-600">{t('requirements.subtitle')}</p>
         </div>
         <RequirementsField
           value={values.requirements}

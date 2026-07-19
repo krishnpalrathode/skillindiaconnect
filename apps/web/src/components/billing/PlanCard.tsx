@@ -95,7 +95,7 @@ export function PlanCard({
             {formatSubunits(plan.priceSubunits, plan.currency, locale)}
           </span>
           {plan.period && (
-            <span className="text-sm text-neutral-500 ms-1">
+            <span className="text-sm text-neutral-600 ms-1">
               {plan.period === 'YEARLY' ? t('perYear') : t('perMonth')}
             </span>
           )}
@@ -103,7 +103,7 @@ export function PlanCard({
 
         {/* GST display is company-type-aware: LOCAL only, and clearly indicative */}
         {isPurchasable && isLocal && (
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-neutral-600">
             {t('gstIndicative', {
               rate: gstRatePct,
               gross: formatSubunits(indicativeGross, plan.currency, locale),
@@ -125,11 +125,11 @@ export function PlanCard({
 
       <div className="ps-4 pe-4 pt-3 pb-4 border-t border-neutral-200 bg-neutral-50">
         {isFree ? (
-          <p className="text-sm text-neutral-500 text-center">
+          <p className="text-sm text-neutral-600 text-center">
             {isCurrent ? t('yourCurrentPlan') : t('freeForever')}
           </p>
         ) : isCurrent ? (
-          <p className="text-sm text-neutral-500 text-center">{t('yourCurrentPlan')}</p>
+          <p className="text-sm text-neutral-600 text-center">{t('yourCurrentPlan')}</p>
         ) : (
           <Button
             variant={emphasized ? 'primary' : 'secondary'}

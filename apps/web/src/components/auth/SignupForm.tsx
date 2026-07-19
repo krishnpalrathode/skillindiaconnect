@@ -92,7 +92,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         <div className="relative">
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-neutral-400"
+            className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-neutral-600"
           >
             <Mail className="size-4" />
           </span>
@@ -166,7 +166,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
                   </span>
                 )}
                 <Icon
-                  className={cn('size-7', selected ? 'text-[#0F3D91]' : 'text-neutral-400')}
+                  className={cn('size-7', selected ? 'text-[#0F3D91]' : 'text-neutral-600')}
                   aria-hidden="true"
                 />
                 <span
@@ -177,7 +177,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
                 >
                   {r === 'CANDIDATE' ? t('roleCandidate') : t('roleEmployer')}
                 </span>
-                <span className="text-xs leading-snug text-neutral-500">{description}</span>
+                <span className="text-xs leading-snug text-neutral-600">{description}</span>
               </button>
             );
           })}

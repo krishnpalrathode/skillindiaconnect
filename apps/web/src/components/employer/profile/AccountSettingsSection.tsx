@@ -68,10 +68,10 @@ export function AccountSettingsSection({ company, onUpdated }: AccountSettingsSe
   const viewContent = (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-0.5">
-        <span className="text-xs text-neutral-500">{t('languageLabel')}</span>
+        <span className="text-xs text-neutral-600">{t('languageLabel')}</span>
         <span className="text-sm text-neutral-900">{currentLang?.label ?? 'English'}</span>
       </div>
-      <p className="text-xs text-neutral-400 border-t border-neutral-100 pt-3">
+      <p className="text-xs text-neutral-600 border-t border-neutral-100 pt-3">
         {t('moreSettingsNote')}
       </p>
     </div>

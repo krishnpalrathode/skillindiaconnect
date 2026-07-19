@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CoreModule } from './core/core.module';
+import { ObservabilityModule } from './core/observability/observability.module';
 import { AuditModule } from './audit/audit.module';
 import { NotificationWorkerModule } from './notifications/notification.worker-module';
 import { JobsWorkerModule } from './jobs/jobs.worker-module';
@@ -14,6 +15,7 @@ import { ResumeWorkerModule } from './resume/resume.worker-module';
 @Module({
   imports: [
     CoreModule,
+    ObservabilityModule,
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     AuditModule,

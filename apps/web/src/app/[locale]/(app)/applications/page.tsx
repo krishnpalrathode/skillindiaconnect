@@ -100,7 +100,7 @@ export default function ApplicationsPage() {
           </>
         ) : error ? (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
-            <p className="text-sm text-neutral-500">{t('error')}</p>
+            <p className="text-sm text-neutral-600">{t('error')}</p>
             <Button variant="outline" onClick={() => router.refresh()} className="min-h-11">
               {t('retry')}
             </Button>

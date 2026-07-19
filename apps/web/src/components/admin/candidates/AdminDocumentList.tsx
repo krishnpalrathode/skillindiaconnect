@@ -52,13 +52,13 @@ export function AdminDocumentList({ detail }: { detail: AdminCandidateDetail }) 
           {t('heading')}
         </h2>
         {/* Stated once, factually: accountability, not a scare banner. */}
-        <p role="note" className="text-xs text-neutral-500">
+        <p role="note" className="text-xs text-neutral-600">
           {t('viewsLogged')}
         </p>
       </div>
 
       {documents.length === 0 && (
-        <p role="status" className="py-4 text-sm text-neutral-500">
+        <p role="status" className="py-4 text-sm text-neutral-600">
           {purged ? t('emptyPurged') : t('emptyNone')}
         </p>
       )}

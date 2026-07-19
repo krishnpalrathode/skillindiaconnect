@@ -81,6 +81,20 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    # SHARDING: 170 tests × 2 projects = 340 runs. On one runner they queue
+    # behind a single box's CPU; split across 4 jobs they run on 4 runners in
+    # parallel, so wall-clock drops roughly 4× (minus the ~2min fixed setup
+    # each shard pays: install, build, browser download).
+    #
+    # Sharding is preferred over simply raising `workers` because each shard
+    # gets its OWN Postgres and Redis service containers below. The e2e suite
+    # runs against a REAL database, so shards are isolated by construction —
+    # whereas extra workers inside one job would share one database and could
+    # interfere. See the note on `workers` in playwright.config.ts.
+    strategy:
+      fail-fast: false # one shard failing shouldn't hide results from the others
+      matrix:
+        shard: [1, 2, 3, 4]
     services:
       postgres:
         image: postgres:16
@@ -137,18 +151,50 @@ jobs:
           pnpm --filter ./apps/api exec node dist/main.api.js > api.log 2>&1 &
           pnpm --filter ./apps/web start > web.log 2>&1 &
           npx --yes wait-on -t 120000 http://localhost:3001/health http://localhost:3000
-          pnpm test:e2e
+          pnpm test:e2e -- --shard=${{ matrix.shard }}/4
         env:
           NODE_ENV: production
       - name: Upload logs + report on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-debug
+          # Artifact names must be unique per matrix job or the upload collides.
+          name: e2e-debug-shard-${{ matrix.shard }}
           path: |
             api.log
             web.log
-            playwright-report/
+            blob-report/
+          retention-days: 7
+      # The blob reports from every shard merge into ONE browsable HTML report,
+      # so a failure is still investigated in a single place rather than by
+      # opening four partial reports.
+      - name: Upload blob report for merging
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-shard-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 1
+
+  e2e-report:
+    # Merges the sharded blob reports into a single HTML report. `always()` so
+    # the report exists precisely when it is most needed — after a failure.
+    if: always()
+    needs: [e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: blob-report-shard-*
+          merge-multiple: true
+      - run: pnpm exec playwright merge-reports --reporter html ./all-blob-reports
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e2e-html-report
+          path: playwright-report/
           retention-days: 7
 
   security:

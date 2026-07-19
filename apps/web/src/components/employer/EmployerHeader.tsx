@@ -47,7 +47,7 @@ function HeaderLangSwitcher() {
             'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
             currentLocale === code
               ? 'bg-primary-100 text-primary-800'
-              : 'text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100',
+              : 'text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100',
           )}
         >
           {label}

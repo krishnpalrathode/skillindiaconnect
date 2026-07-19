@@ -87,7 +87,7 @@ export function FlagsControl({ job, onChanged }: { job: AdminJobDetail; onChange
           {t('heading')}
         </h2>
         {/* What the flags actually DO — an unexplained toggle is a trap. */}
-        <p className="text-xs text-neutral-500">{t('effect')}</p>
+        <p className="text-xs text-neutral-600">{t('effect')}</p>
 
         <FlagSwitch
           id="flag-featured"

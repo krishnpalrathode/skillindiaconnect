@@ -32,7 +32,7 @@ export function ResumeLanguageControl() {
         {/* Only English exists — no HI/AR option to select. */}
         <option value="en">{t('languageEnglish')}</option>
       </select>
-      <p id={`${id}-note`} className="text-xs text-neutral-400">
+      <p id={`${id}-note`} className="text-xs text-neutral-600">
         {t('languageComingSoon')}
       </p>
     </div>

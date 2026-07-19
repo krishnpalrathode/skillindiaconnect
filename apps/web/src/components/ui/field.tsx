@@ -38,7 +38,7 @@ function Field({ id, label, hint, error, required, className, children }: FieldP
       {control}
 
       {hint && !error && (
-        <p id={hintId} className="text-xs text-neutral-500">
+        <p id={hintId} className="text-xs text-neutral-600">
           {hint}
         </p>
       )}

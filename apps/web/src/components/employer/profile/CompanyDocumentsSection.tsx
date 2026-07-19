@@ -56,7 +56,7 @@ export function CompanyDocumentsSection({ company, onRefetch }: CompanyDocuments
                 <Badge variant="warning">{t('certPending')}</Badge>
               )}
             </div>
-            <p className="mt-0.5 text-xs text-neutral-500">
+            <p className="mt-0.5 text-xs text-neutral-600">
               {isApproved ? t('verifiedNote') : t('pendingReviewNote')}
             </p>
           </div>
@@ -64,7 +64,7 @@ export function CompanyDocumentsSection({ company, onRefetch }: CompanyDocuments
 
         {/* Re-upload control — confirmEnabled fires confirm and then onKey is called */}
         <div>
-          <p className="mb-2 text-xs text-neutral-500">{t('reuploadHint')}</p>
+          <p className="mb-2 text-xs text-neutral-600">{t('reuploadHint')}</p>
           <CertificateUpload confirmEnabled onKey={onRefetch} />
         </div>
       </div>

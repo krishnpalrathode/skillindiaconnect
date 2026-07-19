@@ -49,6 +49,29 @@ describe('SearchCacheService', () => {
       redis.get.mockResolvedValue('7');
       expect(await cache.getSearchVersion()).toBe(7);
     });
+
+    // S8-H1: the version read is memoized in-process for a second. Without it,
+    // EVERY cached search paid a second sequential Redis round-trip — and one
+    // that always MISSES until the first job state change ever writes the key.
+    it('memoizes the version so back-to-back reads hit Redis once', async () => {
+      redis.get.mockResolvedValue('3');
+      expect(await cache.getSearchVersion()).toBe(3);
+      expect(await cache.getSearchVersion()).toBe(3);
+      expect(await cache.getSearchVersion()).toBe(3);
+      expect(redis.get).toHaveBeenCalledTimes(1);
+    });
+
+    it('drops the memo on bump so the bumping process never serves its own stale version', async () => {
+      redis.get.mockResolvedValue('3');
+      expect(await cache.getSearchVersion()).toBe(3);
+
+      redis.incr.mockResolvedValue(4);
+      await cache.bumpSearchVersion();
+
+      redis.get.mockResolvedValue('4');
+      expect(await cache.getSearchVersion()).toBe(4);
+      expect(redis.get).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('bumpSearchVersion', () => {
@@ -123,10 +146,27 @@ describe('SearchCacheService', () => {
   });
 
   describe('setSearch', () => {
-    it('calls SETEX with SEARCH_TTL (60s)', async () => {
+    it('calls SETEX with the base TTL plus jitter (60–74s)', async () => {
       redis.setex.mockResolvedValue('OK');
       await cache.setSearch('search:1:abc', { data: [], nextCursor: null });
-      expect(redis.setex).toHaveBeenCalledWith('search:1:abc', 60, expect.any(String));
+      const [key, ttl, payload] = redis.setex.mock.calls[0]!;
+      expect(key).toBe('search:1:abc');
+      expect(typeof payload).toBe('string');
+      // S8-H1: jittered so a burst of keys does not expire as one cohort and
+      // stampede the FTS query. Never below the documented 60s floor.
+      expect(ttl).toBeGreaterThanOrEqual(60);
+      expect(ttl).toBeLessThan(75);
+    });
+
+    it('spreads TTLs across writes rather than reusing one value', async () => {
+      redis.setex.mockResolvedValue('OK');
+      for (let i = 0; i < 40; i++) {
+        await cache.setSearch(`search:1:k${i}`, { data: [], nextCursor: null });
+      }
+      const ttls = new Set(redis.setex.mock.calls.map((c) => c[1]));
+      // With a 15s window over 40 writes, a fixed TTL (the pre-S8-H1 bug this
+      // guards) would collapse this to exactly one distinct value.
+      expect(ttls.size).toBeGreaterThan(1);
     });
   });
 

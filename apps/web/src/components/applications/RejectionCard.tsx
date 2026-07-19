@@ -25,7 +25,7 @@ export function RejectionCard({ feedback, locale }: RejectionCardProps) {
     <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
       {feedback && (
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600">
             {t('feedbackLabel')}
           </p>
           <p className="mt-1 text-sm text-neutral-700">&ldquo;{feedback}&rdquo;</p>
@@ -33,7 +33,7 @@ export function RejectionCard({ feedback, locale }: RejectionCardProps) {
       )}
       <div>
         <p className="text-sm font-medium text-neutral-800">{t('nextStepTitle')}</p>
-        <p className="mt-0.5 text-sm text-neutral-500">{t('nextStepBody')}</p>
+        <p className="mt-0.5 text-sm text-neutral-600">{t('nextStepBody')}</p>
         <Link
           href={`/${locale}/jobs`}
           className={cn(buttonVariants({ variant: 'outline' }), 'mt-3 min-h-11')}

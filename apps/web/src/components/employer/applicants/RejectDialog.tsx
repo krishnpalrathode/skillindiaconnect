@@ -84,7 +84,7 @@ export function RejectDialog({ name, busy, onConfirm, onClose }: RejectDialogPro
             onChange={(e) => setFeedback(e.target.value)}
             placeholder={t('feedbackPlaceholder')}
             aria-describedby="reject-feedback-note reject-feedback-counter"
-            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-600 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           />
           <p id="reject-feedback-note" className="text-xs text-warning-fg">
             {t('visibleNote')}
@@ -94,7 +94,7 @@ export function RejectDialog({ name, busy, onConfirm, onClose }: RejectDialogPro
             aria-live="polite"
             className={cn(
               'text-end text-xs',
-              feedback.length >= FEEDBACK_MAX ? 'text-warning-fg' : 'text-neutral-500',
+              feedback.length >= FEEDBACK_MAX ? 'text-warning-fg' : 'text-neutral-600',
             )}
           >
             {t('counter', { n: feedback.length, max: FEEDBACK_MAX })}

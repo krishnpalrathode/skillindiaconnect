@@ -78,7 +78,7 @@ export function ApplicantFilters({
       </div>
 
       <div className="flex items-center gap-2 text-sm">
-        <span className="text-neutral-500">{t('sortLabel')}</span>
+        <span className="text-neutral-600">{t('sortLabel')}</span>
         <div className="inline-flex overflow-hidden rounded-lg border border-neutral-200">
           {(['match', 'recent'] as ApplicantSort[]).map((s) => (
             <button

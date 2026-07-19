@@ -176,6 +176,44 @@ describe('toResumeView (the chokepoint, object level)', () => {
     const html = renderResumeHtml(toResumeView(source, allOn, null));
     expect(html).not.toContain('Video Portfolio');
   });
+
+  // ── SEC-004 (S8-H2): the template must neutralise hostile profile content ──
+  describe('SEC-004 — template injection', () => {
+    it('escapes script/markup in profile TEXT rather than emitting live markup', () => {
+      const hostile = {
+        ...source,
+        fullName: `<script>alert('pwned')</script>`,
+        fatherName: `<img src=x onerror=alert(1)>`,
+        currentLocation: `"><svg/onload=alert(2)>`,
+        nationality: `</table><h1>INJECTED`,
+      };
+      const html = renderResumeHtml(toResumeView(hostile, allOn, null));
+
+      for (const live of ['<script>', '<img src=x', '<svg/onload', '</table><h1>']) {
+        expect({ marker: live, present: html.includes(live) }).toEqual({ marker: live, present: false });
+      }
+      // Present in ESCAPED form — proves the content rendered and was
+      // neutralised, rather than silently dropped (which would make the
+      // assertions above vacuous).
+      expect(html).toContain('&lt;script&gt;');
+    });
+
+    it('cannot be escaped out of the photo src="" attribute', () => {
+      // The photo data-URI is the one value landing in an attribute rather than
+      // in text. A quote in it would close src="" and turn the remainder into
+      // attributes — a live event handler inside the Chromium render context.
+      const html = renderResumeHtml(
+        toResumeView(source, allOn, `data:image/png" onload="alert(1)`),
+      );
+      expect(/<img[^>]*\sonload=/i.test(html)).toBe(false);
+    });
+
+    it('still renders a well-formed photo when the data-URI is legitimate', () => {
+      const good = 'data:image/png;base64,iVBORw0KGgo=';
+      const html = renderResumeHtml(toResumeView(source, allOn, good));
+      expect(html).toContain(`src="${good}"`);
+    });
+  });
 });
 
 describe('ResumeRenderService (persistence flow, pool real, DB mocked)', () => {

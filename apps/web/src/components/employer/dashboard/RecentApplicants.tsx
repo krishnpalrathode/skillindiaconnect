@@ -39,11 +39,11 @@ export function RecentApplicants({ applicants }: RecentApplicantsProps) {
       {applicants.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-12 px-4 text-center">
           <span className="size-12 rounded-full bg-neutral-100 flex items-center justify-center">
-            <Users className="size-6 text-neutral-400" aria-hidden="true" />
+            <Users className="size-6 text-neutral-600" aria-hidden="true" />
           </span>
           <div>
             <p className="text-sm font-medium text-neutral-700">{t('emptyTitle')}</p>
-            <p className="text-xs text-neutral-500 mt-1">{t('emptyBody')}</p>
+            <p className="text-xs text-neutral-600 mt-1">{t('emptyBody')}</p>
           </div>
         </div>
       ) : (
@@ -66,7 +66,7 @@ export function RecentApplicants({ applicants }: RecentApplicantsProps) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-neutral-900 truncate">{a.candidateName}</p>
-                  <p className="text-xs text-neutral-500 truncate">{a.jobTitle}</p>
+                  <p className="text-xs text-neutral-600 truncate">{a.jobTitle}</p>
                 </div>
                 <span className="shrink-0 text-sm font-semibold tabular-nums text-neutral-600">
                   {tA('matchShort', { score: a.matchScore })}

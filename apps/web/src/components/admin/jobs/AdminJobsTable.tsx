@@ -189,7 +189,7 @@ export function AdminJobsTable() {
       )}
 
       {rows !== null && rows.length === 0 && (
-        <p role="status" className="py-10 text-center text-sm text-neutral-500">
+        <p role="status" className="py-10 text-center text-sm text-neutral-600">
           {t(`empty.${activeTab}`)}
         </p>
       )}
@@ -237,7 +237,7 @@ export function AdminJobsTable() {
                     >
                       {j.title}
                     </Link>
-                    <p className="text-xs text-neutral-500">{j.humanId}</p>
+                    <p className="text-xs text-neutral-600">{j.humanId}</p>
                   </td>
                   <td className="p-3 text-neutral-600">{j.companyName}</td>
                   <td className="p-3 text-neutral-600">{j.market ?? '—'}</td>
@@ -248,7 +248,7 @@ export function AdminJobsTable() {
                     <div className="flex flex-wrap gap-1">
                       {j.isFeatured && <Badge variant="primary">{t('featuredChip')}</Badge>}
                       {j.isUrgent && <Badge variant="accent">{t('urgentChip')}</Badge>}
-                      {!j.isFeatured && !j.isUrgent && <span className="text-neutral-400">—</span>}
+                      {!j.isFeatured && !j.isUrgent && <span className="text-neutral-600">—</span>}
                     </div>
                   </td>
                   <td className="p-3 text-neutral-600">{j.applicantCount ?? 0}</td>

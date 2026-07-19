@@ -51,7 +51,7 @@ export function DocumentsStatusCard({ candidateId, documentsStatus }: DocumentsS
           return (
             <li key={type} className="flex items-center justify-between gap-3 py-2.5">
               <span className="flex items-center gap-2 text-sm text-neutral-700">
-                <FileText className="size-4 text-neutral-400" aria-hidden="true" />
+                <FileText className="size-4 text-neutral-600" aria-hidden="true" />
                 {t(`type.${type}`)}
               </span>
 
@@ -67,7 +67,7 @@ export function DocumentsStatusCard({ candidateId, documentsStatus }: DocumentsS
                     {t('uploaded')}
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-neutral-400">
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-neutral-600">
                     <X className="size-3.5" aria-hidden="true" />
                     {t('notUploaded')}
                   </span>

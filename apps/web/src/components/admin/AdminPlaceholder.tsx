@@ -78,7 +78,7 @@ export function AdminPlaceholder({
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-neutral-900">{t(`nav.${titleKey}`)}</h1>
       <div className="flex items-center gap-3 rounded-xl border border-dashed border-neutral-300 bg-white p-6">
-        <Construction className="size-6 shrink-0 text-neutral-400" aria-hidden="true" />
+        <Construction className="size-6 shrink-0 text-neutral-600" aria-hidden="true" />
         <p className="text-sm text-neutral-600">{t('placeholder', { unit })}</p>
       </div>
     </div>

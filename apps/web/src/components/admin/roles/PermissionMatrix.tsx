@@ -133,7 +133,7 @@ export function PermissionMatrix() {
   return (
     <div className="flex flex-col gap-3">
       {!canManage && (
-        <p role="note" className="flex items-center gap-1.5 text-xs text-neutral-500">
+        <p role="note" className="flex items-center gap-1.5 text-xs text-neutral-600">
           <Lock className="size-3.5 shrink-0" aria-hidden="true" />
           {t('readOnlyNote')}
         </p>
@@ -178,7 +178,7 @@ export function PermissionMatrix() {
                   <th
                     scope="colgroup"
                     colSpan={1 + matrix.roles.length}
-                    className="p-2 ps-3 text-start text-xs font-semibold uppercase tracking-wide text-neutral-500"
+                    className="p-2 ps-3 text-start text-xs font-semibold uppercase tracking-wide text-neutral-600"
                   >
                     {t(`groups.${group.moduleKey}`)}
                   </th>
@@ -189,7 +189,7 @@ export function PermissionMatrix() {
                     <tr key={permission} className="border-b border-neutral-100 last:border-0">
                       <th scope="row" className="p-3 text-start font-normal">
                         <span className="block text-sm text-neutral-900">{label}</span>
-                        <span className="block font-mono text-[11px] text-neutral-400">
+                        <span className="block font-mono text-[11px] text-neutral-600">
                           {permission}
                         </span>
                       </th>

@@ -36,7 +36,7 @@ export function ExperienceStep({ profile, onProfileUpdate, onNext, onBack }: Exp
     <div className="flex flex-col gap-6">
       <div className="text-center">
         <h2 className="text-xl font-bold text-neutral-900">{t('title')}</h2>
-        <p className="mt-1 text-sm text-neutral-500">{t('subtitle')}</p>
+        <p className="mt-1 text-sm text-neutral-600">{t('subtitle')}</p>
       </div>
 
       <ExperienceList

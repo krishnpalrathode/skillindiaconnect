@@ -30,7 +30,7 @@ export default function PostJobPage() {
           <AlertCircle className="size-7 text-warning-fg" aria-hidden="true" />
         </div>
         <h1 className="text-xl font-bold text-neutral-900">{t('approvalGate.title')}</h1>
-        <p className="text-sm text-neutral-500">{t('approvalGate.body')}</p>
+        <p className="text-sm text-neutral-600">{t('approvalGate.body')}</p>
         <Button variant="outline" onClick={() => router.push(`/${locale}/employer/dashboard`)}>
           {t('approvalGate.backToDashboard')}
         </Button>
@@ -43,7 +43,7 @@ export default function PostJobPage() {
       {/* Page header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-neutral-900">{t('createPage.title')}</h1>
-        <p className="mt-1 text-sm text-neutral-500">{t('createPage.subtitle')}</p>
+        <p className="mt-1 text-sm text-neutral-600">{t('createPage.subtitle')}</p>
       </div>
 
       {/* Two-column layout: form (left) + live preview (right) */}

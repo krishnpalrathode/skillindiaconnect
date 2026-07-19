@@ -90,7 +90,7 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
     <div className="flex flex-col gap-6">
       <div className="text-center">
         <h2 className="text-xl font-bold text-neutral-900">{t('title')}</h2>
-        <p className="mt-1 text-sm text-neutral-500">{t('subtitle')}</p>
+        <p className="mt-1 text-sm text-neutral-600">{t('subtitle')}</p>
       </div>
 
       {/* Profile photo (local preview — no API in S1) */}
@@ -107,7 +107,7 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
                 unoptimized
               />
             ) : (
-              <UserCircle2 className="size-12 text-neutral-400" aria-hidden="true" />
+              <UserCircle2 className="size-12 text-neutral-600" aria-hidden="true" />
             )}
           </div>
           <button
@@ -119,7 +119,7 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
             <Camera className="size-3.5" aria-hidden="true" />
           </button>
         </div>
-        <p className="text-xs text-neutral-500">{t('photoHint')}</p>
+        <p className="text-xs text-neutral-600">{t('photoHint')}</p>
         <input
           ref={photoInputRef}
           type="file"

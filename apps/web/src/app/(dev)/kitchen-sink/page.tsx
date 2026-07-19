@@ -43,7 +43,7 @@ export default function KitchenSinkPage() {
                       className="h-10 w-12 rounded"
                       style={{ backgroundColor: `var(--color-primary-${shade})` }}
                     />
-                    <span className="text-[10px] text-neutral-500">{shade}</span>
+                    <span className="text-[10px] text-neutral-600">{shade}</span>
                   </div>
                 ),
               )}
@@ -60,7 +60,7 @@ export default function KitchenSinkPage() {
                       className="h-10 w-12 rounded"
                       style={{ backgroundColor: `var(--color-accent-${shade})` }}
                     />
-                    <span className="text-[10px] text-neutral-500">{shade}</span>
+                    <span className="text-[10px] text-neutral-600">{shade}</span>
                   </div>
                 ),
               )}
@@ -77,7 +77,7 @@ export default function KitchenSinkPage() {
                       className="h-10 w-12 rounded border border-neutral-200"
                       style={{ backgroundColor: `var(--color-neutral-${shade})` }}
                     />
-                    <span className="text-[10px] text-neutral-500">{shade}</span>
+                    <span className="text-[10px] text-neutral-600">{shade}</span>
                   </div>
                 ),
               )}
@@ -233,18 +233,18 @@ export default function KitchenSinkPage() {
           <div className="flex gap-6 items-center">
             <div className="flex flex-col items-center gap-2">
               <Spinner size={24} />
-              <span className="text-xs text-neutral-500">Spinner (action)</span>
+              <span className="text-xs text-neutral-600">Spinner (action)</span>
             </div>
             <div className="flex flex-col items-center gap-2">
               <Spinner size={20} className="text-accent-500" />
-              <span className="text-xs text-neutral-500">Accent colour</span>
+              <span className="text-xs text-neutral-600">Accent colour</span>
             </div>
           </div>
           <div className="space-y-2 max-w-xs">
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-4/5" />
             <Skeleton className="h-4 w-3/5" />
-            <p className="text-xs text-neutral-500">Skeleton (content shape)</p>
+            <p className="text-xs text-neutral-600">Skeleton (content shape)</p>
           </div>
         </section>
 

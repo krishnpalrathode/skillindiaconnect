@@ -63,8 +63,8 @@ export function NotificationItem({ notification, onMarkRead }: NotificationItemP
         >
           {notification.title}
         </p>
-        <p className="text-sm text-neutral-500 mt-0.5 leading-snug">{notification.body}</p>
-        <p className="text-xs text-neutral-400 mt-1">
+        <p className="text-sm text-neutral-600 mt-0.5 leading-snug">{notification.body}</p>
+        <p className="text-xs text-neutral-600 mt-1">
           {formatRelativeTime(notification.createdAt)}
         </p>
       </div>
@@ -80,7 +80,7 @@ export function NotificationItem({ notification, onMarkRead }: NotificationItemP
                 e.stopPropagation();
                 onMarkRead(notification.id);
               }}
-              className="text-xs text-neutral-400 hover:text-primary-600 transition-colors focus-visible:outline-none focus-visible:underline whitespace-nowrap"
+              className="text-xs text-neutral-600 hover:text-primary-600 transition-colors focus-visible:outline-none focus-visible:underline whitespace-nowrap"
               aria-label={t('markRead')}
             >
               {t('markRead')}

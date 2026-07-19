@@ -134,7 +134,7 @@ export default function SubscriptionPage() {
   if (loadError || !plans) {
     return (
       <div className="flex flex-col items-center gap-4 py-24 text-center">
-        <p className="text-sm text-neutral-500">{t('loadError')}</p>
+        <p className="text-sm text-neutral-600">{t('loadError')}</p>
         <Button variant="outline" size="sm" onClick={load}>
           {t('retry')}
         </Button>
@@ -148,7 +148,7 @@ export default function SubscriptionPage() {
     <div className="max-w-4xl flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">{t('pageTitle')}</h1>
-        <p className="text-sm text-neutral-500 mt-1">{t('pageSubtitle')}</p>
+        <p className="text-sm text-neutral-600 mt-1">{t('pageSubtitle')}</p>
       </div>
 
       {/* Manage view — current plan status + invoice history (S5-F2). */}
@@ -170,7 +170,7 @@ export default function SubscriptionPage() {
           )}
 
           {busyPlan ? (
-            <div className="flex items-center gap-2 text-sm text-neutral-500">
+            <div className="flex items-center gap-2 text-sm text-neutral-600">
               <Spinner size={18} label={t('startingCheckout')} />
               {t('startingCheckout')}
             </div>

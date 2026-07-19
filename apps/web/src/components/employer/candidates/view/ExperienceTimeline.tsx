@@ -49,7 +49,7 @@ export function ExperienceTimeline({ experiences }: ExperienceTimelineProps) {
           const duration = formatDuration(exp);
           return (
             <li key={exp.id} className="flex gap-3 border-s-2 border-neutral-100 ps-4">
-              <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
+              <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-600">
                 <Briefcase className="size-4" aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
@@ -65,11 +65,11 @@ export function ExperienceTimeline({ experiences }: ExperienceTimelineProps) {
                     {isForeign ? t('foreign') : t('india')}
                   </span>
                 </div>
-                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-neutral-500">
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-neutral-600">
                   {exp.companyName && <span>{exp.companyName}</span>}
                   {exp.country && <span>· {exp.country}</span>}
                 </div>
-                {duration && <p className="mt-0.5 text-xs text-neutral-400">{duration}</p>}
+                {duration && <p className="mt-0.5 text-xs text-neutral-600">{duration}</p>}
               </div>
             </li>
           );

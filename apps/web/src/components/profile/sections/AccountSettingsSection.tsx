@@ -51,7 +51,7 @@ function ToggleRow({ label, hint, checked, onChange, saving }: ToggleRowProps) {
     <div className="flex items-start justify-between gap-4 py-3 border-b border-neutral-100 last:border-0">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-neutral-800">{label}</p>
-        {hint && <p className="text-xs text-neutral-500 mt-0.5">{hint}</p>}
+        {hint && <p className="text-xs text-neutral-600 mt-0.5">{hint}</p>}
       </div>
       <Toggle
         checked={checked}
@@ -115,7 +115,7 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
       <div className="px-5 py-4 flex flex-col gap-6">
         {/* Privacy controls */}
         <div>
-          <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">
+          <h3 className="text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-2">
             {t('privacyHeading')}
           </h3>
           <div>
@@ -150,7 +150,7 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
 
         {/* Notifications */}
         <div>
-          <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">
+          <h3 className="text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-2">
             {t('notificationsHeading')}
           </h3>
           <div>
@@ -171,7 +171,7 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
 
         {/* Salary expectation */}
         <div>
-          <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-3">
             {t('salaryHeading')}
           </h3>
           <div className="flex flex-col gap-3">
@@ -208,7 +208,7 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
                 <option value="USD">USD — US Dollar</option>
               </select>
             </Field>
-            <p className="text-xs text-neutral-500">{t('salaryNote')}</p>
+            <p className="text-xs text-neutral-600">{t('salaryNote')}</p>
             <Button
               type="button"
               variant="secondary"

@@ -28,13 +28,13 @@ export function UpgradePrompt({ onDismiss }: UpgradePromptProps) {
           </span>
           <div>
             <p className="text-xs font-semibold text-neutral-900">{t('upgradeDialogTitle')}</p>
-            <p className="mt-0.5 text-xs text-neutral-500">{t('upgradeDialogBody')}</p>
+            <p className="mt-0.5 text-xs text-neutral-600">{t('upgradeDialogBody')}</p>
           </div>
         </div>
         <button
           type="button"
           onClick={onDismiss}
-          className="rounded p-0.5 text-neutral-400 hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+          className="rounded p-0.5 text-neutral-600 hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           aria-label={t('upgradeDialogClose')}
         >
           <X className="size-3.5" aria-hidden="true" />

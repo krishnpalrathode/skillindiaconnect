@@ -149,8 +149,28 @@ export class NotificationProcessor extends WorkerHost {
       // ── Failure-fallback: fires ONLY on the last retry ────────────────────────
       // The downgrade path (above) is a deliberate decision not to try WA at all.
       // This path tried WA, failed after all retries, and falls back to email.
+      //
+      // CHAOS-004 (S8-H3) — OFF-BY-ONE: this was `job.attemptsMade >= maxAttempts`,
+      // which is NEVER true inside the processor. BullMQ increments
+      // `attemptsMade` when an attempt FAILS, so while the Nth attempt is
+      // running the counter still reads N-1: on the final attempt of a
+      // 3-attempt job it is 2, and `2 >= 3` is false. The fallback therefore
+      // never ran — chaos testing drove a real WhatsApp rejection through the
+      // production config and observed the delivery row correctly marked FAILED
+      // while ZERO email was sent.
+      //
+      // The consequence in production is silent and serious: WhatsApp is the
+      // primary channel for these candidates, and the events that use it
+      // include "you have been selected". The row said FAILED (so the system was
+      // never dishonest), but the promised downgrade to email did not happen and
+      // the candidate simply heard nothing.
+      //
+      // `attemptsMade + 1` is the number of the attempt currently executing, so
+      // this now reads "is this the last attempt?" — true exactly once, on the
+      // final try.
       const maxAttempts = job.opts.attempts ?? 1;
-      if (job.attemptsMade >= maxAttempts) {
+      const thisAttemptNumber = job.attemptsMade + 1;
+      if (thisAttemptNumber >= maxAttempts) {
         // Mark the row FAILED before the fallback (never silently claim delivery)
         await this.prisma.whatsappMessage
           .update({

@@ -84,7 +84,7 @@ export function CompanyTypeRadio({ value, onChange, error }: CompanyTypeRadioPro
                 'size-8 rounded-lg flex items-center justify-center shrink-0',
                 value === type
                   ? 'bg-primary-100 text-primary-700'
-                  : 'bg-neutral-100 text-neutral-500',
+                  : 'bg-neutral-100 text-neutral-600',
               )}
             >
               {icon}
@@ -98,7 +98,7 @@ export function CompanyTypeRadio({ value, onChange, error }: CompanyTypeRadioPro
               >
                 {title}
               </p>
-              <p className="text-xs text-neutral-500 mt-0.5">{description}</p>
+              <p className="text-xs text-neutral-600 mt-0.5">{description}</p>
             </div>
           </label>
         ))}

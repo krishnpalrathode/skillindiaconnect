@@ -79,7 +79,7 @@ export default function CandidateViewPage() {
           <AlertCircle className="size-7 text-warning-fg" aria-hidden="true" />
         </div>
         <h1 className="text-xl font-bold text-neutral-900">{t('approvalGate.title')}</h1>
-        <p className="text-sm text-neutral-500">{t('approvalGate.body')}</p>
+        <p className="text-sm text-neutral-600">{t('approvalGate.body')}</p>
         <Button variant="outline" onClick={() => router.push(`/${locale}/employer/dashboard`)}>
           {t('approvalGate.backToDashboard')}
         </Button>
@@ -90,7 +90,7 @@ export default function CandidateViewPage() {
   const backLink = (
     <Link
       href={backHref}
-      className="inline-flex items-center gap-1.5 rounded text-sm font-medium text-neutral-500 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+      className="inline-flex items-center gap-1.5 rounded text-sm font-medium text-neutral-600 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
     >
       <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
       {t('view.back')}
@@ -111,11 +111,11 @@ export default function CandidateViewPage() {
         <div className="mb-6">{backLink}</div>
         <div className="flex flex-col items-center gap-3 rounded-xl border border-neutral-200 bg-white py-16 px-4 text-center">
           <span className="flex size-12 items-center justify-center rounded-full bg-neutral-100">
-            <UserX className="size-6 text-neutral-400" aria-hidden="true" />
+            <UserX className="size-6 text-neutral-600" aria-hidden="true" />
           </span>
           <div>
             <p className="text-sm font-semibold text-neutral-700">{t('view.notFoundTitle')}</p>
-            <p className="mt-1 text-xs text-neutral-500">{t('view.notFoundBody')}</p>
+            <p className="mt-1 text-xs text-neutral-600">{t('view.notFoundBody')}</p>
           </div>
           <Button variant="outline" size="sm" onClick={() => router.push(backHref)}>
             {t('view.backToBrowse')}
@@ -130,7 +130,7 @@ export default function CandidateViewPage() {
       <div className="max-w-2xl">
         <div className="mb-6">{backLink}</div>
         <div className="flex flex-col items-center gap-4 rounded-xl border border-neutral-200 bg-white py-16 text-center">
-          <p className="text-sm text-neutral-500">{t('view.loadError')}</p>
+          <p className="text-sm text-neutral-600">{t('view.loadError')}</p>
           <Button variant="outline" size="sm" onClick={load}>
             {t('retry')}
           </Button>

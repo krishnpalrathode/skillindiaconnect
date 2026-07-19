@@ -20,7 +20,7 @@ function StatusBadge({ status }: { status: string }) {
     ACTIVE: { label: t('statusActive'), className: 'bg-success-bg text-success-fg' },
     DRAFT: { label: t('statusDraft'), className: 'bg-neutral-100 text-neutral-600' },
     PAUSED: { label: t('statusPaused'), className: 'bg-warning-bg text-warning-fg' },
-    ARCHIVED: { label: t('statusArchived'), className: 'bg-neutral-100 text-neutral-400' },
+    ARCHIVED: { label: t('statusArchived'), className: 'bg-neutral-100 text-neutral-600' },
   };
   const cfg = configs[status] ?? { label: status, className: 'bg-neutral-100 text-neutral-600' };
   return (
@@ -62,11 +62,11 @@ export function RecentJobsTable({ jobs }: RecentJobsTableProps) {
       {jobs.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-12 px-4 text-center">
           <span className="size-12 rounded-full bg-neutral-100 flex items-center justify-center">
-            <Briefcase className="size-6 text-neutral-400" aria-hidden="true" />
+            <Briefcase className="size-6 text-neutral-600" aria-hidden="true" />
           </span>
           <div>
             <p className="text-sm font-medium text-neutral-700">{t('emptyTitle')}</p>
-            <p className="text-xs text-neutral-500 mt-1">{t('emptyBody')}</p>
+            <p className="text-xs text-neutral-600 mt-1">{t('emptyBody')}</p>
           </div>
         </div>
       ) : (
@@ -76,19 +76,19 @@ export function RecentJobsTable({ jobs }: RecentJobsTableProps) {
               <tr className="border-b border-neutral-100 bg-neutral-50">
                 <th
                   scope="col"
-                  className="text-start px-4 sm:px-6 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide"
+                  className="text-start px-4 sm:px-6 py-3 text-xs font-semibold text-neutral-600 uppercase tracking-wide"
                 >
                   {t('columnTitle')}
                 </th>
                 <th
                   scope="col"
-                  className="text-start px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide"
+                  className="text-start px-4 py-3 text-xs font-semibold text-neutral-600 uppercase tracking-wide"
                 >
                   {t('columnStatus')}
                 </th>
                 <th
                   scope="col"
-                  className="text-start px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide hidden sm:table-cell"
+                  className="text-start px-4 py-3 text-xs font-semibold text-neutral-600 uppercase tracking-wide hidden sm:table-cell"
                 >
                   {t('columnPosted')}
                 </th>
@@ -108,7 +108,7 @@ export function RecentJobsTable({ jobs }: RecentJobsTableProps) {
                   <td className="px-4 py-3">
                     <StatusBadge status="ACTIVE" />
                   </td>
-                  <td className="px-4 py-3 text-neutral-500 hidden sm:table-cell">
+                  <td className="px-4 py-3 text-neutral-600 hidden sm:table-cell">
                     {job.createdAt ? new Date(job.createdAt).toLocaleDateString() : '—'}
                   </td>
                 </tr>

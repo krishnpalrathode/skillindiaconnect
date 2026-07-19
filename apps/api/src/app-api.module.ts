@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { HttpProblemFilter } from './core/http-problem.filter';
+import { ObservabilityModule } from './core/observability/observability.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CoreModule } from './core/core.module';
@@ -19,6 +20,7 @@ import { JobsSearchModule } from './jobs-search/jobs-search.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ResumeModule } from './resume/resume.module';
+import { RATE_LIMITS } from './core/config/rate-limits';
 import { JwtAuthGuard } from './auth/guards/auth.guard';
 import { PermissionsGuard } from './auth/rbac/permissions.guard';
 
@@ -30,6 +32,7 @@ import { PermissionsGuard } from './auth/rbac/permissions.guard';
 @Module({
   imports: [
     CoreModule,
+    ObservabilityModule,
     HealthModule,
     AuthModule,
     R2Module,
@@ -53,7 +56,9 @@ import { PermissionsGuard } from './auth/rbac/permissions.guard';
     AuditQueryModule,
     AdminModule,
     EventEmitterModule.forRoot(),
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
+    // S8-H1: the 100/min contract value now lives in RATE_LIMITS (env-tunable,
+    // same default). The in-memory-storage caveat above still stands.
+    ThrottlerModule.forRoot([{ name: 'default', ...RATE_LIMITS.global }]),
   ],
   providers: [
     // Every error body leaves through the RFC-7807 envelope (api-conventions.md).

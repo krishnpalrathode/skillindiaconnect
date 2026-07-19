@@ -102,7 +102,7 @@ export function EmployerLoginForm() {
           <div className="relative">
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-neutral-400"
+              className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-neutral-600"
             >
               <Mail className="size-4" />
             </span>
@@ -163,11 +163,11 @@ export function EmployerLoginForm() {
       {/* Divider */}
       <div className="relative flex items-center gap-3">
         <div className="flex-1 border-t border-neutral-200" />
-        <span className="text-xs text-neutral-400 lowercase">{tAuth('orDivider')}</span>
+        <span className="text-xs text-neutral-600 lowercase">{tAuth('orDivider')}</span>
         <div className="flex-1 border-t border-neutral-200" />
       </div>
 
-      <div className="flex flex-col gap-2 text-sm text-center text-neutral-500">
+      <div className="flex flex-col gap-2 text-sm text-center text-neutral-600">
         <p>
           {t('noAccount')}{' '}
           <Link
