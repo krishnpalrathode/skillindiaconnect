@@ -20,6 +20,7 @@ import { RecommendedJobs } from '@/components/dashboard/RecommendedJobs';
 import { MyApplicationsMini } from '@/components/dashboard/MyApplicationsMini';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import type { CandidateStats } from '@/lib/api/dashboard';
+import { homePathForRole } from '@/lib/auth/home-path';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type CompletionResult = components['schemas']['CompletionResult'];
@@ -54,7 +55,10 @@ export default function DashboardPage() {
     if (!user) return;
 
     if (user.role !== 'CANDIDATE') {
-      router.replace(`/${locale}/employer/onboarding`);
+      // Their home, not employer onboarding — see home-path.ts. This screen was
+      // the first stop after login for EVERY role, so sending non-candidates to
+      // an employer registration form is what stranded admins.
+      router.replace(homePathForRole(user.role, locale));
       return;
     }
 

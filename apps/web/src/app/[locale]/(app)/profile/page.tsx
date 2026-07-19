@@ -14,6 +14,7 @@ import { SkillsSection } from '@/components/profile/sections/SkillsSection';
 import { AccountSettingsSection } from '@/components/profile/sections/AccountSettingsSection';
 import { getCandidateProfile, getCandidateCompletion } from '@/lib/api/candidate';
 import { useAuth } from '@/lib/auth/auth-context';
+import { homePathForRole } from '@/lib/auth/home-path';
 import { ApiRequestError } from '@/lib/api/client';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
@@ -43,7 +44,15 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user) return;
     if (user.role !== 'CANDIDATE') {
-      router.replace(`/${locale}/employer/onboarding`);
+      // Send them to THEIR home, not to employer onboarding.
+      //
+      // This used to redirect every non-candidate to `/employer/onboarding`,
+      // which is only correct for an EMPLOYER — an admin was pushed onto an
+      // employer registration form. `setLoading(false)` was also never reached
+      // on this branch, so if the redirect did not land the page sat on its
+      // spinner indefinitely: the "stuck loading" an admin saw on /profile.
+      setLoading(false);
+      router.replace(homePathForRole(user.role, locale));
       return;
     }
 
@@ -118,7 +127,12 @@ export default function ProfilePage() {
         onCompletionRefetch={refetchCompletion}
       />
 
-      <AccountSettingsSection profile={profile} onProfileUpdate={setProfile} />
+      {/* Anchor target for the sidebar "Settings" nav item
+          (/profile#account-settings) — candidate settings have no standalone
+          route; this card is them. */}
+      <div id="account-settings" className="scroll-mt-20">
+        <AccountSettingsSection profile={profile} onProfileUpdate={setProfile} />
+      </div>
     </div>
   );
 }

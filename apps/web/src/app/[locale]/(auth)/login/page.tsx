@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { GoogleButton } from '@/components/auth/GoogleButton';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { PhoneLoginFlow } from '@/components/auth/PhoneLoginFlow';
 import { useAuth } from '@/lib/auth/auth-context';
+import { homePathForRole } from '@/lib/auth/home-path';
 
 type Method = 'email' | 'phone';
 
@@ -16,6 +17,8 @@ export default function LoginPage() {
   const t = useTranslations('auth');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams<{ locale: string }>();
+  const locale = params.locale ?? 'en';
   const { user } = useAuth();
   const [method, setMethod] = useState<Method>('email');
 
@@ -27,18 +30,34 @@ export default function LoginPage() {
   // Must run in an effect, not during render: calling router.replace() while
   // LoginPage is rendering updates the Router component mid-render, which
   // React flags as "Cannot update a component while rendering a different component".
+  // Route by ROLE, not to a hardcoded candidate dashboard.
+  //
+  // This previously sent every successful sign-in to `/dashboard`, which is the
+  // CANDIDATE dashboard. An admin landed there, that screen's guard bounced any
+  // non-candidate to `/employer/onboarding`, and a SUPER_ADMIN ended up stranded
+  // on an employer registration form — while the admin console sat there,
+  // working, with nothing routing anyone to it.
   useEffect(() => {
     if (user) {
-      router.replace(next || '/dashboard');
+      router.replace(next || homePathForRole(user.role, locale));
     }
-  }, [user, next, router]);
+  }, [user, next, router, locale]);
 
   if (user) {
     return null;
   }
 
+  /**
+   * Deliberately does NOT redirect.
+   *
+   * `login()` sets the user on the auth context, so the effect above fires with
+   * the freshly-known ROLE and routes there. Redirecting here as well raced it:
+   * this callback runs before the context state has propagated, so it only had
+   * a stale role to work from — which is how everyone ended up at the candidate
+   * dashboard. One redirect path, one source of truth for the role.
+   */
   function handleSuccess() {
-    router.replace(next || '/dashboard');
+    // no-op — the role-aware effect above performs the navigation
   }
 
   return (

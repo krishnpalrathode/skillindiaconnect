@@ -86,7 +86,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isProfile = pathname.includes('/profile');
   const isNotifications = pathname.includes('/notifications');
 
-  const navItems = [
+  // Explicitly typed: nothing is `disabled` right now, so inference would drop
+  // that property from the union and break the mobile nav's disabled branch —
+  // which is still the supported way to add a not-yet-built item.
+  const navItems: NavItemProps[] = [
     {
       href: `/${locale}/dashboard`,
       icon: <LayoutDashboard className="size-5" aria-hidden="true" />,
@@ -115,13 +118,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       href: `/${locale}/applications`,
       icon: <FileText className="size-5" aria-hidden="true" />,
       label: t('applications'),
-      disabled: true,
+      active: pathname.includes('/applications'),
     },
     {
-      href: `/${locale}/settings`,
+      // Candidate settings live in the "Account Settings" card on /profile
+      // (privacy toggles, notification prefs, salary expectations) — there is no
+      // standalone /settings route. This item used to point at that
+      // never-built route AND was disabled, so the nav advertised settings the
+      // user could not reach while the real ones sat one scroll down on
+      // Profile. Deep-link to them instead of duplicating the screen.
+      //
+      // Deliberately no `active`: this IS the profile route, and marking both
+      // items current would announce two "page" nodes to a screen reader.
+      href: `/${locale}/profile#account-settings`,
       icon: <Settings className="size-5" aria-hidden="true" />,
       label: t('settings'),
-      disabled: true,
     },
   ];
 
