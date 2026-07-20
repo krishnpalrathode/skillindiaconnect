@@ -27,39 +27,47 @@ export function ProfileSummaryCard({ profile, completion }: ProfileSummaryCardPr
     .join('');
 
   return (
-    <div className="bg-white rounded-xl border border-neutral-200 p-5 flex flex-col items-center gap-4">
-      <div
-        className="size-14 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-lg font-bold select-none"
-        aria-hidden="true"
-      >
-        {initials}
-      </div>
+    <div className="overflow-hidden rounded-2xl border border-neutral-200/70 bg-white shadow-sm">
+      {/* Gradient banner */}
+      <div className="h-20 bg-gradient-to-br from-[#0F3D91] to-[#2E67B1]" aria-hidden="true" />
 
-      <div className="text-center">
-        <p className="font-semibold text-neutral-900 truncate max-w-[160px]">
-          {profile.fullName ?? profile.email}
+      <div className="-mt-11 flex flex-col items-center gap-4 px-5 pb-6">
+        {/* Avatar overlapping the banner */}
+        <div className="rounded-full bg-white p-1 shadow-md">
+          <div
+            className="flex size-20 items-center justify-center rounded-full bg-primary-100 text-xl font-bold text-primary-700 select-none"
+            aria-hidden="true"
+          >
+            {initials}
+          </div>
+        </div>
+
+        <div className="text-center">
+          <p className="max-w-[180px] truncate font-semibold text-neutral-900">
+            {profile.fullName ?? profile.email}
+          </p>
+          {profile.isAvailable && (
+            <span className="mt-1 inline-block rounded-full bg-success-bg px-2.5 py-0.5 text-xs font-medium text-success-fg">
+              Available
+            </span>
+          )}
+        </div>
+
+        <CompletionRing pct={completion.pct} size={144} strokeWidth={12} gradient />
+
+        <p className="text-center text-sm text-neutral-600">
+          {t('profileSummary.completion', { pct: completion.pct })}
         </p>
-        {profile.isAvailable && (
-          <span className="inline-block mt-1 text-xs font-medium text-success-fg bg-success-bg rounded-full px-2 py-0.5">
-            Available
-          </span>
+
+        {completion.pct < 100 && (
+          <Link
+            href={`/${locale}/profile`}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-[#0F3D91]/25 bg-white px-5 text-sm font-semibold text-[#0F3D91] shadow-sm transition-all hover:bg-[#0F3D91] hover:text-white hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+          >
+            {t('profileSummary.completeNow')}
+          </Link>
         )}
       </div>
-
-      <CompletionRing pct={completion.pct} size={80} strokeWidth={8} />
-
-      <p className="text-sm text-neutral-600 text-center">
-        {t('profileSummary.completion', { pct: completion.pct })}
-      </p>
-
-      {completion.pct < 100 && (
-        <Link
-          href={`/${locale}/profile`}
-          className="text-sm font-medium text-primary-600 hover:text-primary-700 focus-visible:outline-none focus-visible:underline"
-        >
-          {t('profileSummary.completeNow')}
-        </Link>
-      )}
     </div>
   );
 }

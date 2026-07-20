@@ -873,13 +873,17 @@
     "metaTitle": "My Dashboard — SkillIndiaConnect",
     "pageTitle": "Dashboard",
     "greeting": "Hello, {name}",
+    "subtitle": "Explore opportunities and take the next step in your career.",
     "kpi": {
       "applied": "Jobs Applied",
+      "appliedCaption": "Total applications",
       "views": "Profile Views",
       "viewsCaption": "last 30 days",
       "viewsSrLabel": "{count} profile views, last 30 days",
       "shortlisted": "Shortlisted",
-      "updates": "Updates"
+      "shortlistedCaption": "Jobs saved",
+      "updates": "Updates",
+      "updatesCaption": "Latest alerts"
     },
     "recentViews": {
       "title": "Recent profile views",
@@ -890,7 +894,7 @@
     "recommendedJobs": {
       "title": "Recommended Jobs",
       "empty": "No recommendations yet. Complete your profile to get matches.",
-      "viewAll": "Browse all jobs â†’"
+      "viewAll": "Browse all jobs →"
     },
     "myApplications": {
       "title": "My Applications",
@@ -907,7 +911,7 @@
     },
     "profileSummary": {
       "completion": "{pct}% complete",
-      "completeNow": "Complete now â†’"
+      "completeNow": "Complete now →"
     }
   },
   "notifications": {

@@ -46,14 +46,14 @@ export function MyApplicationsMini() {
 
   return (
     <section aria-labelledby="my-applications-heading">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 id="my-applications-heading" className="text-base font-semibold text-neutral-900">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 id="my-applications-heading" className="text-lg font-bold text-neutral-900">
           {t('title')}
         </h2>
         {items && items.length > 0 && (
           <Link
             href={`/${locale}/applications`}
-            className="text-sm font-medium text-primary-600 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
+            className="rounded text-sm font-semibold text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
             {t('viewAll')}
           </Link>
@@ -61,13 +61,18 @@ export function MyApplicationsMini() {
       </div>
 
       {items === null ? (
-        <div className="flex flex-col gap-3">
-          <Skeleton className="h-28 w-full rounded-xl" />
-          <Skeleton className="h-28 w-full rounded-xl" />
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-28 w-full rounded-2xl" />
+          <Skeleton className="h-28 w-full rounded-2xl" />
         </div>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-8 text-center">
-          <FileText className="size-8 text-neutral-300" aria-hidden="true" />
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-neutral-200/70 bg-white px-4 py-10 text-center shadow-sm">
+          <span
+            className="flex size-14 items-center justify-center rounded-full bg-[#E8F0FE] text-[#0F3D91]"
+            aria-hidden="true"
+          >
+            <FileText className="size-6" />
+          </span>
           <p className="text-sm text-neutral-600">{t('empty')}</p>
           <Link
             href={`/${locale}/jobs`}

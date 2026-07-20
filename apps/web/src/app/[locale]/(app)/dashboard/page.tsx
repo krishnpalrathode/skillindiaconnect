@@ -13,6 +13,7 @@ import { searchJobsClient } from '@/lib/api/jobs';
 import { ApiRequestError } from '@/lib/api/client';
 import { EMPTY_FILTERS } from '@/lib/jobs/searchParams';
 import { Spinner } from '@/components/ui/spinner';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { KpiCards } from '@/components/dashboard/KpiCards';
 import { RecentViewersCard } from '@/components/dashboard/RecentViewersCard';
 import { ProfileSummaryCard } from '@/components/dashboard/ProfileSummaryCard';
@@ -139,26 +140,28 @@ export default function DashboardPage() {
   const { profile, completion, stats, unreadCount, recommendedJobs, profileViews } = data;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6">
-      <header>
-        <h1 className="text-xl font-bold text-neutral-900">
-          {t('greeting', { name: profile.fullName?.split(' ')[0] ?? profile.email })}
-        </h1>
-      </header>
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:gap-7 lg:px-8 lg:py-8">
+      <DashboardHeader
+        name={profile.fullName ?? profile.email}
+        email={profile.email}
+        isAvailable={!!profile.isAvailable}
+        unreadCount={unreadCount}
+        locale={locale}
+      />
 
       <KpiCards stats={stats} unreadCount={unreadCount} profileViews={profileViews} />
 
       <RecentViewersCard summary={profileViews} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-1">
           <ProfileSummaryCard profile={profile} completion={completion} />
-          <div className="mt-4">
+          <div className="mt-6">
             <QuickActions />
           </div>
         </div>
 
-        <div className="lg:col-span-2 flex flex-col gap-6">
+        <div className="flex flex-col gap-6 lg:col-span-2">
           <RecommendedJobs jobs={recommendedJobs} />
           <MyApplicationsMini />
         </div>

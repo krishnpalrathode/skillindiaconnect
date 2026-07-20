@@ -873,13 +873,17 @@
     "metaTitle": "मेरा डैशबोर्ड — SkillIndiaConnect",
     "pageTitle": "डैशबोर्ड",
     "greeting": "नमस्ते, {name}",
+    "subtitle": "अवसरों का पता लगाएं और अपने करियर में अगला कदम बढ़ाएं।",
     "kpi": {
       "applied": "आवेदन किए",
+      "appliedCaption": "कुल आवेदन",
       "views": "प्रोफ़ाइल व्यूज़",
       "viewsCaption": "पिछले 30 दिन",
       "viewsSrLabel": "{count} प्रोफ़ाइल व्यूज़, पिछले 30 दिन",
       "shortlisted": "शॉर्टलिस्ट",
-      "updates": "अपडेट"
+      "shortlistedCaption": "सहेजी गई नौकरियाँ",
+      "updates": "अपडेट",
+      "updatesCaption": "नवीनतम अलर्ट"
     },
     "recentViews": {
       "title": "हाल के प्रोफ़ाइल व्यूज़",

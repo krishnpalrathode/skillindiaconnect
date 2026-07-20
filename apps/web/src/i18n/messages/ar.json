@@ -873,13 +873,17 @@
     "metaTitle": "لوحتي — SkillIndiaConnect",
     "pageTitle": "لوحة التحكم",
     "greeting": "مرحباً، {name}",
+    "subtitle": "استكشف الفرص واتخذ الخطوة التالية في حياتك المهنية.",
     "kpi": {
       "applied": "الوظائف المُقدَّم عليها",
+      "appliedCaption": "إجمالي الطلبات",
       "views": "مشاهدات الملف",
       "viewsCaption": "آخر 30 يوماً",
       "viewsSrLabel": "{count} مشاهدة للملف، آخر 30 يوماً",
       "shortlisted": "في القائمة المختصرة",
-      "updates": "التحديثات"
+      "shortlistedCaption": "الوظائف المحفوظة",
+      "updates": "التحديثات",
+      "updatesCaption": "أحدث التنبيهات"
     },
     "recentViews": {
       "title": "مشاهدات الملف الأخيرة",
