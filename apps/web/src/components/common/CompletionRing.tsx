@@ -8,11 +8,19 @@ interface CompletionRingProps {
   className?: string;
   label?: string;
   /**
-   * Opt-in brand look: blue gradient arc + larger centered percentage.
+   * Opt-in brand look: gradient arc + larger centered percentage.
    * Defaults to false so existing usages (profile hero, resume hub) are unchanged.
    */
   gradient?: boolean;
+  /** Gradient stops when `gradient` is on. Defaults to the brand blue pair. */
+  gradientColors?: [string, string];
+  /** Soft glow behind the progress arc (premium widget look). Default off. */
+  glow?: boolean;
+  /** Small milestone dots at 25/50/75/100% around the ring. Default off. */
+  milestones?: boolean;
 }
+
+const MILESTONES = [25, 50, 75, 100];
 
 /**
  * SVG circular progress ring.
@@ -26,6 +34,9 @@ export function CompletionRing({
   className,
   label,
   gradient = false,
+  gradientColors = ['#0F3D91', '#2E67B1'],
+  glow = false,
+  milestones = false,
 }: CompletionRingProps) {
   const clamped = Math.min(100, Math.max(0, pct));
   const r = (size - strokeWidth) / 2;
@@ -54,8 +65,8 @@ export function CompletionRing({
         {gradient && (
           <defs>
             <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#0F3D91" />
-              <stop offset="100%" stopColor="#2E67B1" />
+              <stop offset="0%" stopColor={gradientColors[0]} />
+              <stop offset="100%" stopColor={gradientColors[1]} />
             </linearGradient>
           </defs>
         )}
@@ -79,6 +90,11 @@ export function CompletionRing({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={`${dash} ${circumference}`}
+          style={
+            glow
+              ? { filter: `drop-shadow(0 0 ${strokeWidth / 2}px ${gradientColors[0]}59)` }
+              : undefined
+          }
           className={cn(
             'transition-all duration-700',
             !gradient &&
@@ -89,6 +105,26 @@ export function CompletionRing({
                   : 'text-primary-500'),
           )}
         />
+        {/* Milestone dots — purely decorative markers at 25/50/75/100% */}
+        {milestones &&
+          MILESTONES.map((m) => {
+            const theta = (m / 100) * 2 * Math.PI;
+            const cx = center + r * Math.cos(theta);
+            const cy = center + r * Math.sin(theta);
+            const reached = clamped >= m;
+            return (
+              <circle
+                key={m}
+                cx={cx}
+                cy={cy}
+                r={strokeWidth / 4 + 1}
+                fill={reached ? '#ffffff' : '#ffffff'}
+                stroke={reached ? gradientColors[1] : '#d4d4d4'}
+                strokeWidth={1.5}
+                className="transition-colors duration-500"
+              />
+            );
+          })}
       </svg>
 
       {/* Central label */}

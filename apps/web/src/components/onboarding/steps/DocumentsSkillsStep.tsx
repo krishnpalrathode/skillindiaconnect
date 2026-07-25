@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Info } from 'lucide-react';
+import { Info, FileText, Sparkles, MapPin } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -88,19 +88,29 @@ export function DocumentsSkillsStep({
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-7">
       <div className="text-center">
-        <h2 className="text-xl font-bold text-neutral-900">{t('title')}</h2>
-        <p className="mt-1 text-sm text-neutral-600">{t('subtitle')}</p>
+        <h2 className="text-xl font-bold tracking-tight text-neutral-900 sm:text-2xl">
+          {t('title')}
+        </h2>
+        <p className="mt-1.5 text-sm text-neutral-600">{t('subtitle')}</p>
       </div>
 
       {/* Required location fields */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
+        <div className="flex items-center gap-2.5">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#E8F0FE] text-[#0F3D91]">
+            <MapPin className="size-4" aria-hidden="true" />
+          </span>
+          <h3 className="text-sm font-bold text-neutral-800">{t('locationLabel')}</h3>
+        </div>
+
         <Field id="ds-location" label={t('locationLabel')} required>
           <Input
             placeholder={t('locationPlaceholder')}
             value={location}
             onChange={(e) => setLocation(e.target.value)}
+            className="h-12 rounded-xl"
           />
         </Field>
 
@@ -109,6 +119,7 @@ export function DocumentsSkillsStep({
             placeholder={t('nationalityPlaceholder')}
             value={nationality}
             onChange={(e) => setNationality(e.target.value)}
+            className="h-12 rounded-xl"
           />
         </Field>
 
@@ -125,13 +136,19 @@ export function DocumentsSkillsStep({
             placeholder="30"
             value={noticePeriod}
             onChange={(e) => setNoticePeriod(e.target.value)}
+            className="h-12 rounded-xl"
           />
         </Field>
       </div>
 
       {/* Documents section */}
-      <div className="flex flex-col gap-3">
-        <h3 className="text-sm font-semibold text-neutral-700">{t('passportLabel')}</h3>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2.5">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#E8F0FE] text-[#0F3D91]">
+            <FileText className="size-4" aria-hidden="true" />
+          </span>
+          <h3 className="text-sm font-bold text-neutral-800">{t('passportLabel')}</h3>
+        </div>
 
         {/* Show existing passport if uploaded */}
         {hasPassport ? (
@@ -141,21 +158,23 @@ export function DocumentsSkillsStep({
               .map((d) => (
                 <div
                   key={d.id}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-neutral-50 text-sm"
+                  className="flex items-center gap-2 rounded-xl border border-neutral-200/70 bg-white px-4 py-2.5 text-sm shadow-sm"
                 >
-                  <span className="text-neutral-700">Passport</span>
+                  <FileText className="size-4 text-[#0F3D91]" aria-hidden="true" />
+                  <span className="font-medium text-neutral-700">Passport</span>
                   <Badge variant={DOC_STATUS_VARIANT[d.status]}>{tStatus(d.status)}</Badge>
                 </div>
               ))}
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             <Field id="ds-passport-expiry" label={t('passportExpiryLabel')} required>
               <Input
                 type="date"
                 value={passportExpiry}
                 min={new Date().toISOString().slice(0, 10)}
                 onChange={(e) => setPassportExpiry(e.target.value)}
+                className="h-12 rounded-xl"
               />
             </Field>
             <FileUpload
@@ -176,9 +195,11 @@ export function DocumentsSkillsStep({
         )}
 
         {!hasPassport && (
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-info-bg border border-info-fg/20">
-            <Info className="size-4 text-info-fg shrink-0 mt-0.5" aria-hidden="true" />
-            <p className="text-xs text-info-fg">{t('softBlockDocs')}</p>
+          <div className="flex items-start gap-2.5 rounded-2xl border border-info-fg/20 bg-info-bg p-4">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/70">
+              <Info className="size-4 text-info-fg" aria-hidden="true" />
+            </span>
+            <p className="text-xs leading-relaxed text-info-fg">{t('softBlockDocs')}</p>
           </div>
         )}
 
@@ -200,17 +221,24 @@ export function DocumentsSkillsStep({
       </div>
 
       {/* Skills section */}
-      <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-semibold text-neutral-700">{t('skillsLabel')}</h3>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-100 text-accent-600">
+            <Sparkles className="size-4" aria-hidden="true" />
+          </span>
+          <h3 className="text-sm font-bold text-neutral-800">{t('skillsLabel')}</h3>
+        </div>
         <SkillChips
           skills={profile.skills ?? []}
           onSkillsChange={handleSkillsChange}
           placeholder={t('skillsPlaceholder')}
         />
         {!hasSkills && (
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-info-bg border border-info-fg/20">
-            <Info className="size-4 text-info-fg shrink-0 mt-0.5" aria-hidden="true" />
-            <p className="text-xs text-info-fg">{t('softBlockSkills')}</p>
+          <div className="flex items-start gap-2.5 rounded-2xl border border-info-fg/20 bg-info-bg p-4">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/70">
+              <Info className="size-4 text-info-fg" aria-hidden="true" />
+            </span>
+            <p className="text-xs leading-relaxed text-info-fg">{t('softBlockSkills')}</p>
           </div>
         )}
       </div>
@@ -222,7 +250,13 @@ export function DocumentsSkillsStep({
       )}
 
       <div className="flex justify-between">
-        <Button type="button" variant="outline" size="md" onClick={onBack}>
+        <Button
+          type="button"
+          variant="outline"
+          size="md"
+          onClick={onBack}
+          className="rounded-xl px-6"
+        >
           {tNav('back')}
         </Button>
         <Button
@@ -232,6 +266,7 @@ export function DocumentsSkillsStep({
           loading={saving}
           disabled={!canAdvance}
           onClick={handleNext}
+          className="rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] px-8 shadow-md transition-all hover:shadow-lg"
         >
           {tNav('next')}
         </Button>

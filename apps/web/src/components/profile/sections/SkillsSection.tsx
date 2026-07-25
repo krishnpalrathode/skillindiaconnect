@@ -45,14 +45,16 @@ export function SkillsSection({
 
   const viewContent =
     skills.length === 0 ? (
-      <p className="text-sm text-neutral-600 text-center py-4">{t('softBlockSkills')}</p>
+      <p className="py-8 text-center text-sm text-neutral-600">{t('softBlockSkills')}</p>
     ) : (
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-2">
         {skills.map((skill, idx) => (
           <span
             key={skill.id}
-            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-              idx < 3 ? 'bg-primary-100 text-primary-700' : 'bg-neutral-100 text-neutral-600'
+            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold shadow-sm ${
+              idx < 3
+                ? 'bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] text-white'
+                : 'bg-neutral-100 text-neutral-700'
             }`}
           >
             {skill.name}

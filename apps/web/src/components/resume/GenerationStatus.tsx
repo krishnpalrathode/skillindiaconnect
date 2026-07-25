@@ -42,7 +42,7 @@ export function GenerationStatus({
   return (
     <div
       aria-live="polite"
-      className="flex flex-col items-center gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-6 text-center"
+      className="flex flex-col items-center gap-3 rounded-[22px] border border-neutral-200/70 bg-gradient-to-br from-neutral-50 to-[#E8F0FE]/30 p-6 text-center shadow-sm"
     >
       {phase === 'generating' && (
         <>

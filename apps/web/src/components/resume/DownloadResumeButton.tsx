@@ -188,7 +188,13 @@ export function DownloadResumeButton({
 
   if (phase === 'idle') {
     return (
-      <Button type="button" variant="primary" size="md" onClick={startGenerate}>
+      <Button
+        type="button"
+        variant="primary"
+        size="lg"
+        onClick={startGenerate}
+        className="w-full rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] shadow-md transition-all hover:shadow-lg sm:w-auto sm:self-center sm:px-10"
+      >
         <Download className="size-4" aria-hidden="true" />
         {t('downloadPdf')}
       </Button>

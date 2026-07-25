@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Pencil, Trash2, Briefcase, Globe } from 'lucide-react';
+import { Plus, Pencil, Trash2, Briefcase, Globe, FolderOpen } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
 import { ExperienceForm } from './ExperienceForm';
@@ -48,11 +48,17 @@ export function ExperienceList({ experiences, onExperiencesChange }: ExperienceL
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {experiences.length === 0 && !adding && (
-        <p className="text-sm text-neutral-600 text-center py-4 rounded-lg border border-dashed border-neutral-200">
-          {t('noExperience')}
-        </p>
+        <div className="flex flex-col items-center gap-3 rounded-[22px] border-2 border-dashed border-neutral-200 bg-neutral-50/60 px-4 py-10 text-center">
+          <span
+            className="flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-[#EEF3FB] to-[#E8F0FE] text-[#0F3D91] ring-8 ring-[#F5F8FC]"
+            aria-hidden="true"
+          >
+            <FolderOpen className="size-7" />
+          </span>
+          <p className="max-w-xs text-sm text-neutral-600">{t('noExperience')}</p>
+        </div>
       )}
 
       {experiences.map((exp) =>
@@ -66,23 +72,23 @@ export function ExperienceList({ experiences, onExperiencesChange }: ExperienceL
         ) : (
           <div
             key={exp.id}
-            className="flex items-start gap-3 p-3 rounded-lg border border-border bg-background"
+            className="flex items-start gap-3 rounded-2xl border border-neutral-200/70 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#0F3D91]/20 hover:shadow-md"
           >
-            <div className="shrink-0 w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center mt-0.5">
+            <div className="mt-0.5 flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#E8F0FE]">
               {exp.type === 'FOREIGN' ? (
-                <Globe className="size-4 text-primary-600" aria-hidden="true" />
+                <Globe className="size-5 text-[#0F3D91]" aria-hidden="true" />
               ) : (
-                <Briefcase className="size-4 text-primary-600" aria-hidden="true" />
+                <Briefcase className="size-5 text-[#0F3D91]" aria-hidden="true" />
               )}
             </div>
 
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-neutral-800 truncate">{exp.role ?? '—'}</p>
-              <p className="text-xs text-neutral-600 truncate">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold text-neutral-900">{exp.role ?? '—'}</p>
+              <p className="truncate text-xs text-neutral-600">
                 {[exp.companyName, exp.country].filter(Boolean).join(', ')}
               </p>
               {(exp.years !== undefined || exp.months !== undefined) && (
-                <p className="text-xs text-neutral-600 mt-0.5">
+                <p className="mt-1 inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
                   {[exp.years && `${exp.years}y`, exp.months && `${exp.months}m`]
                     .filter(Boolean)
                     .join(' ')}
@@ -90,27 +96,27 @@ export function ExperienceList({ experiences, onExperiencesChange }: ExperienceL
               )}
             </div>
 
-            <div className="flex gap-1 shrink-0">
+            <div className="flex shrink-0 gap-1">
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8"
+                className="h-9 w-9 rounded-lg text-neutral-600 hover:bg-[#E8F0FE] hover:text-[#0F3D91]"
                 onClick={() => setEditing(exp.id)}
                 aria-label={`${t('editExperience')} ${exp.role ?? ''}`}
               >
-                <Pencil className="size-3.5" aria-hidden="true" />
+                <Pencil className="size-4" aria-hidden="true" />
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-error-fg hover:bg-error-bg"
+                className="h-9 w-9 rounded-lg text-error-fg hover:bg-error-bg"
                 loading={deletingId === exp.id}
                 onClick={() => handleDelete(exp.id)}
                 aria-label={`${t('deleteExperience')} ${exp.role ?? ''}`}
               >
-                <Trash2 className="size-3.5" aria-hidden="true" />
+                <Trash2 className="size-4" aria-hidden="true" />
               </Button>
             </div>
           </div>
@@ -125,7 +131,7 @@ export function ExperienceList({ experiences, onExperiencesChange }: ExperienceL
           variant="outline"
           size="sm"
           onClick={() => setAdding(true)}
-          className="self-start"
+          className="min-h-11 self-center rounded-xl border-[#0F3D91]/25 px-5 font-semibold text-[#0F3D91] transition-all hover:bg-[#E8F0FE] hover:shadow-sm sm:self-start"
         >
           <Plus className="size-4" aria-hidden="true" />
           {t('addExperience')}

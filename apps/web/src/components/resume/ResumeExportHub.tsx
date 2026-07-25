@@ -83,12 +83,13 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
   return (
     <div className="flex flex-col gap-6">
       {/* Completion ring — server-computed, never client-side. */}
-      <div className="flex flex-col items-center gap-2">
-        <p className="text-sm font-medium text-neutral-700">{t('completionTitle')}</p>
+      <div className="flex flex-col items-center gap-3 rounded-[22px] bg-gradient-to-br from-neutral-50 to-[#E8F0FE]/40 px-4 py-6">
+        <p className="text-sm font-bold text-neutral-700">{t('completionTitle')}</p>
         <CompletionRing
           pct={completion?.pct ?? profile.completionPct ?? 0}
-          size={132}
-          strokeWidth={12}
+          size={150}
+          strokeWidth={13}
+          gradient
         />
       </div>
 
@@ -122,7 +123,7 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
           {dirtySinceGenerate && hasGenerated && <RegeneratePrompt />}
 
           <div>
-            <p className="mb-2 text-sm font-semibold text-neutral-700">{t('delivery.title')}</p>
+            <p className="mb-2.5 text-sm font-bold text-neutral-800">{t('delivery.title')}</p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <SendWhatsAppButton />
               <EmailResumeButton />

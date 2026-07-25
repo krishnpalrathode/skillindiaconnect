@@ -46,28 +46,36 @@ export function ExperienceSection({
 
   const viewContent =
     experiences.length === 0 ? (
-      <p className="text-sm text-neutral-600 text-center py-4">{t('noExperience')}</p>
+      <div className="flex flex-col items-center gap-3 py-8 text-center">
+        <span
+          className="flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-[#EEF3FB] to-[#E8F0FE] text-[#0F3D91]"
+          aria-hidden="true"
+        >
+          <Briefcase className="size-6" />
+        </span>
+        <p className="max-w-xs text-sm text-neutral-600">{t('noExperience')}</p>
+      </div>
     ) : (
       <ul className="flex flex-col gap-3">
         {experiences.map((exp) => (
           <li
             key={exp.id}
-            className="flex items-start gap-3 p-3 rounded-lg border border-border bg-neutral-50"
+            className="flex items-start gap-3 rounded-2xl border border-neutral-200/70 bg-neutral-50/60 p-4 transition-all duration-200 hover:border-[#0F3D91]/20 hover:bg-white hover:shadow-sm"
           >
-            <div className="shrink-0 w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center mt-0.5">
+            <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#E8F0FE]">
               {exp.type === 'FOREIGN' ? (
-                <Globe className="size-4 text-primary-600" aria-hidden="true" />
+                <Globe className="size-4 text-[#0F3D91]" aria-hidden="true" />
               ) : (
-                <Briefcase className="size-4 text-primary-600" aria-hidden="true" />
+                <Briefcase className="size-4 text-[#0F3D91]" aria-hidden="true" />
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-neutral-800 truncate">{exp.role ?? '—'}</p>
-              <p className="text-xs text-neutral-600 truncate">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold text-neutral-900">{exp.role ?? '—'}</p>
+              <p className="truncate text-xs text-neutral-600">
                 {[exp.companyName, exp.country].filter(Boolean).join(', ')}
               </p>
               {(exp.years !== undefined || exp.months !== undefined) && (
-                <p className="text-xs text-neutral-600 mt-0.5">
+                <p className="mt-1 inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
                   {[exp.years && `${exp.years}y`, exp.months && `${exp.months}m`]
                     .filter(Boolean)
                     .join(' ')}

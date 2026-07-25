@@ -1,9 +1,9 @@
-﻿'use client';
+'use client';
 
 import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { UserCircle2, Camera } from 'lucide-react';
+import { UserCircle2, Camera, Upload, Languages } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,6 +48,13 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
 
   const canAdvance = fullName.trim().length > 0 && dob.length > 0;
 
+  // Display-only chips parsed from the comma-separated languages input — the
+  // saved value remains the same comma string the API has always received.
+  const languageChips = languages
+    .split(',')
+    .map((l) => l.trim())
+    .filter(Boolean);
+
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -87,37 +94,49 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-7">
       <div className="text-center">
-        <h2 className="text-xl font-bold text-neutral-900">{t('title')}</h2>
-        <p className="mt-1 text-sm text-neutral-600">{t('subtitle')}</p>
+        <h2 className="text-xl font-bold tracking-tight text-neutral-900 sm:text-2xl">
+          {t('title')}
+        </h2>
+        <p className="mt-1.5 text-sm text-neutral-600">{t('subtitle')}</p>
       </div>
 
-      {/* Profile photo (local preview — no API in S1) */}
-      <div className="flex flex-col items-center gap-2">
-        <div className="relative w-20 h-20">
-          <div className="w-20 h-20 rounded-full bg-neutral-100 border-2 border-neutral-200 overflow-hidden flex items-center justify-center">
+      {/* Profile photo (local preview — no API in S1) — premium dashed upload card */}
+      <div
+        className="group flex cursor-pointer flex-col items-center gap-3 rounded-[22px] border-2 border-dashed border-neutral-200 bg-neutral-50/60 px-4 py-6 transition-all duration-200 hover:border-[#0F3D91]/40 hover:bg-[#E8F0FE]/40"
+        onClick={() => photoInputRef.current?.click()}
+      >
+        <div className="relative h-24 w-24">
+          <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-white shadow-md transition-transform duration-200 group-hover:scale-105">
             {photoPreview ? (
               <Image
                 src={photoPreview}
                 alt="Profile"
-                width={80}
-                height={80}
-                className="w-full h-full object-cover"
+                width={96}
+                height={96}
+                className="h-full w-full object-cover"
                 unoptimized
               />
             ) : (
-              <UserCircle2 className="size-12 text-neutral-600" aria-hidden="true" />
+              <UserCircle2 className="size-14 text-neutral-600" aria-hidden="true" />
             )}
           </div>
           <button
             type="button"
-            onClick={() => photoInputRef.current?.click()}
-            className="absolute bottom-0 end-0 w-7 h-7 bg-primary-600 rounded-full flex items-center justify-center text-white hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={(e) => {
+              e.stopPropagation();
+              photoInputRef.current?.click();
+            }}
+            className="absolute bottom-0 end-0 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#0F3D91] to-[#2E67B1] text-white shadow-md transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={t('photoUpload')}
           >
-            <Camera className="size-3.5" aria-hidden="true" />
+            <Camera className="size-4" aria-hidden="true" />
           </button>
+        </div>
+        <div className="flex items-center gap-1.5 text-sm font-medium text-neutral-700">
+          <Upload className="size-4 text-[#0F3D91]" aria-hidden="true" />
+          {t('photoUpload')}
         </div>
         <p className="text-xs text-neutral-600">{t('photoHint')}</p>
         <input
@@ -126,18 +145,20 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
           accept="image/jpeg,image/png,image/webp"
           className="sr-only"
           onChange={handlePhotoChange}
+          onClick={(e) => e.stopPropagation()}
           aria-label={t('photoLabel')}
         />
       </div>
 
       {/* Required fields */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         <Field id="pi-fullname" label={t('nameLabel')} required>
           <Input
             placeholder={t('namePlaceholder')}
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             autoComplete="name"
+            className="h-12 rounded-xl"
           />
         </Field>
 
@@ -147,6 +168,7 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
             value={dob}
             onChange={(e) => setDob(e.target.value)}
             max={new Date().toISOString().slice(0, 10)}
+            className="h-12 rounded-xl"
           />
         </Field>
 
@@ -159,7 +181,7 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
             id="pi-marital"
             value={maritalStatus}
             onChange={(e) => setMaritalStatus(e.target.value as MaritalStatus | '')}
-            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base text-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-primary-600 transition-colors"
+            className="flex h-12 w-full rounded-xl border border-input bg-background px-3 py-2 text-base text-foreground outline-none transition-colors focus-visible:border-primary-600 focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
             <option value="">— Select —</option>
             {MARITAL_STATUSES.map((s) => (
@@ -176,8 +198,24 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
             placeholder="Hindi, English, Arabic"
             value={languages}
             onChange={(e) => setLanguages(e.target.value)}
+            className="h-12 rounded-xl"
           />
         </Field>
+
+        {/* Display-only language chips mirroring the input above */}
+        {languageChips.length > 0 && (
+          <ul className="-mt-2 flex flex-wrap gap-1.5" aria-hidden="true">
+            {languageChips.map((lang) => (
+              <li
+                key={lang}
+                className="inline-flex items-center gap-1 rounded-full bg-[#E8F0FE] px-3 py-1 text-xs font-medium text-[#0F3D91]"
+              >
+                <Languages className="size-3" aria-hidden="true" />
+                {lang}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Phone verify (soft-block — non-required) */}
@@ -203,6 +241,7 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
           loading={saving}
           disabled={!canAdvance}
           onClick={handleNext}
+          className="rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] px-8 shadow-md transition-all hover:shadow-lg"
         >
           {tStep('next')}
         </Button>
