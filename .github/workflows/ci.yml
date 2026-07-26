@@ -151,7 +151,7 @@ jobs:
           pnpm --filter ./apps/api exec node dist/main.api.js > api.log 2>&1 &
           pnpm --filter ./apps/web start > web.log 2>&1 &
           npx --yes wait-on -t 120000 http://localhost:3001/health http://localhost:3000
-          pnpm test:e2e -- --shard=${{ matrix.shard }}/4
+          pnpm exec playwright test --shard=${{ matrix.shard }}/4
         env:
           NODE_ENV: production
       - name: Upload logs + report on failure
