@@ -18,6 +18,15 @@
 // from trying to bundle them — msw/node has package.json export paths that
 // Webpack can't resolve in the instrumentation compilation context.
 export async function register() {
+  // Build-time guard, deliberately first and deliberately NOT combined with the
+  // checks below. Webpack inlines process.env.NODE_ENV, so in a production
+  // compile this becomes `if (true) return;` and everything after it — including
+  // the import of the MSW server — is dead code that gets eliminated. The
+  // NEXT_RUNTIME / API_MOCKING checks below are runtime-only and cannot do that:
+  // the import stays statically linked, which is how msw/node ended up in the
+  // edge bundle and broke the Vercel deploy.
+  if (process.env.NODE_ENV === 'production') return;
+
   if (process.env['NEXT_RUNTIME'] !== 'nodejs') return;
   if (process.env['NEXT_PUBLIC_API_MOCKING'] !== 'enabled') return;
 
