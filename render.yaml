@@ -1,0 +1,145 @@
+# Render Blueprint — SkillIndiaConnect
+#
+# Declares the three services this platform needs. The API and the WORKER are
+# built from the SAME image (apps/api/Dockerfile) and differ only by their
+# start command — that is the architecture's "two processes, one codebase" rule.
+#
+#   api     web service       node dist/main.api.js      binds a port
+#   worker  BACKGROUND worker node dist/main.worker.js   binds NO port
+#   web     web service       next start                 binds a port
+#
+# The worker MUST be `type: worker`. Deploying it as a web service is what
+# produces Render's "Port scan timeout reached, no open ports detected" — the
+# worker has no HTTP listener by design.
+#
+# Secrets are declared with `sync: false`: Render prompts for the value on first
+# apply and stores it encrypted. Nothing secret is committed to this file.
+#
+# Apply with: Render Dashboard → Blueprints → New Blueprint Instance.
+
+services:
+  # ── API (HTTP) ─────────────────────────────────────────────────────────────
+  - type: web
+    name: skillindiaconnect-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: singapore # match the Neon region (ap-southeast-1) to cut latency
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # PORT is injected by Render. main.api.ts reads process.env.PORT, and
+      # Node's listen() with no host binds all interfaces — do NOT hardcode it.
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false # min 32 chars — openssl rand -hex 32
+      - key: JWT_REFRESH_SECRET
+        sync: false # min 32 chars, DIFFERENT from the access secret
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_OAUTH_CALLBACK_URL
+        sync: false # https://<api-host>/api/v1/auth/google/callback
+      - key: WEB_APP_URL
+        fromService:
+          name: skillindiaconnect-web
+          type: web
+          property: hostport
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ENDPOINT
+        sync: false # real R2 endpoint — NOT http://localhost:9000
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+
+  # ── Worker (BullMQ consumers + cron; no HTTP listener) ─────────────────────
+  - type: worker
+    name: skillindiaconnect-worker
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    dockerCommand: node dist/main.worker.js
+    plan: starter
+    region: singapore
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # The worker validates the SAME schema as the API — it boots through the
+      # identical AppConfigModule, so every var above is required here too.
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_OAUTH_CALLBACK_URL
+        sync: false
+      - key: WEB_APP_URL
+        fromService:
+          name: skillindiaconnect-web
+          type: web
+          property: hostport
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ENDPOINT
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      # CHROMIUM_EXECUTABLE_PATH is baked into the image (/usr/bin/chromium-browser)
+      # for the worker's PDF rendering. Only override to move the binary.
+      #
+      # RENDER_POOL_CONCURRENCY is a MEMORY knob, not a throughput knob — size it
+      # against this instance's RAM limit before raising it. See
+      # docs/performance-report.md.
+
+  # ── Web (Next.js) ──────────────────────────────────────────────────────────
+  - type: web
+    name: skillindiaconnect-web
+    runtime: docker
+    dockerfilePath: ./apps/web/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: singapore
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # NEXT_PUBLIC_* is INLINED AT BUILD TIME by Next, so this must be present
+      # during `docker build`, not just at runtime. apps/web/Dockerfile does not
+      # currently declare it as an ARG — see the note in the deploy checklist.
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          name: skillindiaconnect-api
+          type: web
+          property: hostport
