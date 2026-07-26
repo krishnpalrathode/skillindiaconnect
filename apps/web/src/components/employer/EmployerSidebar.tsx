@@ -3,6 +3,7 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useParams } from 'next/navigation';
 import { LayoutDashboard, PlusCircle, Briefcase, Users, CreditCard, User } from 'lucide-react';
 import { useEmployer } from '@/lib/employer/employer-context';
@@ -28,7 +29,7 @@ function NavItem({ href, icon, label, active, disabled, disabledReason, onClick 
         aria-label={disabledReason ? `${label} — ${disabledReason}` : label}
         title={disabledReason}
         // eslint-disable-next-line no-restricted-syntax -- DISABLED control — WCAG 1.4.3 explicitly exempts disabled UI, and darkening it would stop it reading as unavailable.
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-neutral-400 cursor-not-allowed select-none min-h-[44px]"
+        className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-neutral-400 cursor-not-allowed select-none min-h-[44px]"
       >
         <span className="size-5 shrink-0 opacity-50" aria-hidden="true">
           {icon}
@@ -44,14 +45,20 @@ function NavItem({ href, icon, label, active, disabled, disabledReason, onClick 
       aria-current={active ? 'page' : undefined}
       onClick={onClick}
       className={cn(
-        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px]',
+        'group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 min-h-[44px]',
         'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
         active
-          ? 'bg-primary-50 text-primary-700'
-          : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900',
+          ? 'bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] text-white shadow-lg shadow-[#0F3D91]/25'
+          : 'text-neutral-600 hover:bg-white hover:text-[#0F3D91] hover:shadow-sm',
       )}
     >
-      <span className="size-5 shrink-0" aria-hidden="true">
+      <span
+        className={cn(
+          'size-5 shrink-0 transition-transform duration-200',
+          !active && 'group-hover:scale-110',
+        )}
+        aria-hidden="true"
+      >
         {icon}
       </span>
       <span>{label}</span>
@@ -117,20 +124,28 @@ export function EmployerSidebar({ onNavClick }: EmployerSidebarProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b border-neutral-100 shrink-0">
+      {/* Logo — object-cover crops the artwork band out of the logo's canvas
+          (same treatment as the candidate shell) so it reads large. */}
+      <div className="flex items-center justify-center h-28 px-4 border-b border-neutral-100 shrink-0">
         <Link
           href={`/${locale}/employer/dashboard`}
           onClick={onNavClick}
-          className="text-lg font-bold text-primary-700 tracking-tight focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
+          className="relative block h-20 w-full overflow-hidden rounded-lg focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >
-          SkillIndiaConnect
+          <Image
+            src="/brand/logo.png"
+            alt="SkillIndia Connect"
+            fill
+            priority
+            sizes="256px"
+            className="object-cover object-center"
+          />
         </Link>
       </div>
 
       {/* Nav links */}
       <nav
-        className="flex-1 px-2 py-4 flex flex-col gap-0.5 overflow-y-auto"
+        className="flex-1 px-3 py-5 flex flex-col gap-1.5 overflow-y-auto"
         aria-label={t('nav.ariaLabel')}
       >
         {navItems.map((item) => (

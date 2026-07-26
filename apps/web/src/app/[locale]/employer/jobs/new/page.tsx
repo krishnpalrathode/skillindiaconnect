@@ -25,13 +25,17 @@ export default function PostJobPage() {
   // Approval gate — non-approved employers are blocked
   if (!company || company.status !== 'APPROVED') {
     return (
-      <div className="max-w-lg mx-auto pt-8 text-center flex flex-col items-center gap-4">
-        <div className="size-14 rounded-full bg-warning-bg flex items-center justify-center">
-          <AlertCircle className="size-7 text-warning-fg" aria-hidden="true" />
+      <div className="mx-auto flex max-w-lg flex-col items-center gap-4 rounded-2xl border border-neutral-200/70 bg-white p-10 text-center shadow-sm">
+        <div className="flex size-16 items-center justify-center rounded-full bg-warning-bg ring-8 ring-warning-bg/30">
+          <AlertCircle className="size-8 text-warning-fg" aria-hidden="true" />
         </div>
         <h1 className="text-xl font-bold text-neutral-900">{t('approvalGate.title')}</h1>
         <p className="text-sm text-neutral-600">{t('approvalGate.body')}</p>
-        <Button variant="outline" onClick={() => router.push(`/${locale}/employer/dashboard`)}>
+        <Button
+          variant="outline"
+          className="rounded-xl"
+          onClick={() => router.push(`/${locale}/employer/dashboard`)}
+        >
           {t('approvalGate.backToDashboard')}
         </Button>
       </div>
@@ -39,20 +43,22 @@ export default function PostJobPage() {
   }
 
   return (
-    <div className="max-w-6xl">
+    <div className="mx-auto max-w-6xl">
       {/* Page header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">{t('createPage.title')}</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
+          {t('createPage.title')}
+        </h1>
         <p className="mt-1 text-sm text-neutral-600">{t('createPage.subtitle')}</p>
       </div>
 
       {/* Two-column layout: form (left) + live preview (right) */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-8 items-start">
-        <div className="min-w-0 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 xl:gap-8 items-start">
+        <div className="min-w-0 rounded-2xl border border-neutral-200/70 bg-white p-6 shadow-sm">
           <JobForm onValuesChange={setPreviewValues} />
         </div>
 
-        <aside aria-label={t('preview.panelLabel')}>
+        <aside aria-label={t('preview.panelLabel')} className="xl:sticky xl:top-24">
           <JobLivePreview values={previewValues} companyName={company.name} locale={locale} />
         </aside>
       </div>

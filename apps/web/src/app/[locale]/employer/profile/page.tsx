@@ -92,9 +92,9 @@ export default function EmployerProfilePage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center gap-4 py-24 text-center">
+      <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border border-neutral-200/70 bg-white p-10 text-center shadow-sm">
         <p className="text-sm text-neutral-600">{error}</p>
-        <Button variant="outline" size="sm" onClick={refetch}>
+        <Button variant="outline" size="sm" className="rounded-xl" onClick={refetch}>
           {t('retry')}
         </Button>
       </div>
@@ -104,7 +104,7 @@ export default function EmployerProfilePage() {
   if (!profile) return null;
 
   return (
-    <div className="max-w-2xl flex flex-col gap-4">
+    <div className="mx-auto flex max-w-4xl flex-col gap-6">
       <EmployerProfileHero profile={profile} onProfileUpdate={setProfile} />
 
       <CompanyInfoSection company={profile.company} onUpdated={handleCompanyUpdated} />

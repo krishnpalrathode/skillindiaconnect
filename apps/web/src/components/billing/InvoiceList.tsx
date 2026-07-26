@@ -47,7 +47,7 @@ export function InvoiceList() {
   return (
     <section
       aria-labelledby="invoices-heading"
-      className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm"
+      className="rounded-[18px] border border-neutral-200/70 bg-white p-5 shadow-sm transition-shadow duration-200 hover:shadow-md sm:p-6"
     >
       <h2 id="invoices-heading" className="mb-4 text-base font-semibold text-neutral-900">
         {t('invoicesTitle')}

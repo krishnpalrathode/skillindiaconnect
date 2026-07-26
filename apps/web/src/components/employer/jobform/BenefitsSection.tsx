@@ -16,7 +16,7 @@ interface BenefitsSectionProps {
 function LockedToggle({ label, description }: { label: string; description: string }) {
   return (
     <div
-      className="flex items-start gap-3 rounded-lg border border-success-fg/30 bg-success-bg/20 p-3"
+      className="flex items-start gap-3 rounded-xl border border-success-fg/25 bg-success-bg/25 p-3.5"
       role="group"
       aria-label={label}
     >
@@ -79,7 +79,7 @@ function OptionalToggle({
   return (
     <label
       htmlFor={id}
-      className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-white p-3 cursor-pointer hover:border-primary-400 hover:bg-primary-50/30 transition-colors"
+      className="flex items-start gap-3 rounded-xl border border-neutral-200 bg-white p-3.5 cursor-pointer transition-all hover:border-[#0F3D91]/40 hover:bg-[#E8F0FE]/40 hover:shadow-sm"
     >
       <div className="flex-1 min-w-0">
         <span className="text-sm font-medium text-neutral-900 block">{label}</span>
@@ -101,22 +101,32 @@ export function BenefitsSection({ values, onChange }: BenefitsSectionProps) {
 
   return (
     <section aria-labelledby="benefits-heading" className="flex flex-col gap-4">
-      <div>
-        <h3 id="benefits-heading" className="text-base font-semibold text-neutral-900">
-          {t('heading')}
-        </h3>
-        <p className="mt-0.5 text-sm text-neutral-600">{t('subtitle')}</p>
+      <div className="flex items-start gap-3 border-b border-neutral-100 pb-3">
+        <span
+          aria-hidden="true"
+          className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#E8F0FE] text-sm font-bold text-[#0F3D91]"
+        >
+          4
+        </span>
+        <div>
+          <h3 id="benefits-heading" className="text-base font-bold text-neutral-900">
+            {t('heading')}
+          </h3>
+          <p className="mt-0.5 text-sm text-neutral-600">{t('subtitle')}</p>
+        </div>
       </div>
 
       {/* Policy banner */}
       <div
         role="note"
-        className="flex items-start gap-3 rounded-lg border border-primary-200 bg-primary-50 p-4"
+        className="flex items-start gap-3 rounded-xl border border-[#0F3D91]/15 bg-gradient-to-br from-[#E8F0FE]/70 to-white p-4 shadow-sm"
       >
-        <ShieldCheck className="size-5 shrink-0 text-primary-600 mt-0.5" aria-hidden="true" />
+        <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#0F3D91] text-white">
+          <ShieldCheck className="size-5" aria-hidden="true" />
+        </span>
         <div>
-          <p className="text-sm font-semibold text-primary-800">{t('policyTitle')}</p>
-          <p className="mt-0.5 text-xs text-primary-700">{t('policyBody')}</p>
+          <p className="text-sm font-semibold text-neutral-900">{t('policyTitle')}</p>
+          <p className="mt-0.5 text-xs text-neutral-600">{t('policyBody')}</p>
         </div>
       </div>
 

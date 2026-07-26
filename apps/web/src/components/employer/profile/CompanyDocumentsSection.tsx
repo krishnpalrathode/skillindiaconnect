@@ -33,7 +33,7 @@ export function CompanyDocumentsSection({ company, onRefetch }: CompanyDocuments
   return (
     <section
       aria-label={t('sectionTitle')}
-      className="bg-white rounded-xl border border-neutral-200 shadow-sm"
+      className="rounded-[18px] border border-neutral-200/70 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md"
     >
       <div className="px-5 py-4 border-b border-neutral-100">
         <h2 className="text-base font-semibold text-neutral-900">{t('sectionTitle')}</h2>
