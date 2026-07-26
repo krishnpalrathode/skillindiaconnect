@@ -873,13 +873,17 @@
     "metaTitle": "My Dashboard — SkillIndiaConnect",
     "pageTitle": "Dashboard",
     "greeting": "Hello, {name}",
+    "subtitle": "Explore opportunities and take the next step in your career.",
     "kpi": {
       "applied": "Jobs Applied",
+      "appliedCaption": "Total applications",
       "views": "Profile Views",
       "viewsCaption": "last 30 days",
       "viewsSrLabel": "{count} profile views, last 30 days",
       "shortlisted": "Shortlisted",
-      "updates": "Updates"
+      "shortlistedCaption": "Jobs saved",
+      "updates": "Updates",
+      "updatesCaption": "Latest alerts"
     },
     "recentViews": {
       "title": "Recent profile views",
@@ -890,7 +894,7 @@
     "recommendedJobs": {
       "title": "Recommended Jobs",
       "empty": "No recommendations yet. Complete your profile to get matches.",
-      "viewAll": "Browse all jobs â†’"
+      "viewAll": "Browse all jobs →"
     },
     "myApplications": {
       "title": "My Applications",
@@ -907,7 +911,7 @@
     },
     "profileSummary": {
       "completion": "{pct}% complete",
-      "completeNow": "Complete now â†’"
+      "completeNow": "Complete now →"
     }
   },
   "notifications": {
@@ -2294,6 +2298,275 @@
       "upgradeDialogBody": "Document access is a Pro feature. Upgrade to view and download candidate documents.",
       "upgradeDialogCta": "View plans",
       "upgradeDialogClose": "Cancel"
+    }
+  },
+  "landing": {
+    "meta": {
+      "title": "SkillIndiaConnect — Safe, verified jobs in India and the Gulf",
+      "description": "Find verified jobs in India and the Gulf. Every job includes accommodation, health insurance, and transport. Free for workers."
+    },
+    "nav": {
+      "login": "Login",
+      "signUp": "Sign Up Free",
+      "skipToContent": "Skip to main content",
+      "home": "SkillIndiaConnect home"
+    },
+    "hero": {
+      "headline": "<hl>Safe, verified jobs</hl> in India and the Gulf",
+      "subline": "Every job on SkillIndiaConnect must give you a place to stay, health insurance, and transport. We check every employer before their job goes live.",
+      "ctaWorker": "Find Jobs",
+      "ctaEmployer": "Hire Workers",
+      "freeNote": "Free for workers. Always."
+    },
+    "trust": {
+      "ariaLabel": "Why workers trust us",
+      "verifiedEmployers": {
+        "title": "Verified employers",
+        "body": "We check every company before it can post a job."
+      },
+      "protection": {
+        "title": "Worker protection",
+        "body": "Stay, health cover, and transport on every job."
+      },
+      "free": {
+        "title": "Free for workers",
+        "body": "No fees to make a profile or apply."
+      },
+      "whatsapp": {
+        "title": "Updates on WhatsApp",
+        "body": "We message you when your job status changes."
+      }
+    },
+    "howItWorks": {
+      "heading": "How it works",
+      "subheading": "Three steps to your next job.",
+      "step1": {
+        "title": "Make your profile",
+        "body": "Add your skills and work history. It takes a few minutes on your phone."
+      },
+      "step2": {
+        "title": "Get verified",
+        "body": "Upload your documents. Our team checks them so employers trust your profile."
+      },
+      "step3": {
+        "title": "Get hired",
+        "body": "Apply to jobs that match your skills. Employers contact you directly."
+      },
+      "cta": "Create your free profile"
+    },
+    "employers": {
+      "heading": "Hiring skilled workers?",
+      "body": "Post a job and reach verified workers across India. Browse profiles with checked documents and real work history. Built for hiring in India and the Gulf.",
+      "point1": "Post jobs and get matched applicants",
+      "point2": "Browse candidates with verified documents",
+      "point3": "Clear rules for India and Gulf hiring",
+      "cta": "Hire Workers"
+    },
+    "protection": {
+      "heading": "Every job protects you",
+      "lead": "This is our rule, not a promise. An employer cannot publish a job here unless it includes all three.",
+      "accommodation": {
+        "title": "A place to stay",
+        "body": "Housing is part of the job."
+      },
+      "insurance": {
+        "title": "Health insurance",
+        "body": "Medical cover is part of the job."
+      },
+      "transport": {
+        "title": "Transport",
+        "body": "Travel to work is part of the job."
+      },
+      "enforcement": "Our system blocks any job that leaves one of these out."
+    },
+    "categories": {
+      "heading": "Jobs by trade",
+      "subheading": "Find work that matches your skill.",
+      "construction": "Construction",
+      "driving": "Driving",
+      "electrical": "Electrical",
+      "welding": "Welding",
+      "plumbing": "Plumbing",
+      "hospitality": "Hospitality",
+      "carpentry": "Carpentry",
+      "housekeeping": "Housekeeping",
+      "cta": "See jobs for your trade"
+    },
+    "footer": {
+      "tagline": "Connecting skilled Indian workers with verified employers in India and the Gulf.",
+      "company": "Company",
+      "about": "About",
+      "contact": "Contact",
+      "legal": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms",
+      "support": "Support",
+      "emailLabel": "Email us",
+      "languageLabel": "Language",
+      "rights": "© {year} SkillIndiaConnect. All rights reserved."
+    },
+    "carousel": {
+      "label": "Skilled workers on SkillIndiaConnect",
+      "prev": "Previous image",
+      "next": "Next image",
+      "goTo": "Show image {n}",
+      "slideLabel": "Image {n} of {total}",
+      "categories": {
+        "construction": "Construction & Civil",
+        "electrical": "Electrical & Plumbing",
+        "driving": "Drivers & Logistics",
+        "hospitality": "Hospitality & Catering"
+      },
+      "trust": {
+        "protection": "Every job includes accommodation, health insurance & transport",
+        "free": "Zero fees for workers, always",
+        "verified": "Employers verified before posting"
+      },
+      "verifiedStrip": "Verified employers only"
+    }
+  },
+  "staticPages": {
+    "common": {
+      "backHome": "Back to home",
+      "lastUpdated": "Last updated: {date}",
+      "draftNotice": "This is a draft under legal review. It is not final — please check back before relying on it."
+    },
+    "about": {
+      "metaTitle": "About us — SkillIndiaConnect",
+      "metaDescription": "We connect skilled Indian workers with verified employers in India and the Gulf, and protect workers from recruitment fraud.",
+      "title": "About SkillIndiaConnect",
+      "lead": "We help skilled Indian workers find safe jobs in India and the Gulf — without paying bribes, losing their documents, or being lied to about the job.",
+      "missionHeading": "Our mission",
+      "missionBody": "Millions of Indian workers look for work abroad every year. Too many are cheated by fake agents who take money, hold passports, or promise a job that does not exist. We built SkillIndiaConnect so a worker can deal directly with a checked employer, see the real terms of the job before applying, and keep their own documents.",
+      "protectionHeading": "What we guarantee",
+      "protectionBody": "Every job posted here must include a place to stay, health insurance, and transport. This is not a promise we ask employers to make — our system blocks any job that leaves one of them out. We also check each company before its first job goes live.",
+      "freeHeading": "Free for workers",
+      "freeBody": "Workers never pay us. Making a profile, uploading documents, and applying for jobs are all free. We earn from employers who pay to post jobs.",
+      "whoHeading": "Who we serve",
+      "whoBody": "Construction workers, drivers, electricians, welders, plumbers, carpenters, hospitality and housekeeping staff — the skilled trades that build and run cities across India and the Gulf."
+    },
+    "contact": {
+      "metaTitle": "Contact us — SkillIndiaConnect",
+      "metaDescription": "Get in touch with the SkillIndiaConnect team by email.",
+      "title": "Contact us",
+      "lead": "Have a question, a problem with your account, or a job to report? Email us and a person will read it.",
+      "emailHeading": "Email us",
+      "emailBody": "We reply to most emails within two working days.",
+      "emailCta": "Email support",
+      "supportHoursHeading": "Support hours",
+      "supportHoursBody": "Monday to Saturday, 10:00 to 18:00 India Standard Time (IST).",
+      "reportHeading": "Report a job or employer",
+      "reportBody": "If a job looks fake, asks you for money, or does not match what was posted, email us with the job title and the company name. We check every report. Never pay anyone to get a job on this platform.",
+      "accountHeading": "Account help",
+      "accountBody": "If you cannot sign in, try the \"Forgot password\" link on the login page first. If that does not work, email us from the address you signed up with."
+    },
+    "privacy": {
+      "metaTitle": "Privacy Policy — SkillIndiaConnect",
+      "metaDescription": "How SkillIndiaConnect collects, uses, and protects your personal information.",
+      "title": "Privacy Policy",
+      "lead": "This policy explains what information we collect, why we collect it, and what control you have over it.",
+      "sections": [
+        {
+          "heading": "Information we collect",
+          "body": "When you make a profile we collect your name, date of birth, phone number, email address, current location, work experience, skills, and the documents you upload — such as a passport, experience certificate, or educational certificate. Employers who register provide company details and a registration certificate."
+        },
+        {
+          "heading": "Why we collect it",
+          "body": "We use your information to build your profile, verify who you are, match you to suitable jobs, and share your profile with employers when you apply. We use your phone number and email to send you updates about your applications."
+        },
+        {
+          "heading": "What employers can see",
+          "body": "Employers only see the fields your privacy settings allow. If you turn off phone visibility, employers do not receive your phone number. Religion is hidden by default. Internal notes written by our team are never shown to employers or to you."
+        },
+        {
+          "heading": "Your documents",
+          "body": "Documents are stored securely and are shown through short-lived private links. Every time a document link is issued, we record it. Employers on a paid plan may view the documents you uploaded when you apply to their job."
+        },
+        {
+          "heading": "Messages we send",
+          "body": "We send WhatsApp messages and emails about your applications — for example, when an employer shortlists or selects you. These are service messages about your account, not advertising."
+        },
+        {
+          "heading": "Sharing with others",
+          "body": "We share your profile with employers you apply to. We use trusted service providers to send messages, store files, and take payments from employers. We do not sell your personal information."
+        },
+        {
+          "heading": "How long we keep it",
+          "body": "We keep your profile while your account is open. If you delete your account we remove your personal information, except records we must keep by law — such as payment and invoice records."
+        },
+        {
+          "heading": "Your rights",
+          "body": "You can view and edit your profile at any time from your account. You can change your privacy settings, ask for a copy of your data, or ask us to delete your account by emailing support@skillindiaconnect.com."
+        },
+        {
+          "heading": "Age",
+          "body": "This platform is for adults seeking work. You must be at least 18 years old to create an account."
+        },
+        {
+          "heading": "Changes to this policy",
+          "body": "If we change this policy we will update the date at the top of this page. If the change is significant we will tell you in the app or by email."
+        },
+        {
+          "heading": "Contact",
+          "body": "For any question about your privacy or this policy, email support@skillindiaconnect.com."
+        }
+      ]
+    },
+    "terms": {
+      "metaTitle": "Terms of Use — SkillIndiaConnect",
+      "metaDescription": "The rules for using SkillIndiaConnect as a worker or an employer.",
+      "title": "Terms of Use",
+      "lead": "These terms explain the rules for using SkillIndiaConnect. By making an account you agree to them.",
+      "sections": [
+        {
+          "heading": "Who can use SkillIndiaConnect",
+          "body": "You must be at least 18 years old and give true information about yourself or your company. One email address may be used for one account and one role only."
+        },
+        {
+          "heading": "Your account",
+          "body": "Keep your password private. You are responsible for what happens under your account. Tell us straight away if you think someone else is using it."
+        },
+        {
+          "heading": "Rules for workers",
+          "body": "Give accurate information about your skills, experience, and documents. Do not upload documents that are not yours. Never pay anyone for a job on this platform — we do not charge workers, and no employer or agent is allowed to ask you for money."
+        },
+        {
+          "heading": "Rules for employers",
+          "body": "You must register your company and pass our checks before you can post a job. Every job you post must include accommodation, health insurance, and transport; our system will not publish a job without all three. Job details must be true, including pay, hours, and location."
+        },
+        {
+          "heading": "Verification",
+          "body": "We check companies and documents before approving them, but we cannot guarantee that every listing or profile is perfect. Use your judgement, and report anything that looks wrong."
+        },
+        {
+          "heading": "Applications and hiring",
+          "body": "We introduce workers and employers. We are not the employer, and we are not a party to any employment contract you sign. The employer is responsible for the job, the pay, and the working conditions."
+        },
+        {
+          "heading": "Payments",
+          "body": "Workers pay nothing. Employers pay for subscription plans as shown at checkout. Payment terms, renewals, and refunds are described on the subscription page at the time of purchase."
+        },
+        {
+          "heading": "What you may not do",
+          "body": "Do not post false, misleading, or unlawful content. Do not harass other users. Do not try to break, scrape, or misuse the platform. Do not use the platform to charge workers a recruitment fee."
+        },
+        {
+          "heading": "Suspension",
+          "body": "We may suspend or remove an account that breaks these terms, that is used for fraud, or that puts workers at risk."
+        },
+        {
+          "heading": "Our responsibility",
+          "body": "We work to keep the platform available and accurate, but we provide it as-is. We are not responsible for the actions of employers or workers, or for losses arising from an employment relationship formed through the platform."
+        },
+        {
+          "heading": "Changes to these terms",
+          "body": "We may update these terms. We will change the date at the top of this page, and tell you about significant changes in the app or by email."
+        },
+        {
+          "heading": "Contact",
+          "body": "Questions about these terms? Email support@skillindiaconnect.com."
+        }
+      ]
     }
   }
 }

@@ -126,25 +126,30 @@ export function FileUpload({
           }
         }}
         className={cn(
-          'relative flex flex-col items-center justify-center gap-2',
-          'w-full min-h-[96px] rounded-lg border-2 border-dashed',
-          'transition-colors text-sm font-medium',
+          'relative flex flex-col items-center justify-center gap-2.5',
+          'w-full min-h-[128px] rounded-[22px] border-2 border-dashed px-4 py-5',
+          'text-sm font-medium transition-all duration-200',
           'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
           state.status === 'done'
             ? 'border-success-fg/40 bg-success-bg/30 text-success-fg'
             : state.status === 'error'
               ? 'border-error/50 bg-error-bg/30 text-error-fg cursor-pointer hover:bg-error-bg/50'
-              : 'border-border bg-neutral-50 text-neutral-600 hover:border-primary-400 hover:bg-primary-50 cursor-pointer',
+              : 'cursor-pointer border-neutral-200 bg-neutral-50/60 text-neutral-600 hover:border-[#0F3D91]/40 hover:bg-[#E8F0FE]/40 hover:shadow-sm',
           isActive && 'cursor-wait pointer-events-none',
           disabled &&
             !isActive &&
-            'cursor-not-allowed opacity-60 hover:border-border hover:bg-neutral-50',
+            'cursor-not-allowed opacity-60 hover:border-neutral-200 hover:bg-neutral-50/60 hover:shadow-none',
         )}
       >
         {state.status === 'idle' && (
           <>
-            <Upload className="size-5 text-neutral-600" aria-hidden="true" />
-            <span>{t('dropzoneHint')}</span>
+            <span
+              className="flex size-12 items-center justify-center rounded-full bg-[#E8F0FE] text-[#0F3D91]"
+              aria-hidden="true"
+            >
+              <Upload className="size-5" />
+            </span>
+            <span className="font-semibold text-neutral-700">{t('dropzoneHint')}</span>
             <span className="text-xs text-neutral-600">{t('maxSize', { size: maxMb })}</span>
           </>
         )}
@@ -156,13 +161,13 @@ export function FileUpload({
         {state.status === 'uploading' && (
           <div className="flex flex-col items-center gap-1.5 w-full px-4">
             <Spinner size={20} label={t('uploading', { pct: state.progress })} />
-            <div className="w-full bg-neutral-200 rounded-full h-1.5">
+            <div className="h-2 w-full rounded-full bg-neutral-200">
               <div
                 role="progressbar"
                 aria-valuenow={state.progress}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                className="h-1.5 rounded-full bg-primary-600 transition-all"
+                className="h-2 rounded-full bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] transition-all"
                 style={{ width: `${state.progress}%` }}
               />
             </div>

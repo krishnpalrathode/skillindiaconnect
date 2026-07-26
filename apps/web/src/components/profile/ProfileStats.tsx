@@ -14,9 +14,11 @@ interface ProfileStatsProps {
 
 function StatItem({ value, label }: { value: string | number; label: string }) {
   return (
-    <div className="flex flex-col items-center gap-0.5 min-w-0">
-      <span className="text-xl font-bold text-neutral-900 tabular-nums">{value}</span>
-      <span className="text-xs text-neutral-600 text-center leading-tight">{label}</span>
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-1 px-2">
+      <span className="text-2xl font-bold tabular-nums text-neutral-900">{value}</span>
+      <span className="text-center text-xs font-medium leading-tight text-neutral-600">
+        {label}
+      </span>
     </div>
   );
 }
@@ -40,8 +42,9 @@ export function ProfileStats({ profile, className }: ProfileStatsProps) {
   return (
     <div
       className={cn(
-        'bg-white rounded-xl border border-neutral-200 shadow-sm',
-        'flex items-center justify-around divide-x divide-neutral-100 py-4 px-2',
+        'rounded-[18px] border border-neutral-200/70 bg-white shadow-sm',
+        'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md',
+        'flex items-center justify-around divide-x divide-neutral-100 px-2 py-5',
         className,
       )}
     >

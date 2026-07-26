@@ -46,14 +46,14 @@ export function CandidateBrowseCard({ candidate }: CandidateBrowseCardProps) {
     <Link
       href={`/${locale}/employer/candidates/${candidate.id}`}
       aria-label={srLabel}
-      className="group flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition-colors hover:border-primary-300 hover:bg-primary-50/20 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+      className="group flex flex-col gap-3.5 rounded-2xl border border-neutral-200/70 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#0F3D91]/20 hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
     >
-      <div className="flex items-start gap-3">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
+      <div className="flex items-start gap-3.5">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0F3D91] to-[#2E67B1] text-sm font-semibold text-white">
           {initials(candidate.fullName)}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold text-neutral-900 group-hover:text-primary-700">
+          <p className="truncate font-bold text-neutral-900 transition-colors group-hover:text-[#0F3D91]">
             {candidate.fullName}
           </p>
           {categoryLabel && <p className="truncate text-sm text-neutral-600">{categoryLabel}</p>}
@@ -98,7 +98,7 @@ export function CandidateBrowseCard({ candidate }: CandidateBrowseCardProps) {
           {candidate.skills.slice(0, 3).map((skill) => (
             <li
               key={skill}
-              className="rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600"
+              className="rounded-full bg-[#E8F0FE] px-2.5 py-1 text-xs font-medium text-[#0F3D91]"
             >
               {skill}
             </li>

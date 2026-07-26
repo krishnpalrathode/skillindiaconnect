@@ -42,9 +42,9 @@ export function ChecklistCard({ hint }: ChecklistCardProps) {
     <section
       role="note"
       aria-label={t('title')}
-      className="relative flex items-start gap-3 rounded-xl border border-primary-200 bg-primary-50/60 p-4 pe-10"
+      className="relative flex items-start gap-3.5 rounded-2xl border border-[#0F3D91]/15 bg-gradient-to-br from-[#E8F0FE]/70 to-white p-5 pe-12 shadow-sm"
     >
-      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
+      <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#0F3D91] text-white shadow-sm shadow-[#0F3D91]/25">
         <Sparkles className="size-5" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
@@ -52,7 +52,7 @@ export function ChecklistCard({ hint }: ChecklistCardProps) {
         <p className="mt-0.5 text-sm text-neutral-600">{hint}</p>
         <Link
           href={`/${locale}/employer/profile`}
-          className="mt-2 inline-flex items-center gap-1 rounded text-sm font-medium text-primary-700 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+          className="mt-2.5 inline-flex items-center gap-1 rounded text-sm font-semibold text-[#0F3D91] transition-all hover:gap-1.5 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >
           {t('cta')}
           <ArrowRight className="size-3.5 rtl:rotate-180" aria-hidden="true" />

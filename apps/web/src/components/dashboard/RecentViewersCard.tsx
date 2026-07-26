@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
-import { Eye, Building2 } from 'lucide-react';
+import { Eye, Building2, FileSearch } from 'lucide-react';
 import type { ProfileViewsSummary } from '@/lib/api/profile-views';
 
 interface RecentViewersCardProps {
@@ -33,22 +33,30 @@ export function RecentViewersCard({ summary }: RecentViewersCardProps) {
     <section
       id="recent-views"
       aria-labelledby="recent-views-heading"
-      className="scroll-mt-20 bg-white rounded-xl border border-neutral-200"
+      className="scroll-mt-20 overflow-hidden rounded-2xl border border-neutral-200/70 bg-white/90 shadow-sm backdrop-blur-sm"
     >
-      <div className="flex items-center gap-2 px-4 sm:px-5 py-4 border-b border-neutral-100">
-        <Eye className="size-4 text-primary-600" aria-hidden="true" />
+      <div className="flex items-center gap-2.5 border-b border-neutral-100 px-5 py-4 sm:px-6">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-[#E8F0FE] text-[#0F3D91]">
+          <Eye className="size-4" aria-hidden="true" />
+        </span>
         <h2 id="recent-views-heading" className="text-base font-semibold text-neutral-900">
           {t('title')}
         </h2>
       </div>
 
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
-          <p className="text-sm font-medium text-neutral-700">{t('emptyTitle')}</p>
-          <p className="text-xs text-neutral-600">{t('emptyBody')}</p>
+        <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
+          <span
+            className="flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-[#EEF3FB] to-[#E8F0FE] text-[#0F3D91] ring-8 ring-[#F5F8FC]"
+            aria-hidden="true"
+          >
+            <FileSearch className="size-9" />
+          </span>
+          <p className="text-base font-semibold text-neutral-900">{t('emptyTitle')}</p>
+          <p className="max-w-xs text-sm text-neutral-600">{t('emptyBody')}</p>
           <Link
             href={`/${locale}/profile`}
-            className="mt-1 inline-flex min-h-[44px] items-center rounded-md px-3 text-sm font-medium text-primary-600 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+            className="mt-2 inline-flex min-h-[44px] items-center rounded-xl bg-[#0F3D91] px-5 text-sm font-semibold text-white shadow-sm shadow-[#0F3D91]/20 transition-all hover:bg-[#0d3479] hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
             {t('emptyCta')}
           </Link>
@@ -58,9 +66,9 @@ export function RecentViewersCard({ summary }: RecentViewersCardProps) {
           {rows.map((view, i) => (
             <li
               key={`${view.companyName}-${view.viewedAt}-${i}`}
-              className="flex items-center gap-3 px-4 sm:px-5 py-3"
+              className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-neutral-50/70 sm:px-6"
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-600">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#E8F0FE] text-[#0F3D91]">
                 <Building2 className="size-4" aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">

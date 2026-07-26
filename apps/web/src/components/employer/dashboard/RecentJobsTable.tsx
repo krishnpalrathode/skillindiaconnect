@@ -43,16 +43,22 @@ export function RecentJobsTable({ jobs }: RecentJobsTableProps) {
   return (
     <section
       aria-labelledby="recent-jobs-heading"
-      className="bg-white rounded-xl border border-neutral-200 overflow-hidden"
+      className="h-full overflow-hidden rounded-2xl border border-neutral-200/70 bg-white/90 shadow-sm backdrop-blur-sm"
     >
-      <div className="px-4 sm:px-6 py-4 border-b border-neutral-100 flex items-center justify-between">
-        <h2 id="recent-jobs-heading" className="text-base font-semibold text-neutral-900">
+      <div className="px-5 sm:px-6 py-4 border-b border-neutral-100 flex items-center justify-between">
+        <h2
+          id="recent-jobs-heading"
+          className="flex items-center gap-2.5 text-base font-semibold text-neutral-900"
+        >
+          <span className="flex size-8 items-center justify-center rounded-lg bg-[#E8F0FE] text-[#0F3D91]">
+            <Briefcase className="size-4" aria-hidden="true" />
+          </span>
           {t('title')}
         </h2>
         {jobs.length > 0 && (
           <Link
             href={`/${locale}/employer/jobs`}
-            className="text-sm text-primary-600 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
+            className="rounded text-sm font-semibold text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
             View all
           </Link>
@@ -60,13 +66,16 @@ export function RecentJobsTable({ jobs }: RecentJobsTableProps) {
       </div>
 
       {jobs.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 py-12 px-4 text-center">
-          <span className="size-12 rounded-full bg-neutral-100 flex items-center justify-center">
-            <Briefcase className="size-6 text-neutral-600" aria-hidden="true" />
+        <div className="flex flex-col items-center gap-3 py-14 px-4 text-center">
+          <span
+            className="flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-[#EEF3FB] to-[#E8F0FE] text-[#0F3D91] ring-8 ring-[#F5F8FC]"
+            aria-hidden="true"
+          >
+            <Briefcase className="size-7" />
           </span>
           <div>
-            <p className="text-sm font-medium text-neutral-700">{t('emptyTitle')}</p>
-            <p className="text-xs text-neutral-600 mt-1">{t('emptyBody')}</p>
+            <p className="text-base font-semibold text-neutral-900">{t('emptyTitle')}</p>
+            <p className="mt-1 text-sm text-neutral-600">{t('emptyBody')}</p>
           </div>
         </div>
       ) : (
@@ -96,19 +105,19 @@ export function RecentJobsTable({ jobs }: RecentJobsTableProps) {
             </thead>
             <tbody className="divide-y divide-neutral-100">
               {jobs.map((job) => (
-                <tr key={job.id} className="hover:bg-neutral-50 transition-colors">
-                  <td className="px-4 sm:px-6 py-3 font-medium text-neutral-900">
+                <tr key={job.id} className="transition-colors hover:bg-neutral-50/70">
+                  <td className="px-4 sm:px-6 py-3.5 font-medium text-neutral-900">
                     <Link
                       href={`/${locale}/employer/jobs/${job.id}`}
-                      className="hover:text-primary-700 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
+                      className="rounded transition-colors hover:text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
                     >
                       {job.title}
                     </Link>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3.5">
                     <StatusBadge status="ACTIVE" />
                   </td>
-                  <td className="px-4 py-3 text-neutral-600 hidden sm:table-cell">
+                  <td className="px-4 py-3.5 text-neutral-600 hidden sm:table-cell">
                     {job.createdAt ? new Date(job.createdAt).toLocaleDateString() : '—'}
                   </td>
                 </tr>

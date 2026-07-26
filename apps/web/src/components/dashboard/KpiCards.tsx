@@ -4,7 +4,9 @@ import React from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
+import { Briefcase, Eye, Bookmark, Bell } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 import type { CandidateStats } from '@/lib/api/dashboard';
 import type { ProfileViewsSummary } from '@/lib/api/profile-views';
 
@@ -21,24 +23,50 @@ interface KpiCardsProps {
 interface KpiCardProps {
   label: string;
   value: number | string;
+  icon: React.ReactNode;
+  /** Tailwind classes for the icon tile (bg + text color). */
+  iconClassName: string;
   href?: string;
   caption?: string;
   srLabel?: string;
   loading?: boolean;
 }
 
-function KpiCard({ label, value, href, caption, srLabel, loading }: KpiCardProps) {
+function KpiCard({
+  label,
+  value,
+  icon,
+  iconClassName,
+  href,
+  caption,
+  srLabel,
+  loading,
+}: KpiCardProps) {
   const content = (
-    <div className="bg-white rounded-xl border border-neutral-200 px-4 py-5 flex flex-col gap-1 hover:shadow-sm transition-shadow min-h-[92px]">
-      {loading ? (
-        <Skeleton className="h-8 w-10" />
-      ) : (
-        <span className="text-2xl font-bold text-neutral-900 tabular-nums" aria-hidden={!!srLabel}>
-          {value}
-        </span>
-      )}
-      <span className="text-sm text-neutral-600 leading-snug">{label}</span>
-      {caption && <span className="text-xs text-neutral-600 leading-snug">{caption}</span>}
+    <div className="flex h-full min-h-[104px] items-start gap-3 rounded-2xl border border-neutral-200/70 bg-white/90 px-4 py-4 shadow-sm backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-200 hover:shadow-md sm:px-5">
+      <span
+        className={cn(
+          'flex size-11 shrink-0 items-center justify-center rounded-xl',
+          iconClassName,
+        )}
+        aria-hidden="true"
+      >
+        {icon}
+      </span>
+      <div className="flex min-w-0 flex-col">
+        {loading ? (
+          <Skeleton className="h-8 w-10" />
+        ) : (
+          <span
+            className="text-2xl font-bold leading-tight text-neutral-900 tabular-nums"
+            aria-hidden={!!srLabel}
+          >
+            {value}
+          </span>
+        )}
+        <span className="text-sm font-medium leading-snug text-neutral-700">{label}</span>
+        {caption && <span className="text-xs leading-snug text-neutral-600">{caption}</span>}
+      </div>
     </div>
   );
   if (href) {
@@ -46,7 +74,7 @@ function KpiCard({ label, value, href, caption, srLabel, loading }: KpiCardProps
       <Link
         href={href}
         aria-label={srLabel}
-        className="block focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded-xl"
+        className="block rounded-2xl focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
       >
         {content}
       </Link>
@@ -77,14 +105,23 @@ export function KpiCards({ stats, unreadCount, profileViews }: KpiCardsProps) {
       : undefined;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
       {/* S4-F2: the values are live (GET /candidates/me/stats) and now link into
           Screen 08 — the "once applications open" placeholder is gone. */}
-      <KpiCard label={t('applied')} value={stats.applied} href={`/${locale}/applications`} />
+      <KpiCard
+        label={t('applied')}
+        value={stats.applied}
+        caption={t('appliedCaption')}
+        icon={<Briefcase className="size-5" aria-hidden="true" />}
+        iconClassName="bg-[#E8F0FE] text-[#0F3D91]"
+        href={`/${locale}/applications`}
+      />
       <KpiCard
         label={t('views')}
         value={viewsValue}
         caption={t('viewsCaption')}
+        icon={<Eye className="size-5" aria-hidden="true" />}
+        iconClassName="bg-success-bg text-success-fg"
         href="#recent-views"
         srLabel={viewsSrLabel}
         loading={viewsLoading}
@@ -92,9 +129,19 @@ export function KpiCards({ stats, unreadCount, profileViews }: KpiCardsProps) {
       <KpiCard
         label={t('shortlisted')}
         value={stats.shortlisted}
+        caption={t('shortlistedCaption')}
+        icon={<Bookmark className="size-5" aria-hidden="true" />}
+        iconClassName="bg-[#F3E8FF] text-[#7C3AED]"
         href={`/${locale}/applications?status=SHORTLISTED`}
       />
-      <KpiCard label={t('updates')} value={unreadCount} href={`/${locale}/notifications`} />
+      <KpiCard
+        label={t('updates')}
+        value={unreadCount}
+        caption={t('updatesCaption')}
+        icon={<Bell className="size-5" aria-hidden="true" />}
+        iconClassName="bg-accent-100 text-accent-600"
+        href={`/${locale}/notifications`}
+      />
     </div>
   );
 }

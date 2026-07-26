@@ -92,9 +92,9 @@ export function MyJobsTable() {
     <div className="flex flex-col gap-4">
       {/* Search + Post CTA row */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <div className="relative w-full sm:max-w-xs">
+        <div className="relative w-full sm:max-w-sm">
           <Search
-            className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-neutral-600 pointer-events-none"
+            className="absolute start-3.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600 pointer-events-none"
             aria-hidden="true"
           />
           <Input
@@ -103,12 +103,12 @@ export function MyJobsTable() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('searchPlaceholder')}
             aria-label={t('searchLabel')}
-            className="ps-9"
+            className="ps-10 rounded-xl"
           />
         </div>
         <Link
           href={`/${locale}/employer/jobs/new`}
-          className="inline-flex items-center gap-2 h-11 px-4 rounded-md bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 shrink-0 min-h-[44px]"
+          className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] text-white text-sm font-semibold shadow-md shadow-[#0F3D91]/20 transition-all hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 shrink-0 min-h-[44px]"
         >
           <PlusCircle className="size-4" aria-hidden="true" />
           {t('postNewJob')}
@@ -119,7 +119,7 @@ export function MyJobsTable() {
       <div
         role="tablist"
         aria-label={t('statusFilterLabel')}
-        className="flex gap-0.5 border-b border-neutral-200 overflow-x-auto"
+        className="flex gap-1 overflow-x-auto rounded-xl bg-white/70 p-1 ring-1 ring-neutral-200/70"
       >
         {STATUS_TABS.map((tab) => (
           <button
@@ -127,10 +127,10 @@ export function MyJobsTable() {
             role="tab"
             aria-selected={statusFilter === tab.value}
             onClick={() => setStatusFilter(tab.value)}
-            className={`px-3 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 ${
+            className={`rounded-lg px-3.5 py-2 text-sm font-medium whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 ${
               statusFilter === tab.value
-                ? 'border-primary-600 text-primary-700'
-                : 'border-transparent text-neutral-600 hover:text-neutral-800'
+                ? 'bg-[#0F3D91] text-white shadow-sm'
+                : 'text-neutral-600 hover:bg-neutral-100 hover:text-[#0F3D91]'
             }`}
           >
             {t(`tabs.${tab.labelKey}`)}
@@ -157,17 +157,20 @@ export function MyJobsTable() {
 
       {/* Empty state */}
       {!isLoading && !error && jobs.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center gap-4">
-          <div className="size-14 rounded-full bg-neutral-100 flex items-center justify-center">
-            <Briefcase className="size-7 text-neutral-600" aria-hidden="true" />
+        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-neutral-200/70 bg-white/90 py-16 text-center shadow-sm">
+          <div
+            className="flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-[#EEF3FB] to-[#E8F0FE] text-[#0F3D91] ring-8 ring-[#F5F8FC]"
+            aria-hidden="true"
+          >
+            <Briefcase className="size-9" />
           </div>
           <div>
-            <p className="text-base font-semibold text-neutral-700">{t('emptyTitle')}</p>
-            <p className="text-sm text-neutral-600 mt-1">{t('emptyBody')}</p>
+            <p className="text-lg font-semibold text-neutral-900">{t('emptyTitle')}</p>
+            <p className="mt-1 text-sm text-neutral-600">{t('emptyBody')}</p>
           </div>
           <Link
             href={`/${locale}/employer/jobs/new`}
-            className="inline-flex items-center gap-2 h-11 px-4 rounded-md bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+            className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] text-white text-sm font-semibold shadow-md shadow-[#0F3D91]/20 transition-all hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
             <PlusCircle className="size-4" aria-hidden="true" />
             {t('postFirstJob')}
@@ -177,63 +180,81 @@ export function MyJobsTable() {
 
       {/* Table */}
       {!isLoading && !error && jobs.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-neutral-200">
+        <div className="overflow-x-auto rounded-2xl border border-neutral-200/70 bg-white/90 shadow-sm backdrop-blur-sm">
           <table className="w-full min-w-[640px] text-sm" aria-label={t('tableLabel')}>
-            <thead className="bg-neutral-50 border-b border-neutral-200">
+            <thead className="bg-neutral-50/80 border-b border-neutral-200">
               <tr>
-                <th scope="col" className="text-start px-4 py-3 font-semibold text-neutral-700">
+                <th
+                  scope="col"
+                  className="text-start px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
+                >
                   {t('col.title')}
                 </th>
-                <th scope="col" className="text-start px-3 py-3 font-semibold text-neutral-700">
+                <th
+                  scope="col"
+                  className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
+                >
                   {t('col.market')}
                 </th>
-                <th scope="col" className="text-start px-3 py-3 font-semibold text-neutral-700">
+                <th
+                  scope="col"
+                  className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
+                >
                   {t('col.status')}
                 </th>
-                <th scope="col" className="text-start px-3 py-3 font-semibold text-neutral-700">
+                <th
+                  scope="col"
+                  className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
+                >
                   {t('col.applications')}
                 </th>
-                <th scope="col" className="text-start px-3 py-3 font-semibold text-neutral-700">
+                <th
+                  scope="col"
+                  className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
+                >
                   {t('col.posted')}
                 </th>
-                <th scope="col" className="text-start px-3 py-3 font-semibold text-neutral-700">
+                <th
+                  scope="col"
+                  className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
+                >
                   {t('col.actions')}
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
               {jobs.map((job) => (
-                <tr key={job.id} className="hover:bg-neutral-50 transition-colors">
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-neutral-900 leading-snug">{job.title}</p>
-                    <p className="text-xs text-neutral-600">{job.location}</p>
+                <tr key={job.id} className="transition-colors hover:bg-neutral-50/70">
+                  <td className="px-5 py-4">
+                    <p className="font-semibold text-neutral-900 leading-snug">{job.title}</p>
+                    <p className="mt-0.5 text-xs text-neutral-600">{job.location}</p>
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-4">
                     <Badge variant={job.market === 'GULF' ? 'primary' : 'accent'}>
                       {job.market === 'GULF' ? t('marketGulf') : t('marketLocal')}
                     </Badge>
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-4">
                     <JobStatusBadge status={job.status} />
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-4">
                     {/* S4-F3: live applicant count → the job's pipeline (Screen 18). */}
                     <Link
                       href={`/${locale}/employer/jobs/${job.id}/applicants`}
-                      className="inline-flex min-h-11 items-center gap-1 rounded font-medium text-primary-600 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+                      className="inline-flex min-h-11 items-center gap-1 rounded font-semibold text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
                       aria-label={t('applicantsCountLabel', { count: job.applicantCount ?? 0 })}
                     >
                       {job.applicantCount ?? 0}
                     </Link>
                   </td>
-                  <td className="px-3 py-3 text-neutral-600">
+                  <td className="px-3 py-4 text-neutral-600">
                     {job.publishedAt
                       ? formatPostedAgo(job.publishedAt, locale)
                       : job.status === 'DRAFT'
                         ? t('draftNotPosted')
                         : formatPostedAgo(job.createdAt, locale)}
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-4">
                     <JobRowActions
                       job={job}
                       onJobUpdated={handleJobUpdated}
@@ -249,7 +270,7 @@ export function MyJobsTable() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-neutral-600">
+        <div className="flex items-center justify-between rounded-2xl border border-neutral-200/70 bg-white/90 px-5 py-3 text-sm text-neutral-600 shadow-sm">
           <span>{t('pageInfo', { page, totalPages })}</span>
           <div className="flex gap-2">
             <Button

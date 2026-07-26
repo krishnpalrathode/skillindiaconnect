@@ -95,7 +95,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-4">
+    <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 lg:py-8">
       <ProfileHero profile={profile} completion={completion} />
 
       <ProfileStats profile={profile} />
