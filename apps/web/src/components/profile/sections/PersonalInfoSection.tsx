@@ -23,10 +23,10 @@ interface PersonalInfoSectionProps {
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <dt className="text-xs font-medium text-neutral-600">{label}</dt>
-      <dd className="text-sm text-neutral-900">
-        {value || <span className="text-neutral-600">—</span>}
+    <div className="flex flex-col gap-1">
+      <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-600">{label}</dt>
+      <dd className="text-sm font-medium text-neutral-900">
+        {value || <span className="font-normal text-neutral-600">—</span>}
       </dd>
     </div>
   );
@@ -100,7 +100,7 @@ export function PersonalInfoSection({
   ) => setDraft((d) => ({ ...d, [key]: value }));
 
   const viewContent = (
-    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+    <dl className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
       <InfoRow
         label={t('phoneLabel')}
         value={
@@ -140,6 +140,7 @@ export function PersonalInfoSection({
     <div className="flex flex-col gap-4">
       <Field id="pi-fullName" label={t('nameLabel') || 'Full name'} required>
         <Input
+          className="h-12 rounded-xl"
           value={(draft.fullName as string) ?? ''}
           onChange={(e) => set('fullName', e.target.value)}
           placeholder={t('namePlaceholder')}
@@ -148,6 +149,7 @@ export function PersonalInfoSection({
 
       <Field id="pi-fatherName" label={t('fatherNameLabel')}>
         <Input
+          className="h-12 rounded-xl"
           value={(draft.fatherName as string) ?? ''}
           onChange={(e) => set('fatherName', e.target.value)}
           placeholder={t('fatherNamePlaceholder')}
@@ -156,6 +158,7 @@ export function PersonalInfoSection({
 
       <Field id="pi-dob" label={t('dobLabel')}>
         <Input
+          className="h-12 rounded-xl"
           type="date"
           value={(draft.dob as string) ?? ''}
           onChange={(e) => set('dob', e.target.value)}
@@ -169,7 +172,7 @@ export function PersonalInfoSection({
           onChange={(e) =>
             set('maritalStatus', (e.target.value || undefined) as MaritalStatus | undefined)
           }
-          className="h-11 w-full rounded-md border border-input bg-background ps-3 pe-3 text-sm focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+          className="h-12 w-full rounded-xl border border-input bg-background ps-3 pe-3 text-sm transition-colors focus-visible:border-primary-600 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >
           <option value="">—</option>
           {(['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'] as MaritalStatus[]).map((s) => (
@@ -182,6 +185,7 @@ export function PersonalInfoSection({
 
       <Field id="pi-religion" label={t('religionLabel')}>
         <Input
+          className="h-12 rounded-xl"
           value={(draft.religion as string) ?? ''}
           onChange={(e) => set('religion', e.target.value)}
           placeholder={t('religionPlaceholder')}
@@ -190,6 +194,7 @@ export function PersonalInfoSection({
 
       <Field id="pi-languages" label={t('languagesLabel')}>
         <Input
+          className="h-12 rounded-xl"
           value={languagesStr}
           onChange={(e) => setLanguagesStr(e.target.value)}
           placeholder={t('languagesPlaceholder')}
@@ -198,6 +203,7 @@ export function PersonalInfoSection({
 
       <Field id="pi-nationality" label={t('nationalityLabel')}>
         <Input
+          className="h-12 rounded-xl"
           value={(draft.nationality as string) ?? ''}
           onChange={(e) => set('nationality', e.target.value)}
           placeholder={t('nationalityPlaceholder')}
@@ -206,6 +212,7 @@ export function PersonalInfoSection({
 
       <Field id="pi-location" label={t('locationLabel')}>
         <Input
+          className="h-12 rounded-xl"
           value={(draft.currentLocation as string) ?? ''}
           onChange={(e) => set('currentLocation', e.target.value)}
           placeholder={t('locationPlaceholder')}
@@ -214,6 +221,7 @@ export function PersonalInfoSection({
 
       <Field id="pi-notice" label={t('noticePeriodLabel')}>
         <Input
+          className="h-12 rounded-xl"
           type="number"
           min={0}
           max={365}

@@ -134,10 +134,12 @@ export default function EmployerDashboardPage() {
   const hasNoJobs = dashboard.recentJobs.length === 0;
 
   return (
-    <div className="max-w-5xl flex flex-col gap-6">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 lg:gap-7">
       <div>
-        <h1 className="text-2xl font-bold text-neutral-900">{greeting}</h1>
-        <p className="text-sm text-neutral-600 mt-0.5">{company.name}</p>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
+          {greeting}
+        </h1>
+        <p className="mt-1 text-sm text-neutral-600">{company.name}</p>
       </div>
 
       <EmployerKpis kpis={dashboard.kpis} />

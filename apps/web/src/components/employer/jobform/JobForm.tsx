@@ -151,16 +151,24 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
     <form
       onSubmit={(e) => e.preventDefault()}
       noValidate
-      className="flex flex-col gap-8"
+      className="flex flex-col gap-9"
       aria-label={isEdit ? t('editFormLabel') : t('createFormLabel')}
     >
       {/* ── 1. Basic Info ─────────────────────────────────────────────────────── */}
       <section aria-labelledby="basic-heading" className="flex flex-col gap-4">
-        <div>
-          <h3 id="basic-heading" className="text-base font-semibold text-neutral-900">
-            {t('basic.heading')}
-          </h3>
-          <p className="mt-0.5 text-sm text-neutral-600">{t('basic.subtitle')}</p>
+        <div className="flex items-start gap-3 border-b border-neutral-100 pb-3">
+          <span
+            aria-hidden="true"
+            className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#E8F0FE] text-sm font-bold text-[#0F3D91]"
+          >
+            1
+          </span>
+          <div>
+            <h3 id="basic-heading" className="text-base font-bold text-neutral-900">
+              {t('basic.heading')}
+            </h3>
+            <p className="mt-0.5 text-sm text-neutral-600">{t('basic.subtitle')}</p>
+          </div>
         </div>
 
         <Field id="job-title" label={t('basic.titleLabel')} required error={errors.title}>
@@ -185,10 +193,10 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
             {marketOptions.map((opt) => (
               <label
                 key={opt.value}
-                className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 cursor-pointer transition-colors text-sm font-medium min-h-[44px] ${
+                className={`flex items-center gap-2 rounded-xl border-2 px-5 py-2.5 cursor-pointer transition-all text-sm font-semibold min-h-[44px] ${
                   values.market === opt.value
-                    ? 'border-primary-600 bg-primary-50 text-primary-700'
-                    : 'border-neutral-200 text-neutral-700 hover:border-primary-300 hover:bg-primary-50/50'
+                    ? 'border-[#0F3D91] bg-[#E8F0FE] text-[#0F3D91] shadow-sm'
+                    : 'border-neutral-200 text-neutral-700 hover:border-[#0F3D91]/40 hover:bg-[#E8F0FE]/40'
                 }`}
               >
                 <input
@@ -211,7 +219,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
             value={values.categoryId}
             onChange={(e) => patch({ categoryId: e.target.value })}
             aria-required
-            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-primary-600 ps-3 pe-3"
+            className="flex h-12 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-[#0F3D91] ps-3.5 pe-3.5"
           >
             <option value="" disabled>
               {categories.length === 0 ? 'Loading categories…' : 'Select a category'}
@@ -235,7 +243,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
             onChange={(e) =>
               patch({ employmentType: e.target.value as JobFormValues['employmentType'] })
             }
-            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-primary-600 ps-3 pe-3"
+            className="flex h-12 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-[#0F3D91] ps-3.5 pe-3.5"
           >
             <option value="FULL_TIME">Full-time</option>
             <option value="PART_TIME">Part-time</option>
@@ -258,12 +266,20 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
       </section>
 
       {/* ── 2. Job Description ────────────────────────────────────────────────── */}
-      <section aria-labelledby="desc-heading" className="flex flex-col gap-3">
-        <div>
-          <h3 id="desc-heading" className="text-base font-semibold text-neutral-900">
-            {t('description.heading')}
-          </h3>
-          <p className="mt-0.5 text-sm text-neutral-600">{t('description.subtitle')}</p>
+      <section aria-labelledby="desc-heading" className="flex flex-col gap-4">
+        <div className="flex items-start gap-3 border-b border-neutral-100 pb-3">
+          <span
+            aria-hidden="true"
+            className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#E8F0FE] text-sm font-bold text-[#0F3D91]"
+          >
+            2
+          </span>
+          <div>
+            <h3 id="desc-heading" className="text-base font-bold text-neutral-900">
+              {t('description.heading')}
+            </h3>
+            <p className="mt-0.5 text-sm text-neutral-600">{t('description.subtitle')}</p>
+          </div>
         </div>
         <RichTextField
           id="job-description"
@@ -284,12 +300,20 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
       <BenefitsSection values={values} onChange={(p) => patch(p as Partial<JobFormValues>)} />
 
       {/* ── 5. Requirements ───────────────────────────────────────────────────── */}
-      <section aria-labelledby="req-heading" className="flex flex-col gap-3">
-        <div>
-          <h3 id="req-heading" className="text-base font-semibold text-neutral-900">
-            {t('requirements.heading')}
-          </h3>
-          <p className="mt-0.5 text-sm text-neutral-600">{t('requirements.subtitle')}</p>
+      <section aria-labelledby="req-heading" className="flex flex-col gap-4">
+        <div className="flex items-start gap-3 border-b border-neutral-100 pb-3">
+          <span
+            aria-hidden="true"
+            className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#E8F0FE] text-sm font-bold text-[#0F3D91]"
+          >
+            5
+          </span>
+          <div>
+            <h3 id="req-heading" className="text-base font-bold text-neutral-900">
+              {t('requirements.heading')}
+            </h3>
+            <p className="mt-0.5 text-sm text-neutral-600">{t('requirements.subtitle')}</p>
+          </div>
         </div>
         <RequirementsField
           value={values.requirements}
@@ -310,14 +334,14 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
         <PublishErrorHandler error={publishError} onDismiss={() => setPublishError(null)} />
       )}
 
-      {/* ── Actions ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap gap-3 pt-2 border-t border-neutral-100">
+      {/* ── Actions — sticky so they stay reachable on this long form ─────────── */}
+      <div className="sticky bottom-0 -mx-6 -mb-6 flex flex-wrap items-center gap-3 border-t border-neutral-200/70 bg-white/95 px-6 py-4 backdrop-blur-md sm:rounded-b-2xl">
         <Button
           type="button"
           variant="outline"
           onClick={handleSaveDraft}
           disabled={draftStatus === 'saving' || publishStatus === 'saving'}
-          className="min-h-[44px]"
+          className="min-h-[44px] rounded-xl"
         >
           {draftStatus === 'saving' ? (
             <>
@@ -335,7 +359,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
           type="button"
           onClick={handlePublish}
           disabled={draftStatus === 'saving' || publishStatus === 'saving'}
-          className="min-h-[44px]"
+          className="min-h-[44px] rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] shadow-md shadow-[#0F3D91]/20 transition-all hover:-translate-y-0.5 hover:shadow-lg"
         >
           {publishStatus === 'saving' ? (
             <>

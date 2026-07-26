@@ -49,22 +49,26 @@ export function PreviewExportStep({ profile, onBack }: PreviewExportStepProps) {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-7">
       <div className="text-center">
-        <h2 className="text-xl font-bold text-neutral-900">{t('title')}</h2>
-        <p className="mt-1 text-sm text-neutral-600">{t('subtitle')}</p>
+        <h2 className="text-xl font-bold tracking-tight text-neutral-900 sm:text-2xl">
+          {t('title')}
+        </h2>
+        <p className="mt-1.5 text-sm text-neutral-600">{t('subtitle')}</p>
       </div>
 
       {/* S7-F1 export hub: completion ring + live preview + Download PDF (async). */}
       <ResumeExportHub profile={profile} />
 
       {/* Video slot (Coming Soon — B6) */}
-      <div className="flex flex-col gap-2 p-4 rounded-lg border border-dashed border-neutral-200 bg-neutral-50">
-        <div className="flex items-center gap-2">
-          <Video className="size-4 text-neutral-600" aria-hidden="true" />
-          <p className="text-sm font-medium text-neutral-600">{t('videoTitle')}</p>
+      <div className="flex items-start gap-3 rounded-[22px] border-2 border-dashed border-neutral-200 bg-neutral-50/60 p-5">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600">
+          <Video className="size-5" aria-hidden="true" />
+        </span>
+        <div>
+          <p className="text-sm font-semibold text-neutral-700">{t('videoTitle')}</p>
+          <p className="mt-0.5 text-xs text-neutral-600">{t('videoComingSoon')}</p>
         </div>
-        <p className="text-xs text-neutral-600">{t('videoComingSoon')}</p>
       </div>
 
       {error && (
@@ -74,7 +78,13 @@ export function PreviewExportStep({ profile, onBack }: PreviewExportStepProps) {
       )}
 
       <div className="flex justify-between">
-        <Button type="button" variant="outline" size="md" onClick={onBack}>
+        <Button
+          type="button"
+          variant="outline"
+          size="md"
+          onClick={onBack}
+          className="rounded-xl px-6"
+        >
           {tNav('back')}
         </Button>
         <Button
@@ -83,6 +93,7 @@ export function PreviewExportStep({ profile, onBack }: PreviewExportStepProps) {
           size="lg"
           loading={finishing}
           onClick={handleFinish}
+          className="rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] px-8 shadow-md transition-all hover:shadow-lg"
         >
           {t('saveAndContinue')}
         </Button>

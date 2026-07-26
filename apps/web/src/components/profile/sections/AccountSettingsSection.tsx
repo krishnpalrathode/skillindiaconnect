@@ -106,13 +106,15 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
   return (
     <section
       aria-label={tSec('accountSettings')}
-      className="bg-white rounded-xl border border-neutral-200 shadow-sm"
+      className="rounded-[18px] border border-neutral-200/70 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md"
     >
-      <div className="flex items-center px-5 py-4 border-b border-neutral-100">
-        <h2 className="text-base font-semibold text-neutral-900">{tSec('accountSettings')}</h2>
+      <div className="flex items-center border-b border-neutral-100 px-5 py-4 sm:px-6">
+        <h2 className="text-lg font-bold tracking-tight text-neutral-900">
+          {tSec('accountSettings')}
+        </h2>
       </div>
 
-      <div className="px-5 py-4 flex flex-col gap-6">
+      <div className="flex flex-col gap-7 px-5 py-5 sm:px-6">
         {/* Privacy controls */}
         <div>
           <h3 className="text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-2">
@@ -178,6 +180,7 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
             <div className="grid grid-cols-2 gap-3">
               <Field id="salary-min" label={t('salaryMinLabel')}>
                 <Input
+                  className="h-12 rounded-xl"
                   type="number"
                   min={0}
                   value={salaryMin}
@@ -187,6 +190,7 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
               </Field>
               <Field id="salary-max" label={t('salaryMaxLabel')}>
                 <Input
+                  className="h-12 rounded-xl"
                   type="number"
                   min={0}
                   value={salaryMax}
@@ -200,7 +204,7 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
                 id="salary-currency"
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="h-11 w-full rounded-md border border-input bg-background ps-3 pe-3 text-sm focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+                className="h-12 w-full rounded-xl border border-input bg-background ps-3 pe-3 text-sm transition-colors focus-visible:border-primary-600 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
               >
                 <option value="INR">INR — Indian Rupee</option>
                 <option value="AED">AED — UAE Dirham</option>
@@ -215,7 +219,7 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
               size="sm"
               loading={salarySaving}
               onClick={saveSalary}
-              className="self-start"
+              className="min-h-10 self-start rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] px-5 text-white shadow-sm transition-all hover:shadow-md"
             >
               {t('saveSalary')}
             </Button>

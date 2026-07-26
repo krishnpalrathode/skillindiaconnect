@@ -58,13 +58,15 @@ export function ResumeSettingsPanel({
   }
 
   return (
-    <section aria-label={t('title')} className="flex flex-col gap-2">
-      <h4 className="flex items-center gap-1.5 text-sm font-semibold text-neutral-700">
-        <SlidersHorizontal className="size-4" aria-hidden="true" />
+    <section aria-label={t('title')} className="flex flex-col gap-2.5">
+      <h4 className="flex items-center gap-2.5 text-sm font-bold text-neutral-800">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#E8F0FE] text-[#0F3D91]">
+          <SlidersHorizontal className="size-4" aria-hidden="true" />
+        </span>
         {t('title')}
       </h4>
 
-      <div className="rounded-lg border border-neutral-200 bg-white px-4">
+      <div className="rounded-[22px] border border-neutral-200/70 bg-white px-5 shadow-sm">
         <SettingToggleRow
           label={t('showPhone')}
           checked={settings.showPhone}

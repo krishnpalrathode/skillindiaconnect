@@ -28,8 +28,8 @@ export function EmployerKpis({ kpis }: EmployerKpisProps) {
       label: t('activeJobs'),
       value: kpis.activeJobs,
       icon: <Briefcase className="size-5" aria-hidden="true" />,
-      colorClass: 'text-primary-600',
-      bgClass: 'bg-primary-50',
+      colorClass: 'text-[#0F3D91]',
+      bgClass: 'bg-[#E8F0FE]',
     },
     {
       key: 'totalJobViews',
@@ -45,15 +45,15 @@ export function EmployerKpis({ kpis }: EmployerKpisProps) {
       value: kpis.totalApplications,
       icon: <Users className="size-5" aria-hidden="true" />,
       colorClass: 'text-accent-600',
-      bgClass: 'bg-orange-50',
+      bgClass: 'bg-accent-100',
     },
     {
       key: 'shortlisted',
       label: t('shortlisted'),
       value: kpis.shortlisted,
       icon: <Star className="size-5" aria-hidden="true" />,
-      colorClass: 'text-warning-fg',
-      bgClass: 'bg-warning-bg',
+      colorClass: 'text-[#7C3AED]',
+      bgClass: 'bg-[#F3E8FF]',
     },
     {
       key: 'hiredThisMonth',
@@ -70,21 +70,21 @@ export function EmployerKpis({ kpis }: EmployerKpisProps) {
       {cards.map(({ key, label, value, icon, colorClass, bgClass }) => (
         <div
           key={key}
-          className="bg-white rounded-xl border border-neutral-200 p-4 flex flex-col gap-3"
+          className="group flex flex-col gap-3 rounded-2xl border border-neutral-200/70 bg-white/90 p-4 shadow-sm backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-5"
         >
           <span
-            className={`size-10 rounded-lg flex items-center justify-center ${bgClass} ${colorClass}`}
+            className={`size-11 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105 ${bgClass} ${colorClass}`}
           >
             {icon}
           </span>
           <div>
             <dd
-              className="text-2xl font-bold tabular-nums text-neutral-900"
+              className="text-2xl font-bold tabular-nums leading-tight text-neutral-900"
               aria-label={`${label}: ${value}`}
             >
               {value}
             </dd>
-            <dt className="text-xs text-neutral-600 mt-0.5">{label}</dt>
+            <dt className="text-xs font-medium text-neutral-600 mt-1">{label}</dt>
           </div>
         </div>
       ))}

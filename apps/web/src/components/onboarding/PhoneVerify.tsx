@@ -105,10 +105,12 @@ export function PhoneVerify({
 
   if (stage === 'verified') {
     return (
-      <div className="flex items-center gap-2 p-3 rounded-lg bg-success-bg border border-success-fg/20">
-        <CheckCircle2 className="size-5 text-success-fg shrink-0" aria-hidden="true" />
+      <div className="flex items-center gap-3 rounded-2xl border border-success-fg/20 bg-success-bg p-4">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
+          <CheckCircle2 className="size-5 text-success-fg" aria-hidden="true" />
+        </span>
         <div>
-          <p className="text-sm font-medium text-success-fg">{t('phoneVerified')}</p>
+          <p className="text-sm font-semibold text-success-fg">{t('phoneVerified')}</p>
           <p className="text-xs text-neutral-600">
             <Ltr>{phone}</Ltr>
           </p>
@@ -116,7 +118,7 @@ export function PhoneVerify({
         <button
           type="button"
           onClick={() => setStage('input')}
-          className="ms-auto text-xs text-neutral-600 underline hover:text-neutral-700"
+          className="ms-auto rounded text-xs font-medium text-neutral-600 underline hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {t('phoneVerify')}
         </button>
@@ -125,10 +127,12 @@ export function PhoneVerify({
   }
 
   return (
-    <div className="flex flex-col gap-3 p-4 rounded-lg border border-border bg-neutral-50">
-      <div className="flex items-center gap-2">
-        <Phone className="size-4 text-primary-600 shrink-0" aria-hidden="true" />
-        <p className="text-sm font-semibold text-neutral-800">{t('phoneVerifyTitle')}</p>
+    <div className="flex flex-col gap-3 rounded-[22px] border border-neutral-200/70 bg-gradient-to-br from-neutral-50 to-[#E8F0FE]/40 p-5 shadow-sm">
+      <div className="flex items-center gap-2.5">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#E8F0FE] text-[#0F3D91]">
+          <Phone className="size-4" aria-hidden="true" />
+        </span>
+        <p className="text-sm font-bold text-neutral-800">{t('phoneVerifyTitle')}</p>
       </div>
       <p className="text-xs text-neutral-600">{t('phoneVerifySubtitle')}</p>
 
@@ -142,6 +146,7 @@ export function PhoneVerify({
               onChange={(e) => setPhone(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               disabled={loading}
+              className="h-12 rounded-xl bg-white"
             />
           </Field>
           <div className="flex items-end">
@@ -152,6 +157,7 @@ export function PhoneVerify({
               loading={loading}
               disabled={!phone.trim()}
               onClick={handleSend}
+              className="h-12 rounded-xl"
             >
               {t('phoneVerify')}
             </Button>

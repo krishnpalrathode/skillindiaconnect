@@ -62,102 +62,111 @@ export function EmployerProfileHero({ profile, onProfileUpdate }: EmployerProfil
         : t('uploadLogoLabel');
 
   return (
-    <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-5">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-        {/* Logo zone */}
-        <div
-          role="button"
-          tabIndex={isActive ? -1 : 0}
-          aria-label={logoLabel}
-          aria-disabled={isActive}
-          aria-busy={isActive}
-          onClick={handleLogoInteract}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              handleLogoInteract();
-            }
-          }}
-          className={cn(
-            'relative flex items-center justify-center shrink-0',
-            'size-20 rounded-xl border-2 border-dashed overflow-hidden',
-            'transition-colors cursor-pointer',
-            'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
-            isActive
-              ? 'border-neutral-300 bg-neutral-50 cursor-wait'
-              : upload.status === 'error'
-                ? 'border-error/50 bg-error-bg/30 hover:bg-error-bg/50'
-                : logoUrl
-                  ? 'border-neutral-200 bg-neutral-50 hover:border-primary-400'
-                  : 'border-neutral-300 bg-neutral-50 hover:border-primary-400 hover:bg-primary-50',
-          )}
-        >
-          {isActive ? (
-            <Spinner size={24} label={t('uploading')} />
-          ) : logoUrl && upload.status !== 'error' ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={logoUrl}
-              alt={t('logoAlt')}
-              className="size-full object-cover"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          ) : (
-            <Building2 className="size-8 text-neutral-300" aria-hidden="true" />
-          )}
+    <div className="overflow-hidden rounded-2xl border border-neutral-200/70 bg-white shadow-sm">
+      {/* Gradient banner */}
+      <div
+        className="h-24 bg-gradient-to-br from-[#0F3D91] via-[#2E67B1] to-[#0F3D91]"
+        aria-hidden="true"
+      />
+      <div className="p-5 sm:p-6">
+        <div className="-mt-16 flex flex-col sm:flex-row gap-5 items-start sm:items-end">
+          {/* Logo zone */}
+          <div
+            role="button"
+            tabIndex={isActive ? -1 : 0}
+            aria-label={logoLabel}
+            aria-disabled={isActive}
+            aria-busy={isActive}
+            onClick={handleLogoInteract}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleLogoInteract();
+              }
+            }}
+            className={cn(
+              'relative flex items-center justify-center shrink-0',
+              'size-24 rounded-2xl border-2 border-dashed overflow-hidden bg-white shadow-md',
+              'transition-all cursor-pointer',
+              'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
+              isActive
+                ? 'border-neutral-300 bg-neutral-50 cursor-wait'
+                : upload.status === 'error'
+                  ? 'border-error/50 bg-error-bg/30 hover:bg-error-bg/50'
+                  : logoUrl
+                    ? 'border-white bg-neutral-50 hover:border-[#0F3D91]/40'
+                    : 'border-neutral-300 bg-neutral-50 hover:border-[#0F3D91]/40 hover:bg-[#E8F0FE]',
+            )}
+          >
+            {isActive ? (
+              <Spinner size={24} label={t('uploading')} />
+            ) : logoUrl && upload.status !== 'error' ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={logoUrl}
+                alt={t('logoAlt')}
+                className="size-full object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <Building2 className="size-8 text-neutral-300" aria-hidden="true" />
+            )}
 
-          {/* Hover overlay for existing logo */}
-          {logoUrl && !isActive && upload.status !== 'error' && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity">
-              <RefreshCw className="size-5 text-white" aria-hidden="true" />
-            </div>
-          )}
-        </div>
-
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png"
-          className="sr-only"
-          aria-label={logoLabel}
-          onChange={handleFileChange}
-        />
-
-        {/* Company info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-bold text-neutral-900 break-words">{company.name}</h1>
-            {isApproved && (
-              <Badge variant="success" aria-label={t('approvedBadge')}>
-                {t('verifiedBadge')}
-              </Badge>
+            {/* Hover overlay for existing logo */}
+            {logoUrl && !isActive && upload.status !== 'error' && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity">
+                <RefreshCw className="size-5 text-white" aria-hidden="true" />
+              </div>
             )}
           </div>
 
-          {isApproved && <p className="text-xs text-success-fg mt-0.5">{t('approvedBadge')}</p>}
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/jpeg,image/png"
+            className="sr-only"
+            aria-label={logoLabel}
+            onChange={handleFileChange}
+          />
 
-          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-sm text-neutral-600">
-            {company.industryType && <span>{company.industryType}</span>}
-            {company.location && <span>{company.location}</span>}
+          {/* Company info */}
+          <div className="flex-1 min-w-0 pb-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight text-neutral-900 break-words">
+                {company.name}
+              </h1>
+              {isApproved && (
+                <Badge variant="success" aria-label={t('approvedBadge')}>
+                  {t('verifiedBadge')}
+                </Badge>
+              )}
+            </div>
+
+            {isApproved && <p className="text-xs text-success-fg mt-0.5">{t('approvedBadge')}</p>}
+
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-sm text-neutral-600">
+              {company.industryType && <span>{company.industryType}</span>}
+              {company.location && <span>{company.location}</span>}
+            </div>
+
+            {upload.status === 'error' && (
+              <p className="text-xs text-error-fg mt-1" role="alert">
+                {upload.errorMessage ?? t('uploadError')}
+              </p>
+            )}
+            {upload.status === 'done' && (
+              <p className="text-xs text-success-fg mt-1">{t('uploadDone')}</p>
+            )}
+
+            <p className="text-xs text-neutral-600 mt-1">{t('typeHint')}</p>
           </div>
-
-          {upload.status === 'error' && (
-            <p className="text-xs text-error-fg mt-1" role="alert">
-              {upload.errorMessage ?? t('uploadError')}
-            </p>
-          )}
-          {upload.status === 'done' && (
-            <p className="text-xs text-success-fg mt-1">{t('uploadDone')}</p>
-          )}
-
-          <p className="text-xs text-neutral-600 mt-1">{t('typeHint')}</p>
         </div>
-      </div>
 
-      {/* Checklist nudge — below the hero row */}
-      {profileChecklist.hint && <ChecklistNudge hint={profileChecklist.hint} className="mt-4" />}
+        {/* Checklist nudge — below the hero row */}
+        {profileChecklist.hint && <ChecklistNudge hint={profileChecklist.hint} className="mt-5" />}
+      </div>
     </div>
   );
 }

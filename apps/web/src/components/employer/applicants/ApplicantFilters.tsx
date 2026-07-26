@@ -64,11 +64,11 @@ export function ApplicantFilters({
               aria-label={t('tabSrLabel', { label, count: n })}
               onClick={() => onStatusChange(tab)}
               className={cn(
-                'min-h-11 shrink-0 rounded-lg px-3 text-sm font-medium whitespace-nowrap transition-colors',
+                'min-h-11 shrink-0 rounded-xl px-4 text-sm font-semibold whitespace-nowrap transition-all',
                 'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
                 selected
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200',
+                  ? 'bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] text-white shadow-md shadow-[#0F3D91]/20'
+                  : 'bg-white text-neutral-700 ring-1 ring-neutral-200/70 hover:text-[#0F3D91] hover:shadow-sm',
               )}
             >
               {label} <span className="tabular-nums opacity-80">{n}</span>
@@ -79,7 +79,7 @@ export function ApplicantFilters({
 
       <div className="flex items-center gap-2 text-sm">
         <span className="text-neutral-600">{t('sortLabel')}</span>
-        <div className="inline-flex overflow-hidden rounded-lg border border-neutral-200">
+        <div className="inline-flex gap-1 overflow-hidden rounded-xl bg-white p-1 ring-1 ring-neutral-200/70">
           {(['match', 'recent'] as ApplicantSort[]).map((s) => (
             <button
               key={s}
@@ -87,10 +87,11 @@ export function ApplicantFilters({
               aria-pressed={sort === s}
               onClick={() => onSortChange(s)}
               className={cn(
-                'min-h-11 px-3 text-sm font-medium transition-colors',
+                'min-h-10 rounded-lg px-3.5 text-sm font-medium transition-all',
+                'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
                 sort === s
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-white text-neutral-700 hover:bg-neutral-100',
+                  ? 'bg-[#0F3D91] text-white shadow-sm'
+                  : 'text-neutral-700 hover:bg-neutral-100 hover:text-[#0F3D91]',
               )}
             >
               {t(`sort.${s}`)}

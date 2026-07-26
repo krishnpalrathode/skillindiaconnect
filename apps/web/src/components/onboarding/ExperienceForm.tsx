@@ -61,12 +61,12 @@ export function ExperienceForm({ existing, onSaved, onCancel }: ExperienceFormPr
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 p-4 rounded-lg border border-border bg-neutral-50"
+      className="flex flex-col gap-4 rounded-[22px] border border-neutral-200/70 bg-gradient-to-br from-neutral-50 to-[#E8F0FE]/30 p-5 shadow-sm"
     >
       {/* Experience type toggle */}
       <div>
-        <p className="text-sm font-medium text-neutral-700 mb-2">{t('typeLabel')}</p>
-        <div className="flex rounded-md border border-border overflow-hidden text-sm">
+        <p className="mb-2 text-sm font-medium text-neutral-700">{t('typeLabel')}</p>
+        <div className="flex gap-1 rounded-xl bg-neutral-100 p-1 text-sm">
           {(['INDIA', 'FOREIGN'] as ExperienceType[]).map((opt) => (
             <button
               key={opt}
@@ -75,11 +75,11 @@ export function ExperienceForm({ existing, onSaved, onCancel }: ExperienceFormPr
               aria-checked={type === opt}
               onClick={() => setType(opt)}
               className={[
-                'flex-1 py-2 font-medium transition-colors',
+                'flex-1 rounded-lg py-2 font-semibold transition-all duration-200',
                 'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
                 type === opt
-                  ? 'bg-primary-50 text-primary-700 border-b-2 border-primary-600'
-                  : 'text-neutral-600 hover:bg-neutral-50',
+                  ? 'bg-white text-[#0F3D91] shadow-sm'
+                  : 'text-neutral-600 hover:text-neutral-900',
               ].join(' ')}
             >
               {opt === 'INDIA' ? t('typeDomestic') : t('typeForeign')}
@@ -92,6 +92,7 @@ export function ExperienceForm({ existing, onSaved, onCancel }: ExperienceFormPr
       {type === 'FOREIGN' && (
         <Field id="exp-country" label={t('countryLabel')}>
           <Input
+            className="h-12 rounded-xl bg-white"
             placeholder="UAE, Saudi Arabia…"
             value={country}
             onChange={(e) => setCountry(e.target.value)}
@@ -101,6 +102,7 @@ export function ExperienceForm({ existing, onSaved, onCancel }: ExperienceFormPr
 
       <Field id="exp-company" label={t('companyLabel')}>
         <Input
+          className="h-12 rounded-xl bg-white"
           placeholder="Company name"
           value={company}
           onChange={(e) => setCompany(e.target.value)}
@@ -109,6 +111,7 @@ export function ExperienceForm({ existing, onSaved, onCancel }: ExperienceFormPr
 
       <Field id="exp-role" label={t('roleLabel')}>
         <Input
+          className="h-12 rounded-xl bg-white"
           placeholder="Mason, Driver, Welder…"
           value={role}
           onChange={(e) => setRole(e.target.value)}
@@ -118,6 +121,7 @@ export function ExperienceForm({ existing, onSaved, onCancel }: ExperienceFormPr
       <div className="flex gap-3">
         <Field id="exp-years" label={t('yearsLabel')} className="flex-1">
           <Input
+            className="h-12 rounded-xl bg-white"
             type="number"
             min={0}
             max={50}
@@ -128,6 +132,7 @@ export function ExperienceForm({ existing, onSaved, onCancel }: ExperienceFormPr
         </Field>
         <Field id="exp-months" label={t('monthsLabel')} className="flex-1">
           <Input
+            className="h-12 rounded-xl bg-white"
             type="number"
             min={0}
             max={11}
@@ -144,11 +149,24 @@ export function ExperienceForm({ existing, onSaved, onCancel }: ExperienceFormPr
         </p>
       )}
 
-      <div className="flex gap-2 justify-end">
-        <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={saving}>
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onCancel}
+          disabled={saving}
+          className="min-h-10 rounded-xl px-4"
+        >
           {t('cancel')}
         </Button>
-        <Button type="submit" variant="secondary" size="sm" loading={saving}>
+        <Button
+          type="submit"
+          variant="secondary"
+          size="sm"
+          loading={saving}
+          className="min-h-10 rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] px-5 text-white shadow-sm transition-all hover:shadow-md"
+        >
           {t('saveExperience')}
         </Button>
       </div>

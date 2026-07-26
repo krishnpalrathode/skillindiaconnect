@@ -70,8 +70,8 @@ export function SkillChips({ skills, onSkillsChange, placeholder, className }: S
       {/* Chips container */}
       <div
         className={cn(
-          'flex flex-wrap gap-1.5 min-h-[44px] p-2 rounded-md border border-input bg-background',
-          'focus-within:ring-[3px] focus-within:ring-ring/70 focus-within:border-primary-600',
+          'flex min-h-[52px] flex-wrap gap-2 rounded-xl border border-input bg-background p-2.5',
+          'focus-within:border-primary-600 focus-within:ring-[3px] focus-within:ring-ring/70',
           'transition-colors',
         )}
       >
@@ -79,8 +79,10 @@ export function SkillChips({ skills, onSkillsChange, placeholder, className }: S
           <span
             key={skill.id}
             className={cn(
-              'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
-              idx < 3 ? 'bg-primary-100 text-primary-700' : 'bg-neutral-100 text-neutral-600',
+              'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold shadow-sm transition-transform hover:scale-105',
+              idx < 3
+                ? 'bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] text-white'
+                : 'bg-neutral-100 text-neutral-700',
             )}
           >
             {skill.name}
@@ -89,7 +91,10 @@ export function SkillChips({ skills, onSkillsChange, placeholder, className }: S
               disabled={busy}
               onClick={() => removeSkill(skill.id)}
               aria-label={`Remove skill ${skill.name}`}
-              className="rounded-full hover:bg-black/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className={cn(
+                'rounded-full focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+                idx < 3 ? 'hover:bg-white/20' : 'hover:bg-black/10',
+              )}
             >
               <X className="size-3" aria-hidden="true" />
             </button>

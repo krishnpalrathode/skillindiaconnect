@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useParams, useSearchParams } from 'next/navigation';
 import { Mail, Lock, HardHat, Building2, Check } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { ApiRequestError } from '@/lib/api/client';
@@ -24,11 +25,22 @@ const ROLE_CARD_META: Record<Role, { Icon: typeof HardHat; description: string }
   EMPLOYER: { Icon: Building2, description: 'Hire skilled workers' },
 };
 
+/** `?role=employer` (case-insensitive) preselects the Employer card. */
+function roleFromParam(raw: string | null | undefined): Role {
+  return raw?.toLowerCase() === 'employer' ? 'EMPLOYER' : 'CANDIDATE';
+}
+
 export function SignupForm({ onSuccess }: SignupFormProps) {
   const t = useTranslations('auth');
   const { signup } = useAuth();
+  const searchParams = useSearchParams();
+  const params = useParams<{ locale: string }>();
+  const locale = params?.locale ?? 'en';
 
-  const [role, setRole] = useState<Role>('CANDIDATE');
+  // Landing/employer-login deep-links arrive as /signup?role=employer. Read it
+  // once as the initial value so the user can still switch freely afterwards —
+  // syncing it on every render would fight their clicks.
+  const [role, setRole] = useState<Role>(() => roleFromParam(searchParams?.get('role')));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -196,7 +208,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
           {t.rich('termsText', {
             terms: (chunks) => (
               <a
-                href="/terms"
+                href={`/${locale}/terms`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-[#0F3D91] hover:underline"
@@ -206,7 +218,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
             ),
             privacy: (chunks) => (
               <a
-                href="/privacy"
+                href={`/${locale}/privacy`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-[#0F3D91] hover:underline"

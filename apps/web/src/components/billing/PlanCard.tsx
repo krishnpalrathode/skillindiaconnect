@@ -71,10 +71,12 @@ export function PlanCard({
         }
       }}
       className={cn(
-        'relative cursor-pointer transition-shadow focus-visible:outline-none',
+        'relative cursor-pointer rounded-[18px] transition-all duration-200 focus-visible:outline-none',
         'focus-visible:ring-[3px] focus-visible:ring-ring/70',
-        selected ? 'border-primary-600 ring-1 ring-primary-600' : 'hover:shadow-md',
-        emphasized && !selected && 'border-primary-300',
+        selected
+          ? 'border-[#0F3D91] ring-2 ring-[#0F3D91]/30 shadow-md'
+          : 'hover:-translate-y-0.5 hover:shadow-md',
+        emphasized && !selected && 'border-[#0F3D91]/40 shadow-sm',
       )}
     >
       {isYearly && (

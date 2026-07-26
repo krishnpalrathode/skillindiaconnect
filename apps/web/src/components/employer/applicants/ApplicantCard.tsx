@@ -61,9 +61,9 @@ export function ApplicantCard({
   const docsByType = new Map((a.documentsStatus ?? []).map((d) => [d.type, d]));
 
   return (
-    <li className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4">
-      <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
+    <li className="flex flex-col gap-3.5 rounded-2xl border border-neutral-200/70 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#0F3D91]/20 hover:shadow-md">
+      <div className="flex items-start gap-3.5">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0F3D91] to-[#2E67B1] text-sm font-semibold text-white">
           {initials(a.fullName)}
         </span>
         <div className="min-w-0 flex-1">
@@ -71,7 +71,7 @@ export function ApplicantCard({
             <button
               type="button"
               onClick={onOpenDetail}
-              className="text-base font-semibold text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
+              className="rounded text-base font-bold text-neutral-900 transition-colors hover:text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
             >
               {a.fullName}
             </button>
@@ -114,7 +114,7 @@ export function ApplicantCard({
             <li
               key={type}
               className={cn(
-                'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs',
+                'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium',
                 uploaded && !expired
                   ? 'bg-success-bg text-success-fg'
                   : 'bg-neutral-100 text-neutral-600',
@@ -152,7 +152,7 @@ export function ApplicantCard({
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-neutral-100 pt-3.5">
         <span className="text-xs text-neutral-600">
           {a.humanId} · {t('appliedAgo', { ago: formatPostedAgo(a.appliedAt, locale) })}
         </span>

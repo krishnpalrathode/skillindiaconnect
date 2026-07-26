@@ -87,3 +87,32 @@
     scroll-behavior: auto;
   }
 }
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Landing hero motion
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* The signature underline draws from the reading-start edge: left-to-right in
+   LTR, right-to-left in Arabic. transform-origin has no logical equivalent, so
+   the RTL case is mirrored explicitly. */
+.hero-underline {
+  transform-origin: left center;
+}
+
+[dir='rtl'] .hero-underline {
+  transform-origin: right center;
+}
+
+/* Reduced motion: the global rule further up collapses durations but leaves
+   animation-delay intact, which would still hold a delayed element in its
+   invisible from-state for up to a second. For the hero we remove the
+   animation outright so the content is simply there, fully visible, at once. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-anim,
+  .hero-ambient,
+  .hero-underline {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

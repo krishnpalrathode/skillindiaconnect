@@ -147,14 +147,75 @@ const config: Config = {
         lg: '0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04)',
       },
 
-      /* ── Animation (basic keyframes for skeleton + spinner) ── */
+      /* ── Animation ──
+         Skeleton + spinner, plus the landing hero's entrance and ambient
+         motion. Every hero keyframe animates ONLY transform and opacity so the
+         compositor can run them off the main thread — nothing here can trigger
+         layout, so hero motion cannot contribute to CLS. All of it is disabled
+         under prefers-reduced-motion (see globals.css). */
       keyframes: {
         'spin-smooth': {
           to: { transform: 'rotate(360deg)' },
         },
+
+        /* Entrance — runs once on load. */
+        'hero-rise': {
+          from: { opacity: '0', transform: 'translate3d(0, 20px, 0)' },
+          to: { opacity: '1', transform: 'translate3d(0, 0, 0)' },
+        },
+        'hero-rise-scale': {
+          from: { opacity: '0', transform: 'translate3d(0, 20px, 0) scale(0.97)' },
+          to: { opacity: '1', transform: 'translate3d(0, 0, 0) scale(1)' },
+        },
+        /* Signature moment: the accent underline draws in. Direction is set by
+           transform-origin, which flips for RTL in globals.css. */
+        'hero-underline': {
+          from: { transform: 'scaleX(0)' },
+          to: { transform: 'scaleX(1)' },
+        },
+
+        /* Ambient — slow, looping, low-contrast. */
+        'hero-glow-drift': {
+          '0%, 100%': { transform: 'translate3d(0, 0, 0) scale(1)' },
+          '50%': { transform: 'translate3d(6%, -4%, 0) scale(1.12)' },
+        },
+        'hero-float-a': {
+          '0%, 100%': { transform: 'translate3d(0, 0, 0) rotate(0deg)' },
+          '50%': { transform: 'translate3d(0, -18px, 0) rotate(6deg)' },
+        },
+        'hero-float-b': {
+          '0%, 100%': { transform: 'translate3d(0, 0, 0) rotate(0deg)' },
+          '50%': { transform: 'translate3d(10px, 14px, 0) rotate(-8deg)' },
+        },
+        'hero-float-c': {
+          '0%, 100%': { transform: 'translate3d(0, 0, 0) scale(1)' },
+          '50%': { transform: 'translate3d(-12px, -10px, 0) scale(1.08)' },
+        },
+
+        /* Carousel: slow Ken Burns drift while a slide is displayed. */
+        'hero-kenburns': {
+          from: { transform: 'scale(1)' },
+          to: { transform: 'scale(1.04)' },
+        },
       },
       animation: {
         'spin-smooth': 'spin-smooth 0.8s linear infinite',
+
+        /* `both` fill-mode holds the from-state during the stagger delay.
+           Critically, opacity:0 lives in the KEYFRAME, never in a base class —
+           so if CSS fails to load the content still paints. */
+        'hero-rise': 'hero-rise 600ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        'hero-rise-scale': 'hero-rise-scale 600ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        /* 1240ms = entrance settles (~840ms) + the 400ms beat before the draw. */
+        'hero-underline': 'hero-underline 500ms cubic-bezier(0.16, 1, 0.3, 1) 1240ms both',
+
+        'hero-glow-drift': 'hero-glow-drift 15s ease-in-out infinite',
+        'hero-float-a': 'hero-float-a 9s ease-in-out infinite',
+        'hero-float-b': 'hero-float-b 11s ease-in-out infinite',
+        'hero-float-c': 'hero-float-c 8s ease-in-out infinite',
+
+        /* Runs across the full 5s dwell + the 700ms crossfade into the next. */
+        'hero-kenburns': 'hero-kenburns 5700ms ease-out both',
       },
     },
   },

@@ -20,9 +20,12 @@ import { Users, ShieldCheck, IndianRupee } from 'lucide-react';
  * translation files are frozen for this UI pass.
  */
 
+// Product facts only — no placement/employer counts. We have not launched, so
+// any such number would be invented, and an invented metric on a public page is
+// a verification risk as well as a lie.
 const STATS = [
-  { Icon: Users, value: '10,000+', label: 'Workers Placed' },
-  { Icon: ShieldCheck, value: 'Gulf', label: 'Verified Jobs' },
+  { Icon: Users, value: 'Verified', label: 'Employers' },
+  { Icon: ShieldCheck, value: 'India &', label: 'Gulf Jobs' },
   { Icon: IndianRupee, value: 'Free for', label: 'Candidates' },
 ] as const;
 

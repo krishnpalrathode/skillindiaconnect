@@ -32,14 +32,14 @@ export function Toggle({ checked, onChange, label, disabled, id, className }: To
         'transition-colors duration-200 ease-in-out',
         'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        checked ? 'bg-primary-600' : 'bg-neutral-300',
+        checked ? 'bg-gradient-to-r from-[#0F3D91] to-[#2E67B1]' : 'bg-neutral-300',
         className,
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
-          'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm',
+          'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md',
           'transform transition duration-200 ease-in-out',
           checked ? 'translate-x-5' : 'translate-x-0',
         )}
