@@ -159,6 +159,7 @@ describe('activation enqueues the render post-commit (the S5-B2 edit)', () => {
       { log: jest.fn(), logInTransaction: jest.fn() } as unknown as AuditService,
       new EventEmitter2(),
       { add } as unknown as Queue,
+      { recordActivation: jest.fn() } as never,
     );
 
     const result = await activation.activate('ord-1', {

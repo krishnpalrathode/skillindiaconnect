@@ -179,6 +179,8 @@ beforeAll(async () => {
       new EventEmitter2(),
       // S7-B1: the post-commit invoice-render enqueue — inert here.
       { add: jest.fn().mockResolvedValue(undefined) } as never,
+      // C3: the activation metric — inert stub.
+      { recordActivation: jest.fn() } as never,
     );
     const handler = new PaymentEventsHandler(prismaSvc, activation, audit);
     webhooks = new WebhookService(
@@ -187,6 +189,8 @@ beforeAll(async () => {
       audit,
       new RazorpayAdapter(config),
       new StripeAdapter(config),
+      // C3: the webhook metric — inert stub.
+      { recordWebhook: jest.fn() } as never,
     );
   } catch {
     dockerUnavailable = true;
