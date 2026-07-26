@@ -13,7 +13,10 @@ import { QUEUE_NAMES } from './queue.constants';
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        connection: { url: config.get<string>('REDIS_URL') },
+        connection: {
+           url: config.get<string>('REDIS_URL'),
+           maxRetriesPerRequest: null,
+        },
       }),
     }),
     BullModule.registerQueue(
