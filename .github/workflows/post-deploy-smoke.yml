@@ -1,0 +1,47 @@
+name: Post-Deploy Smoke
+
+# The deployment stage of the test pyramid (docs/testing-architecture.md §5).
+# Runs against the ALREADY-DEPLOYED environment — NOT part of PR CI. It is kept
+# out of the merge path on purpose: it needs a live URL, and a network blip to
+# prod must never block a merge.
+#
+# Wiring it directly to Vercel/Railway deploy-success (via a Deployment Hook or
+# the `deployment_status` event) is a documented follow-up; for now it runs on a
+# daily schedule (catches a silently-broken prod) and on manual dispatch.
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Deployed web base URL to smoke (overrides the SMOKE_BASE_URL repo variable)'
+        required: false
+  schedule:
+    - cron: '0 6 * * *' # 06:00 UTC daily
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Run post-deploy smoke
+        env:
+          # Repo Variables (Settings → Secrets and variables → Actions → Variables):
+          #   SMOKE_BASE_URL — the deployed web URL (e.g. the Vercel production URL)
+          #   SMOKE_API_URL  — the deployed API base URL (optional; enables /health check)
+          SMOKE_BASE_URL: ${{ github.event.inputs.base_url || vars.SMOKE_BASE_URL }}
+          SMOKE_API_URL: ${{ vars.SMOKE_API_URL }}
+        run: |
+          if [ -z "$SMOKE_BASE_URL" ]; then
+            echo "::notice::SMOKE_BASE_URL is not set (repo variable or dispatch input) — nothing to smoke, skipping."
+            exit 0
+          fi
+          echo "Smoking $SMOKE_BASE_URL"
+          pnpm exec playwright test -c playwright.smoke.config.ts
+      - name: Upload smoke traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-deploy-smoke-traces
+          path: test-results/
+          retention-days: 7
