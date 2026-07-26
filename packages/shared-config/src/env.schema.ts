@@ -22,18 +22,38 @@ export const envSchema = z.object({
 
   // Cloudflare R2 (S3-compatible object storage for documents, photos, resumes)
   // Local dev can point at an R2 dev bucket or any S3-compatible mock (e.g. MinIO).
-  R2_ACCOUNT_ID: z.string().min(1),
-  R2_ACCESS_KEY_ID: z.string().min(1),
-  R2_SECRET_ACCESS_KEY: z.string().min(1),
-  R2_BUCKET: z.string().min(1),
-  R2_ENDPOINT: z.string().url(),
+  //
+  // OPTIONAL AT BOOT so an environment without object storage can still start
+  // (same rationale as STRIPE_SECRET_KEY below). Absence is enforced at USE
+  // time: StorageService.requireClient() throws a clear STORAGE_NOT_CONFIGURED
+  // error rather than letting the AWS SDK fail with an opaque credentials
+  // message. WITHOUT THESE, EVERY DOCUMENT UPLOAD FAILS — which blocks employer
+  // registration (registration certificate) and candidate apply (mandatory
+  // documents). Set them before those flows are needed.
+  R2_ACCOUNT_ID: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).optional()),
+  R2_ACCESS_KEY_ID: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).optional()),
+  R2_SECRET_ACCESS_KEY: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().min(1).optional(),
+  ),
+  R2_BUCKET: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).optional()),
+  R2_ENDPOINT: z.preprocess((v) => (v === '' ? undefined : v), z.string().url().optional()),
 
-  // Payments (S5-B1). Razorpay is the LOCKED PRIMARY gateway — required.
+  // Payments (S5-B1). Razorpay is the LOCKED PRIMARY gateway.
   // Stripe is the hedge for FOREIGN companies: OPTIONAL at boot, required at
   // routing (RoutingService selects Stripe only when the key exists AND the
   // payments.stripe_enabled setting is on).
-  RAZORPAY_KEY_ID: z.string().min(1),
-  RAZORPAY_KEY_SECRET: z.string().min(1),
+  //
+  // Razorpay is now OPTIONAL AT BOOT too, matching what the adapter already
+  // does: RazorpayAdapter builds no client when the key is absent, exposes
+  // `isConfigured === false`, and createOrder() throws an explicit error. So an
+  // environment without payment credentials starts cleanly and only checkout
+  // is unavailable — the schema previously blocked boot for no reason.
+  RAZORPAY_KEY_ID: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).optional()),
+  RAZORPAY_KEY_SECRET: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().min(1).optional(),
+  ),
   // Empty string ≡ absent — `.env` files commonly leave optional keys blank
   // (`STRIPE_SECRET_KEY=`), and a blank key must not construct a Stripe client.
   STRIPE_SECRET_KEY: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).optional()),
@@ -44,7 +64,10 @@ export const envSchema = z.object({
   // clear config error if events arrive without the secret), not here: a
   // zod .refine would wrap the object in ZodEffects and break the
   // check-env-drift script's `.shape` introspection.
-  RAZORPAY_WEBHOOK_SECRET: z.string().min(1),
+  RAZORPAY_WEBHOOK_SECRET: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().min(1).optional(),
+  ),
   STRIPE_WEBHOOK_SECRET: z.preprocess(
     (v) => (v === '' ? undefined : v),
     z.string().min(1).optional(),
