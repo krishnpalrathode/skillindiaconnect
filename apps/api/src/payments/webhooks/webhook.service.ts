@@ -3,6 +3,7 @@ import { Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { AuditService } from '../../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../../audit/audit.types';
+import { MetricsService } from '../../core/observability/metrics.service';
 import {
   PaymentGatewayPort,
   RAZORPAY_GATEWAY,
@@ -45,6 +46,10 @@ export class WebhookService {
     private readonly audit: AuditService,
     @Inject(RAZORPAY_GATEWAY) private readonly razorpay: PaymentGatewayPort,
     @Inject(STRIPE_GATEWAY) private readonly stripe: PaymentGatewayPort,
+    // C3: the webhook throughput/latency counter the go-live "webhook lag"
+    // alert reads. `outcome` is a bounded label set (rejected | duplicate |
+    // error | the handler outcomes). Observability only.
+    private readonly metrics: MetricsService,
   ) {}
 
   async process(
@@ -52,6 +57,9 @@ export class WebhookService {
     rawBody: Buffer,
     headers: Record<string, string | string[] | undefined>,
   ): Promise<void> {
+    const startedAt = Date.now();
+    const record = (outcome: string): void =>
+      this.metrics.recordWebhook(provider, outcome, Date.now() - startedAt);
     const adapter = provider === 'razorpay' ? this.razorpay : this.stripe;
 
     // ── 1. Verify (on the raw bytes; the body is NEVER parsed on this path) ──
@@ -76,6 +84,7 @@ export class WebhookService {
         status: AuditStatus.FAILED,
         meta: { provider, reason: signature ? 'bad_signature' : 'missing_signature' },
       });
+      record('rejected');
       throw new UnauthorizedException({ code: 'INVALID_SIGNATURE' });
     }
 
@@ -110,6 +119,7 @@ export class WebhookService {
             status: AuditStatus.SUCCESS,
             meta: { provider, eventId: event.eventId, eventType: event.type },
           });
+          record('duplicate');
           return; // 200 — zero side effects
         }
         rowId = existing.id;
@@ -135,9 +145,11 @@ export class WebhookService {
         where: { id: rowId },
         data: { processedAt: new Date(), status: `PROCESSED:${outcome}` },
       });
+      record(outcome);
     } catch (err) {
       // Mark ERROR (a later gateway retry re-processes — see the dedupe
       // exception above) and let the 5xx tell the gateway to retry.
+      record('error');
       await this.prisma.webhookEvent
         .update({ where: { id: rowId }, data: { processedAt: new Date(), status: 'ERROR' } })
         .catch(() => undefined);

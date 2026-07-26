@@ -50,6 +50,23 @@ export const envSchema = z.object({
     z.string().min(1).optional(),
   ),
 
+  // Email channel (Titan SMTP via Nodemailer, behind the provider-neutral
+  // EmailChannel port). EMAIL_PROVIDER selects the adapter; `mock` is the safe
+  // default for dev/test/CI. The TITAN_SMTP_* + EMAIL_FROM values are OPTIONAL
+  // at boot (a `mock`/`ses` deploy needs none) and REQUIRED-AT-USE: the Titan
+  // adapter throws loudly at construction if EMAIL_PROVIDER=titan and any is
+  // missing (email-channel.factory.ts / titan-smtp-email.channel.ts). Secrets
+  // are referenced BY NAME only — the values live in the secret store.
+  EMAIL_PROVIDER: z.enum(['titan', 'ses', 'mock']).default('mock'),
+  TITAN_SMTP_HOST: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).optional()),
+  TITAN_SMTP_PORT: z.coerce.number().int().positive().default(465),
+  TITAN_SMTP_USER: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).optional()),
+  TITAN_SMTP_PASS: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).optional()),
+  // The authorized sender (a Titan mailbox now; an SES identity later). ADAPTER
+  // CONFIG, never a per-call field — keeping FROM out of call sites is what
+  // makes the SES migration touch zero callers.
+  EMAIL_FROM: z.preprocess((v) => (v === '' ? undefined : v), z.string().email().optional()),
+
   // S7-B1: WORKER-only Chromium. OPTIONAL — when absent, puppeteer uses its
   // own downloaded Chrome (local dev). The alpine container sets it to the
   // apk-installed binary (/usr/bin/chromium-browser) because the image build

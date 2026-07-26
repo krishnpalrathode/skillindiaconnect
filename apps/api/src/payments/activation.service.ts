@@ -17,6 +17,7 @@ import { NotificationService } from '../notifications/notification.service';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
 import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
+import { MetricsService } from '../core/observability/metrics.service';
 import { InvoiceService } from './invoice.service';
 
 /** Emitted post-commit when a subscription activates (B3's quota cache etc.). */
@@ -71,10 +72,36 @@ export class ActivationService {
     private readonly eventEmitter: EventEmitter2,
     // S7-B1: the API ENQUEUES invoice rendering; the worker's Chromium renders.
     @InjectQueue(QUEUE_NAMES.INVOICE_RENDER) private readonly invoiceRenderQueue: Queue,
+    // C3: the money-path activation counter the go-live alert fires on. This is
+    // the outcome the whole cutover exists to watch — a silent 'failed' means a
+    // customer paid and got nothing. Observability only; no logic changes here.
+    private readonly metrics: MetricsService,
   ) {}
 
   async activate(orderId: string, ctx: ActivationContext): Promise<ActivationResult> {
-    const committed = await this.prisma.$transaction(async (tx) => {
+    let committed: Awaited<ReturnType<typeof this.runActivationTx>>;
+    try {
+      committed = await this.runActivationTx(orderId, ctx);
+    } catch (err) {
+      // A throw here = the transaction rolled back: paid gateway-side, NOT
+      // activated our-side. Record it BEFORE rethrowing so the alert fires even
+      // as the webhook returns 5xx (which tells the gateway to retry).
+      this.metrics.recordActivation('failed');
+      throw err;
+    }
+
+    if (!committed) {
+      // Idempotent no-op (already PAID/REFUNDED under the lock) — a real,
+      // healthy outcome, distinct from 'failed'.
+      this.metrics.recordActivation('noop');
+      return { activated: false };
+    }
+    this.metrics.recordActivation('activated');
+    return this.afterCommit(committed);
+  }
+
+  private async runActivationTx(orderId: string, ctx: ActivationContext) {
+    return this.prisma.$transaction(async (tx) => {
       // 1. Lock the order row — serializes concurrent deliveries for THIS order.
       await tx.$queryRaw`SELECT id FROM orders WHERE id = ${orderId} FOR UPDATE`;
 
@@ -200,8 +227,13 @@ export class ActivationService {
         planName: order.plan.name,
       };
     });
+  }
 
-    if (!committed) return { activated: false };
+  /** Post-commit side effects — runs only for a genuinely activated order. */
+  private async afterCommit(
+    committed: NonNullable<Awaited<ReturnType<typeof this.runActivationTx>>>,
+  ): Promise<ActivationResult> {
+    const { orderId } = committed.payload;
 
     // 7. Post-commit, fire-safe side effects: the domain event + the
     //    SUBSCRIPTION_PURCHASED notification (email + in-app per the matrix —
