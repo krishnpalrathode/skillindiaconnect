@@ -54,18 +54,35 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm --filter @skillindiaconnect/web dev',
+    // CI vs local, deliberately different:
+    //   CI    → BUILD once with MSW baked in, then serve via `next start`.
+    //   local → `next dev` for fast iteration.
+    // Why the CI split: a cold `next dev` on a 2-vCPU runner compiles each route
+    // on first hit AND the root layout's two `next/font/google` families fetch
+    // from fonts.googleapis.com at request time — together that blows past the
+    // 30s navigation timeout and every `page.goto` fails (observed in CI run
+    // 30216780076). `next build` fetches+self-hosts the fonts at build time and
+    // pre-compiles all routes, so `next start` serves instantly and
+    // deterministically. Building with NEXT_PUBLIC_API_MOCKING=enabled (via
+    // `env` below) bakes MSW into the bundle — this build is a TEST artifact,
+    // never deployed, so the "no MSW in production" rule is not violated.
+    command: process.env['CI']
+      ? 'pnpm --filter @skillindiaconnect/web build && pnpm --filter @skillindiaconnect/web start'
+      : 'pnpm --filter @skillindiaconnect/web dev',
     url: 'http://localhost:3000',
-    // Playwright OWNS the web server for this suite (never reuse an existing
-    // one). Reuse is unsafe here: a dev server started outside this config —
-    // e.g. `pnpm dev` with .env.local mocking DISABLED — would be silently
-    // reused and MSW would be off, which is exactly the non-determinism this
-    // suite must not have. Fresh server every run → `env` below always applies.
+    // Playwright OWNS the web server (never reuse an existing one): a server
+    // started outside this config — e.g. `pnpm dev` with .env.local mocking
+    // DISABLED — would be silently reused and MSW off. Fresh server every run →
+    // `env` below always applies.
     reuseExistingServer: false,
-    timeout: 120_000,
-    // Force MSW on for the spawned dev server. An environment variable wins
-    // over apps/web/.env.local, so this is authoritative regardless of local
-    // config — the whole reason the suite is deterministic here.
+    // The CI build (Next production build on a 2-vCPU runner) runs inside this
+    // command — give it generous room; a high ceiling costs nothing when the
+    // server comes up sooner.
+    timeout: process.env['CI'] ? 420_000 : 120_000,
+    // Force MSW on. An environment variable wins over apps/web/.env.local, and
+    // — in CI — is inlined by `next build` into the client bundle so MockSetup
+    // starts the worker, and read by instrumentation.ts so the Node-side MSW
+    // server intercepts SSR fetches too.
     env: { NEXT_PUBLIC_API_MOCKING: 'enabled' },
   },
 });
