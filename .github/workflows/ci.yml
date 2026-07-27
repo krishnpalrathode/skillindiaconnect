@@ -82,9 +82,13 @@ jobs:
   # ── UI-REGRESSION suite (Category A) — Playwright + MSW ──────────────────────
   # Job id kept as `e2e` so existing required-status-checks keep matching; it is
   # the MSW UI-regression layer per docs/testing-architecture.md (the real-stack
-  # E2E layer is deferred to post-handoff). Playwright starts `next dev` with
-  # NEXT_PUBLIC_API_MOCKING=enabled (playwright.config.ts webServer.env), so MSW
-  # serves every /api/v1/* call — NO real API, Postgres or Redis is needed.
+  # E2E layer is deferred to post-handoff). Playwright's webServer (see
+  # playwright.config.ts) BUILDS the web app with NEXT_PUBLIC_API_MOCKING=enabled
+  # and serves it via `next start` — MSW is baked into the bundle and serves
+  # every /api/v1/* call, so NO real API, Postgres or Redis is needed. (A cold
+  # `next dev` was too slow on the runner — routes compiled + Google fonts
+  # fetched per request blew past the 30s nav timeout; the prebuilt bundle is
+  # fast and deterministic.)
   e2e:
     runs-on: ubuntu-latest
     # SHARDING: the suite is split across 4 jobs so it runs on 4 runners in
