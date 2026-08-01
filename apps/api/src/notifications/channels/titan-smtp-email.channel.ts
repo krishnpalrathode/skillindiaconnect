@@ -142,6 +142,18 @@ export class TitanSmtpEmailChannel implements EmailChannel {
       pool: true,
       maxConnections: 5,
       maxMessages: 100,
+      // EXPLICIT timeouts — nodemailer's defaults (2min connect / 10min socket)
+      // are far longer than BullMQ's stalled-job window, so a network that
+      // silently blackholes SMTP (a host that blocks outbound 465/587, a DNS
+      // hole) does NOT surface as a failure. The job holds its lock past the
+      // stall threshold, gets reclaimed, and is re-processed forever WITHOUT
+      // incrementing attemptsMade — so the retry cap never trips and the
+      // fallback in the processor is never reached. Timing out inside the stall
+      // window converts that infinite loop into an honest FAILED + errorCode
+      // ('ETIMEDOUT'/'ECONNECTION'), which is what the retry/fallback expects.
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
     });
   }
 
