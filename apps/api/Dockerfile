@@ -37,11 +37,17 @@ RUN pnpm install --frozen-lockfile
 # ── Build packages then the API app ──────────────────────────────────────────
 FROM base AS builder
 WORKDIR /repo
+# Source FIRST, then the installed node_modules — never the other way round.
+# `COPY . .` copies whatever the build context contains, and a context uploaded
+# from a developer machine (docker build / fly deploy / railway up) can still
+# carry nested node_modules if .dockerignore is ever weakened. Copying deps
+# last means the deps stage always wins instead of being silently clobbered by
+# host symlinks that dangle inside the container.
+COPY . .
 COPY --from=deps /repo/node_modules ./node_modules
 COPY --from=deps /repo/packages/shared-config/node_modules ./packages/shared-config/node_modules
 COPY --from=deps /repo/packages/shared-types/node_modules ./packages/shared-types/node_modules
 COPY --from=deps /repo/apps/api/node_modules ./apps/api/node_modules
-COPY . .
 # Compile shared packages first so their dist/ is available at runtime.
 RUN pnpm --filter @skillindiaconnect/shared-config build
 RUN pnpm --filter @skillindiaconnect/shared-types build
