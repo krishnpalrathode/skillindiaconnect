@@ -219,14 +219,19 @@ export class NotificationProcessor extends WorkerHost {
       select: { email: true },
     });
 
-    // Check email opt-in preference for candidates
-    const profile = await this.prisma.candidateProfile.findFirst({
-      where: { userId },
-      select: { emailNotifs: true },
-    });
-    if (profile?.emailNotifs === false) {
-      // User has opted out of email notifications — silently skip.
-      return;
+    // Check email opt-in preference for candidates. Security/transactional mail
+    // (matrix `transactional: true`) BYPASSES it — the toggle governs
+    // notifications, and must not silently swallow a password-reset link the
+    // user just requested to get back into their own account.
+    if (!NOTIFICATION_MATRIX[type].transactional) {
+      const profile = await this.prisma.candidateProfile.findFirst({
+        where: { userId },
+        select: { emailNotifs: true },
+      });
+      if (profile?.emailNotifs === false) {
+        // User has opted out of email notifications — silently skip.
+        return;
+      }
     }
 
     await this.sendEmailDirect(userId, user.email, type, payload, 'direct');

@@ -58,3 +58,10 @@ export function postForgotPassword(email: string): Promise<{ message: string }> 
     body: JSON.stringify({ email }),
   });
 }
+
+export function postResetPassword(token: string, password: string): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  });
+}

@@ -20,6 +20,9 @@ import { Public } from './decorators/public.decorator';
 import { CurrentUser, CurrentUserPayload } from './decorators/current-user.decorator';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { PasswordResetService } from './password-reset.service';
 
 const REFRESH_COOKIE = 'sic_refresh';
 
@@ -29,6 +32,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly tokenService: TokenService,
     private readonly configService: ConfigService,
+    private readonly passwordResetService: PasswordResetService,
   ) {}
 
   // ─── Signup ──────────────────────────────────────────────────────────────────
@@ -61,6 +65,43 @@ export class AuthController {
     const result = await this.authService.login(dto, req.ip, req.headers['user-agent']);
     this.setRefreshCookie(res, result.refreshToken, result.refreshExp);
     return { data: { user: result.user, accessToken: result.accessToken } };
+  }
+
+  // ─── Password reset ──────────────────────────────────────────────────────────
+
+  /**
+   * ALWAYS 200, on every path — unknown address, Google-only account, or a link
+   * genuinely sent. The response must not reveal whether an email is registered,
+   * so there is deliberately nothing to branch on in the body either.
+   *
+   * The service applies its own per-address hourly budget on top of this
+   * per-IP throttle; that one is what stops a single address being mail-bombed
+   * from many IPs.
+   */
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
+  async forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: Request) {
+    await this.passwordResetService.request(dto.email, req.ip);
+    return {
+      data: { message: 'If this email is registered, a reset link has been sent.' },
+    };
+  }
+
+  /**
+   * Consumes the token and sets the new password. Deliberately does NOT sign the
+   * user in: the reset revokes every refresh session (including any an attacker
+   * holds), and issuing fresh tokens straight from a mailed link would hand a
+   * session to whoever opened it. They log in again with the new password.
+   */
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    await this.passwordResetService.reset(dto.token, dto.password);
+    return { data: { message: 'Password updated. Please sign in.' } };
   }
 
   // ─── Google OAuth ─────────────────────────────────────────────────────────────

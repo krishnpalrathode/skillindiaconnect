@@ -188,7 +188,17 @@
     "verifyOtp": "Verify OTP",
     "resendOtp": "Resend OTP",
     "resendIn": "Resend in {seconds}s",
-    "methodTabsLabel": "Sign-in method"
+    "methodTabsLabel": "Sign-in method",
+    "resetTitle": "Choose a new password",
+    "resetSubtitle": "Enter a new password for your account",
+    "newPasswordLabel": "New password",
+    "resetSubmit": "Update password",
+    "resetDoneTitle": "Password updated",
+    "resetDoneBody": "Your password has been changed. Please sign in with your new password.",
+    "resetInvalidTitle": "This link is no longer valid",
+    "resetInvalidBody": "Password reset links expire after 1 hour and can only be used once. Request a new one.",
+    "resetRequestNew": "Request a new link",
+    "goToLogin": "Go to log in"
   },
   "profile": {
     "title": "My Profile",
