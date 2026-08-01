@@ -2473,16 +2473,32 @@
       "lead": "This policy explains what information we collect, why we collect it, and what control you have over it.",
       "sections": [
         {
+          "heading": "Who we are",
+          "body": "SkillIndiaConnect is a job platform that connects skilled workers in India with verified employers in India and the Gulf. We decide how your personal information is used on this platform, and we are responsible for keeping it safe. [Registered company name, registered address and company registration number to be added before launch.]"
+        },
+        {
+          "heading": "You must be 18 or older",
+          "body": "This platform is for adults seeking work. You must be at least 18 years old to create an account. We do not knowingly collect information about anyone under 18. If we find that an account belongs to someone under 18, we will close it and delete the information. If you believe a child has given us their information, tell us at support@skillindiaconnect.com."
+        },
+        {
           "heading": "Information we collect",
-          "body": "When you make a profile we collect your name, date of birth, phone number, email address, current location, work experience, skills, and the documents you upload — such as a passport, experience certificate, or educational certificate. Employers who register provide company details and a registration certificate."
+          "body": "When you make a profile we collect your name, date of birth, phone number, email address, current location, work experience, skills, and the documents you upload — such as a passport, experience certificate, or educational certificate. Employers who register provide company details and a registration certificate. We also record basic technical information when you use the platform — your device type, browser, IP address and the pages you open — so the service keeps working and stays secure."
         },
         {
           "heading": "Why we collect it",
-          "body": "We use your information to build your profile, verify who you are, match you to suitable jobs, and share your profile with employers when you apply. We use your phone number and email to send you updates about your applications."
+          "body": "We use your information to build your profile, verify who you are, match you to suitable jobs, and share your profile with employers when you apply. We use your phone number and email to send you updates about your applications. We also use it to keep the platform safe: to check employers, to detect fake jobs and misuse, and to meet our legal obligations."
+        },
+        {
+          "heading": "Consent and your choices",
+          "body": "You give us your information because you choose to use this platform, and we ask for your consent where the law requires it. You can withdraw your consent at any time by changing your privacy settings or by deleting your account. If you withdraw consent for information we need to run the service — such as your name and contact details — we may not be able to keep your account open."
         },
         {
           "heading": "What employers can see",
           "body": "Employers only see the fields your privacy settings allow. If you turn off phone visibility, employers do not receive your phone number. Religion is hidden by default. Internal notes written by our team are never shown to employers or to you."
+        },
+        {
+          "heading": "Sensitive details are your choice",
+          "body": "Religion, father’s name and passport number are optional, and they are hidden by default. You choose whether to add them and whether to show them. We never ask for your caste. Religion is never used to rank or match you for jobs — matching looks only at your trade, your years of experience, whether you have worked abroad, and whether your documents are complete."
         },
         {
           "heading": "Your documents",
@@ -2494,27 +2510,43 @@
         },
         {
           "heading": "Sharing with others",
-          "body": "We share your profile with employers you apply to. We use trusted service providers to send messages, store files, and take payments from employers. We do not sell your personal information."
+          "body": "We share your profile with employers you apply to. We use trusted service providers to send messages, store files, and take payments from employers. We do not sell your personal information. We also do not share it with advertisers."
+        },
+        {
+          "heading": "Signing in with Google",
+          "body": "Workers can create an account using Google. If you do, Google tells us your name and email address so we can set up your account — we never receive your Google password. What Google does with your information is covered by Google’s own privacy policy. Employers and our administrators sign in with an email address and password instead."
+        },
+        {
+          "heading": "Payments",
+          "body": "Only employers pay us; the platform is free for workers. Payments are handled by our payment gateway on its own secure page. We never see or store your card, UPI or bank details. We do keep a record of the order, the invoice and whether the payment succeeded, because tax and accounting law requires it."
+        },
+        {
+          "heading": "Cookies we use",
+          "body": "We use one cookie, named sic_refresh, and its only job is to keep you signed in. Your browser does not let scripts read it. We do not use advertising cookies, and we do not run third-party analytics or tracking scripts on this platform. If you block this cookie you will simply have to sign in more often."
+        },
+        {
+          "heading": "Where your information is stored",
+          "body": "Your information is stored on servers we rent from cloud providers. Some of the companies that help us run the platform — sending WhatsApp messages and email, storing your documents, taking payments from employers, and alerting us to technical errors — may process your information outside India. Where that happens, we require them to protect it to the standard described in this policy."
+        },
+        {
+          "heading": "How we protect your information",
+          "body": "We follow reasonable security practices as required by the Information Technology Act, 2000 and the rules made under it. Your connection to the platform is encrypted. Your documents are private and can only be opened through short-lived links. Only staff who need your information for their work can reach it, and administrator actions are recorded. We deliberately keep sensitive details — such as your phone number, passport number and date of birth — out of our technical error logs."
         },
         {
           "heading": "How long we keep it",
-          "body": "We keep your profile while your account is open. If you delete your account we remove your personal information, except records we must keep by law — such as payment and invoice records."
+          "body": "We keep your profile while your account is open. When you ask us to delete your account, we mark it for deletion and complete it after 30 days, which gives you time to change your mind. After that we delete your documents from storage and strip personal details out of the messages we sent you. We keep payment, invoice and audit records for as long as the law requires."
         },
         {
           "heading": "Your rights",
-          "body": "You can view and edit your profile at any time from your account. You can change your privacy settings, ask for a copy of your data, or ask us to delete your account by emailing support@skillindiaconnect.com."
-        },
-        {
-          "heading": "Age",
-          "body": "This platform is for adults seeking work. You must be at least 18 years old to create an account."
+          "body": "You can view and edit your profile at any time from your account. You can change your privacy settings, ask for a copy of your data, correct anything that is wrong, withdraw your consent, or ask us to delete your account. To make a request, email support@skillindiaconnect.com. We may ask you to confirm who you are first, so that nobody else can make a request in your name."
         },
         {
           "heading": "Changes to this policy",
           "body": "If we change this policy we will update the date at the top of this page. If the change is significant we will tell you in the app or by email."
         },
         {
-          "heading": "Contact",
-          "body": "For any question about your privacy or this policy, email support@skillindiaconnect.com."
+          "heading": "Contact and complaints",
+          "body": "For any question about your privacy or this policy, email support@skillindiaconnect.com. If you are unhappy with our answer, you can escalate to our Grievance Officer at the same address with ‘Grievance’ in the subject line. We will acknowledge your complaint within 24 hours and aim to resolve it within 15 days, as required under Indian law. [Grievance Officer’s name and direct contact details to be added before launch.]"
         }
       ]
     },
