@@ -146,9 +146,7 @@ export class CheckoutService {
     //    the CACHED CheckoutSession byte-for-byte: no new order, no second
     //    gateway call. The key is scoped per company so keys can't collide
     //    (or be replayed) across tenants.
-    const redisKey = idempotencyKey
-      ? `idem:checkout:${company.id}:${idempotencyKey}`
-      : null;
+    const redisKey = idempotencyKey ? `idem:checkout:${company.id}:${idempotencyKey}` : null;
     if (redisKey) {
       const cached = await this.redis.get(redisKey);
       if (cached) return JSON.parse(cached) as CheckoutSessionDto;
@@ -207,7 +205,7 @@ export class CheckoutService {
         where: { id: order.id },
         data: { status: OrderStatus.FAILED },
       });
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = describeGatewayError(err);
       this.logger.error(`Gateway createOrder failed (orderId=${order.id}): ${msg}`);
       await this.audit.log({
         actorUserId: userId,
@@ -380,8 +378,7 @@ export class CheckoutService {
 
     if (!current || current.plan.code === 'FREE') {
       const freePlan =
-        current?.plan ??
-        (await this.prisma.plan.findUniqueOrThrow({ where: { code: 'FREE' } }));
+        current?.plan ?? (await this.prisma.plan.findUniqueOrThrow({ where: { code: 'FREE' } }));
       return {
         plan: this.toPlanDto(freePlan, gstRatePct),
         status: 'ACTIVE',
@@ -469,6 +466,45 @@ export class CheckoutService {
   private wholeDaysUntil(date: Date): number {
     return Math.max(0, Math.ceil((date.getTime() - Date.now()) / DAY_MS));
   }
+}
+
+/**
+ * Renders a gateway failure into something an operator can act on.
+ *
+ * The Razorpay SDK rejects with a PLAIN OBJECT, not an Error — shaped roughly
+ * `{ statusCode, error: { code, description, reason, field, source, step } }`.
+ * `String(err)` on that yields the literal "[object Object]", which is what the
+ * production logs were reporting: a failure with no cause, indistinguishable
+ * between bad credentials, a disabled account, and a rejected amount.
+ *
+ * Only the provider's own diagnostic fields are surfaced. Credentials live in
+ * the adapter's client config and are never part of an error body, so there is
+ * nothing secret to redact here.
+ */
+export function describeGatewayError(err: unknown): string {
+  if (err instanceof Error) return err.message;
+
+  if (err && typeof err === 'object') {
+    const outer = err as { statusCode?: unknown; error?: unknown };
+    const inner = (outer.error ?? {}) as Record<string, unknown>;
+    const parts = [
+      outer.statusCode !== undefined ? `status=${String(outer.statusCode)}` : null,
+      inner['code'] ? `code=${String(inner['code'])}` : null,
+      inner['description'] ? `description=${String(inner['description'])}` : null,
+      inner['reason'] ? `reason=${String(inner['reason'])}` : null,
+      inner['field'] ? `field=${String(inner['field'])}` : null,
+    ].filter(Boolean);
+
+    if (parts.length > 0) return parts.join(' ');
+
+    try {
+      return JSON.stringify(err);
+    } catch {
+      // Circular or otherwise unserialisable — fall through.
+    }
+  }
+
+  return String(err);
 }
 
 // Re-export for consumers/tests that need the order type without Prisma import.
