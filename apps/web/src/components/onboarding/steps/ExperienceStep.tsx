@@ -33,10 +33,12 @@ export function ExperienceStep({ profile, onProfileUpdate, onNext, onBack }: Exp
   const hasExperience = (profile.experiences?.length ?? 0) > 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-7">
       <div className="text-center">
-        <h2 className="text-xl font-bold text-neutral-900">{t('title')}</h2>
-        <p className="mt-1 text-sm text-neutral-600">{t('subtitle')}</p>
+        <h2 className="text-xl font-bold tracking-tight text-neutral-900 sm:text-2xl">
+          {t('title')}
+        </h2>
+        <p className="mt-1.5 text-sm text-neutral-600">{t('subtitle')}</p>
       </div>
 
       <ExperienceList
@@ -46,17 +48,31 @@ export function ExperienceStep({ profile, onProfileUpdate, onNext, onBack }: Exp
 
       {/* Soft-block nudge — non-blocking */}
       {!hasExperience && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-info-bg border border-info-fg/20">
-          <Info className="size-4 text-info-fg shrink-0 mt-0.5" aria-hidden="true" />
-          <p className="text-xs text-info-fg">{t('softBlock')}</p>
+        <div className="flex items-start gap-2.5 rounded-2xl border border-info-fg/20 bg-info-bg p-4">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/70">
+            <Info className="size-4 text-info-fg" aria-hidden="true" />
+          </span>
+          <p className="text-xs leading-relaxed text-info-fg">{t('softBlock')}</p>
         </div>
       )}
 
       <div className="flex justify-between">
-        <Button type="button" variant="outline" size="md" onClick={onBack}>
+        <Button
+          type="button"
+          variant="outline"
+          size="md"
+          onClick={onBack}
+          className="rounded-xl px-6"
+        >
           {tNav('back')}
         </Button>
-        <Button type="button" variant="primary" size="md" onClick={onNext}>
+        <Button
+          type="button"
+          variant="primary"
+          size="md"
+          onClick={onNext}
+          className="rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] px-8 shadow-md transition-all hover:shadow-lg"
+        >
           {tNav('next')}
         </Button>
       </div>

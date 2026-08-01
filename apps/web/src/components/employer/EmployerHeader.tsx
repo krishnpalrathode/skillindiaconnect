@@ -3,7 +3,7 @@
 import React, { useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useParams, useRouter, usePathname } from 'next/navigation';
-import { Bell, ChevronDown, LogOut, User } from 'lucide-react';
+import { Bell, Building2, ChevronDown, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useEmployer } from '@/lib/employer/employer-context';
 import { cn } from '@/lib/utils';
@@ -43,11 +43,11 @@ function HeaderLangSwitcher() {
           aria-pressed={currentLocale === code}
           aria-label={`Switch language to ${code}`}
           className={cn(
-            'px-2 py-1 rounded text-xs font-medium transition-colors min-w-[2rem] h-8',
+            'px-2.5 py-1 rounded-lg text-xs font-semibold transition-all min-w-[2rem] h-8',
             'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
             currentLocale === code
-              ? 'bg-primary-100 text-primary-800'
-              : 'text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100',
+              ? 'bg-[#0F3D91] text-white shadow-sm'
+              : 'text-neutral-600 hover:text-[#0F3D91] hover:bg-white',
           )}
         >
           {label}
@@ -69,13 +69,19 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const displayName = company?.name ?? user?.email ?? '';
+  const companyInitials = (company?.name ?? user?.email ?? '?')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('');
 
   function handleLogout() {
     logout().then(() => router.replace(`/${locale}/login`));
   }
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-4 bg-white border-b border-neutral-200 shadow-sm">
+    <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-4 sm:px-6 bg-white/90 backdrop-blur-md border-b border-neutral-200/70 shadow-sm">
       {/* Left: hamburger trigger (mobile) + company name */}
       <div className="flex items-center gap-3 min-w-0">
         {onMenuClick && (
@@ -83,7 +89,7 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
             type="button"
             onClick={onMenuClick}
             aria-label={t('nav.openSidebar')}
-            className="lg:hidden flex items-center justify-center size-9 rounded-lg text-neutral-600 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 shrink-0"
+            className="lg:hidden flex items-center justify-center size-10 rounded-xl text-neutral-600 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 shrink-0"
           >
             <svg
               width="20"
@@ -102,18 +108,26 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
           </button>
         )}
         {displayName && (
-          <span
-            className="text-sm font-semibold text-neutral-800 truncate max-w-[10rem] sm:max-w-xs"
-            data-testid="header-company-name"
-          >
-            {displayName}
+          <span className="flex min-w-0 items-center gap-2.5">
+            <span
+              aria-hidden="true"
+              className="hidden size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0F3D91] to-[#2E67B1] text-xs font-bold text-white sm:flex"
+            >
+              {companyInitials || <Building2 className="size-4" />}
+            </span>
+            <span
+              className="text-sm font-semibold text-neutral-800 truncate max-w-[10rem] sm:max-w-xs"
+              data-testid="header-company-name"
+            >
+              {displayName}
+            </span>
           </span>
         )}
       </div>
 
       {/* Right: lang switcher, notifications, account menu */}
       <div className="flex items-center gap-2 shrink-0">
-        <div className="hidden sm:block">
+        <div className="hidden sm:block rounded-xl bg-neutral-100/70 p-0.5">
           <HeaderLangSwitcher />
         </div>
 
@@ -121,7 +135,7 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
         <button
           type="button"
           aria-label={t('header.notifications')}
-          className="relative flex items-center justify-center size-9 rounded-lg text-neutral-600 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+          className="relative flex items-center justify-center size-10 rounded-xl text-neutral-600 ring-1 ring-neutral-200/70 transition-all hover:text-[#0F3D91] hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >
           <Bell className="size-5" aria-hidden="true" />
         </button>
@@ -139,24 +153,33 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
                 setMenuOpen(false);
               }
             }}
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium text-neutral-700 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 min-h-[36px]"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-medium text-neutral-700 ring-1 ring-neutral-200/70 transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 min-h-[40px]"
           >
             <User className="size-4" aria-hidden="true" />
             <span className="hidden sm:block max-w-[7rem] truncate">{user?.email}</span>
-            <ChevronDown className="size-4 shrink-0" aria-hidden="true" />
+            <ChevronDown
+              className={cn('size-4 shrink-0 transition-transform', menuOpen && 'rotate-180')}
+              aria-hidden="true"
+            />
           </button>
 
           {menuOpen && (
             <div
               role="menu"
               aria-label={t('header.accountMenu')}
-              className="absolute end-0 mt-1 w-44 rounded-lg bg-white border border-neutral-200 shadow-lg py-1 z-30"
+              className="absolute end-0 mt-2 w-52 overflow-hidden rounded-2xl bg-white border border-neutral-200 shadow-xl p-1.5 z-30"
             >
+              {user?.email && (
+                <>
+                  <p className="truncate px-3 py-2 text-xs text-neutral-600">{user.email}</p>
+                  <div className="my-1 border-t border-neutral-100" />
+                </>
+              )}
               <button
                 role="menuitem"
                 type="button"
                 onClick={handleLogout}
-                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-[2px] focus-visible:ring-ring/70 min-h-[40px]"
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-error-fg transition-colors hover:bg-error-bg focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-[2px] focus-visible:ring-ring/70 min-h-[40px]"
               >
                 <LogOut className="size-4" aria-hidden="true" />
                 {t('header.logout')}

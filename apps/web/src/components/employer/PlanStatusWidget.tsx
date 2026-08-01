@@ -48,8 +48,10 @@ export function PlanStatusWidget() {
   return (
     <div
       className={cn(
-        'px-3 py-3 rounded-lg border mx-2 mb-3',
-        isGrace ? 'bg-warning-bg border-warning-fg/25' : 'bg-neutral-50 border-neutral-200',
+        'px-4 py-3.5 rounded-2xl border mx-3 mb-4 shadow-sm transition-shadow hover:shadow-md',
+        isGrace
+          ? 'bg-warning-bg border-warning-fg/25'
+          : 'bg-gradient-to-br from-white to-[#E8F0FE]/60 border-neutral-200/70',
       )}
     >
       <div className="flex items-start justify-between gap-1">
@@ -98,10 +100,10 @@ export function PlanStatusWidget() {
       <Link
         href={subscriptionHref}
         className={cn(
-          'mt-2 flex items-center gap-1 text-xs font-medium rounded transition-colors',
+          'mt-2.5 inline-flex items-center gap-1 text-xs font-semibold rounded transition-all hover:gap-1.5',
           'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
           isFree || isExpired
-            ? 'text-primary-600 hover:text-primary-700'
+            ? 'text-[#0F3D91] hover:text-[#0d3479]'
             : isGrace
               ? 'text-warning-fg hover:text-warning-fg/80'
               : 'text-neutral-600 hover:text-neutral-800',

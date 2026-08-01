@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import type { components } from '@skillindiaconnect/shared-types';
-import { JobCard } from '@/components/jobs/JobCard';
+import { RecommendedJobCard } from './RecommendedJobCard';
 
 type JobCardType = components['schemas']['JobCard'];
 
@@ -20,25 +20,27 @@ export function RecommendedJobs({ jobs }: RecommendedJobsProps) {
 
   return (
     <section aria-labelledby="recommended-jobs-heading">
-      <div className="flex items-center justify-between mb-3">
-        <h2 id="recommended-jobs-heading" className="text-base font-semibold text-neutral-900">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 id="recommended-jobs-heading" className="text-lg font-bold text-neutral-900">
           {t('title')}
         </h2>
         <Link
           href={`/${locale}/jobs`}
-          className="text-sm text-primary-600 hover:text-primary-700 focus-visible:outline-none focus-visible:underline"
+          className="rounded text-sm font-semibold text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >
           {t('viewAll')}
         </Link>
       </div>
 
       {jobs.length === 0 ? (
-        <p className="text-sm text-neutral-600 py-4">{t('empty')}</p>
+        <div className="rounded-2xl border border-neutral-200/70 bg-white px-4 py-8 text-center text-sm text-neutral-600 shadow-sm">
+          {t('empty')}
+        </div>
       ) : (
-        <ul className="flex flex-col gap-3" aria-label={t('title')}>
+        <ul className="flex flex-col gap-4" aria-label={t('title')}>
           {jobs.map((job) => (
             <li key={job.id}>
-              <JobCard job={job} locale={locale} />
+              <RecommendedJobCard job={job} locale={locale} />
             </li>
           ))}
         </ul>

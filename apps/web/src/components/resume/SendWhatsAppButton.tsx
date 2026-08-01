@@ -59,10 +59,22 @@ export function SendWhatsAppButton() {
         : 'text-neutral-600';
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <Button type="button" variant="outline" size="md" onClick={send} loading={sending}>
-        <MessageCircle className="size-4" aria-hidden="true" />
-        {t('whatsappButton')}
+    <div className="flex flex-1 flex-col gap-1.5">
+      <Button
+        type="button"
+        variant="outline"
+        size="md"
+        onClick={send}
+        loading={sending}
+        className="h-auto w-full justify-start gap-3 rounded-2xl border-neutral-200/80 bg-white px-4 py-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-success-fg/40 hover:bg-success-bg/30 hover:shadow-md"
+      >
+        <span
+          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-success-bg text-success-fg"
+          aria-hidden="true"
+        >
+          <MessageCircle className="size-5" />
+        </span>
+        <span className="font-semibold text-neutral-800">{t('whatsappButton')}</span>
       </Button>
       {message && (
         <p

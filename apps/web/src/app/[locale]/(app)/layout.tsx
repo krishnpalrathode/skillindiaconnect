@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname, useParams } from 'next/navigation';
 import { User, Briefcase, FileText, Bell, Settings, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -23,7 +24,7 @@ function NavItem({ href, icon, label, active, disabled }: NavItemProps) {
       <span
         aria-label={`${label} — coming soon`}
         // eslint-disable-next-line no-restricted-syntax -- DISABLED control — WCAG 1.4.3 explicitly exempts disabled UI, and darkening it would stop it reading as unavailable.
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-neutral-400 cursor-not-allowed select-none"
+        className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-neutral-400 cursor-not-allowed select-none"
       >
         <span className="size-5 shrink-0 opacity-50">{icon}</span>
         <span className="hidden lg:block">{label}</span>
@@ -36,14 +37,21 @@ function NavItem({ href, icon, label, active, disabled }: NavItemProps) {
       href={href}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+        'group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
         'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
         active
-          ? 'bg-primary-50 text-primary-700'
-          : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900',
+          ? 'bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] text-white shadow-lg shadow-[#0F3D91]/25'
+          : 'text-neutral-600 hover:bg-white hover:text-[#0F3D91] hover:shadow-sm',
       )}
     >
-      <span className="size-5 shrink-0">{icon}</span>
+      <span
+        className={cn(
+          'size-5 shrink-0 transition-transform duration-200',
+          !active && 'group-hover:scale-110',
+        )}
+      >
+        {icon}
+      </span>
       <span className="hidden lg:block">{label}</span>
     </Link>
   );
@@ -86,7 +94,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isProfile = pathname.includes('/profile');
   const isNotifications = pathname.includes('/notifications');
 
-  const navItems = [
+  // Explicitly typed: nothing is `disabled` right now, so inference would drop
+  // that property from the union and break the mobile nav's disabled branch —
+  // which is still the supported way to add a not-yet-built item.
+  const navItems: NavItemProps[] = [
     {
       href: `/${locale}/dashboard`,
       icon: <LayoutDashboard className="size-5" aria-hidden="true" />,
@@ -115,40 +126,56 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       href: `/${locale}/applications`,
       icon: <FileText className="size-5" aria-hidden="true" />,
       label: t('applications'),
-      disabled: true,
+      active: pathname.includes('/applications'),
     },
     {
-      href: `/${locale}/settings`,
+      // Candidate settings live in the "Account Settings" card on /profile
+      // (privacy toggles, notification prefs, salary expectations) — there is no
+      // standalone /settings route. This item used to point at that
+      // never-built route AND was disabled, so the nav advertised settings the
+      // user could not reach while the real ones sat one scroll down on
+      // Profile. Deep-link to them instead of duplicating the screen.
+      //
+      // Deliberately no `active`: this IS the profile route, and marking both
+      // items current would announce two "page" nodes to a screen reader.
+      href: `/${locale}/profile#account-settings`,
       icon: <Settings className="size-5" aria-hidden="true" />,
       label: t('settings'),
-      disabled: true,
     },
   ];
 
   return (
-    <div className="min-h-svh bg-neutral-50 lg:flex">
+    <div className="min-h-svh bg-[#F5F8FC] lg:flex">
       {/* ── Desktop sidebar ──────────────────────────────────────────── */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-56 xl:w-64 lg:shrink-0 lg:fixed lg:inset-y-0 lg:start-0 border-e border-neutral-200 bg-white z-10">
-        {/* Logo */}
-        <div className="flex items-center h-16 px-4 border-b border-neutral-100">
-          <span className="text-lg font-bold text-primary-700 tracking-tight">
-            SkillIndiaConnect
-          </span>
+      <aside className="hidden lg:flex lg:flex-col lg:w-56 xl:w-64 lg:shrink-0 lg:fixed lg:inset-y-0 lg:start-0 border-e border-neutral-200/70 bg-white/95 backdrop-blur-sm z-10">
+        {/* Logo — object-cover crops the artwork band out of the logo's gray
+            canvas (same treatment as the login screen) so it reads large. */}
+        <div className="flex items-center justify-center h-28 px-4 border-b border-neutral-100">
+          <div className="relative h-20 w-full overflow-hidden rounded-lg">
+            <Image
+              src="/brand/logo.png"
+              alt="SkillIndia Connect"
+              fill
+              priority
+              sizes="256px"
+              className="object-cover object-center"
+            />
+          </div>
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 px-2 py-4 flex flex-col gap-1" aria-label="Main navigation">
+        <nav className="flex-1 px-3 py-5 flex flex-col gap-1.5" aria-label="Main navigation">
           {navItems.map((item) => (
             <NavItem key={item.href} {...item} />
           ))}
         </nav>
 
         {/* Logout */}
-        <div className="px-2 py-4 border-t border-neutral-100">
+        <div className="px-3 py-4 border-t border-neutral-100">
           <button
             type="button"
             onClick={() => logout().then(() => router.replace(`/${locale}/login`))}
-            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+            className="flex w-full items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-neutral-600 hover:bg-error-bg hover:text-error-fg transition-all duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
             <LogOut className="size-5 shrink-0" aria-hidden="true" />
             <span className="hidden lg:block">{t('logout')}</span>
@@ -157,10 +184,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* ── Mobile top header ─────────────────────────────────────────── */}
-      <header className="lg:hidden sticky top-0 z-10 flex items-center justify-between h-14 px-4 bg-white border-b border-neutral-200 shadow-sm">
-        <span className="text-base font-bold text-primary-700 tracking-tight">
-          SkillIndiaConnect
-        </span>
+      <header className="lg:hidden sticky top-0 z-10 flex items-center justify-between h-16 px-4 bg-white/95 backdrop-blur-sm border-b border-neutral-200 shadow-sm">
+        <div className="relative h-11 w-36 overflow-hidden rounded-md">
+          <Image
+            src="/brand/logo.png"
+            alt="SkillIndia Connect"
+            fill
+            priority
+            sizes="144px"
+            className="object-cover object-center"
+          />
+        </div>
         <button
           type="button"
           onClick={() => logout().then(() => router.replace(`/${locale}/login`))}
@@ -195,9 +229,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               href={item.href}
               aria-current={item.active ? 'page' : undefined}
               className={cn(
-                'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg min-h-[44px] justify-center',
+                'flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl min-h-[44px] justify-center transition-colors',
                 'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
-                item.active ? 'text-primary-700' : 'text-neutral-600',
+                item.active
+                  ? 'bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] text-white shadow-md shadow-[#0F3D91]/25'
+                  : 'text-neutral-600',
               )}
             >
               {item.icon}

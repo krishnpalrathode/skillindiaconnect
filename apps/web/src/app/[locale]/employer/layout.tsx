@@ -17,7 +17,7 @@ function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void })
   return (
     <>
       <div
-        className="lg:hidden fixed inset-0 z-40 bg-black/30"
+        className="lg:hidden fixed inset-0 z-40 bg-neutral-900/40 backdrop-blur-sm"
         aria-hidden="true"
         onClick={onClose}
       />
@@ -28,7 +28,7 @@ function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void })
         aria-modal="true"
         aria-label="Navigation"
         tabIndex={-1}
-        className="lg:hidden fixed inset-y-0 start-0 z-50 w-72 bg-white shadow-xl focus:outline-none"
+        className="lg:hidden fixed inset-y-0 start-0 z-50 w-72 bg-[#F5F8FC] shadow-2xl focus:outline-none"
         onKeyDown={(e) => e.key === 'Escape' && onClose()}
       >
         <EmployerSidebar onNavClick={onClose} />
@@ -63,14 +63,14 @@ function ShellInner({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-svh bg-neutral-50 lg:flex">
+    <div className="min-h-svh bg-[#F5F8FC] lg:flex">
       {/* Mobile drawer */}
       <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
       {/* Desktop sidebar */}
       <aside
         aria-label="Employer navigation"
-        className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 lg:fixed lg:inset-y-0 lg:start-0 border-e border-neutral-200 bg-white z-10"
+        className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 lg:fixed lg:inset-y-0 lg:start-0 border-e border-neutral-200/70 bg-white/95 backdrop-blur-sm z-10"
       >
         <EmployerSidebar />
       </aside>
@@ -84,7 +84,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
           <CompanyStateBanner status={company.status} rejectionReason={company.rejectionReason} />
         )}
 
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

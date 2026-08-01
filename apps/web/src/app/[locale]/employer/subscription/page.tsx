@@ -133,9 +133,9 @@ export default function SubscriptionPage() {
 
   if (loadError || !plans) {
     return (
-      <div className="flex flex-col items-center gap-4 py-24 text-center">
+      <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border border-neutral-200/70 bg-white p-10 text-center shadow-sm">
         <p className="text-sm text-neutral-600">{t('loadError')}</p>
-        <Button variant="outline" size="sm" onClick={load}>
+        <Button variant="outline" size="sm" className="rounded-xl" onClick={load}>
           {t('retry')}
         </Button>
       </div>
@@ -145,10 +145,12 @@ export default function SubscriptionPage() {
   const isLocal = company?.type === 'LOCAL';
 
   return (
-    <div className="max-w-4xl flex flex-col gap-6">
+    <div className="mx-auto flex max-w-5xl flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-neutral-900">{t('pageTitle')}</h1>
-        <p className="text-sm text-neutral-600 mt-1">{t('pageSubtitle')}</p>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
+          {t('pageTitle')}
+        </h1>
+        <p className="mt-1 text-sm text-neutral-600">{t('pageSubtitle')}</p>
       </div>
 
       {/* Manage view — current plan status + invoice history (S5-F2). */}

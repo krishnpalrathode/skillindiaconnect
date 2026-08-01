@@ -99,11 +99,13 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-7">
       {/* Page title + step counter */}
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-900 text-center">{t('pageTitle')}</h1>
-        <p className="text-sm text-neutral-600 text-center mt-1">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
+          {t('pageTitle')}
+        </h1>
+        <p className="mt-2 inline-flex items-center rounded-full bg-[#E8F0FE] px-3.5 py-1 text-sm font-semibold text-[#0F3D91]">
           {t('stepOf', { current: step, total: 4 })}
         </p>
       </div>
@@ -112,7 +114,7 @@ export default function OnboardingPage() {
       <Stepper current={step} />
 
       {/* Step content */}
-      <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-6">
+      <div className="rounded-[24px] border border-neutral-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgb(15,61,145,0.06)] backdrop-blur-sm sm:p-8">
         {step === 1 && (
           <PersonalInfoStep profile={profile} onProfileUpdate={setProfile} onNext={() => goTo(2)} />
         )}

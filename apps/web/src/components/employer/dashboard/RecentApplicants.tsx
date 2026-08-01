@@ -28,22 +28,31 @@ export function RecentApplicants({ applicants }: RecentApplicantsProps) {
   return (
     <section
       aria-labelledby="recent-applicants-heading"
-      className="bg-white rounded-xl border border-neutral-200 overflow-hidden"
+      className="h-full overflow-hidden rounded-2xl border border-neutral-200/70 bg-white/90 shadow-sm backdrop-blur-sm"
     >
-      <div className="px-4 sm:px-6 py-4 border-b border-neutral-100">
-        <h2 id="recent-applicants-heading" className="text-base font-semibold text-neutral-900">
+      <div className="px-5 sm:px-6 py-4 border-b border-neutral-100">
+        <h2
+          id="recent-applicants-heading"
+          className="flex items-center gap-2.5 text-base font-semibold text-neutral-900"
+        >
+          <span className="flex size-8 items-center justify-center rounded-lg bg-accent-100 text-accent-600">
+            <Users className="size-4" aria-hidden="true" />
+          </span>
           {t('title')}
         </h2>
       </div>
 
       {applicants.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 py-12 px-4 text-center">
-          <span className="size-12 rounded-full bg-neutral-100 flex items-center justify-center">
-            <Users className="size-6 text-neutral-600" aria-hidden="true" />
+        <div className="flex flex-col items-center gap-3 py-14 px-4 text-center">
+          <span
+            className="flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-accent-50 to-accent-100 text-accent-600 ring-8 ring-[#F5F8FC]"
+            aria-hidden="true"
+          >
+            <Users className="size-7" />
           </span>
           <div>
-            <p className="text-sm font-medium text-neutral-700">{t('emptyTitle')}</p>
-            <p className="text-xs text-neutral-600 mt-1">{t('emptyBody')}</p>
+            <p className="text-base font-semibold text-neutral-900">{t('emptyTitle')}</p>
+            <p className="mt-1 text-sm text-neutral-600">{t('emptyBody')}</p>
           </div>
         </div>
       ) : (
@@ -52,9 +61,9 @@ export function RecentApplicants({ applicants }: RecentApplicantsProps) {
             <li key={a.applicationId}>
               <Link
                 href={`/${locale}/employer/jobs/${a.jobId}/applicants`}
-                className="flex items-center gap-3 px-4 sm:px-6 py-3 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+                className="flex items-center gap-3 px-5 sm:px-6 py-3.5 transition-colors hover:bg-neutral-50/70 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
               >
-                <span className="size-9 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-sm font-semibold shrink-0">
+                <span className="size-10 shrink-0 rounded-full bg-gradient-to-br from-[#0F3D91] to-[#2E67B1] text-white flex items-center justify-center text-sm font-semibold">
                   {a.candidateName
                     ? a.candidateName
                         .split(' ')

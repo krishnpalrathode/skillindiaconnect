@@ -19,10 +19,12 @@ export default function MyJobsPage() {
   }, [published]);
 
   return (
-    <div className="max-w-6xl flex flex-col gap-6">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">{t('pageTitle')}</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
+            {t('pageTitle')}
+          </h1>
           <p className="mt-1 text-sm text-neutral-600">{t('pageSubtitle')}</p>
         </div>
       </div>
@@ -33,7 +35,7 @@ export default function MyJobsPage() {
           role="status"
           tabIndex={-1}
           aria-live="polite"
-          className="rounded-lg border border-success-fg/30 bg-success-bg px-4 py-3 text-sm font-medium text-success-fg"
+          className="rounded-2xl border border-success-fg/25 bg-success-bg px-5 py-4 text-sm font-medium text-success-fg shadow-sm"
         >
           {t('publishSuccess')}
         </div>

@@ -29,11 +29,19 @@ export function WorkConditionsSection({ values, errors, onChange }: WorkConditio
 
   return (
     <section aria-labelledby="conditions-heading" className="flex flex-col gap-4">
-      <div>
-        <h3 id="conditions-heading" className="text-base font-semibold text-neutral-900">
-          {t('heading')}
-        </h3>
-        <p className="mt-0.5 text-sm text-neutral-600">{t('subtitle')}</p>
+      <div className="flex items-start gap-3 border-b border-neutral-100 pb-3">
+        <span
+          aria-hidden="true"
+          className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#E8F0FE] text-sm font-bold text-[#0F3D91]"
+        >
+          6
+        </span>
+        <div>
+          <h3 id="conditions-heading" className="text-base font-bold text-neutral-900">
+            {t('heading')}
+          </h3>
+          <p className="mt-0.5 text-sm text-neutral-600">{t('subtitle')}</p>
+        </div>
       </div>
 
       {/* Structured working hours — map to hoursPerDay / daysPerWeek columns */}
@@ -128,7 +136,7 @@ export function WorkConditionsSection({ values, errors, onChange }: WorkConditio
           onChange={(e) =>
             onChange({ genderPreference: e.target.value as JobFormValues['genderPreference'] })
           }
-          className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-primary-600 ps-3 pe-3"
+          className="flex h-12 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-[#0F3D91] ps-3.5 pe-3.5"
         >
           <option value="ANY">{t('genderAny')}</option>
           <option value="MALE">{t('genderMale')}</option>
