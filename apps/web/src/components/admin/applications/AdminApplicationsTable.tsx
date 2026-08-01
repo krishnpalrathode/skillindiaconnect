@@ -92,6 +92,17 @@ export function AdminApplicationsTable() {
     void load();
   }, [load]);
 
+  // Dynamic search: debounce the typed draft into the URL, which drives the
+  // refetch — no submit button, the list filters live as you type. The
+  // `trimmed === search` guard makes this a no-op on mount and once the draft
+  // and URL are already in sync, so the debounce's own URL write doesn't loop.
+  useEffect(() => {
+    const trimmed = searchDraft.trim();
+    if (trimmed === search) return;
+    const id = setTimeout(() => setParam('search', trimmed || null), 300);
+    return () => clearTimeout(id);
+  }, [searchDraft, search, setParam]);
+
   if (error instanceof ApiRequestError && error.error.status === 403) {
     return (
       <ForbiddenState
@@ -126,29 +137,24 @@ export function AdminApplicationsTable() {
 
       {/* Search + job filter chip */}
       <div className="flex flex-wrap items-center gap-3">
-        <form
-          className="flex items-center gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setParam('search', searchDraft.trim() || null);
-          }}
-        >
+        <div className="relative flex items-center">
+          <Search
+            className="pointer-events-none absolute start-3 size-4 text-neutral-600"
+            aria-hidden="true"
+          />
           <label htmlFor="admin-apps-search" className="sr-only">
             {t('searchLabel')}
           </label>
           <input
             id="admin-apps-search"
             type="search"
+            role="searchbox"
             value={searchDraft}
             onChange={(e) => setSearchDraft(e.target.value)}
             placeholder={t('searchPlaceholder')}
-            className="min-h-[44px] w-72 rounded-lg border border-neutral-300 px-3 text-sm focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+            className="min-h-[44px] w-72 rounded-lg border border-neutral-300 ps-9 pe-3 text-sm focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           />
-          <Button type="submit" variant="outline" size="sm">
-            <Search className="size-4" aria-hidden="true" />
-            {t('searchButton')}
-          </Button>
-        </form>
+        </div>
 
         {jobId && (
           <Button variant="outline" size="sm" onClick={() => setParam('jobId', null)}>
