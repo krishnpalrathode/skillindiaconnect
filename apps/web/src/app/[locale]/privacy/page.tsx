@@ -4,7 +4,7 @@ import { StaticPageShell } from '@/components/landing/StaticPageShell';
 import { LegalSections, type LegalSection } from '@/components/landing/LegalSections';
 
 /** Draft date for the policy text below. Bump when the copy changes. */
-const LAST_UPDATED_ISO = '2026-07-26';
+const LAST_UPDATED_ISO = '2026-08-02';
 
 type Props = { params: Promise<{ locale: string }> };
 
