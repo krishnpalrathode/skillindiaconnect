@@ -2404,7 +2404,12 @@
       "support": "Support",
       "emailLabel": "Email us",
       "languageLabel": "Language",
-      "rights": "© {year} SkillIndiaConnect. All rights reserved."
+      "rights": "© {year} SkillIndiaConnect. All rights reserved.",
+      "getStarted": "Get Started",
+      "findJobs": "Find Jobs",
+      "hireWorkers": "Hire Workers",
+      "login": "Login",
+      "employerLogin": "Employer Login"
     },
     "carousel": {
       "label": "Skilled workers on SkillIndiaConnect",
