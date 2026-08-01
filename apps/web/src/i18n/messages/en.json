@@ -92,7 +92,8 @@
     "yes": "Yes",
     "no": "No",
     "or": "or",
-    "and": "and"
+    "and": "and",
+    "brand": "SkillIndiaConnect"
   },
   "field": {
     "requiredError": "This field is required",
@@ -478,7 +479,7 @@
       "retry": "Retry"
     },
     "login": {
-      "metaTitle": "Employer Login — SkillIndiaConnect",
+      "metaTitle": "Employer Login",
       "pageTitle": "Hire Verified Blue-Collar Workers",
       "pageSubtitle": "Connect with skilled, verified workers across India and the Gulf.",
       "trustBadge1": "Verified Worker Profiles",
@@ -501,7 +502,7 @@
       "genericError": "Something went wrong. Please try again."
     },
     "onboarding": {
-      "metaTitle": "Company Setup — SkillIndiaConnect",
+      "metaTitle": "Company Setup",
       "pageTitle": "Set up your company profile",
       "pageSubtitle": "Tell us about your company so we can verify and activate your account.",
       "resubmitPageTitle": "Resubmit company registration",
@@ -557,7 +558,7 @@
       }
     },
     "dashboard": {
-      "metaTitle": "Employer Dashboard — SkillIndiaConnect",
+      "metaTitle": "Employer Dashboard",
       "greeting": "Good morning, {name}",
       "greetingFallback": "Welcome back",
       "kpi": {
@@ -602,7 +603,7 @@
       "retry": "Retry"
     },
     "profile": {
-      "metaTitle": "Company Profile — SkillIndiaConnect",
+      "metaTitle": "Company Profile",
       "pageTitle": "Company Profile",
       "loadingProfile": "Loading profile…",
       "errorLoad": "Failed to load profile.",
@@ -780,7 +781,7 @@
     }
   },
   "jobs": {
-    "metaTitle": "Find Jobs — SkillIndiaConnect",
+    "metaTitle": "Find Jobs",
     "metaDescription": "Browse thousands of blue-collar jobs in India and the Gulf. Filter by location, salary, and category.",
     "pageTitle": "Find Jobs",
     "pageSubtitle": "Explore opportunities across India and the Gulf",
@@ -870,7 +871,7 @@
     }
   },
   "dashboard": {
-    "metaTitle": "My Dashboard — SkillIndiaConnect",
+    "metaTitle": "My Dashboard",
     "pageTitle": "Dashboard",
     "greeting": "Hello, {name}",
     "subtitle": "Explore opportunities and take the next step in your career.",
@@ -915,7 +916,7 @@
     }
   },
   "notifications": {
-    "metaTitle": "Notifications — SkillIndiaConnect",
+    "metaTitle": "Notifications",
     "pageTitle": "Notifications",
     "empty": {
       "all": "You have no notifications yet.",
@@ -2432,7 +2433,7 @@
       "draftNotice": "This is a draft under legal review. It is not final — please check back before relying on it."
     },
     "about": {
-      "metaTitle": "About us — SkillIndiaConnect",
+      "metaTitle": "About us",
       "metaDescription": "We connect skilled Indian workers with verified employers in India and the Gulf, and protect workers from recruitment fraud.",
       "title": "About SkillIndiaConnect",
       "lead": "We help skilled Indian workers find safe jobs in India and the Gulf — without paying bribes, losing their documents, or being lied to about the job.",
@@ -2446,7 +2447,7 @@
       "whoBody": "Construction workers, drivers, electricians, welders, plumbers, carpenters, hospitality and housekeeping staff — the skilled trades that build and run cities across India and the Gulf."
     },
     "contact": {
-      "metaTitle": "Contact us — SkillIndiaConnect",
+      "metaTitle": "Contact us",
       "metaDescription": "Get in touch with the SkillIndiaConnect team by email.",
       "title": "Contact us",
       "lead": "Have a question, a problem with your account, or a job to report? Email us and a person will read it.",
@@ -2461,7 +2462,7 @@
       "accountBody": "If you cannot sign in, try the \"Forgot password\" link on the login page first. If that does not work, email us from the address you signed up with."
     },
     "privacy": {
-      "metaTitle": "Privacy Policy — SkillIndiaConnect",
+      "metaTitle": "Privacy Policy",
       "metaDescription": "How SkillIndiaConnect collects, uses, and protects your personal information.",
       "title": "Privacy Policy",
       "lead": "This policy explains what information we collect, why we collect it, and what control you have over it.",
@@ -2513,7 +2514,7 @@
       ]
     },
     "terms": {
-      "metaTitle": "Terms of Use — SkillIndiaConnect",
+      "metaTitle": "Terms of Use",
       "metaDescription": "The rules for using SkillIndiaConnect as a worker or an employer.",
       "title": "Terms of Use",
       "lead": "These terms explain the rules for using SkillIndiaConnect. By making an account you agree to them.",
