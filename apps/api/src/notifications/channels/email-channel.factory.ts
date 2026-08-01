@@ -2,9 +2,10 @@ import { Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EMAIL_CHANNEL, EmailChannel } from './email.channel';
 import { MockEmailChannel } from './email.mock';
+import { ResendEmailChannel } from './resend-email.channel';
 import { TitanSmtpEmailChannel } from './titan-smtp-email.channel';
 
-export type EmailProvider = 'titan' | 'ses' | 'mock';
+export type EmailProvider = 'titan' | 'resend' | 'ses' | 'mock';
 
 /**
  * Config-driven EMAIL_CHANNEL binding — the same pattern the WhatsApp channel
@@ -12,8 +13,14 @@ export type EmailProvider = 'titan' | 'ses' | 'mock';
  * a code edit per environment:
  *
  *   EMAIL_PROVIDER=mock   → MockEmailChannel   (dev/test/CI; the default)
- *   EMAIL_PROVIDER=titan  → TitanSmtpEmailChannel (production email via Titan)
+ *   EMAIL_PROVIDER=resend → ResendEmailChannel (production email over HTTPS)
+ *   EMAIL_PROVIDER=titan  → TitanSmtpEmailChannel (SMTP; see the warning below)
  *   EMAIL_PROVIDER=ses    → not built yet — throws a self-documenting error
+ *
+ * ⚠️ SMTP IS BLOCKED ON THE WORKER'S HOST. Outbound connects to Titan on 465,
+ * 587 and 25 all time out there while :443 is open — a firewall policy, not a
+ * credential problem. `titan` is kept because it is correct code and works on
+ * hosts that permit SMTP, but `resend` is the binding production uses.
  *
  * The `mock` binding reuses the EXISTING MockEmailChannel provider instance (so
  * tests that inject MockEmailChannel and EMAIL_CHANNEL see the same send log).
@@ -35,6 +42,10 @@ export function createEmailChannelProvider(): Provider {
       switch (provider) {
         case 'mock':
           return mock;
+        case 'resend':
+          // Constructed here (worker-only module) — throws loudly if the
+          // RESEND_API_KEY / EMAIL_FROM secrets are missing.
+          return new ResendEmailChannel(config);
         case 'titan':
           // Constructed here (worker-only module) — throws loudly if the
           // TITAN_SMTP_* / EMAIL_FROM secrets are missing.
@@ -49,7 +60,7 @@ export function createEmailChannelProvider(): Provider {
           );
         default:
           throw new Error(
-            `Unknown EMAIL_PROVIDER '${provider}' — expected 'titan', 'ses', or 'mock'.`,
+            `Unknown EMAIL_PROVIDER '${provider}' — expected 'resend', 'titan', 'ses', or 'mock'.`,
           );
       }
     },
