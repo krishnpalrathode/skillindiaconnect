@@ -23,7 +23,9 @@ export function EmployerRouteGuard({ children }: EmployerRouteGuardProps) {
     } else if (user.role !== 'EMPLOYER') {
       // Candidate → their profile; admin → admin console. Sending an admin to
       // /profile loops (profile bounces non-candidates right back here).
-      router.replace(user.role === 'CANDIDATE' ? `/${locale}/profile` : roleHome(user.role, locale));
+      router.replace(
+        user.role === 'CANDIDATE' ? `/${locale}/profile` : roleHome(user.role, locale),
+      );
     }
   }, [user, isLoading, router, locale]);
 
