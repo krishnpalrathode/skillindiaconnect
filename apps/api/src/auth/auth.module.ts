@@ -12,7 +12,9 @@ import { RbacMatrixService } from './rbac/rbac-matrix.service';
 import { AdminMeController } from './rbac/admin-me.controller';
 import { OtpService } from './otp/otp.service';
 import { OtpController } from './otp/otp.controller';
+import { PasswordResetService } from './password-reset.service';
 import { WhatsappModule } from '../notifications/channels/whatsapp.module';
+import { NotificationModule } from '../notifications/notification.module';
 import { CandidateModule } from '../candidate/candidate.module';
 
 @Module({
@@ -21,6 +23,10 @@ import { CandidateModule } from '../candidate/candidate.module';
     // Secret and TTL are overridden per-call in TokenService so no global config needed here.
     JwtModule.register({}),
     WhatsappModule,
+    // NotificationModule imported for its PUBLIC NotificationService export, so
+    // the reset link is ENQUEUED and sent by the worker rather than mailed from
+    // the API process (worker-and-external-sends.md).
+    NotificationModule,
     // CandidateModule imported so OtpController can use CandidateReadService
     // instead of querying candidate_profiles directly (module-boundaries.md Rule 4).
     CandidateModule,
@@ -38,6 +44,7 @@ import { CandidateModule } from '../candidate/candidate.module';
     PermissionService,
     RbacMatrixService,
     OtpService,
+    PasswordResetService,
   ],
   // JwtModule re-exported so AppApiModule can resolve JwtService for JwtAuthGuard (APP_GUARD).
   // PermissionService exported so other modules (S6 Admin) can inject it without owning the table.

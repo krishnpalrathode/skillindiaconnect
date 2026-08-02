@@ -9,6 +9,7 @@ import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types'
 import { EmployerService } from '../employer/employer.service';
 import { JobLifecycleService } from '../jobs/job-lifecycle.service';
 import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
+import { MAINTENANCE_WORKER_OPTS } from '../queue/worker-tuning';
 import {
   FREE_PLAN_CODE,
   SUBSCRIPTION_GRACE_DAYS,
@@ -53,7 +54,8 @@ function addDays(date: Date, days: number): Date {
  * re-graced), reminders by the ledger — re-running the day's job is a no-op.
  */
 @Injectable()
-@Processor(QUEUE_NAMES.SUBSCRIPTION_LIFECYCLE)
+// MAINTENANCE tier: fed by a 03:00 cron. See queue/worker-tuning.ts.
+@Processor(QUEUE_NAMES.SUBSCRIPTION_LIFECYCLE, MAINTENANCE_WORKER_OPTS)
 export class SubscriptionLifecycleProcessor extends WorkerHost {
   private readonly logger = new Logger(SubscriptionLifecycleProcessor.name);
 

@@ -5,6 +5,7 @@ import { Job as BullJob, Queue } from 'bullmq';
 import { UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { QUEUE_NAMES, JOB_NAMES } from '../../queue/queue.constants';
+import { MAINTENANCE_WORKER_OPTS } from '../../queue/worker-tuning';
 import { PurgeService, type PurgeCounts, type PurgeResult, type PurgeTrigger } from './purge.service';
 
 /** Payload of a PURGE_CANDIDATE job. capturedKeys/counts are persisted by THIS processor. */
@@ -51,7 +52,9 @@ export const PURGE_JOB_OPTS = {
  * (BullMQ v5 forbids ':' in custom jobIds — every id here uses '-'.)
  */
 @Injectable()
-@Processor(QUEUE_NAMES.ACCOUNT_PURGE)
+// MAINTENANCE tier: fed by a 02:30 cron (and by DELETE /account, which is not
+// time-critical — the grace window is 30 days). See queue/worker-tuning.ts.
+@Processor(QUEUE_NAMES.ACCOUNT_PURGE, MAINTENANCE_WORKER_OPTS)
 export class PurgeProcessor extends WorkerHost {
   private readonly logger = new Logger(PurgeProcessor.name);
 

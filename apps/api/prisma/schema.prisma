@@ -151,6 +151,11 @@ enum NotificationType {
   // S7-B2: "your resume PDF is ready" — fired when a generation flips READY so
   // a candidate who navigated away mid-render still learns it finished.
   RESUME_READY
+  /// Emailed password-reset link. SECURITY mail, not a notification: it is
+  /// email-only (no in-app row — the recipient cannot sign in to read one, and
+  /// a feed entry announcing a reset would leak the event to a session that may
+  /// not be theirs) and it ignores the marketing email opt-out.
+  PASSWORD_RESET
 }
 
 enum DeliveryStatus {
@@ -215,6 +220,7 @@ model User {
   employerUser     EmployerUser?
   refreshSessions  RefreshSession[]
   notifications    Notification[]
+  passwordResetTokens PasswordResetToken[]
   @@index([role, status])
   @@map("users")
 }
@@ -231,6 +237,27 @@ model RefreshSession {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId, expiresAt])
   @@map("refresh_sessions")
+}
+
+/// Single-use password-reset grant.
+///
+/// Only the SHA-256 of the token is stored — the raw value exists solely in the
+/// emailed link, exactly like OtpChallenge.codeHash. A database leak therefore
+/// yields no usable reset tokens.
+///
+/// `tokenHash` is UNIQUE so a lookup is a single indexed equality probe and can
+/// never match two rows; `consumedAt` (not deletion) marks use, so a replayed
+/// link is distinguishable from an expired or forged one.
+model PasswordResetToken {
+  id         String    @id @default(uuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
+  @@map("password_reset_tokens")
 }
 
 model OtpChallenge {

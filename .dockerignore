@@ -1,10 +1,21 @@
+# NOTE: a bare `node_modules` matches ONLY the repository root — Docker matches
+# each pattern against the whole context-relative path, so nested directories
+# need the `**/` prefix. Without it, `COPY . .` drags the HOST's
+# packages/*/node_modules into the image on top of the ones installed in the
+# deps stage. pnpm's symlinks are absolute, so they dangle inside the container
+# and the build dies with "Cannot find module .../typescript/bin/tsc".
+# This only bites builds that upload a local working tree (docker build,
+# fly deploy, railway up) — a git-clone build has no node_modules to leak.
 .git
-node_modules
-.next
-dist
-*.log
+**/node_modules
+**/.next
+**/dist
+**/dist-worker
+**/coverage
+**/test-results
+**/playwright-report
+**/*.log
 .env
 .env.local
-coverage
-test-results
-playwright-report
+**/.env
+**/.env.local

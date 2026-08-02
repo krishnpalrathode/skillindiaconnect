@@ -11,6 +11,18 @@ export interface MatrixEntry {
   whatsappKind?: WaMessageKind;
   /** Enqueue an email job. */
   email: boolean;
+  /**
+   * SECURITY/TRANSACTIONAL mail — sends even when the recipient has turned off
+   * email notifications (`candidate_profiles.emailNotifs = false`).
+   *
+   * That toggle governs NOTIFICATIONS (job matches, reminders, status updates).
+   * It must not be able to suppress a message the user just asked for as part of
+   * getting into their own account: silently dropping a password-reset link
+   * locks them out with no feedback, and the opt-out was never consent to that.
+   * Deliberately opt-in per type — default false keeps every existing type
+   * honouring the preference exactly as before.
+   */
+  transactional?: boolean;
 }
 
 /**
@@ -141,5 +153,17 @@ export const NOTIFICATION_MATRIX: Record<NotificationType, MatrixEntry> = {
     inApp: true,
     whatsapp: false,
     email: false,
+  },
+  // ── Account security ─────────────────────────────────────────────────────────
+  // EMAIL ONLY, and deliberately so. No in-app row: the recipient cannot sign in
+  // to read one, and writing "a password reset was requested" into the feed
+  // would surface the event to any session already open on that account. No
+  // WhatsApp: the reset link is a bearer credential and the phone on file is not
+  // proven to be the same person's.
+  PASSWORD_RESET: {
+    inApp: false,
+    whatsapp: false,
+    email: true,
+    transactional: true,
   },
 };

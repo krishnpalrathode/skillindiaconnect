@@ -29,3 +29,21 @@ export const JOB_NAMES = {
   // pdfKey NULL — the S5-B2 backfill AND the retry net for failed renders.
   INVOICE_BACKFILL_SWEEP: 'invoice-backfill-sweep',
 } as const;
+
+/**
+ * Retry policy for DELETE_OBJECT jobs.
+ *
+ * Lives here rather than beside the processor because the producer
+ * (candidate/document.service.ts, API process) and the consumer
+ * (core/storage/r2-delete.processor.ts, worker process) sit on opposite sides
+ * of the API/worker split — this file is the seam both already import.
+ *
+ * Five attempts with a long backoff: the failure this is insuring against is R2
+ * being briefly unreachable, and the consequence of giving up is an object that
+ * outlives the deletion the candidate was told had happened. Retrying for ~8
+ * minutes costs nothing; abandoning after one attempt costs an erasure.
+ */
+export const R2_DELETE_JOB_OPTS = {
+  attempts: 5,
+  backoff: { type: 'exponential', delay: 30_000 },
+} as const;

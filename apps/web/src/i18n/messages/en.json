@@ -191,6 +191,16 @@
     "methodTabsLabel": "Sign-in method",
     "forgotWrongEmail": "Use a different email",
     "forgotHint": "We'll send a reset link to this email if it matches an existing account."
+    "resetTitle": "Choose a new password",
+    "resetSubtitle": "Enter a new password for your account",
+    "newPasswordLabel": "New password",
+    "resetSubmit": "Update password",
+    "resetDoneTitle": "Password updated",
+    "resetDoneBody": "Your password has been changed. Please sign in with your new password.",
+    "resetInvalidTitle": "This link is no longer valid",
+    "resetInvalidBody": "Password reset links expire after 1 hour and can only be used once. Request a new one.",
+    "resetRequestNew": "Request a new link",
+    "goToLogin": "Go to log in"
   },
   "profile": {
     "title": "My Profile",

@@ -26,7 +26,13 @@ services:
     dockerContext: .
     plan: starter
     region: singapore # match the Neon region (ap-southeast-1) to cut latency
-    healthCheckPath: /health
+    # /health/live, NOT /health. Render probes this continuously, and /health
+    # pings Redis + Postgres on every call — on a per-command Redis plan that is
+    # a standing charge for a question the probe is not even asking. /health/live
+    # checks NO dependencies by design (see health.controller.ts): a dependency
+    # outage must not cause Render to restart an otherwise-healthy process.
+    # /health and /health/ready remain for dashboards and human use.
+    healthCheckPath: /health/live
     envVars:
       - key: NODE_ENV
         value: production

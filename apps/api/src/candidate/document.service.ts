@@ -11,7 +11,7 @@ import { Queue } from 'bullmq';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { StorageService } from '../core/storage/storage.service';
-import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
+import { QUEUE_NAMES, JOB_NAMES, R2_DELETE_JOB_OPTS } from '../queue/queue.constants';
 import { CANDIDATE_EVENTS, CandidateChangedPayload } from './events/candidate.events';
 import {
   ACCEPTED_DOC_TYPES,
@@ -139,12 +139,12 @@ export class DocumentService {
     await this.prisma.candidateDocument.delete({
       where: { candidateId_type: { candidateId, type: type as DocumentType } },
     });
-    // Enqueue object deletion for hygiene — the purge worker will also sweep orphans.
+    // Enqueue object deletion — consumed by R2DeleteProcessor in the worker.
     // BullMQ 5.x forbids ':' in custom jobIds; r2Key contains only alphanumeric, /, -, _.
     await this.r2DeleteQueue.add(
       JOB_NAMES.DELETE_OBJECT,
       { key: doc.r2Key },
-      { jobId: `r2del-${doc.r2Key}` },
+      { jobId: `r2del-${doc.r2Key}`, ...R2_DELETE_JOB_OPTS },
     );
     await this.eventEmitter.emitAsync(CANDIDATE_EVENTS.DOCUMENT_CHANGED, {
       candidateId,

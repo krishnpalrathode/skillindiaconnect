@@ -6,13 +6,16 @@ import { PrismaService } from '../core/prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
 import { QUEUE_NAMES } from '../queue/queue.constants';
+import { RESPONSIVE_WORKER_OPTS } from '../queue/worker-tuning';
 import { WHATSAPP_CHANNEL, WhatsappChannel } from './channels/whatsapp.channel';
 import { EMAIL_CHANNEL, EmailChannel } from './channels/email.channel';
 import { NOTIFICATION_MATRIX } from './notification.matrix';
 import { NotificationJobData, NotifyPayload } from './notification.types';
 import { isWhatsappDeliverable } from './whatsapp-deliverability';
 
-@Processor(QUEUE_NAMES.NOTIFICATION)
+// RESPONSIVE tier: a candidate is waiting on the other end of these sends.
+// Pickup latency is unaffected — see worker-tuning.ts on the v5 marker.
+@Processor(QUEUE_NAMES.NOTIFICATION, RESPONSIVE_WORKER_OPTS)
 export class NotificationProcessor extends WorkerHost {
   private readonly logger = new Logger(NotificationProcessor.name);
 
@@ -219,14 +222,19 @@ export class NotificationProcessor extends WorkerHost {
       select: { email: true },
     });
 
-    // Check email opt-in preference for candidates
-    const profile = await this.prisma.candidateProfile.findFirst({
-      where: { userId },
-      select: { emailNotifs: true },
-    });
-    if (profile?.emailNotifs === false) {
-      // User has opted out of email notifications — silently skip.
-      return;
+    // Check email opt-in preference for candidates. Security/transactional mail
+    // (matrix `transactional: true`) BYPASSES it — the toggle governs
+    // notifications, and must not silently swallow a password-reset link the
+    // user just requested to get back into their own account.
+    if (!NOTIFICATION_MATRIX[type].transactional) {
+      const profile = await this.prisma.candidateProfile.findFirst({
+        where: { userId },
+        select: { emailNotifs: true },
+      });
+      if (profile?.emailNotifs === false) {
+        // User has opted out of email notifications — silently skip.
+        return;
+      }
     }
 
     await this.sendEmailDirect(userId, user.email, type, payload, 'direct');
