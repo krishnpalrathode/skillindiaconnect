@@ -97,6 +97,17 @@ export function EmployerQueueTable() {
     void load();
   }, [load]);
 
+  // Dynamic search: debounce the typed draft into the URL, which drives the
+  // refetch — no submit button, the list filters live as you type. The
+  // `trimmed === search` guard makes this a no-op on mount and once the draft
+  // and URL are already in sync, so the debounce's own URL write doesn't loop.
+  useEffect(() => {
+    const trimmed = searchDraft.trim();
+    if (trimmed === search) return;
+    const id = setTimeout(() => setParam('search', trimmed || null), 300);
+    return () => clearTimeout(id);
+  }, [searchDraft, search, setParam]);
+
   if (error instanceof ApiRequestError && error.error.status === 403) {
     return (
       <ForbiddenState
@@ -115,7 +126,11 @@ export function EmployerQueueTable() {
             type="button"
             role="tab"
             aria-selected={activeTab === tab}
-            onClick={() => setParam('status', tab === 'ALL' ? null : tab)}
+            // 'ALL' must be written explicitly (?status=ALL): dropping the param
+            // instead collides with the default, which reads absent status as
+            // PENDING — so the ALL tab could never activate. `activeTab` maps ALL
+            // back to an unfiltered query (status: undefined) at fetch time.
+            onClick={() => setParam('status', tab)}
             className={cn(
               'min-h-[44px] rounded-lg px-3 text-sm font-medium transition-colors',
               'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
@@ -144,29 +159,24 @@ export function EmployerQueueTable() {
           </select>
         </label>
 
-        <form
-          className="flex items-center gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setParam('search', searchDraft.trim() || null);
-          }}
-        >
+        <div className="relative flex items-center">
+          <Search
+            className="pointer-events-none absolute start-3 size-4 text-neutral-600"
+            aria-hidden="true"
+          />
           <label htmlFor="employer-search" className="sr-only">
             {t('searchLabel')}
           </label>
           <input
             id="employer-search"
             type="search"
+            role="searchbox"
             value={searchDraft}
             onChange={(e) => setSearchDraft(e.target.value)}
             placeholder={t('searchPlaceholder')}
-            className="min-h-[44px] w-64 rounded-lg border border-neutral-300 px-3 text-sm focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+            className="min-h-[44px] w-64 rounded-lg border border-neutral-300 ps-9 pe-3 text-sm focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           />
-          <Button type="submit" variant="outline" size="sm">
-            <Search className="size-4" aria-hidden="true" />
-            {t('searchButton')}
-          </Button>
-        </form>
+        </div>
       </div>
 
       {/* The table */}

@@ -87,9 +87,22 @@ export function CandidateFilters({ filters, locale }: CandidateFiltersProps) {
   };
 
   const submitSearch = (e: React.FormEvent) => {
+    // Enter searches immediately (push), bypassing the debounce.
     e.preventDefault();
     go({ q: q.trim() || null });
   };
+
+  // Dynamic search: debounce the typed query into the URL. `replace` (not push)
+  // so typing doesn't stack a history entry per keystroke. The guard makes this
+  // a no-op once the query and the URL agree, so the navigation doesn't loop.
+  useEffect(() => {
+    const trimmed = q.trim();
+    if (trimmed === (filters.q ?? '')) return;
+    const id = setTimeout(() => {
+      router.replace(nextCandidateUrl(pathname, filters, { q: trimmed || null }));
+    }, 300);
+    return () => clearTimeout(id);
+  }, [q, filters, pathname, router]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -97,17 +110,19 @@ export function CandidateFilters({ filters, locale }: CandidateFiltersProps) {
         <label htmlFor="candidate-q" className="mb-2 block text-sm font-semibold text-neutral-700">
           {t('search')}
         </label>
-        <div className="flex gap-2">
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-neutral-600"
+            aria-hidden="true"
+          />
           <Input
             id="candidate-q"
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t('searchPlaceholder')}
+            className="ps-9"
           />
-          <Button type="submit" variant="outline" aria-label={t('search')} className="shrink-0">
-            <Search className="size-4" aria-hidden="true" />
-          </Button>
         </div>
       </form>
 
