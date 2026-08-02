@@ -22,6 +22,8 @@ import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { CreateExperienceDto } from './dto/create-experience.dto';
 import { UpdateExperienceDto } from './dto/update-experience.dto';
 import { CreateSkillDto } from './dto/create-skill.dto';
+import { PresignPhotoDto } from './dto/presign-photo.dto';
+import { ConfirmPhotoDto } from './dto/confirm-photo.dto';
 
 @Controller('candidates')
 export class CandidateController {
@@ -46,6 +48,20 @@ export class CandidateController {
   async updateMe(@CurrentUser() user: CurrentUserPayload, @Body() dto: UpdateProfileDto) {
     this.candidateService.assertCandidateRole(user.role);
     return { data: await this.candidateService.updateProfile(user.userId, dto) };
+  }
+
+  // ─── Profile photo (avatar) upload ────────────────────────────────────────
+
+  @Post('me/photo/presign')
+  async presignPhoto(@CurrentUser() user: CurrentUserPayload, @Body() dto: PresignPhotoDto) {
+    this.candidateService.assertCandidateRole(user.role);
+    return { data: await this.candidateService.presignPhoto(user.userId, dto) };
+  }
+
+  @Post('me/photo/confirm')
+  async confirmPhoto(@CurrentUser() user: CurrentUserPayload, @Body() dto: ConfirmPhotoDto) {
+    this.candidateService.assertCandidateRole(user.role);
+    return { data: await this.candidateService.confirmPhoto(user.userId, dto) };
   }
 
   // ─── Completion ───────────────────────────────────────────────────────────

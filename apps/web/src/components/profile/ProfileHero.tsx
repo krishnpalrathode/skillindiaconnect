@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   MapPin,
@@ -10,11 +10,17 @@ import {
   CheckCircle2,
   Camera,
   AlertTriangle,
+  Loader2,
 } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CompletionRing } from '@/components/common/CompletionRing';
+import { getResume, generateResume, getResumeStatus, getResumeDownloadUrl } from '@/lib/api/resume';
+import { presignPhoto, confirmPhoto, uploadToPresignedUrl } from '@/lib/api/candidate';
+
+const PHOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type CompletionResult = components['schemas']['CompletionResult'];
@@ -44,9 +50,91 @@ function Initials({ name, className }: { name: string; className?: string }) {
 export function ProfileHero({ profile, completion }: ProfileHeroProps) {
   const t = useTranslations('profile.hero');
 
+  const [resumeBusy, setResumeBusy] = useState(false);
+  const [resumeError, setResumeError] = useState(false);
+
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(profile.photoUrl ?? null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
   const joinedDate = profile.createdAt
     ? new Date(profile.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long' })
     : null;
+
+  /**
+   * Download resume (S7). Reuse an already-READY render when one exists (instant,
+   * no wasted Chromium slot); otherwise enqueue a generation and POLL to READY
+   * before opening the freshly-signed PDF url — rendering is worker-side and
+   * never synchronous. FAILED / timeout / network errors surface an inline retry.
+   */
+  async function handleDownloadResume() {
+    if (resumeBusy) return;
+    setResumeBusy(true);
+    setResumeError(false);
+    try {
+      const info = await getResume();
+      let ready = info.current?.status === 'READY';
+
+      if (!ready) {
+        await generateResume();
+        // ~40s ceiling: a 30s render × retries settles well inside this.
+        for (let i = 0; i < 20 && !ready; i++) {
+          await new Promise((r) => setTimeout(r, 2000));
+          const status = await getResumeStatus();
+          if (status.status === 'READY') ready = true;
+          else if (status.status === 'FAILED') throw new Error('render failed');
+        }
+        if (!ready) throw new Error('render timed out');
+      }
+
+      // Re-mint a fresh short-lived signed url and hand it to the browser.
+      const { url } = await getResumeDownloadUrl();
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch {
+      setResumeError(true);
+    } finally {
+      setResumeBusy(false);
+    }
+  }
+
+  /**
+   * Change photo: presign → PUT the bytes straight to R2 → confirm (which
+   * persists the key and returns the signed url). Client-side validates
+   * type/size first for instant feedback; the server re-validates from the
+   * stored object, so this is UX, not the security boundary.
+   */
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file after an error
+    if (!file || photoBusy) return;
+
+    setPhotoError(null);
+    if (!PHOTO_MIME_TYPES.includes(file.type)) {
+      setPhotoError(t('photoTypeError'));
+      return;
+    }
+    if (file.size > PHOTO_MAX_BYTES) {
+      setPhotoError(t('photoSizeError'));
+      return;
+    }
+
+    setPhotoBusy(true);
+    try {
+      const presign = await presignPhoto({
+        fileName: file.name,
+        mimeType: file.type,
+        sizeBytes: file.size,
+      });
+      await uploadToPresignedUrl(presign.uploadUrl, file);
+      const updated = await confirmPhoto(presign.key);
+      setPhotoUrl(updated.photoUrl ?? null);
+    } catch {
+      setPhotoError(t('photoUploadError'));
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
 
   return (
     <div className="overflow-hidden rounded-[18px] border border-neutral-200/70 bg-white shadow-[0_8px_30px_rgb(15,61,145,0.06)] transition-shadow duration-200 hover:shadow-[0_12px_36px_rgb(15,61,145,0.10)]">
@@ -65,19 +153,41 @@ export function ProfileHero({ profile, completion }: ProfileHeroProps) {
             <div className="-mt-12 flex flex-col gap-4 sm:mt-0 sm:flex-row sm:items-end">
               {/* Avatar */}
               <div className="relative shrink-0 sm:-mt-14">
-                <div className="rounded-full bg-white p-1 shadow-md">
-                  <Initials name={profile.fullName || '?'} className="size-24 text-3xl" />
+                <div className="overflow-hidden rounded-full bg-white p-1 shadow-md">
+                  {photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- signed R2 url, not a static asset; next/image can't optimize a short-lived presigned url.
+                    <img
+                      src={photoUrl}
+                      alt={profile.fullName || ''}
+                      className="size-24 rounded-full object-cover"
+                    />
+                  ) : (
+                    <Initials name={profile.fullName || '?'} className="size-24 text-3xl" />
+                  )}
                 </div>
-                {/* Change photo — no API in S1; shown as disabled */}
+                {/* Change photo — presign → PUT → confirm. */}
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="sr-only"
+                  onChange={handlePhotoChange}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                />
                 <button
                   type="button"
-                  disabled
-                  title={t('photoComingSoon')}
+                  onClick={() => photoInputRef.current?.click()}
+                  disabled={photoBusy}
                   aria-label={t('changePhoto')}
-                  // eslint-disable-next-line no-restricted-syntax -- DISABLED control — WCAG 1.4.3 explicitly exempts disabled UI, and darkening it would stop it reading as unavailable.
-                  className="absolute -bottom-0.5 -end-0.5 flex size-8 cursor-not-allowed items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-400 shadow-sm"
+                  aria-busy={photoBusy}
+                  className="absolute -bottom-0.5 -end-0.5 flex size-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-sm transition-colors hover:text-[#0F3D91] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 disabled:cursor-wait"
                 >
-                  <Camera className="size-3.5" aria-hidden="true" />
+                  {photoBusy ? (
+                    <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Camera className="size-3.5" aria-hidden="true" />
+                  )}
                 </button>
               </div>
 
@@ -100,6 +210,12 @@ export function ProfileHero({ profile, completion }: ProfileHeroProps) {
                 </div>
               </div>
             </div>
+
+            {photoError && (
+              <p role="alert" className="mt-3 text-xs font-medium text-error-fg">
+                {photoError}
+              </p>
+            )}
 
             {/* Meta rows */}
             <div className="mt-5 flex min-w-0 flex-col gap-2 text-sm text-neutral-600">
@@ -137,22 +253,27 @@ export function ProfileHero({ profile, completion }: ProfileHeroProps) {
         </div>
 
         {/* Action buttons */}
-        <div className="mt-5 flex flex-wrap gap-2">
-          {/* Download resume — S7 feature */}
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          {/* Download resume — wired to the S7 resume flow (generate → poll → download). */}
           <Button
             type="button"
             variant="outline"
             size="sm"
-            disabled
-            title={t('comingSoon')}
-            aria-label={`${t('downloadResume')} — ${t('comingSoon')}`}
+            onClick={handleDownloadResume}
+            disabled={resumeBusy}
+            aria-label={t('downloadResume')}
+            aria-busy={resumeBusy}
             className="min-h-10 gap-1.5 rounded-xl px-4"
           >
-            <Download className="size-3.5" aria-hidden="true" />
-            {t('downloadResume')}
+            {resumeBusy ? (
+              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <Download className="size-3.5" aria-hidden="true" />
+            )}
+            {resumeBusy ? t('preparingResume') : t('downloadResume')}
           </Button>
 
-          {/* Share profile — Phase 2 feature */}
+          {/* Share profile — Phase 2 feature (public slug/page not built; no public endpoint) */}
           <Button
             type="button"
             variant="outline"
@@ -166,6 +287,12 @@ export function ProfileHero({ profile, completion }: ProfileHeroProps) {
             {t('shareProfile')}
           </Button>
         </div>
+
+        {resumeError && (
+          <p role="alert" className="mt-2 text-xs font-medium text-error-fg">
+            {t('resumeError')}
+          </p>
+        )}
 
         {/* What's missing hint */}
         {completion.missingForApply && completion.missingForApply.length > 0 && (

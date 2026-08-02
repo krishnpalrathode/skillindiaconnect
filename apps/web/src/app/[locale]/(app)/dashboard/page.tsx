@@ -143,7 +143,6 @@ export default function DashboardPage() {
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:gap-7 lg:px-8 lg:py-8">
       <DashboardHeader
         name={profile.fullName ?? profile.email}
-        email={profile.email}
         isAvailable={!!profile.isAvailable}
         unreadCount={unreadCount}
         locale={locale}
@@ -151,14 +150,15 @@ export default function DashboardPage() {
 
       <KpiCards stats={stats} unreadCount={unreadCount} profileViews={profileViews} />
 
-      <RecentViewersCard summary={profileViews} />
-
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-1">
+        <div className="flex flex-col gap-6 lg:col-span-1">
           <ProfileSummaryCard profile={profile} completion={completion} />
-          <div className="mt-6">
-            <QuickActions />
-          </div>
+          <QuickActions />
+          {/* Recent profile views lives with the profile widgets in the sidebar
+              — it is profile-engagement context, not top-of-fold content. The
+              #recent-views anchor is preserved so the Profile Views KPI still
+              links straight to it. */}
+          <RecentViewersCard summary={profileViews} />
         </div>
 
         <div className="flex flex-col gap-6 lg:col-span-2">

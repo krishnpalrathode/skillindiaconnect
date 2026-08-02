@@ -216,8 +216,13 @@
     "hero": {
       "changePhoto": "تغيير الصورة",
       "photoComingSoon": "رفع الصورة قادم قريباً",
+      "photoTypeError": "الرجاء اختيار صورة بصيغة JPG أو PNG أو WebP.",
+      "photoSizeError": "يجب أن تكون الصورة أقل من 5 ميغابايت.",
+      "photoUploadError": "تعذّر رفع صورتك. حاول مرة أخرى.",
       "editProfile": "تعديل الملف الشخصي",
       "downloadResume": "تنزيل السيرة الذاتية",
+      "preparingResume": "جارٍ التحضير…",
+      "resumeError": "تعذّر تجهيز سيرتك الذاتية. حاول مرة أخرى.",
       "shareProfile": "مشاركة الملف الشخصي",
       "comingSoon": "قريباً",
       "availableForWork": "نشط — متاح للعمل",

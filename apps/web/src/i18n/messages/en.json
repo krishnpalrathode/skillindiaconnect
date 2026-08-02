@@ -216,8 +216,13 @@
     "hero": {
       "changePhoto": "Change photo",
       "photoComingSoon": "Photo upload coming soon",
+      "photoTypeError": "Please choose a JPG, PNG or WebP image.",
+      "photoSizeError": "Image must be under 5 MB.",
+      "photoUploadError": "Couldn't upload your photo. Please try again.",
       "editProfile": "Edit profile",
       "downloadResume": "Download resume",
+      "preparingResume": "Preparing…",
+      "resumeError": "Couldn't prepare your resume. Please try again.",
       "shareProfile": "Share profile",
       "comingSoon": "Coming soon",
       "availableForWork": "Active — Available for Work",

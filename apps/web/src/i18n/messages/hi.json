@@ -216,8 +216,13 @@
     "hero": {
       "changePhoto": "फ़ोटो बदलें",
       "photoComingSoon": "फ़ोटो अपलोड जल्द आ रहा है",
+      "photoTypeError": "कृपया JPG, PNG या WebP छवि चुनें।",
+      "photoSizeError": "छवि 5 MB से कम होनी चाहिए।",
+      "photoUploadError": "आपकी फ़ोटो अपलोड नहीं हो सकी। कृपया पुनः प्रयास करें।",
       "editProfile": "प्रोफ़ाइल संपादित करें",
       "downloadResume": "रिज्यूमे डाउनलोड करें",
+      "preparingResume": "तैयार किया जा रहा है…",
+      "resumeError": "आपका रिज़्यूमे तैयार नहीं हो सका। कृपया पुनः प्रयास करें।",
       "shareProfile": "प्रोफ़ाइल शेयर करें",
       "comingSoon": "जल्द आ रहा है",
       "availableForWork": "सक्रिय — काम के लिए उपलब्ध",

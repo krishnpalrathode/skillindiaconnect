@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils';
 interface DashboardHeaderProps {
   /** Full name (or email fallback) — used for the greeting first-name and the chip. */
   name: string;
-  email: string;
   isAvailable: boolean;
   unreadCount: number;
   locale: string;
@@ -24,7 +23,6 @@ interface DashboardHeaderProps {
  */
 export function DashboardHeader({
   name,
-  email,
   isAvailable,
   unreadCount,
   locale,
@@ -101,21 +99,25 @@ export function DashboardHeader({
             aria-expanded={menuOpen}
             className="flex items-center gap-2.5 rounded-full bg-white/80 py-1.5 pe-2 ps-1.5 shadow-sm ring-1 ring-neutral-200/70 transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
-            <span
-              aria-hidden="true"
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0F3D91] to-[#2E67B1] text-sm font-semibold text-white"
-            >
-              {initials || <User className="size-4" />}
-            </span>
-            <span className="hidden text-start sm:block">
-              <span className="block max-w-[140px] truncate text-sm font-semibold leading-tight text-neutral-900">
-                {name}
+            <span className="relative shrink-0">
+              <span
+                aria-hidden="true"
+                className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-[#0F3D91] to-[#2E67B1] text-sm font-semibold text-white"
+              >
+                {initials || <User className="size-4" />}
               </span>
+              {/* Availability as a presence dot (mirrors the notification dot),
+                  not a text label — cleaner and keeps the chip single-line. */}
               {isAvailable && (
-                <span className="block text-xs font-medium leading-tight text-success-fg">
-                  Available
-                </span>
+                <span
+                  aria-hidden="true"
+                  className="absolute -bottom-0.5 -end-0.5 size-3 rounded-full bg-success ring-2 ring-white"
+                />
               )}
+            </span>
+            <span className="hidden max-w-[140px] truncate text-start text-sm font-semibold text-neutral-900 sm:block">
+              {name}
+              {isAvailable && <span className="sr-only"> — Available</span>}
             </span>
             <ChevronDown
               className={cn(
@@ -129,20 +131,17 @@ export function DashboardHeader({
           {menuOpen && (
             <div
               role="menu"
-              className="absolute end-0 top-[calc(100%+0.5rem)] z-20 w-56 overflow-hidden rounded-2xl border border-neutral-200 bg-white p-1.5 shadow-xl"
+              // Compact menu, right-aligned under the chip — the name already
+              // lives on the chip, so the dropdown is just the actions.
+              className="absolute end-0 top-[calc(100%+0.5rem)] z-20 w-44 overflow-hidden rounded-xl border border-neutral-200 bg-white p-1.5 shadow-xl"
             >
-              <div className="px-3 py-2">
-                <p className="truncate text-sm font-semibold text-neutral-900">{name}</p>
-                <p className="truncate text-xs text-neutral-600">{email}</p>
-              </div>
-              <div className="my-1 border-t border-neutral-100" />
               <Link
                 href={`/${locale}/profile`}
                 role="menuitem"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
               >
-                <User className="size-4" aria-hidden="true" />
+                <User className="size-4 shrink-0" aria-hidden="true" />
                 {tNav('profile')}
               </Link>
               <button
@@ -152,9 +151,9 @@ export function DashboardHeader({
                   setMenuOpen(false);
                   logout().then(() => router.replace(`/${locale}/login`));
                 }}
-                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-error-fg transition-colors hover:bg-error-bg focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-error-fg transition-colors hover:bg-error-bg focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
               >
-                <LogOut className="size-4" aria-hidden="true" />
+                <LogOut className="size-4 shrink-0" aria-hidden="true" />
                 {tNav('logout')}
               </button>
             </div>
