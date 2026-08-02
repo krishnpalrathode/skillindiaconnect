@@ -7,6 +7,7 @@ import { NotificationService } from '../notifications/notification.service';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
 import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
+import { MAINTENANCE_WORKER_OPTS } from '../queue/worker-tuning';
 import {
   REMINDER_WINDOWS,
   PASSPORT_EXPIRY_BATCH_SIZE,
@@ -50,7 +51,8 @@ function daysUntilExpiry(expiryDate: Date, now: Date): number {
 }
 
 @Injectable()
-@Processor(QUEUE_NAMES.PASSPORT_EXPIRY)
+// MAINTENANCE tier: fed by a 01:00 cron. See queue/worker-tuning.ts.
+@Processor(QUEUE_NAMES.PASSPORT_EXPIRY, MAINTENANCE_WORKER_OPTS)
 export class PassportExpiryProcessor extends WorkerHost {
   private readonly logger = new Logger(PassportExpiryProcessor.name);
 

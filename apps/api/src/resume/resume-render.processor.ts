@@ -6,6 +6,7 @@ import { UserRole } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
 import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
+import { RESPONSIVE_WORKER_OPTS } from '../queue/worker-tuning';
 import { RENDER_TUNING } from '../pdf/render-tuning';
 import { ResumeRenderService } from './resume-render.service';
 import { RESUME_EVENTS, ResumeGeneratedPayload } from './resume.events';
@@ -37,6 +38,9 @@ export const RESUME_RENDER_JOB_OPTS = {
   // is how many resume renders are in flight inside the worker; the Chromium
   // pool semaphore is the memory ceiling behind it. See render-tuning.ts.
   concurrency: RENDER_TUNING.resumeRenderConcurrency,
+  // RESPONSIVE tier: the candidate is polling for this PDF. The stalled check
+  // stays ON here — it is what reclaims a render lost to a wedged Chromium.
+  ...RESPONSIVE_WORKER_OPTS,
 })
 export class ResumeRenderProcessor extends WorkerHost {
   private readonly logger = new Logger(ResumeRenderProcessor.name);

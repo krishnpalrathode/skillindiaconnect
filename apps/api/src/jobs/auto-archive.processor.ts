@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job as BullJob } from 'bullmq';
 import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
+import { MAINTENANCE_WORKER_OPTS } from '../queue/worker-tuning';
 import { JobLifecycleService } from './job-lifecycle.service';
 
 /**
@@ -15,7 +16,8 @@ import { JobLifecycleService } from './job-lifecycle.service';
  * BullMQ's deterministic jobId ensures exactly-once execution across worker replicas.
  */
 @Injectable()
-@Processor(QUEUE_NAMES.AUTO_ARCHIVE)
+// MAINTENANCE tier: fed by a 02:00 cron. See queue/worker-tuning.ts.
+@Processor(QUEUE_NAMES.AUTO_ARCHIVE, MAINTENANCE_WORKER_OPTS)
 export class AutoArchiveProcessor extends WorkerHost {
   private readonly logger = new Logger(AutoArchiveProcessor.name);
 

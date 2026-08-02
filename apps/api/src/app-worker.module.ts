@@ -3,6 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CoreModule } from './core/core.module';
 import { ObservabilityModule } from './core/observability/observability.module';
+import { R2DeleteWorkerModule } from './core/storage/r2-delete.worker-module';
 import { AuditModule } from './audit/audit.module';
 import { NotificationWorkerModule } from './notifications/notification.worker-module';
 import { JobsWorkerModule } from './jobs/jobs.worker-module';
@@ -19,6 +20,9 @@ import { ResumeWorkerModule } from './resume/resume.worker-module';
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     AuditModule,
+    // The R2_DELETE consumer. Absent until now, so every document deletion ever
+    // enqueued is still waiting in Redis — see r2-delete.processor.ts.
+    R2DeleteWorkerModule,
     NotificationWorkerModule,
     JobsWorkerModule,
     CandidateWorkerModule,
