@@ -190,7 +190,7 @@
     "resendIn": "Resend in {seconds}s",
     "methodTabsLabel": "Sign-in method",
     "forgotWrongEmail": "Use a different email",
-    "forgotHint": "We'll send a reset link to this email if it matches an existing account."
+    "forgotHint": "We'll send a reset link to this email if it matches an existing account.",
     "resetTitle": "Choose a new password",
     "resetSubtitle": "Enter a new password for your account",
     "newPasswordLabel": "New password",

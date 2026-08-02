@@ -127,6 +127,24 @@ export const envSchema = z.object({
   INVOICE_RENDER_CONCURRENCY: z.coerce.number().int().positive().default(1),
   RATE_LIMIT_GLOBAL_PER_MIN: z.coerce.number().int().positive().default(100),
   RATE_LIMIT_SEARCH_PER_MIN: z.coerce.number().int().positive().default(30),
+
+  // ── Redis command budget + metrics cadence ───────────────────────────────
+  // Same discipline as the render/rate-limit knobs above: read directly from
+  // process.env at the read sites (queue/worker-tuning.ts, observability), and
+  // DECLARED here so `.env.example` stays the single documented inventory.
+  // Full derivation: docs/redis-command-budget.md.
+  BULL_DRAIN_DELAY_S: z.coerce.number().int().positive().default(60),
+  BULL_MAINTENANCE_DRAIN_DELAY_S: z.coerce.number().int().positive().default(300),
+  BULL_STALLED_INTERVAL_MS: z.coerce.number().int().positive().default(300_000),
+  BULL_MAINTENANCE_STALLED_INTERVAL_MS: z.coerce.number().int().positive().default(600_000),
+  METRICS_PROCESS_INTERVAL_MS: z.coerce.number().int().positive().default(15_000),
+  METRICS_QUEUE_INTERVAL_MS: z.coerce.number().int().positive().default(600_000),
+  // on | off — blank means "default per SIC_PROCESS_ROLE" (worker-only), so it
+  // is optional rather than defaulted to a fixed value here.
+  METRICS_QUEUE_COLLECTION: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.enum(['on', 'off']).optional(),
+  ),
 });
 
 export type Env = z.infer<typeof envSchema>;

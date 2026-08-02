@@ -21,12 +21,7 @@ interface DashboardHeaderProps {
  * and a user-menu chip on the end side. Purely presentational — the bell links to
  * the existing /notifications route and the menu reuses the existing auth logout.
  */
-export function DashboardHeader({
-  name,
-  isAvailable,
-  unreadCount,
-  locale,
-}: DashboardHeaderProps) {
+export function DashboardHeader({ name, isAvailable, unreadCount, locale }: DashboardHeaderProps) {
   const t = useTranslations('dashboard');
   const tNav = useTranslations('nav');
   const { logout } = useAuth();
