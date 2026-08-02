@@ -227,7 +227,7 @@ test.describe('Signup page', () => {
 test.describe('Forgot password page', () => {
   test('renders the request form', async ({ page }, testInfo) => {
     await page.goto(FORGOT_URL);
-    await expect(page.getByRole('heading', { name: /reset your password/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /forgot password/i })).toBeVisible();
     await expect(page.getByLabel(/email address/i)).toBeVisible();
     await testInfo.attach('forgot-password-page', {
       body: await page.screenshot({ fullPage: true }),
@@ -242,7 +242,7 @@ test.describe('Forgot password page', () => {
 
     // Unknown email — must still succeed
     await page.getByLabel(/email address/i).fill('nobody@nowhere.com');
-    await page.getByRole('button', { name: /send reset/i }).click();
+    await page.getByRole('button', { name: /next/i }).click();
 
     await expect(page.getByRole('heading', { name: /check your inbox/i })).toBeVisible();
     await testInfo.attach('forgot-password-check-inbox', {
