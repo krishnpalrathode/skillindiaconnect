@@ -15,6 +15,7 @@ import * as path from 'path';
 import { CandidateService } from './candidate.service';
 import { CompletionService } from './completion/completion.service';
 import { PrismaService } from '../core/prisma/prisma.service';
+import { StorageService } from '../core/storage/storage.service';
 import { CANDIDATE_EVENTS } from './events/candidate.events';
 
 // â”€â”€â”€ Factories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -97,12 +98,20 @@ describe('CandidateService', () => {
 
     eventEmitterMock = { emit: jest.fn() };
 
+    const storageMock = {
+      presignGet: jest.fn().mockResolvedValue('https://signed.example/photo'),
+      presignPut: jest.fn().mockResolvedValue({ url: 'https://put.example', expiresInSeconds: 300 }),
+      headObject: jest.fn().mockResolvedValue({ sizeBytes: 1024, contentType: 'image/jpeg' }),
+      deleteObject: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CandidateService,
         { provide: PrismaService, useValue: prismaMock },
         { provide: CompletionService, useValue: completionMock },
         { provide: EventEmitter2, useValue: eventEmitterMock },
+        { provide: StorageService, useValue: storageMock },
       ],
     }).compile();
 
@@ -274,6 +283,17 @@ describe('CandidateService â€” integration (real DB)', () => {
           CandidateService,
           CompletionService,
           { provide: PrismaService, useValue: candPrisma },
+          {
+            provide: StorageService,
+            useValue: {
+              presignGet: jest.fn().mockResolvedValue('https://signed.example/photo'),
+              presignPut: jest
+                .fn()
+                .mockResolvedValue({ url: 'https://put.example', expiresInSeconds: 300 }),
+              headObject: jest.fn().mockResolvedValue({ sizeBytes: 1024, contentType: 'image/jpeg' }),
+              deleteObject: jest.fn().mockResolvedValue(undefined),
+            },
+          },
         ],
       }).compile();
 

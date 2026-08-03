@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
   nextJobSearchUrl,
@@ -36,11 +35,25 @@ export function JobSearchControls({ filters }: JobSearchControlsProps) {
     router.push(nextJobSearchUrl(pathname, filters, patch));
   }
 
+  // Dynamic search: debounce the typed query into the URL. `replace` (not push)
+  // so typing doesn't stack a history entry per keystroke; discrete filters
+  // (market/sort) still `push`. The guard makes this a no-op once the query and
+  // the URL are in sync, so the navigation it triggers doesn't loop.
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (trimmed === (filters.q ?? '')) return;
+    const id = setTimeout(() => {
+      router.replace(nextJobSearchUrl(pathname, filters, { q: trimmed || null }));
+    }, 300);
+    return () => clearTimeout(id);
+  }, [query, filters, pathname, router]);
+
   return (
     <div className="flex flex-col gap-3">
       <form
         role="search"
         onSubmit={(e) => {
+          // Enter searches immediately (push), bypassing the debounce.
           e.preventDefault();
           go({ q: query.trim() || null });
         }}
@@ -63,9 +76,6 @@ export function JobSearchControls({ filters }: JobSearchControlsProps) {
             className="ps-9"
           />
         </div>
-        <Button type="submit" variant="secondary">
-          {t('searchButton')}
-        </Button>
       </form>
 
       <div className="flex flex-wrap items-center justify-between gap-3">

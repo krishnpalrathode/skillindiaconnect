@@ -71,9 +71,13 @@ export function OnBehalfJobForm() {
     }
   }, []);
 
+  // Dynamic search: debounce the typed query into the employer lookup. Fires on
+  // mount too (empty query → the initial approved-employer list), so no separate
+  // load effect is needed and no submit button gates the search.
   useEffect(() => {
-    void searchEmployers('');
-  }, [searchEmployers]);
+    const id = setTimeout(() => void searchEmployers(employerSearch.trim()), 300);
+    return () => clearTimeout(id);
+  }, [employerSearch, searchEmployers]);
 
   // ── The job form (S2-F4 state module) ──────────────────────────────────────
   const [values, setValues] = useState<JobFormValues>(DEFAULT_FORM_VALUES);
@@ -188,7 +192,11 @@ export function OnBehalfJobForm() {
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
+            <div className="relative w-72">
+              <Search
+                className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-neutral-600"
+                aria-hidden="true"
+              />
               <label htmlFor="employer-search" className="sr-only">
                 {t('employerSearchLabel')}
               </label>
@@ -198,17 +206,8 @@ export function OnBehalfJobForm() {
                 value={employerSearch}
                 onChange={(e) => setEmployerSearch(e.target.value)}
                 placeholder={t('employerSearchPlaceholder')}
-                className="min-h-[44px] w-72 rounded-lg border border-neutral-300 px-3 text-sm focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+                className="min-h-[44px] w-full rounded-lg border border-neutral-300 ps-9 pe-3 text-sm focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
               />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => void searchEmployers(employerSearch.trim())}
-              >
-                <Search className="size-4" aria-hidden="true" />
-                {t('employerSearchButton')}
-              </Button>
             </div>
 
             {employerResults === null && <Spinner size={18} label={t('employerLoading')} />}

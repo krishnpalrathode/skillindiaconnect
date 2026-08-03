@@ -14,7 +14,9 @@ type Props = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'landing.meta' });
-  return { title: t('title'), description: t('description') };
+  // `absolute` opts out of the layout's `%s — brand` template: the landing title
+  // already leads with the brand.
+  return { title: { absolute: t('title') }, description: t('description') };
 }
 
 /**

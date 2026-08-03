@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '@/lib/auth/auth-context';
 import { postPhoneLoginStart } from '@/lib/auth/api';
 import { ApiRequestError } from '@/lib/api/client';
+import { maskPhone } from '@/lib/mask';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
@@ -134,7 +135,15 @@ export function PhoneLoginFlow({ onSuccess }: PhoneLoginFlowProps) {
   // Step B — OTP
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-neutral-600">{t('otpSentMessage')}</p>
+      <p className="text-sm text-neutral-600">
+        {t.rich('otpSentMessage', {
+          // Country code stays visible beside the masked national number; <bdi>
+          // stops the number being reordered inside the RTL sentence in Arabic.
+          id: () => (
+            <bdi className="font-medium text-neutral-900">{`${countryCode} ${maskPhone(phone)}`}</bdi>
+          ),
+        })}
+      </p>
 
       {error && (
         <p role="alert" className="text-sm text-error-fg font-medium">

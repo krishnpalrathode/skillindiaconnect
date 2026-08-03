@@ -17,11 +17,20 @@ import { compute } from './completion/completion.service';
 import { CANDIDATE_EVENTS, CandidateChangedPayload } from './events/candidate.events';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
+import { v4 as uuidv4 } from 'uuid';
+import { StorageService } from '../core/storage/storage.service';
+import { PresignPhotoDto } from './dto/presign-photo.dto';
+import { ConfirmPhotoDto } from './dto/confirm-photo.dto';
 import {
   CandidateProfileWithRelations,
   toSelf,
   CandidateSelfDto,
 } from './mappers/candidate-self.mapper';
+
+/** Profile photo upload limits. Image-only; a signed url is short-lived. */
+const PHOTO_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+const PHOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const PHOTO_URL_EXPIRY_SECONDS = 3600; // the profile photo signed-url lifetime
 
 /**
  * Human labels for the mandatory document types, used to build the contract's
@@ -40,13 +49,92 @@ export class CandidateService {
     private readonly prisma: PrismaService,
     private readonly completionService: CompletionService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly storage: StorageService,
   ) {}
 
   // ─── Profile access ────────────────────────────────────────────────────────
 
   async getProfileByUserId(userId: string): Promise<CandidateSelfDto> {
     const profile = await this.findOrCreateProfile(userId);
-    return toSelf(profile);
+    // The wire carries a SHORT-EXPIRY SIGNED url, never the raw R2 key — the
+    // key is private, the url is what the browser renders.
+    const photoUrl = profile.photoKey
+      ? await this.storage.presignGet(profile.photoKey, PHOTO_URL_EXPIRY_SECONDS)
+      : null;
+    return toSelf(profile, photoUrl);
+  }
+
+  // ─── Profile photo (avatar) upload ───────────────────────────────────────────
+
+  /**
+   * Presign a direct-to-R2 PUT for the profile photo (mirrors the document
+   * upload flow). The declared mime/size are a first check; the authoritative
+   * gate is the HEAD re-validation in {@link confirmPhoto}. The key is
+   * namespaced under the candidate so ownership is verifiable at confirm.
+   */
+  async presignPhoto(
+    userId: string,
+    dto: PresignPhotoDto,
+  ): Promise<{ uploadUrl: string; key: string; expiresInSeconds: number }> {
+    if (!PHOTO_MIME_TYPES.includes(dto.mimeType)) {
+      throw new UnprocessableEntityException({ code: 'INVALID_FILE_TYPE' });
+    }
+    if (dto.sizeBytes > PHOTO_MAX_BYTES) {
+      throw new UnprocessableEntityException({ code: 'FILE_TOO_LARGE' });
+    }
+    const candidateId = await this.getCandidateIdByUserId(userId);
+    const safeFileName = dto.fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const key = `candidates/${candidateId}/photo/${uuidv4()}-${safeFileName}`;
+    const { url, expiresInSeconds } = await this.storage.presignPut({
+      key,
+      contentType: dto.mimeType,
+      maxBytes: PHOTO_MAX_BYTES,
+    });
+    return { uploadUrl: url, key, expiresInSeconds };
+  }
+
+  /**
+   * Persist a completed photo upload. Verifies OWNERSHIP (key prefix), that the
+   * PUT actually landed (HEAD), and re-checks the REAL mime/size from the object
+   * (client declarations can be falsified). Best-effort deletes the previous
+   * photo so orphans don't accumulate, recomputes completion, and returns the
+   * fresh self profile (with the signed url).
+   */
+  async confirmPhoto(userId: string, dto: ConfirmPhotoDto): Promise<CandidateSelfDto> {
+    const candidateId = await this.getCandidateIdByUserId(userId);
+    const expectedPrefix = `candidates/${candidateId}/photo/`;
+    if (!dto.key.startsWith(expectedPrefix)) {
+      throw new ForbiddenException({ code: 'KEY_NOT_OWNED' });
+    }
+    const head = await this.storage.headObject(dto.key);
+    if (!head) {
+      throw new UnprocessableEntityException({ code: 'UPLOAD_NOT_FOUND' });
+    }
+    if (head.sizeBytes > PHOTO_MAX_BYTES) {
+      throw new UnprocessableEntityException({ code: 'FILE_TOO_LARGE' });
+    }
+    if (!PHOTO_MIME_TYPES.includes(head.contentType)) {
+      throw new UnprocessableEntityException({ code: 'INVALID_FILE_TYPE' });
+    }
+
+    const existing = await this.prisma.candidateProfile.findUnique({
+      where: { id: candidateId },
+      select: { photoKey: true },
+    });
+    await this.prisma.candidateProfile.update({
+      where: { id: candidateId },
+      data: { photoKey: dto.key },
+    });
+
+    // Best-effort cleanup of the replaced photo — never block on it.
+    if (existing?.photoKey && existing.photoKey !== dto.key) {
+      await this.storage.deleteObject(existing.photoKey).catch(() => undefined);
+    }
+
+    // A photo counts toward profile completion (see completion.service).
+    await this.completionService.recomputeForCandidate(candidateId);
+
+    return this.getProfileByUserId(userId);
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto): Promise<CandidateSelfDto> {

@@ -91,18 +91,38 @@ describe('EmployerQueueTable', () => {
     expect(screen.queryByText(pendingCompany().name)).not.toBeInTheDocument();
   });
 
-  it('search updates the URL (state lives in the URL, not the component)', async () => {
+  it('search is dynamic — typing debounces into the URL, no submit button', async () => {
     signInAs(SUPER_ADMIN_USER_ID);
     // Filter changes go through NATIVE history (shallow routing) — a filter is
     // client state; router.replace would fire a wasted RSC round-trip per click.
+    // The search box filters live: no submit button exists.
+    const replaceState = vi.spyOn(window.history, 'replaceState');
+    render(<EmployerQueueTable />);
+    await waitFor(() => expect(screen.getByText(pendingCompany().name)).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: /search/i })).not.toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText(/search companies/i), 'Noor');
+
+    // The debounce lands the typed value in the URL without any explicit submit.
+    await waitFor(() =>
+      expect(replaceState).toHaveBeenCalledWith(null, '', expect.stringContaining('search=Noor')),
+    );
+    replaceState.mockRestore();
+  });
+
+  it('the All tab writes ?status=ALL — not an absent param, which the default reads back as PENDING', async () => {
+    signInAs(SUPER_ADMIN_USER_ID);
+    // Regression: employers default to PENDING when status is absent, so the All
+    // tab must encode ALL explicitly. Dropping the param produced a URL identical
+    // to the PENDING landing — the All tab could never activate and its rows
+    // never loaded.
     const replaceState = vi.spyOn(window.history, 'replaceState');
     render(<EmployerQueueTable />);
     await waitFor(() => expect(screen.getByText(pendingCompany().name)).toBeInTheDocument());
 
-    await userEvent.type(screen.getByLabelText(/search companies/i), 'Noor');
-    await userEvent.click(screen.getByRole('button', { name: /search/i }));
+    await userEvent.click(screen.getByRole('tab', { name: /^all$/i }));
 
-    expect(replaceState).toHaveBeenCalledWith(null, '', expect.stringContaining('search=Noor'));
+    expect(replaceState).toHaveBeenCalledWith(null, '', expect.stringContaining('status=ALL'));
     replaceState.mockRestore();
   });
 });
