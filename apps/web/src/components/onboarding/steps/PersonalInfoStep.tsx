@@ -189,7 +189,12 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
 
       {/* Required fields */}
       <div className="flex flex-col gap-5">
-        <Field id="pi-fullname" label={t('nameLabel')} required error={showNameError ? t('nameError') : undefined}>
+        <Field
+          id="pi-fullname"
+          label={t('nameLabel')}
+          required
+          error={showNameError ? t('nameError') : undefined}
+        >
           <Input
             placeholder={t('namePlaceholder')}
             value={fullName}

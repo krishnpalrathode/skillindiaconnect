@@ -1553,7 +1553,11 @@
       "findJobs": "ابحث عن وظيفة",
       "hireWorkers": "وظّف عمالاً",
       "login": "تسجيل الدخول",
-      "employerLogin": "تسجيل دخول صاحب العمل"
+      "employerLogin": "تسجيل دخول صاحب العمل",
+      "explore": "استكشف",
+      "followUs": "تابعنا",
+      "callUs": "اتصل بنا",
+      "visitUs": "مكتبنا"
     },
     "carousel": {
       "label": "عمال مهرة على سكيل إنديا كونكت",

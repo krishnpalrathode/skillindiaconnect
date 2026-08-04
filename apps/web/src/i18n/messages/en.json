@@ -2428,7 +2428,11 @@
       "findJobs": "Find Jobs",
       "hireWorkers": "Hire Workers",
       "login": "Login",
-      "employerLogin": "Employer Login"
+      "employerLogin": "Employer Login",
+      "explore": "Explore",
+      "followUs": "Follow us",
+      "callUs": "Call us",
+      "visitUs": "Our office"
     },
     "carousel": {
       "label": "Skilled workers on SkillIndiaConnect",
