@@ -18,6 +18,30 @@ type MaritalStatus = components['schemas']['MaritalStatus'];
 
 const MARITAL_STATUSES: MaritalStatus[] = ['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'];
 
+// Blue-collar recruitment: candidates must be of legal working age. 100 is a
+// sane upper bound that also rejects obviously-mistyped years (e.g. 1900).
+const MIN_AGE = 18;
+const MAX_AGE = 100;
+
+/** ISO (YYYY-MM-DD) date exactly `years` before today — used for the picker bounds. */
+function isoYearsAgo(years: number): string {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - years);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Whole years between `dob` (YYYY-MM-DD) and today, or null if unparseable. */
+function ageFromDob(dob: string): number | null {
+  if (!dob) return null;
+  const b = new Date(`${dob}T00:00:00`);
+  if (Number.isNaN(b.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - b.getFullYear();
+  const monthDelta = now.getMonth() - b.getMonth();
+  if (monthDelta < 0 || (monthDelta === 0 && now.getDate() < b.getDate())) age -= 1;
+  return age;
+}
+
 interface PersonalInfoStepProps {
   profile: CandidateProfile;
   onProfileUpdate: (updated: CandidateProfile) => void;
@@ -46,7 +70,20 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
-  const canAdvance = fullName.trim().length > 0 && dob.length > 0;
+  // Bounds for the date picker: no future dates, no under-18s, no absurd ages.
+  const maxDob = isoYearsAgo(MIN_AGE);
+  const minDob = isoYearsAgo(MAX_AGE);
+
+  const nameValid = fullName.trim().length >= 2;
+  const age = ageFromDob(dob);
+  const ageValid = age !== null && age >= MIN_AGE && age <= MAX_AGE;
+
+  // Inline errors only surface once the user has actually entered something —
+  // we don't scold an empty, untouched field.
+  const showNameError = fullName.trim().length > 0 && !nameValid;
+  const showAgeError = dob.length > 0 && !ageValid;
+
+  const canAdvance = nameValid && ageValid;
 
   // Display-only chips parsed from the comma-separated languages input — the
   // saved value remains the same comma string the API has always received.
@@ -152,7 +189,7 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
 
       {/* Required fields */}
       <div className="flex flex-col gap-5">
-        <Field id="pi-fullname" label={t('nameLabel')} required>
+        <Field id="pi-fullname" label={t('nameLabel')} required error={showNameError ? t('nameError') : undefined}>
           <Input
             placeholder={t('namePlaceholder')}
             value={fullName}
@@ -162,12 +199,19 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
           />
         </Field>
 
-        <Field id="pi-dob" label={t('dobLabel')} required>
+        <Field
+          id="pi-dob"
+          label={t('dobLabel')}
+          required
+          hint={t('dobHint')}
+          error={showAgeError ? t('ageError') : undefined}
+        >
           <Input
             type="date"
             value={dob}
             onChange={(e) => setDob(e.target.value)}
-            max={new Date().toISOString().slice(0, 10)}
+            min={minDob}
+            max={maxDob}
             className="h-12 rounded-xl"
           />
         </Field>
