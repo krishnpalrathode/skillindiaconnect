@@ -1,5 +1,9 @@
 {
   "resume": {
+    "pageTitle": "[ar] Resume Builder",
+    "pageSubtitle": "[ar] Create a professional resume from your profile, then download it or send it to yourself.",
+    "loadingError": "[ar] We couldn't load your resume builder. Please try again.",
+    "retry": "[ar] Retry",
     "downloadPdf": "تنزيل PDF",
     "regenerate": "إعادة الإنشاء",
     "regeneratePrompt": "لقد غيّرت إعدادات سيرتك الذاتية — أعد إنشاء سيرتك الذاتية لتطبيقها على ملف PDF المُنزَّل.",
@@ -107,6 +111,9 @@
     "jobs": "[ar] Jobs",
     "applications": "[ar] Applications",
     "notifications": "[ar] Notifications",
+    "notificationsShort": "[ar] Alerts",
+    "resumeBuilder": "[ar] Resume Builder",
+    "resumeBuilderShort": "[ar] Resume",
     "settings": "[ar] Settings",
     "logout": "[ar] Log out",
     "login": "[ar] Log in"

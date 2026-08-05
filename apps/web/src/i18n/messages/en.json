@@ -1,5 +1,9 @@
 {
   "resume": {
+    "pageTitle": "Resume Builder",
+    "pageSubtitle": "Create a professional resume from your profile, then download it or send it to yourself.",
+    "loadingError": "We couldn't load your resume builder. Please try again.",
+    "retry": "Retry",
     "downloadPdf": "Download PDF",
     "regenerate": "Regenerate",
     "regeneratePrompt": "You changed your resume settings — regenerate your resume to apply them to the downloaded PDF.",
@@ -107,6 +111,9 @@
     "jobs": "Jobs",
     "applications": "Applications",
     "notifications": "Notifications",
+    "notificationsShort": "Alerts",
+    "resumeBuilder": "Resume Builder",
+    "resumeBuilderShort": "Resume",
     "settings": "Settings",
     "logout": "Log out",
     "login": "Log in"

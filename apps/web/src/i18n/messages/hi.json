@@ -1,5 +1,9 @@
 {
   "resume": {
+    "pageTitle": "[hi] Resume Builder",
+    "pageSubtitle": "[hi] Create a professional resume from your profile, then download it or send it to yourself.",
+    "loadingError": "[hi] We couldn't load your resume builder. Please try again.",
+    "retry": "[hi] Retry",
     "downloadPdf": "PDF डाउनलोड करें",
     "regenerate": "फिर से बनाएँ",
     "regeneratePrompt": "आपने अपनी रिज्यूमे सेटिंग्स बदलीं — डाउनलोड किए गए PDF पर लागू करने के लिए रिज्यूमे फिर से बनाएँ।",
@@ -107,6 +111,9 @@
     "jobs": "[hi] Jobs",
     "applications": "[hi] Applications",
     "notifications": "[hi] Notifications",
+    "notificationsShort": "[hi] Alerts",
+    "resumeBuilder": "[hi] Resume Builder",
+    "resumeBuilderShort": "[hi] Resume",
     "settings": "[hi] Settings",
     "logout": "[hi] Log out",
     "login": "[hi] Log in"
