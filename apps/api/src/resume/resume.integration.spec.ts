@@ -19,6 +19,7 @@ import {
   Prisma,
   PrismaClient,
   ResumeGenerationStatus,
+  ResumeTemplate,
   ResumeTrigger,
   UserRole,
 } from '@prisma/client';
@@ -232,6 +233,10 @@ describe('resume settings', () => {
       showReligion: false, // OFF by default — the sensitive one
       showFatherName: true,
       showPassportNumber: false, // OFF by default — the sensitive one
+      // CR-001 B1. Exhaustive on purpose: toEqual fails when a new setting
+      // appears, which is what caught this one. CLASSIC is the default because
+      // it is the template every existing resume was already rendered with.
+      template: ResumeTemplate.CLASSIC,
     });
   });
 
