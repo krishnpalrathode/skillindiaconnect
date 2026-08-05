@@ -201,7 +201,13 @@
     "resetInvalidTitle": "This link is no longer valid",
     "resetInvalidBody": "Password reset links expire after 1 hour and can only be used once. Request a new one.",
     "resetRequestNew": "Request a new link",
-    "goToLogin": "Go to log in"
+    "goToLogin": "Go to log in",
+    "logoutConfirm": {
+      "title": "Log out?",
+      "body": "You will need to sign in again to see your applications and job matches.",
+      "confirm": "Log out",
+      "cancel": "Stay signed in"
+    }
   },
   "profile": {
     "title": "My Profile",
@@ -957,7 +963,8 @@
     "empty": {
       "all": "You have no notifications yet.",
       "filter": "No notifications in this category.",
-      "unread": "No unread notifications."
+      "unread": "No unread notifications.",
+      "allBody": "When an employer shortlists you, a matching job is posted, or your profile needs attention, it will show up here."
     },
     "markAllRead": "Mark all as read",
     "markRead": "Mark as read",
@@ -985,7 +992,18 @@
       "yesterday": "Yesterday",
       "thisWeek": "This Week",
       "older": "Older"
-    }
+    },
+    "subtitle": "Updates about your applications, job matches and profile.",
+    "unreadCount": "{count, plural, one {# unread} other {# unread}}",
+    "allCaughtUp": "All caught up",
+    "justNow": "Just now",
+    "emptyTitles": {
+      "all": "No notifications yet",
+      "filter": "Nothing in this category",
+      "unread": "You're all caught up"
+    },
+    "actionBrowseJobs": "Browse jobs",
+    "actionShowAll": "Show all notifications"
   },
   "jobform": {
     "createFormLabel": "Create job posting form",

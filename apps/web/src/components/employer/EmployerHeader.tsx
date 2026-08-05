@@ -2,10 +2,10 @@
 
 import React, { useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { useParams, useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Bell, Building2, ChevronDown, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
-import { useToast } from '@/components/ui/toast';
+import { useLogoutConfirm } from '@/lib/auth/logout-confirm';
 import { useEmployer } from '@/lib/employer/employer-context';
 import { cn } from '@/lib/utils';
 
@@ -60,13 +60,9 @@ function HeaderLangSwitcher() {
 
 export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const t = useTranslations('employer');
-  const tCommon = useTranslations('common');
-  const { showToast } = useToast();
-  const { user, logout } = useAuth();
+  const { requestLogout } = useLogoutConfirm();
+  const { user } = useAuth();
   const { company } = useEmployer();
-  const router = useRouter();
-  const params = useParams<{ locale: string }>();
-  const locale = params?.locale ?? 'en';
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -78,14 +74,6 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase() ?? '')
     .join('');
-
-  function handleLogout() {
-    logout().then(() => {
-      showToast({ message: tCommon('logoutSuccess'), variant: 'success' });
-      // Landing page, not /login — see AppLayout.handleLogout.
-      router.replace(`/${locale}`);
-    });
-  }
 
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-4 sm:px-6 bg-white/90 backdrop-blur-md border-b border-neutral-200/70 shadow-sm">
@@ -185,7 +173,7 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
               <button
                 role="menuitem"
                 type="button"
-                onClick={handleLogout}
+                onClick={requestLogout}
                 className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-error-fg transition-colors hover:bg-error-bg focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-[2px] focus-visible:ring-ring/70 min-h-[40px]"
               >
                 <LogOut className="size-4" aria-hidden="true" />

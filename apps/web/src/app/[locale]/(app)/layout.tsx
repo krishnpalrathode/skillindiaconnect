@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useRouter, usePathname, useParams } from 'next/navigation';
 import { User, Briefcase, FileText, Bell, Settings, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
-import { useToast } from '@/components/ui/toast';
+import { useLogoutConfirm } from '@/lib/auth/logout-confirm';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
@@ -60,9 +60,8 @@ function NavItem({ href, icon, label, active, disabled }: NavItemProps) {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations('nav');
-  const tCommon = useTranslations('common');
-  const { showToast } = useToast();
-  const { user, isLoading, isLoggingOut, logout } = useAuth();
+  const { requestLogout } = useLogoutConfirm();
+  const { user, isLoading, isLoggingOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams<{ locale: string }>();
@@ -71,18 +70,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // /jobs (search + detail) is public — browsable unauthenticated for SEO/guests.
   // Every other route in this group is candidate-only.
   const isPublicPath = pathname.includes('/jobs');
-
-  /**
-   * Signs out to the LANDING page, not /login — a user who just left should
-   * land somewhere public, not on a form asking them to sign back in.
-   * The toast is raised before navigating; it survives because ToastProvider
-   * lives in the locale layout, above the routed page.
-   */
-  async function handleLogout() {
-    await logout();
-    showToast({ message: tCommon('logoutSuccess'), variant: 'success' });
-    router.replace(`/${locale}`);
-  }
 
   useEffect(() => {
     // `isLoggingOut` — a deliberate sign-out owns its own redirect (to the
@@ -192,7 +179,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="px-3 py-4 border-t border-neutral-100">
           <button
             type="button"
-            onClick={handleLogout}
+            onClick={requestLogout}
             className="flex w-full items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-neutral-600 hover:bg-error-bg hover:text-error-fg transition-all duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
             <LogOut className="size-5 shrink-0" aria-hidden="true" />
@@ -215,7 +202,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
         <button
           type="button"
-          onClick={handleLogout}
+          onClick={requestLogout}
           aria-label={t('logout')}
           className="flex items-center justify-center size-9 rounded-lg text-neutral-600 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >

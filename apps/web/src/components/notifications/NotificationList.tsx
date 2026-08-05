@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useParams } from 'next/navigation';
+import { AlertCircle, CheckCheck } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { cn } from '@/lib/utils';
 import {
@@ -12,6 +14,8 @@ import {
 } from '@/lib/api/notifications';
 import { NotificationFilters } from './NotificationFilters';
 import { NotificationItem } from './NotificationItem';
+import { NotificationEmptyState } from './NotificationEmptyState';
+import { NotificationSkeleton } from './NotificationSkeleton';
 
 type Notification = components['schemas']['Notification'];
 type FilterValue = NonNullable<NotificationListParams['filter']>;
@@ -43,6 +47,8 @@ function groupByDate(
 
 export function NotificationList() {
   const t = useTranslations('notifications');
+  const params = useParams<{ locale: string }>();
+  const locale = params?.locale ?? 'en';
   const now = React.useMemo(() => new Date(), []);
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -110,7 +116,17 @@ export function NotificationList() {
   const unreadCount = notifications.filter((n) => !n.read).length;
   const groups = groupByDate(notifications, now);
 
-  const emptyKey = unreadOnly ? 'unread' : activeFilter ? 'filter' : 'all';
+  const emptyKind: 'all' | 'filter' | 'unread' = unreadOnly
+    ? 'unread'
+    : activeFilter
+      ? 'filter'
+      : 'all';
+
+  /** Clears every narrowing control at once, from the empty state. */
+  const resetFilters = () => {
+    setActiveFilter(undefined);
+    setUnreadOnly(false);
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -121,37 +137,65 @@ export function NotificationList() {
         onUnreadToggle={(u) => setUnreadOnly(u)}
       />
 
-      {unreadCount > 0 && (
-        <div className="flex justify-end">
+      {/*
+        Status bar. Rendered at a FIXED height whether or not anything is unread —
+        previously "Mark all as read" appeared and vanished, shunting the whole
+        feed up and down as the last item was read.
+      */}
+      <div className="flex min-h-[2rem] items-center justify-between gap-3">
+        {unreadCount > 0 ? (
+          <span className="inline-flex items-center gap-2 rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">
+            <span className="size-1.5 rounded-full bg-primary-600" aria-hidden="true" />
+            {t('unreadCount', { count: unreadCount })}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-2 text-xs font-medium text-neutral-600">
+            <CheckCheck className="size-4 text-success-fg" aria-hidden="true" />
+            {t('allCaughtUp')}
+          </span>
+        )}
+
+        {unreadCount > 0 && (
           <button
             type="button"
             onClick={handleMarkAllRead}
-            className="text-sm text-primary-600 hover:text-primary-700 focus-visible:outline-none focus-visible:underline"
+            className="inline-flex min-h-[2rem] items-center rounded-lg px-2 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
             {t('markAllRead')}
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12 text-sm text-neutral-600">
-          {t('loading')}
-        </div>
+        <NotificationSkeleton label={t('loading')} />
       ) : error ? (
-        <div className="flex flex-col items-center gap-3 py-12">
-          <p className="text-sm text-neutral-600">{error}</p>
+        <div
+          role="alert"
+          className="flex flex-col items-center gap-4 rounded-2xl border border-error-fg/20 bg-error-bg px-6 py-12 text-center"
+        >
+          <AlertCircle className="size-8 text-error-fg" aria-hidden="true" />
+          <p className="text-sm font-medium text-error-fg">{error}</p>
           <button
             type="button"
             onClick={() => fetchPage(undefined, true)}
-            className="text-sm text-primary-600 underline"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-error-fg/30 bg-white px-5 text-sm font-semibold text-error-fg transition-colors hover:bg-white/70 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
             {t('retry')}
           </button>
         </div>
       ) : groups.length === 0 ? (
-        <p className="text-sm text-neutral-600 py-12 text-center">
-          {t(`empty.${emptyKey}` as Parameters<typeof t>[0])}
-        </p>
+        <NotificationEmptyState
+          kind={emptyKind}
+          title={t(`emptyTitles.${emptyKind}` as Parameters<typeof t>[0])}
+          // The original one-line copy stays the BODY for the filtered/unread
+          // cases; only the true-empty feed gets the fuller explanation.
+          body={emptyKind === 'all' ? t('empty.allBody') : t(`empty.${emptyKind}`)}
+          action={
+            emptyKind === 'all'
+              ? { label: t('actionBrowseJobs'), href: `/${locale}/jobs` }
+              : { label: t('actionShowAll'), onClick: resetFilters }
+          }
+        />
       ) : (
         <div className="flex flex-col gap-6">
           {groups.map(({ group, items }) => (

@@ -143,6 +143,7 @@ export default function DashboardPage() {
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:gap-7 lg:px-8 lg:py-8">
       <DashboardHeader
         name={profile.fullName ?? profile.email}
+        photoUrl={profile.photoUrl}
         isAvailable={!!profile.isAvailable}
         unreadCount={unreadCount}
         locale={locale}

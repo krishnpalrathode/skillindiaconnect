@@ -229,4 +229,39 @@ describe('NotificationList', () => {
       }
     });
   });
+
+  it('empty state offers a way OUT of the filter, and it clears unread-only too', async () => {
+    const { db: mockDb } = await import('../../../mocks/data');
+    const notifs = mockDb.notifications.get('mock-user-candidate-1') ?? [];
+    const snapshot = notifs.map((n) => ({ read: n.read, readAt: n.readAt }));
+    notifs.forEach((n) => {
+      n.read = true;
+      n.readAt = new Date().toISOString();
+    });
+
+    render(<NotificationList />);
+
+    const checkbox = await screen.findByRole('checkbox', { name: /unread only/i });
+    await userEvent.click(checkbox);
+
+    // A dead end is the bug: the empty state must carry the escape hatch.
+    const reset = await screen.findByRole('button', { name: /show all notifications/i });
+    await userEvent.click(reset);
+
+    await waitFor(() => {
+      expect(screen.queryByText(/no unread notifications/i)).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('checkbox', { name: /unread only/i })).not.toBeChecked();
+
+    notifs.forEach((n, i) => {
+      n.read = snapshot[i]!.read;
+      n.readAt = snapshot[i]!.readAt;
+    });
+  });
+
+  it('shows a skeleton while loading, not a bare text string', () => {
+    render(<NotificationList />);
+    // aria-busy tells assistive tech the region is still filling in.
+    expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true');
+  });
 });

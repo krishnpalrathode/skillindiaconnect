@@ -15,6 +15,7 @@ import {
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Avatar } from '@/components/ui/avatar';
 import { CompletionRing } from '@/components/common/CompletionRing';
 import { getResume, generateResume, getResumeStatus, getResumeDownloadUrl } from '@/lib/api/resume';
 import { presignPhoto, confirmPhoto, uploadToPresignedUrl } from '@/lib/api/candidate';
@@ -28,23 +29,6 @@ type CompletionResult = components['schemas']['CompletionResult'];
 interface ProfileHeroProps {
   profile: CandidateProfile;
   completion: CompletionResult;
-}
-
-function Initials({ name, className }: { name: string; className?: string }) {
-  const initials = name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? '')
-    .join('');
-  return (
-    <div
-      className={`flex select-none items-center justify-center rounded-full bg-gradient-to-br from-[#0F3D91] to-[#2E67B1] font-bold text-white ${className ?? ''}`}
-      aria-hidden="true"
-    >
-      {initials || '?'}
-    </div>
-  );
 }
 
 export function ProfileHero({ profile, completion }: ProfileHeroProps) {
@@ -154,16 +138,11 @@ export function ProfileHero({ profile, completion }: ProfileHeroProps) {
               {/* Avatar */}
               <div className="relative shrink-0 sm:-mt-14">
                 <div className="overflow-hidden rounded-full bg-white p-1 shadow-md">
-                  {photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- signed R2 url, not a static asset; next/image can't optimize a short-lived presigned url.
-                    <img
-                      src={photoUrl}
-                      alt={profile.fullName || ''}
-                      className="size-24 rounded-full object-cover"
-                    />
-                  ) : (
-                    <Initials name={profile.fullName || '?'} className="size-24 text-3xl" />
-                  )}
+                  <Avatar
+                    name={profile.fullName || '?'}
+                    photoUrl={photoUrl}
+                    className="size-24 text-3xl"
+                  />
                 </div>
                 {/* Change photo — presign → PUT → confirm. */}
                 <input
