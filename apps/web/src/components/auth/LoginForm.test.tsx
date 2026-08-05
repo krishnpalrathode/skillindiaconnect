@@ -30,8 +30,20 @@ describe('LoginForm', () => {
     );
   });
 
-  it('has a link to the forgot-password page', () => {
+  it('falls back to a link to /forgot-password when no handler is supplied', () => {
     render(<LoginForm onSuccess={vi.fn()} />);
     expect(screen.getByRole('link', { name: /forgot password/i })).toBeInTheDocument();
+  });
+
+  it('renders a BUTTON (not a link) when the host can swap the panel in place', async () => {
+    const user = userEvent.setup();
+    const onForgotPassword = vi.fn();
+    render(<LoginForm onSuccess={vi.fn()} onForgotPassword={onForgotPassword} />);
+
+    // No link means no navigation — the host handles it on the same page.
+    expect(screen.queryByRole('link', { name: /forgot password/i })).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: /forgot password/i }));
+    expect(onForgotPassword).toHaveBeenCalledTimes(1);
   });
 });

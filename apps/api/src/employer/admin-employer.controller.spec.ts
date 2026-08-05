@@ -41,6 +41,8 @@ function makeCompany(status: CompanyStatus = CompanyStatus.PENDING) {
     status,
     registrationNumber: 'REG1',
     industryType: 'IT',
+    phoneCode: '+91',
+    country: 'India',
     phone: '+91111',
     location: 'Delhi',
     website: null,

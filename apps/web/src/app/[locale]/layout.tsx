@@ -3,7 +3,9 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
 import { MockSetup } from '@/mocks/mock-setup';
 import { AuthProvider } from '@/lib/auth/auth-context';
+import { LogoutConfirmProvider } from '@/lib/auth/logout-confirm';
 import { RouteTitle } from '@/components/RouteTitle';
+import { ToastProvider } from '@/components/ui/toast';
 import { routing } from '@/i18n/routing';
 import { notFound } from 'next/navigation';
 
@@ -48,9 +50,18 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       <RouteTitle />
-      <MockSetup>
-        <AuthProvider>{children}</AuthProvider>
-      </MockSetup>
+      {/* ToastProvider sits ABOVE the pages so a toast raised just before a
+          router.replace() survives the navigation — this layout is not
+          remounted when the route below it changes. */}
+      <ToastProvider>
+        <MockSetup>
+          <AuthProvider>
+            {/* Inside AuthProvider + ToastProvider: it needs both to sign out
+                and to raise the confirmation toast. */}
+            <LogoutConfirmProvider>{children}</LogoutConfirmProvider>
+          </AuthProvider>
+        </MockSetup>
+      </ToastProvider>
     </NextIntlClientProvider>
   );
 }

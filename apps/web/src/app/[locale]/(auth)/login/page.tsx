@@ -6,12 +6,19 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { GoogleButton } from '@/components/auth/GoogleButton';
+import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { PhoneLoginFlow } from '@/components/auth/PhoneLoginFlow';
 import { useAuth } from '@/lib/auth/auth-context';
 import { homePathForRole } from '@/lib/auth/home-path';
 
 type Method = 'email' | 'phone';
+
+/**
+ * 'forgot' swaps the reset form in place of the whole sign-in panel — no
+ * navigation, so the surrounding card and hero stay put.
+ */
+type View = 'signIn' | 'forgot';
 
 export default function LoginPage() {
   const t = useTranslations('auth');
@@ -21,6 +28,7 @@ export default function LoginPage() {
   const locale = params.locale ?? 'en';
   const { user } = useAuth();
   const [method, setMethod] = useState<Method>('email');
+  const [view, setView] = useState<View>('signIn');
 
   // `next` lets callers (e.g. SaveJobButton on a public job page) send the
   // candidate back to where they were instead of always landing on /dashboard.
@@ -67,7 +75,9 @@ export default function LoginPage() {
           heading for screen readers. The logo canvas has transparent margins —
           the fixed-ratio wrapper crops to the artwork band. */}
       <div className="text-center">
-        <h1 className="sr-only">{t('loginTitle')}</h1>
+        {/* ForgotPasswordForm renders its own visible h1 — emitting this one too
+            would leave the page with two h1s in the reset view. */}
+        {view === 'signIn' && <h1 className="sr-only">{t('loginTitle')}</h1>}
         <div className="relative mx-auto h-[96px] w-[270px]">
           <Image
             src="/brand/logo.png"
@@ -80,19 +90,27 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <GoogleButton
-        label={t('googleLogin')}
-        className="h-12 rounded-xl border-neutral-300 font-semibold hover:border-neutral-400"
-      />
+      {/* Reset flow replaces the sign-in panel IN PLACE — same page, same card,
+          no route change. The logo above stays so the screen keeps its identity. */}
+      {view === 'forgot' ? (
+        <ForgotPasswordForm onBackToLogin={() => setView('signIn')} />
+      ) : (
+        <>
+          <GoogleButton
+            label={t('googleLogin')}
+            className="h-12 rounded-xl border-neutral-300 font-semibold hover:border-neutral-400"
+          />
 
-      {/* Divider */}
-      <div className="relative flex items-center gap-3">
-        <div className="flex-1 border-t border-neutral-200" />
-        <span className="text-xs text-neutral-600 uppercase tracking-wider">{t('orDivider')}</span>
-        <div className="flex-1 border-t border-neutral-200" />
-      </div>
+          {/* Divider */}
+          <div className="relative flex items-center gap-3">
+            <div className="flex-1 border-t border-neutral-200" />
+            <span className="text-xs text-neutral-600 uppercase tracking-wider">
+              {t('orDivider')}
+            </span>
+            <div className="flex-1 border-t border-neutral-200" />
+          </div>
 
-      {/*
+          {/*
         Method tabs.
 
         A11Y-001 (S8-H4): these carried role="tab" with NO role="tablist"
@@ -102,67 +120,69 @@ export default function LoginPage() {
         were on. The panel below is now bound with aria-controls/aria-labelledby
         so the relationship is programmatic, not just visual.
       */}
-      <div
-        role="tablist"
-        aria-label={t('methodTabsLabel')}
-        className="flex overflow-hidden rounded-xl border border-neutral-200 text-sm"
-      >
-        <button
-          type="button"
-          role="tab"
-          id="login-tab-email"
-          aria-selected={method === 'email'}
-          aria-controls="login-panel-email"
-          onClick={() => setMethod('email')}
-          className={[
-            'h-11 flex-1 font-semibold transition-colors',
-            'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
-            method === 'email'
-              ? 'border-b-2 border-[#0F3D91] bg-[#eef4ff] text-[#0F3D91]'
-              : 'text-neutral-600 hover:bg-neutral-50',
-          ].join(' ')}
-        >
-          {t('tabEmail')}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="login-tab-phone"
-          aria-selected={method === 'phone'}
-          aria-controls="login-panel-phone"
-          onClick={() => setMethod('phone')}
-          className={[
-            'h-11 flex-1 font-semibold transition-colors',
-            'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
-            method === 'phone'
-              ? 'border-b-2 border-[#0F3D91] bg-[#eef4ff] text-[#0F3D91]'
-              : 'text-neutral-600 hover:bg-neutral-50',
-          ].join(' ')}
-        >
-          {t('tabPhone')}
-        </button>
-      </div>
+          <div
+            role="tablist"
+            aria-label={t('methodTabsLabel')}
+            className="flex overflow-hidden rounded-xl border border-neutral-200 text-sm"
+          >
+            <button
+              type="button"
+              role="tab"
+              id="login-tab-email"
+              aria-selected={method === 'email'}
+              aria-controls="login-panel-email"
+              onClick={() => setMethod('email')}
+              className={[
+                'h-11 flex-1 font-semibold transition-colors',
+                'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
+                method === 'email'
+                  ? 'border-b-2 border-[#0F3D91] bg-[#eef4ff] text-[#0F3D91]'
+                  : 'text-neutral-600 hover:bg-neutral-50',
+              ].join(' ')}
+            >
+              {t('tabEmail')}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="login-tab-phone"
+              aria-selected={method === 'phone'}
+              aria-controls="login-panel-phone"
+              onClick={() => setMethod('phone')}
+              className={[
+                'h-11 flex-1 font-semibold transition-colors',
+                'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
+                method === 'phone'
+                  ? 'border-b-2 border-[#0F3D91] bg-[#eef4ff] text-[#0F3D91]'
+                  : 'text-neutral-600 hover:bg-neutral-50',
+              ].join(' ')}
+            >
+              {t('tabPhone')}
+            </button>
+          </div>
 
-      {/* A11Y-001: the panel each tab controls, named by its own tab. */}
-      {method === 'email' ? (
-        <div role="tabpanel" id="login-panel-email" aria-labelledby="login-tab-email">
-          <LoginForm onSuccess={handleSuccess} />
-        </div>
-      ) : (
-        <div role="tabpanel" id="login-panel-phone" aria-labelledby="login-tab-phone">
-          <PhoneLoginFlow onSuccess={handleSuccess} />
-        </div>
+          {/* A11Y-001: the panel each tab controls, named by its own tab. */}
+          {method === 'email' ? (
+            <div role="tabpanel" id="login-panel-email" aria-labelledby="login-tab-email">
+              <LoginForm onSuccess={handleSuccess} onForgotPassword={() => setView('forgot')} />
+            </div>
+          ) : (
+            <div role="tabpanel" id="login-panel-phone" aria-labelledby="login-tab-phone">
+              <PhoneLoginFlow onSuccess={handleSuccess} />
+            </div>
+          )}
+
+          <p className="text-center text-sm text-neutral-600">
+            {t('noAccount')}{' '}
+            <Link
+              href="/signup"
+              className="font-semibold text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
+            >
+              {t('signupLink')}
+            </Link>
+          </p>
+        </>
       )}
-
-      <p className="text-center text-sm text-neutral-600">
-        {t('noAccount')}{' '}
-        <Link
-          href="/signup"
-          className="font-semibold text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
-        >
-          {t('signupLink')}
-        </Link>
-      </p>
     </div>
   );
 }

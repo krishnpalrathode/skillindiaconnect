@@ -839,6 +839,60 @@ const candidateMeNotificationsRead = http.post(
   },
 );
 
+// Employer feed — same per-user store, different base path (mirrors the API's
+// EmployerNotificationsController).
+const employerMeNotifications = http.get(`${BASE}/employers/me/notifications`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+  const url = new URL(request.url);
+  const unreadOnly = url.searchParams.get('unread') === 'true';
+  const cursor = url.searchParams.get('cursor');
+  const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
+
+  let notifs = db.notifications.get(user.id) ?? [];
+  if (unreadOnly) notifs = notifs.filter((n) => !n.read);
+
+  const { data, nextCursor } = cursorPaginate(notifs, cursor, limit);
+  return HttpResponse.json({ data, nextCursor });
+});
+
+const employerMeNotificationsRead = http.post(
+  `${BASE}/employers/me/notifications/read`,
+  async ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const body = (await request.json()) as { ids?: string[]; all?: boolean };
+    const notifs = db.notifications.get(user.id) ?? [];
+    const now = new Date().toISOString();
+    let markedCount = 0;
+
+    if (body.all) {
+      notifs.forEach((n) => {
+        if (!n.read) {
+          n.read = true;
+          n.readAt = now;
+          markedCount++;
+        }
+      });
+    } else if (body.ids?.length) {
+      const idSet = new Set(body.ids);
+      notifs.forEach((n) => {
+        if (idSet.has(n.id) && !n.read) {
+          n.read = true;
+          n.readAt = now;
+          markedCount++;
+        }
+      });
+    }
+
+    return HttpResponse.json({ data: { markedCount } });
+  },
+);
+
 const accountDelete = http.delete(`${BASE}/account`, ({ request }) => {
   const user = getAuthUser(request);
   if (!user)
@@ -4225,6 +4279,8 @@ export const handlers = [
   candidateMeStats,
   candidateMeNotifications,
   candidateMeNotificationsRead,
+  employerMeNotifications,
+  employerMeNotificationsRead,
   // Account
   accountDelete,
   // Resume

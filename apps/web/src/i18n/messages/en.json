@@ -93,7 +93,8 @@
     "no": "No",
     "or": "or",
     "and": "and",
-    "brand": "SkillIndiaConnect"
+    "brand": "SkillIndiaConnect",
+    "logoutSuccess": "Logged out successfully"
   },
   "field": {
     "requiredError": "This field is required",
@@ -200,7 +201,13 @@
     "resetInvalidTitle": "This link is no longer valid",
     "resetInvalidBody": "Password reset links expire after 1 hour and can only be used once. Request a new one.",
     "resetRequestNew": "Request a new link",
-    "goToLogin": "Go to log in"
+    "goToLogin": "Go to log in",
+    "logoutConfirm": {
+      "title": "Log out?",
+      "body": "You will need to sign in again to see your applications and job matches.",
+      "confirm": "Log out",
+      "cancel": "Stay signed in"
+    }
   },
   "profile": {
     "title": "My Profile",
@@ -349,7 +356,10 @@
       "photoUpload": "Upload photo",
       "nameLabel": "Full name",
       "namePlaceholder": "Your full name",
+      "nameError": "Please enter your full name (at least 2 characters).",
       "dobLabel": "Date of birth",
+      "dobHint": "You must be at least 18 years old to register.",
+      "ageError": "You must be at least 18 years old to register.",
       "maritalStatusLabel": "Marital status",
       "languagesLabel": "Languages spoken",
       "languagesPlaceholder": "Type languages separated by commas",
@@ -460,6 +470,7 @@
       "postJobPendingHint": "Available after approval",
       "myJobs": "My Jobs",
       "candidates": "Candidates",
+      "notifications": "Notifications",
       "subscription": "Subscription",
       "profile": "Company Profile"
     },
@@ -571,6 +582,22 @@
         "security": "Security",
         "cleaning": "Cleaning and Facility Management",
         "other": "Other"
+      },
+      "nameTooLong": "Company name cannot be longer than 100 characters",
+      "nameNoAlnum": "Company name must contain at least one letter or number",
+      "phoneCodeLabel": "Code",
+      "phoneCodeRequired": "Select a country code",
+      "countryLabel": "Country",
+      "countryPlaceholder": "Select country",
+      "countryRequired": "Select your country",
+      "countries": {
+        "india": "India",
+        "uae": "United Arab Emirates",
+        "saudiArabia": "Saudi Arabia",
+        "qatar": "Qatar",
+        "kuwait": "Kuwait",
+        "oman": "Oman",
+        "bahrain": "Bahrain"
       }
     },
     "dashboard": {
@@ -800,7 +827,7 @@
     "metaTitle": "Find Jobs",
     "metaDescription": "Browse thousands of blue-collar jobs in India and the Gulf. Filter by location, salary, and category.",
     "pageTitle": "Find Jobs",
-    "pageSubtitle": "Explore opportunities across India and the Gulf",
+    "pageSubtitle": "Explore opportunity across India and Beyond",
     "filtersLabel": "Job filters",
     "searchLabel": "Search jobs",
     "searchPlaceholder": "Job title or keyword…",
@@ -937,7 +964,8 @@
     "empty": {
       "all": "You have no notifications yet.",
       "filter": "No notifications in this category.",
-      "unread": "No unread notifications."
+      "unread": "No unread notifications.",
+      "allBody": "When an employer shortlists you, a matching job is posted, or your profile needs attention, it will show up here."
     },
     "markAllRead": "Mark all as read",
     "markRead": "Mark as read",
@@ -965,7 +993,18 @@
       "yesterday": "Yesterday",
       "thisWeek": "This Week",
       "older": "Older"
-    }
+    },
+    "subtitle": "Updates about your applications, job matches and profile.",
+    "unreadCount": "{count, plural, one {# unread} other {# unread}}",
+    "allCaughtUp": "All caught up",
+    "justNow": "Just now",
+    "emptyTitles": {
+      "all": "No notifications yet",
+      "filter": "Nothing in this category",
+      "unread": "You're all caught up"
+    },
+    "actionBrowseJobs": "Browse jobs",
+    "actionShowAll": "Show all notifications"
   },
   "jobform": {
     "createFormLabel": "Create job posting form",
@@ -997,6 +1036,8 @@
       "marketLabel": "Market",
       "marketGulf": "Gulf (International)",
       "marketLocal": "Local (India)",
+      "countryLabel": "Country",
+      "countryPlaceholder": "Select a country",
       "locationLabel": "Location",
       "locationPlaceholder": "e.g. Dubai, UAE or Mumbai, India"
     },
@@ -2059,6 +2100,8 @@
         "marketLabel": "Market",
         "marketGulf": "Gulf",
         "marketLocal": "India (Local)",
+        "countryLabel": "Country",
+        "countryPlaceholder": "Select a country",
         "categoryLabel": "Job category",
         "categoriesLoading": "Loading categories…",
         "categoryPlaceholder": "Select a category",
@@ -2425,7 +2468,11 @@
       "findJobs": "Find Jobs",
       "hireWorkers": "Hire Workers",
       "login": "Login",
-      "employerLogin": "Employer Login"
+      "employerLogin": "Employer Login",
+      "explore": "Explore",
+      "followUs": "Follow us",
+      "callUs": "Call us",
+      "visitUs": "Our office"
     },
     "carousel": {
       "label": "Skilled workers on SkillIndiaConnect",

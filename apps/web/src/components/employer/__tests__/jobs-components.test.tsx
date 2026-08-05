@@ -446,6 +446,8 @@ describe('MyJobsTable', () => {
 async function fillRequiredJobFields(user: ReturnType<typeof userEvent.setup>) {
   await user.clear(screen.getByLabelText(/job title/i));
   await user.type(screen.getByLabelText(/job title/i), 'Test Welder');
+  // Market defaults to GULF → a GCC country is required.
+  await user.selectOptions(screen.getByLabelText(/country/i), 'United Arab Emirates');
   // Category options load async from /job-categories — wait for one, then select.
   await user.selectOptions(
     screen.getByLabelText(/job category/i),

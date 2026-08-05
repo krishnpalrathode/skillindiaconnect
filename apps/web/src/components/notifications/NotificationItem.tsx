@@ -15,14 +15,26 @@ interface NotificationItemProps {
   onMarkRead: (id: string) => void;
 }
 
-function formatRelativeTime(isoDate: string): string {
+/**
+ * Localised relative time.
+ *
+ * This used to return hardcoded English ("Just now", "5m ago", "3d ago") on a
+ * screen that ships Hindi and Arabic, so every timestamp in the feed stayed in
+ * English. Intl.RelativeTimeFormat renders in the ACTIVE locale and handles
+ * plural rules per language, which a template string cannot.
+ */
+function formatRelativeTime(isoDate: string, locale: string, justNow: string): string {
   const diff = Date.now() - new Date(isoDate).getTime();
   const mins = Math.floor(diff / 60_000);
-  if (mins < 60) return mins <= 1 ? 'Just now' : `${mins}m ago`;
+  if (mins < 1) return justNow;
+
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  if (mins < 60) return rtf.format(-mins, 'minute');
+
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  if (hours < 24) return rtf.format(-hours, 'hour');
+
+  return rtf.format(-Math.floor(hours / 24), 'day');
 }
 
 export function NotificationItem({ notification, onMarkRead }: NotificationItemProps) {
@@ -40,8 +52,10 @@ export function NotificationItem({ notification, onMarkRead }: NotificationItemP
   const inner = (
     <div
       className={cn(
-        'flex items-start gap-3 px-4 py-3 rounded-lg transition-colors',
-        notification.read ? 'bg-white' : 'bg-primary-50/40',
+        // The accent bar is always present, transparent when read, so marking a
+        // row read re-colours it instead of shifting its content sideways.
+        'flex items-start gap-3 border-s-2 px-4 py-3.5 transition-colors',
+        notification.read ? 'border-transparent bg-white' : 'border-primary-600 bg-primary-50/50',
         href && 'hover:bg-neutral-50',
       )}
     >
@@ -64,15 +78,15 @@ export function NotificationItem({ notification, onMarkRead }: NotificationItemP
           {notification.title}
         </p>
         <p className="text-sm text-neutral-600 mt-0.5 leading-snug">{notification.body}</p>
-        <p className="text-xs text-neutral-600 mt-1">
-          {formatRelativeTime(notification.createdAt)}
-        </p>
+        <time dateTime={notification.createdAt} className="mt-1 block text-xs text-neutral-600">
+          {formatRelativeTime(notification.createdAt, locale, t('justNow'))}
+        </time>
       </div>
 
-      <div className="flex-none flex items-center gap-2 ms-2">
+      <div className="ms-2 flex flex-none items-center gap-1.5">
         {!notification.read && (
           <>
-            <span className="size-2 rounded-full bg-primary-500 flex-none" aria-label="Unread" />
+            <span className="size-2 flex-none rounded-full bg-primary-600" aria-label="Unread" />
             <button
               type="button"
               onClick={(e) => {
@@ -80,7 +94,7 @@ export function NotificationItem({ notification, onMarkRead }: NotificationItemP
                 e.stopPropagation();
                 onMarkRead(notification.id);
               }}
-              className="text-xs text-neutral-600 hover:text-primary-600 transition-colors focus-visible:outline-none focus-visible:underline whitespace-nowrap"
+              className="inline-flex min-h-[44px] items-center whitespace-nowrap rounded-lg px-2 text-xs font-medium text-neutral-600 transition-colors hover:bg-white hover:text-primary-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
               aria-label={t('markRead')}
             >
               {t('markRead')}

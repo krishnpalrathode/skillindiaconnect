@@ -48,7 +48,7 @@ function writeStoredStep(userId: string, step: StepIndex) {
  */
 export default function OnboardingPage() {
   const t = useTranslations('onboarding');
-  const { user } = useAuth();
+  const { user, isLoggingOut } = useAuth();
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
 
@@ -58,6 +58,8 @@ export default function OnboardingPage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
+    // A deliberate sign-out owns its own redirect — see (app)/layout.tsx.
+    if (isLoggingOut) return;
     if (!user) {
       router.replace(`/${locale}/login`);
       return;
@@ -74,7 +76,7 @@ export default function OnboardingPage() {
       })
       .catch(() => setFetchError('Failed to load profile. Please refresh.'))
       .finally(() => setLoading(false));
-  }, [user, locale, router]);
+  }, [user, isLoggingOut, locale, router]);
 
   const goTo = (next: StepIndex) => {
     setStep(next);

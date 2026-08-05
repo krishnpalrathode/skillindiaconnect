@@ -2,6 +2,7 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -11,6 +12,7 @@ import {
   Min,
 } from 'class-validator';
 import { Currency, EmploymentType, JobMarket } from '@prisma/client';
+import { ALL_JOB_COUNTRIES } from '../job-countries';
 
 export class UpdateJobDto {
   @IsOptional()
@@ -25,6 +27,11 @@ export class UpdateJobDto {
   @IsOptional()
   @IsEnum(JobMarket)
   market?: JobMarket;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(ALL_JOB_COUNTRIES)
+  country?: string;
 
   @IsOptional()
   @IsString()

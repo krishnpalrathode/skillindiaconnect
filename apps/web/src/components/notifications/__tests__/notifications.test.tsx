@@ -5,8 +5,9 @@ import { render } from '../../../test-utils';
 import { NotificationFilters } from '../NotificationFilters';
 import { NotificationItem } from '../NotificationItem';
 import { NotificationList } from '../NotificationList';
-import { db, makeAccessToken } from '../../../mocks/data';
+import { db, makeAccessToken, EMPLOYER_APPROVED_USER_ID } from '../../../mocks/data';
 import { setAccessToken, resetClient } from '../../../lib/api/client';
+import { employerNotificationsApi } from '../../../lib/api/notifications';
 import type { components } from '@skillindiaconnect/shared-types';
 
 type Notification = components['schemas']['Notification'];
@@ -202,6 +203,29 @@ describe('NotificationList', () => {
     });
   });
 
+  it('reads the EMPLOYER feed when given the employer API (the fix for missing employer notifications)', async () => {
+    const token = makeAccessToken(EMPLOYER_APPROVED_USER_ID);
+    setAccessToken(token);
+    db.sessions.set(token, { userId: EMPLOYER_APPROVED_USER_ID, accessToken: token });
+    db.notifications.set(EMPLOYER_APPROVED_USER_ID, [
+      {
+        id: 'emp-approved-1',
+        type: 'EMPLOYER_APPROVED',
+        title: 'Company Approved',
+        body: 'Your company "Gulf Builders Arabia" has been approved. You can now post jobs.',
+        read: false,
+        readAt: null,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+
+    render(<NotificationList api={employerNotificationsApi} />);
+
+    await waitFor(() => expect(screen.getByText('Company Approved')).toBeInTheDocument());
+
+    db.notifications.delete(EMPLOYER_APPROVED_USER_ID);
+  });
+
   it('shows empty state for unread-only filter when all are read', async () => {
     // Mark all as read first via MSW mutation
     const { db: mockDb } = await import('../../../mocks/data');
@@ -228,5 +252,40 @@ describe('NotificationList', () => {
         n.readAt = null;
       }
     });
+  });
+
+  it('empty state offers a way OUT of the filter, and it clears unread-only too', async () => {
+    const { db: mockDb } = await import('../../../mocks/data');
+    const notifs = mockDb.notifications.get('mock-user-candidate-1') ?? [];
+    const snapshot = notifs.map((n) => ({ read: n.read, readAt: n.readAt }));
+    notifs.forEach((n) => {
+      n.read = true;
+      n.readAt = new Date().toISOString();
+    });
+
+    render(<NotificationList />);
+
+    const checkbox = await screen.findByRole('checkbox', { name: /unread only/i });
+    await userEvent.click(checkbox);
+
+    // A dead end is the bug: the empty state must carry the escape hatch.
+    const reset = await screen.findByRole('button', { name: /show all notifications/i });
+    await userEvent.click(reset);
+
+    await waitFor(() => {
+      expect(screen.queryByText(/no unread notifications/i)).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('checkbox', { name: /unread only/i })).not.toBeChecked();
+
+    notifs.forEach((n, i) => {
+      n.read = snapshot[i]!.read;
+      n.readAt = snapshot[i]!.readAt;
+    });
+  });
+
+  it('shows a skeleton while loading, not a bare text string', () => {
+    render(<NotificationList />);
+    // aria-busy tells assistive tech the region is still filling in.
+    expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true');
   });
 });

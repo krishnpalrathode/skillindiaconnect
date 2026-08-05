@@ -116,3 +116,22 @@
     transform: none !important;
   }
 }
+
+/* Toast enters from the inline-END edge, so it flips with direction rather
+   than always sliding in from the physical right. */
+[dir='rtl'] .toast-item {
+  --toast-enter-x: -16px;
+}
+
+/* Reduced motion: the countdown BAR must keep draining — it is the only visual
+   signal of how long the toast has left — but the entrance slide is dropped.
+   The global rule collapses every duration to 0.01ms, which would snap the bar
+   to empty instantly, so the bar re-asserts its real duration here. */
+@media (prefers-reduced-motion: reduce) {
+  .toast-item {
+    animation: none !important;
+  }
+  .toast-progress-bar {
+    animation-duration: var(--toast-duration) !important;
+  }
+}

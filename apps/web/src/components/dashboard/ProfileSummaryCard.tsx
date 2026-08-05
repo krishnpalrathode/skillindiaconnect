@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import type { components } from '@skillindiaconnect/shared-types';
 import { CompletionRing } from '@/components/common/CompletionRing';
+import { Avatar } from '@/components/ui/avatar';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type CompletionResult = components['schemas']['CompletionResult'];
@@ -20,12 +21,6 @@ export function ProfileSummaryCard({ profile, completion }: ProfileSummaryCardPr
   const params = useParams<{ locale: string }>();
   const locale = params.locale ?? 'en';
 
-  const initials = (profile.fullName ?? profile.email)
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? '')
-    .join('');
-
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-200/70 bg-white shadow-sm">
       {/* Gradient banner */}
@@ -34,12 +29,11 @@ export function ProfileSummaryCard({ profile, completion }: ProfileSummaryCardPr
       <div className="-mt-11 flex flex-col items-center gap-4 px-5 pb-6">
         {/* Avatar overlapping the banner */}
         <div className="rounded-full bg-white p-1 shadow-md">
-          <div
-            className="flex size-20 items-center justify-center rounded-full bg-primary-100 text-xl font-bold text-primary-700 select-none"
-            aria-hidden="true"
-          >
-            {initials}
-          </div>
+          <Avatar
+            name={profile.fullName ?? profile.email}
+            photoUrl={profile.photoUrl}
+            className="size-20 text-xl"
+          />
         </div>
 
         <div className="text-center">

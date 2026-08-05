@@ -112,8 +112,10 @@ const BASE_DTO = {
   type: CompanyType.LOCAL,
   registrationNumber: 'REG123',
   industryType: 'Construction',
-  phone: '+919876543210',
-  location: 'Mumbai, India',
+  phoneCode: '+91',
+  phone: '9876543210',
+  country: 'India',
+  location: 'Mumbai',
   employeeRange: '50-200',
   languagePref: 'en',
   description: 'A test employer.',
@@ -139,6 +141,45 @@ describe('EmployerService â€” integration (real DB)', () => {
     expect(link).not.toBeNull();
     expect(link!.companyId).toBe(company.id);
     expect(link!.isPrimary).toBe(true);
+  });
+
+  it('register: persists country and the phone dial code as separate columns', async () => {
+    if (dockerUnavailable) return;
+    const user = await makeEmployerUser();
+
+    const company = await employerService.register(user.id, {
+      ...BASE_DTO,
+      phoneCode: '+971',
+      phone: '501234567',
+      country: 'United Arab Emirates',
+      location: 'Dubai',
+    });
+
+    const row = await prisma.company.findUnique({ where: { id: company.id } });
+    expect(row!.country).toBe('United Arab Emirates');
+    expect(row!.phoneCode).toBe('+971');
+    // The dial code stays OUT of the phone column — they are separate fields.
+    expect(row!.phone).toBe('501234567');
+  });
+
+  it('register: registrationNumber is OPTIONAL â€” omitting it stores null', async () => {
+    if (dockerUnavailable) return;
+    const user = await makeEmployerUser();
+
+    const { registrationNumber, ...withoutRegNumber } = BASE_DTO;
+    // Guard the fixture: this test is meaningless if BASE_DTO ever stops
+    // carrying a registration number for us to drop.
+    expect(registrationNumber).toBeTruthy();
+
+    const company = await employerService.register(user.id, withoutRegNumber);
+
+    expect(company.id).toBeTruthy();
+    expect(company.status).toBe(CompanyStatus.PENDING);
+    expect(company.registrationNumber).toBeNull();
+
+    // The row really is null in the DB, not just absent from the return value.
+    const row = await prisma.company.findUnique({ where: { id: company.id } });
+    expect(row!.registrationNumber).toBeNull();
   });
 
   it('register: second register for the same employer user â†’ 409 COMPANY_EXISTS', async () => {

@@ -2,9 +2,8 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
-import { useParams, useRouter } from 'next/navigation';
 import { LogOut, Menu } from 'lucide-react';
-import { useAuth } from '@/lib/auth/auth-context';
+import { useLogoutConfirm } from '@/lib/auth/logout-confirm';
 import { useAdmin } from '@/lib/admin/admin-context';
 import { Badge } from '@/components/ui/badge';
 
@@ -18,16 +17,8 @@ import { Badge } from '@/components/ui/badge';
  */
 export function AdminHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const t = useTranslations('admin');
-  const { logout } = useAuth();
+  const { requestLogout } = useLogoutConfirm();
   const { role } = useAdmin();
-  const router = useRouter();
-  const params = useParams<{ locale: string }>();
-  const locale = params?.locale ?? 'en';
-
-  async function handleLogout() {
-    await logout();
-    router.replace(`/${locale}/login`);
-  }
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-neutral-200 bg-white px-4 sm:px-6">
@@ -51,7 +42,7 @@ export function AdminHeader({ onMenuClick }: { onMenuClick?: () => void }) {
         )}
         <button
           type="button"
-          onClick={() => void handleLogout()}
+          onClick={requestLogout}
           className="flex min-h-[44px] items-center gap-2 rounded-lg px-3 text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >
           <LogOut className="size-4" aria-hidden="true" />

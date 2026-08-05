@@ -26,7 +26,7 @@ export default function EmployerOnboardingPage() {
   const isResubmit = !isLoading && company !== null;
 
   return (
-    <div className="max-w-3xl">
+    <div className="mx-auto max-w-3xl">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-neutral-900">
           {isResubmit ? t('resubmitPageTitle') : t('pageTitle')}
@@ -36,8 +36,13 @@ export default function EmployerOnboardingPage() {
         </p>
       </div>
 
-      {/* Pass company to form only when loaded — avoids flash of empty pre-fill */}
-      {!isLoading && <CompanyOnboardingForm company={company} />}
+      {/* Pass company to form only when loaded — avoids flash of empty pre-fill.
+          White card surface matches the other employer pages (dashboard, profile). */}
+      {!isLoading && (
+        <div className="rounded-2xl border border-neutral-200/70 bg-white p-6 shadow-sm sm:p-8">
+          <CompanyOnboardingForm company={company} />
+        </div>
+      )}
     </div>
   );
 }

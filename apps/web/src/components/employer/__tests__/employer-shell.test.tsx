@@ -21,9 +21,10 @@ import { EMPLOYER_PRO_USER_ID, EMPLOYER_GRACE_USER_ID } from '../../../mocks/dat
 
 // ─── Mock next navigation ─────────────────────────────────────────────────────
 
+const nav = vi.hoisted(() => ({ pathname: '/en/employer/dashboard' }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
-  usePathname: () => '/en/employer/dashboard',
+  usePathname: () => nav.pathname,
   useParams: () => ({ locale: 'en' }),
 }));
 
@@ -50,6 +51,7 @@ function loginAsEmployer(userId: string) {
 
 beforeEach(() => {
   resetClient();
+  nav.pathname = '/en/employer/dashboard';
 });
 
 // ─── CompanyStateBanner ───────────────────────────────────────────────────────
@@ -128,6 +130,45 @@ describe('EmployerSidebar — Post a Job approval gate', () => {
       expect(link).toBeInTheDocument();
       expect(link).not.toHaveAttribute('aria-disabled');
     });
+  });
+});
+
+// ─── EmployerSidebar — active nav item (longest-prefix match) ────────────────
+
+describe('EmployerSidebar — active highlight', () => {
+  async function renderAt(pathname: string) {
+    nav.pathname = pathname;
+    loginAsEmployer(EMPLOYER_APPROVED_USER_ID);
+    render(
+      <Wrapper>
+        <EmployerSidebar />
+      </Wrapper>,
+    );
+    // Wait until the approved company loads so "Post a Job" is a real link.
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: /post a job/i })).toBeInTheDocument(),
+    );
+  }
+
+  it('on /employer/jobs/new only "Post a Job" is active — not "My Jobs"', async () => {
+    await renderAt('/en/employer/jobs/new');
+    expect(screen.getByRole('link', { name: /post a job/i })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    expect(screen.getByRole('link', { name: /my jobs/i })).not.toHaveAttribute('aria-current');
+  });
+
+  it('on /employer/jobs "My Jobs" is active — not "Post a Job"', async () => {
+    await renderAt('/en/employer/jobs');
+    expect(screen.getByRole('link', { name: /my jobs/i })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: /post a job/i })).not.toHaveAttribute('aria-current');
+  });
+
+  it('on a job detail route /employer/jobs/:id "My Jobs" stays active', async () => {
+    await renderAt('/en/employer/jobs/abc123');
+    expect(screen.getByRole('link', { name: /my jobs/i })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: /post a job/i })).not.toHaveAttribute('aria-current');
   });
 });
 

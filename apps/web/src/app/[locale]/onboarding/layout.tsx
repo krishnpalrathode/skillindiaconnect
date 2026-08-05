@@ -3,11 +3,18 @@ import Image from 'next/image';
 
 export default function OnboardingLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-svh bg-[#F5F8FC]">
-      {/* Branded top bar — object-cover crops the artwork band out of the logo's
-          gray canvas (same treatment as the login screen and app sidebar). */}
-      <header className="sticky top-0 z-10 border-b border-neutral-200/70 bg-white/95 shadow-sm backdrop-blur-sm">
-        <div className="mx-auto flex h-16 max-w-3xl items-center px-4">
+    <div className="relative min-h-svh bg-gradient-to-b from-[#EEF3FB] via-[#F5F8FC] to-white">
+      {/* Soft brand glow behind the content — purely decorative. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(60%_100%_at_50%_0%,rgba(15,61,145,0.10),transparent)]"
+      />
+
+      {/* Full-width branded header. Logo is pinned to the top-left; object-cover
+          crops the artwork band out of the logo's gray canvas (same treatment as
+          the login screen and app sidebar). */}
+      <header className="sticky top-0 z-20 border-b border-neutral-200/70 bg-white/90 shadow-sm backdrop-blur-md">
+        <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="relative h-11 w-36 overflow-hidden rounded-md">
             <Image
               src="/brand/logo.png"
@@ -18,10 +25,13 @@ export default function OnboardingLayout({ children }: { children: ReactNode }) 
               className="object-cover object-center"
             />
           </div>
+          <span className="hidden text-sm font-medium text-neutral-500 sm:inline">
+            Candidate onboarding
+          </span>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:py-10">{children}</main>
+      <main className="relative mx-auto max-w-3xl px-4 py-8 sm:py-10">{children}</main>
     </div>
   );
 }

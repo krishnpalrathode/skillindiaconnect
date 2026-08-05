@@ -22,6 +22,8 @@ const makeCompany = (overrides: Partial<{ status: CompanyStatus }> = {}) => ({
   status: CompanyStatus.APPROVED,
   registrationNumber: 'GB001',
   industryType: 'Construction',
+  phoneCode: '+91',
+  country: 'India',
   phone: '+966',
   location: 'Riyadh',
   employeeRange: '201-500',

@@ -16,6 +16,8 @@ export interface Job {
   employmentType: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT';
   market: JobMarket;
   status: JobStatus;
+  /** Recruiting country (canonical English name); null on pre-feature jobs. */
+  country: string | null;
   location: string;
   description: string;
   categoryId: string;
@@ -65,6 +67,7 @@ export interface CreateJobBody {
   title: string;
   employmentType: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT';
   market: JobMarket;
+  country: string;
   location: string;
   description: string;
   categoryId: string;

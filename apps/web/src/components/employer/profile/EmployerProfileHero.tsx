@@ -69,7 +69,8 @@ export function EmployerProfileHero({ profile, onProfileUpdate }: EmployerProfil
         aria-hidden="true"
       />
       <div className="p-5 sm:p-6">
-        <div className="-mt-16 flex flex-col sm:flex-row gap-5 items-start sm:items-end">
+        {/* Logo overlaps the banner (avatar style) */}
+        <div className="-mt-16">
           {/* Logo zone */}
           <div
             role="button"
@@ -121,47 +122,47 @@ export function EmployerProfileHero({ profile, onProfileUpdate }: EmployerProfil
               </div>
             )}
           </div>
+        </div>
 
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/jpeg,image/png"
-            className="sr-only"
-            aria-label={logoLabel}
-            onChange={handleFileChange}
-          />
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/png"
+          className="sr-only"
+          aria-label={logoLabel}
+          onChange={handleFileChange}
+        />
 
-          {/* Company info */}
-          <div className="flex-1 min-w-0 pb-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight text-neutral-900 break-words">
-                {company.name}
-              </h1>
-              {isApproved && (
-                <Badge variant="success" aria-label={t('approvedBadge')}>
-                  {t('verifiedBadge')}
-                </Badge>
-              )}
-            </div>
-
-            {isApproved && <p className="text-xs text-success-fg mt-0.5">{t('approvedBadge')}</p>}
-
-            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-sm text-neutral-600">
-              {company.industryType && <span>{company.industryType}</span>}
-              {company.location && <span>{company.location}</span>}
-            </div>
-
-            {upload.status === 'error' && (
-              <p className="text-xs text-error-fg mt-1" role="alert">
-                {upload.errorMessage ?? t('uploadError')}
-              </p>
+        {/* Company info — on the white card so every line stays legible */}
+        <div className="mt-4 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-neutral-900 break-words">
+              {company.name}
+            </h1>
+            {isApproved && (
+              <Badge variant="success" aria-label={t('approvedBadge')}>
+                {t('verifiedBadge')}
+              </Badge>
             )}
-            {upload.status === 'done' && (
-              <p className="text-xs text-success-fg mt-1">{t('uploadDone')}</p>
-            )}
-
-            <p className="text-xs text-neutral-600 mt-1">{t('typeHint')}</p>
           </div>
+
+          {isApproved && <p className="text-xs text-success-fg mt-0.5">{t('approvedBadge')}</p>}
+
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-sm text-neutral-600">
+            {company.industryType && <span>{company.industryType}</span>}
+            {company.location && <span>{company.location}</span>}
+          </div>
+
+          {upload.status === 'error' && (
+            <p className="text-xs text-error-fg mt-1" role="alert">
+              {upload.errorMessage ?? t('uploadError')}
+            </p>
+          )}
+          {upload.status === 'done' && (
+            <p className="text-xs text-success-fg mt-1">{t('uploadDone')}</p>
+          )}
+
+          <p className="text-xs text-neutral-600 mt-1">{t('typeHint')}</p>
         </div>
 
         {/* Checklist nudge — below the hero row */}

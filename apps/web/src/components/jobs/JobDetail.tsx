@@ -53,7 +53,7 @@ export function JobDetail({ job, locale }: JobDetailProps) {
             <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-600">
               <span className="flex items-center gap-1">
                 <MapPin className="size-4 shrink-0" aria-hidden="true" />
-                {job.location}
+                {job.country ? `${job.location}, ${job.country}` : job.location}
               </span>
               <span>{formatPostedAgo(job.createdAt, locale)}</span>
             </div>

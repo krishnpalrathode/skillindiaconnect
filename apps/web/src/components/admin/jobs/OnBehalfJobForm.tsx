@@ -22,6 +22,7 @@ import {
   type JobFormValues,
 } from '@/lib/jobs/jobFormState';
 import { getJobCategories, type JobCategory } from '@/lib/api/jobs-employer';
+import { countriesForMarket } from '@/lib/countries';
 import { listEmployers, type Company } from '@/lib/api/admin-employers';
 import { createJobOnBehalf, type Job } from '@/lib/api/admin-jobs';
 import { ApiRequestError, type ApiError } from '@/lib/api/client';
@@ -99,6 +100,7 @@ export function OnBehalfJobForm() {
       const next = { ...prev, ...partial } as JobFormValues;
       if (partial.market && partial.market !== prev.market) {
         next.salaryCurrency = getCurrenciesForMarket(partial.market)[0]!;
+        next.country = partial.market === 'LOCAL' ? 'India' : '';
       }
       return next;
     });
@@ -285,6 +287,25 @@ export function OnBehalfJobForm() {
               </label>
             ))}
           </div>
+        </Field>
+
+        <Field id="ob-job-country" label={t('countryLabel')} required error={errors.country}>
+          <select
+            id="ob-job-country"
+            value={values.country}
+            onChange={(e) => patch({ country: e.target.value })}
+            aria-required
+            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+          >
+            <option value="" disabled>
+              {t('countryPlaceholder')}
+            </option>
+            {countriesForMarket(values.market).map((c) => (
+              <option key={c.key} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <Field id="ob-job-category" label={t('categoryLabel')} required error={errors.categoryId}>

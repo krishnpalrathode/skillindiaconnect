@@ -13,6 +13,7 @@ import { WorkConditionsSection } from './WorkConditionsSection';
 import { RichTextField } from './RichTextField';
 import { RequirementsField } from './RequirementsField';
 import { PublishErrorHandler } from './PublishErrorHandler';
+import { countriesForMarket } from '@/lib/countries';
 import {
   DEFAULT_FORM_VALUES,
   validateJobForm,
@@ -68,10 +69,13 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
     (partial: Partial<JobFormValues>) => {
       setValues((prev) => {
         const next = { ...prev, ...partial } as JobFormValues;
-        // When market changes, reset currency to first valid option
+        // When market changes, reset currency to first valid option and the
+        // country to one valid for that market: India is auto-selected for LOCAL
+        // (its only option); GULF requires an explicit pick.
         if (partial.market && partial.market !== prev.market) {
           const currencies = getCurrenciesForMarket(partial.market);
           next.salaryCurrency = currencies[0]!;
+          next.country = partial.market === 'LOCAL' ? 'India' : '';
         }
         onValuesChange?.(next);
         return next;
@@ -211,6 +215,25 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
               </label>
             ))}
           </div>
+        </Field>
+
+        <Field id="job-country" label={t('basic.countryLabel')} required error={errors.country}>
+          <select
+            id="job-country"
+            value={values.country}
+            onChange={(e) => patch({ country: e.target.value })}
+            aria-required
+            className="flex h-12 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-[#0F3D91] ps-3.5 pe-3.5"
+          >
+            <option value="" disabled>
+              {t('basic.countryPlaceholder')}
+            </option>
+            {countriesForMarket(values.market).map((c) => (
+              <option key={c.key} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <Field id="job-category" label="Job category" required error={errors.categoryId}>

@@ -28,6 +28,8 @@ describe('EmployerDashboardService', () => {
     status: CompanyStatus.APPROVED,
     registrationNumber: 'GB001',
     industryType: 'Construction',
+    phoneCode: '+91',
+    country: 'India',
     phone: '+966500000000',
     location: 'Riyadh',
     employeeRange: '201-500',

@@ -93,7 +93,8 @@
     "no": "[ar] No",
     "or": "[ar] or",
     "and": "[ar] and",
-    "brand": "سكيل إنديا كونكت"
+    "brand": "سكيل إنديا كونكت",
+    "logoutSuccess": "تم تسجيل الخروج بنجاح"
   },
   "field": {
     "requiredError": "[ar] This field is required",
@@ -200,7 +201,13 @@
     "resetInvalidTitle": "لم يعد هذا الرابط صالحًا",
     "resetInvalidBody": "تنتهي صلاحية روابط إعادة تعيين كلمة المرور بعد ساعة واحدة ويمكن استخدامها مرة واحدة فقط. اطلب رابطًا جديدًا.",
     "resetRequestNew": "اطلب رابطًا جديدًا",
-    "goToLogin": "الذهاب إلى تسجيل الدخول"
+    "goToLogin": "الذهاب إلى تسجيل الدخول",
+    "logoutConfirm": {
+      "title": "تسجيل الخروج؟",
+      "body": "ستحتاج إلى تسجيل الدخول مرّة أخرى لرؤية طلباتك والوظائف المطابقة لك.",
+      "confirm": "تسجيل الخروج",
+      "cancel": "البقاء مسجّلاً"
+    }
   },
   "profile": {
     "title": "ملفي الشخصي",
@@ -349,7 +356,10 @@
       "photoUpload": "رفع صورة",
       "nameLabel": "الاسم الكامل",
       "namePlaceholder": "اسمك الكامل",
+      "nameError": "يرجى إدخال اسمك الكامل (حرفان على الأقل).",
       "dobLabel": "تاريخ الميلاد",
+      "dobHint": "يجب أن يكون عمرك 18 عامًا على الأقل للتسجيل.",
+      "ageError": "يجب أن يكون عمرك 18 عامًا على الأقل للتسجيل.",
       "maritalStatusLabel": "الحالة الاجتماعية",
       "languagesLabel": "اللغات المتحدث بها",
       "languagesPlaceholder": "اكتب اللغات مفصولة بفواصل",
@@ -460,6 +470,7 @@
       "postJobPendingHint": "متاح بعد الموافقة",
       "myJobs": "وظائفي",
       "candidates": "المرشحون",
+      "notifications": "الإشعارات",
       "subscription": "الاشتراك",
       "profile": "ملف الشركة"
     },
@@ -571,6 +582,22 @@
         "security": "الأمن",
         "cleaning": "النظافة وإدارة المرافق",
         "other": "أخرى"
+      },
+      "nameTooLong": "لا يمكن أن يتجاوز اسم الشركة 100 حرف",
+      "nameNoAlnum": "يجب أن يحتوي اسم الشركة على حرف أو رقم واحد على الأقل",
+      "phoneCodeLabel": "الرمز",
+      "phoneCodeRequired": "اختر رمز الدولة",
+      "countryLabel": "الدولة",
+      "countryPlaceholder": "اختر الدولة",
+      "countryRequired": "اختر دولتك",
+      "countries": {
+        "india": "الهند",
+        "uae": "الإمارات العربية المتحدة",
+        "saudiArabia": "السعودية",
+        "qatar": "قطر",
+        "kuwait": "الكويت",
+        "oman": "عُمان",
+        "bahrain": "البحرين"
       }
     },
     "dashboard": {
@@ -937,7 +964,8 @@
     "empty": {
       "all": "ليس لديك إشعارات بعد.",
       "filter": "لا إشعارات في هذه الفئة.",
-      "unread": "لا إشعارات غير مقروءة."
+      "unread": "لا إشعارات غير مقروءة.",
+      "allBody": "عندما يرشّحك صاحب عمل، أو تُنشر وظيفة تناسبك، أو يحتاج ملفك إلى انتباهك، سيظهر ذلك هنا."
     },
     "markAllRead": "وضع علامة مقروء على الكل",
     "markRead": "وضع علامة مقروء",
@@ -965,7 +993,18 @@
       "yesterday": "أمس",
       "thisWeek": "هذا الأسبوع",
       "older": "أقدم"
-    }
+    },
+    "subtitle": "تحديثات عن طلباتك والوظائف المطابقة وملفك الشخصي.",
+    "unreadCount": "{count, plural, one {# غير مقروء} other {# غير مقروء}}",
+    "allCaughtUp": "لا جديد",
+    "justNow": "الآن",
+    "emptyTitles": {
+      "all": "لا توجد إشعارات بعد",
+      "filter": "لا شيء في هذه الفئة",
+      "unread": "لا جديد لديك"
+    },
+    "actionBrowseJobs": "تصفّح الوظائف",
+    "actionShowAll": "عرض كل الإشعارات"
   },
   "jobform": {
     "createFormLabel": "نموذج إنشاء وظيفة",
@@ -997,6 +1036,8 @@
       "marketLabel": "السوق",
       "marketGulf": "الخليج (دولي)",
       "marketLocal": "محلي (الهند)",
+      "countryLabel": "الدولة",
+      "countryPlaceholder": "اختر دولة",
       "locationLabel": "الموقع",
       "locationPlaceholder": "مثل: دبي، الإمارات أو مومباي، الهند"
     },
@@ -1550,7 +1591,11 @@
       "findJobs": "ابحث عن وظيفة",
       "hireWorkers": "وظّف عمالاً",
       "login": "تسجيل الدخول",
-      "employerLogin": "تسجيل دخول صاحب العمل"
+      "employerLogin": "تسجيل دخول صاحب العمل",
+      "explore": "استكشف",
+      "followUs": "تابعنا",
+      "callUs": "اتصل بنا",
+      "visitUs": "مكتبنا"
     },
     "carousel": {
       "label": "عمال مهرة على سكيل إنديا كونكت",

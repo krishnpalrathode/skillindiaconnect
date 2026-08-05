@@ -1,4 +1,10 @@
-import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  forwardRef,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JobMarket, JobStatus, Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
@@ -14,6 +20,7 @@ import { PublishGuardService } from './publish-guard.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { ListJobsDto } from './dto/list-jobs.dto';
+import { isCountryValidForMarket } from './job-countries';
 
 /**
  * Sanitizes job description HTML to strip dangerous tags/attributes (XSS defense).
@@ -131,12 +138,22 @@ export class JobsService {
     dto: CreateJobDto,
     postedByAdminId?: string,
   ): Promise<JobData> {
+    // Server-side enforcement (never trust the UI): India for LOCAL, a GCC state
+    // for GULF. The DTO already guarantees `country` is one of the known names.
+    if (!isCountryValidForMarket(dto.country, dto.market)) {
+      throw new BadRequestException({
+        code: 'COUNTRY_MARKET_MISMATCH',
+        detail: `Country "${dto.country}" is not valid for a ${dto.market} job.`,
+      });
+    }
+
     return this.prisma.job.create({
       data: {
         companyId,
         title: dto.title,
         employmentType: dto.employmentType,
         market: dto.market,
+        country: dto.country,
         location: dto.location,
         description: sanitizeDescription(dto.description),
         categoryId: dto.categoryId,
@@ -240,12 +257,28 @@ export class JobsService {
     if (!job) throw new NotFoundException({ code: 'JOB_NOT_FOUND' });
     await this.assertOwnership(job.companyId, userId);
 
+    // Keep country consistent with market when either is edited. Old rows with a
+    // null country are left alone unless the edit sets one.
+    const nextMarket = dto.market ?? job.market;
+    const nextCountry = dto.country ?? job.country;
+    if (
+      nextCountry != null &&
+      (dto.market !== undefined || dto.country !== undefined) &&
+      !isCountryValidForMarket(nextCountry, nextMarket)
+    ) {
+      throw new BadRequestException({
+        code: 'COUNTRY_MARKET_MISMATCH',
+        detail: `Country "${nextCountry}" is not valid for a ${nextMarket} job.`,
+      });
+    }
+
     const updated = await this.prisma.job.update({
       where: { id: jobId },
       data: {
         ...(dto.title !== undefined && { title: dto.title }),
         ...(dto.employmentType !== undefined && { employmentType: dto.employmentType }),
         ...(dto.market !== undefined && { market: dto.market }),
+        ...(dto.country !== undefined && { country: dto.country }),
         ...(dto.location !== undefined && { location: dto.location }),
         ...(dto.description !== undefined && {
           description: sanitizeDescription(dto.description),
@@ -422,6 +455,7 @@ export class JobsService {
         title: source.title,
         employmentType: source.employmentType,
         market: source.market,
+        country: source.country,
         location: source.location,
         description: source.description,
         categoryId: source.categoryId,

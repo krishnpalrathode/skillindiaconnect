@@ -2,9 +2,11 @@
 
 import React, { useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { useParams, useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { Bell, Building2, ChevronDown, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
+import { useLogoutConfirm } from '@/lib/auth/logout-confirm';
 import { useEmployer } from '@/lib/employer/employer-context';
 import { cn } from '@/lib/utils';
 
@@ -59,11 +61,9 @@ function HeaderLangSwitcher() {
 
 export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const t = useTranslations('employer');
-  const { user, logout } = useAuth();
+  const { requestLogout } = useLogoutConfirm();
+  const { user } = useAuth();
   const { company } = useEmployer();
-  const router = useRouter();
-  const params = useParams<{ locale: string }>();
-  const locale = params?.locale ?? 'en';
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -75,10 +75,6 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase() ?? '')
     .join('');
-
-  function handleLogout() {
-    logout().then(() => router.replace(`/${locale}/login`));
-  }
 
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-4 sm:px-6 bg-white/90 backdrop-blur-md border-b border-neutral-200/70 shadow-sm">
@@ -131,14 +127,14 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
           <HeaderLangSwitcher />
         </div>
 
-        {/* Notifications bell — stub; no endpoint in S2 */}
-        <button
-          type="button"
+        {/* Notifications — links to the employer notifications page */}
+        <Link
+          href={`/${locale}/employer/notifications`}
           aria-label={t('header.notifications')}
           className="relative flex items-center justify-center size-10 rounded-xl text-neutral-600 ring-1 ring-neutral-200/70 transition-all hover:text-[#0F3D91] hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >
           <Bell className="size-5" aria-hidden="true" />
-        </button>
+        </Link>
 
         {/* Account menu */}
         <div className="relative" ref={menuRef}>
@@ -178,7 +174,7 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
               <button
                 role="menuitem"
                 type="button"
-                onClick={handleLogout}
+                onClick={requestLogout}
                 className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-error-fg transition-colors hover:bg-error-bg focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-[2px] focus-visible:ring-ring/70 min-h-[40px]"
               >
                 <LogOut className="size-4" aria-hidden="true" />

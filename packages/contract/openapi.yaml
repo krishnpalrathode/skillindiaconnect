@@ -791,13 +791,23 @@ components:
         status:
           $ref: '#/components/schemas/CompanyStatus'
         registrationNumber:
-          type: string
+          type: [string, 'null']
+          description: Optional at registration; null when the employer did not supply one
         industryType:
           type: string
+        phoneCode:
+          type: [string, 'null']
+          description: Dial code for `phone`, e.g. "+91". Null for companies registered before the field existed.
+          example: '+91'
         phone:
           type: string
+        country:
+          type: [string, 'null']
+          description: Company country. Null for companies registered before the field existed.
+          example: India
         location:
           type: string
+          description: City or area within `country`
         website:
           type: string
           format: uri
@@ -1006,6 +1016,12 @@ components:
           type: string
         market:
           $ref: '#/components/schemas/JobMarket'
+        country:
+          type: [string, 'null']
+          description: >
+            Recruiting country (canonical English name, e.g. "India", "United Arab
+            Emirates"). null on jobs created before the field existed.
+          example: United Arab Emirates
         location:
           type: string
         categoryId:
@@ -4200,20 +4216,33 @@ paths:
           application/json:
             schema:
               type: object
-              required: [name, type, phone, location, employeeRange]
+              required: [name, type, phoneCode, phone, country, location, employeeRange]
               properties:
                 name:
                   type: string
+                  maxLength: 100
+                  description: >
+                    Must contain at least one letter or digit — a name made only
+                    of punctuation/symbols is rejected.
                 type:
                   $ref: '#/components/schemas/CompanyType'
                 registrationNumber:
                   type: string
                 industryType:
                   type: string
+                phoneCode:
+                  type: string
+                  pattern: '^\+[0-9]{1,4}$'
+                  example: '+91'
                 phone:
                   type: string
+                country:
+                  type: string
+                  maxLength: 60
+                  example: India
                 location:
                   type: string
+                  description: City or area within `country`
                 website:
                   type: string
                   format: uri
@@ -4314,14 +4343,27 @@ paths:
               properties:
                 name:
                   type: string
+                  maxLength: 100
+                  description: >
+                    Must contain at least one letter or digit — a name made only
+                    of punctuation/symbols is rejected.
                 registrationNumber:
                   type: string
                 industryType:
                   type: string
+                phoneCode:
+                  type: string
+                  pattern: '^\+[0-9]{1,4}$'
+                  example: '+91'
                 phone:
                   type: string
+                country:
+                  type: string
+                  maxLength: 60
+                  example: India
                 location:
                   type: string
+                  description: City or area within `country`
                 website:
                   type: string
                   format: uri

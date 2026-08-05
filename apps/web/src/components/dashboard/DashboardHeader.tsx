@@ -3,14 +3,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
 import { Bell, ChevronDown, LogOut, User } from 'lucide-react';
-import { useAuth } from '@/lib/auth/auth-context';
+import { useLogoutConfirm } from '@/lib/auth/logout-confirm';
+import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
 interface DashboardHeaderProps {
   /** Full name (or email fallback) — used for the greeting first-name and the chip. */
   name: string;
+  /** Signed photo url; falls back to initials when absent. */
+  photoUrl?: string | null;
   isAvailable: boolean;
   unreadCount: number;
   locale: string;
@@ -21,22 +23,21 @@ interface DashboardHeaderProps {
  * and a user-menu chip on the end side. Purely presentational — the bell links to
  * the existing /notifications route and the menu reuses the existing auth logout.
  */
-export function DashboardHeader({ name, isAvailable, unreadCount, locale }: DashboardHeaderProps) {
+export function DashboardHeader({
+  name,
+  photoUrl,
+  isAvailable,
+  unreadCount,
+  locale,
+}: DashboardHeaderProps) {
   const t = useTranslations('dashboard');
   const tNav = useTranslations('nav');
-  const { logout } = useAuth();
-  const router = useRouter();
+  const { requestLogout } = useLogoutConfirm();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const firstName = name.split(' ')[0] ?? name;
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? '')
-    .join('');
-
   useEffect(() => {
     if (!menuOpen) return;
     function onPointerDown(e: MouseEvent) {
@@ -95,12 +96,7 @@ export function DashboardHeader({ name, isAvailable, unreadCount, locale }: Dash
             className="flex items-center gap-2.5 rounded-full bg-white/80 py-1.5 pe-2 ps-1.5 shadow-sm ring-1 ring-neutral-200/70 transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
             <span className="relative shrink-0">
-              <span
-                aria-hidden="true"
-                className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-[#0F3D91] to-[#2E67B1] text-sm font-semibold text-white"
-              >
-                {initials || <User className="size-4" />}
-              </span>
+              <Avatar name={name} photoUrl={photoUrl} className="size-9 text-sm" />
               {/* Availability as a presence dot (mirrors the notification dot),
                   not a text label — cleaner and keeps the chip single-line. */}
               {isAvailable && (
@@ -144,7 +140,7 @@ export function DashboardHeader({ name, isAvailable, unreadCount, locale }: Dash
                 role="menuitem"
                 onClick={() => {
                   setMenuOpen(false);
-                  logout().then(() => router.replace(`/${locale}/login`));
+                  requestLogout();
                 }}
                 className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-error-fg transition-colors hover:bg-error-bg focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
               >

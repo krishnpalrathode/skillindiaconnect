@@ -93,7 +93,8 @@
     "no": "[hi] No",
     "or": "[hi] or",
     "and": "[hi] and",
-    "brand": "स्किलइंडियाकनेक्ट"
+    "brand": "स्किलइंडियाकनेक्ट",
+    "logoutSuccess": "सफलतापूर्वक लॉग आउट हो गए"
   },
   "field": {
     "requiredError": "[hi] This field is required",
@@ -200,7 +201,13 @@
     "resetInvalidTitle": "यह लिंक अब मान्य नहीं है",
     "resetInvalidBody": "पासवर्ड रीसेट लिंक 1 घंटे बाद समाप्त हो जाते हैं और केवल एक बार उपयोग किए जा सकते हैं। नया लिंक मंगवाएँ।",
     "resetRequestNew": "नया लिंक मंगवाएँ",
-    "goToLogin": "लॉग इन पर जाएँ"
+    "goToLogin": "लॉग इन पर जाएँ",
+    "logoutConfirm": {
+      "title": "लॉग आउट करें?",
+      "body": "अपने आवेदन और मिलती नौकरियाँ देखने के लिए आपको दोबारा साइन इन करना होगा।",
+      "confirm": "लॉग आउट",
+      "cancel": "साइन इन रहें"
+    }
   },
   "profile": {
     "title": "मेरी प्रोफ़ाइल",
@@ -349,7 +356,10 @@
       "photoUpload": "फ़ोटो अपलोड करें",
       "nameLabel": "पूरा नाम",
       "namePlaceholder": "आपका पूरा नाम",
+      "nameError": "कृपया अपना पूरा नाम दर्ज करें (कम से कम 2 अक्षर)।",
       "dobLabel": "जन्म तिथि",
+      "dobHint": "पंजीकरण के लिए आपकी आयु कम से कम 18 वर्ष होनी चाहिए।",
+      "ageError": "पंजीकरण के लिए आपकी आयु कम से कम 18 वर्ष होनी चाहिए।",
       "maritalStatusLabel": "वैवाहिक स्थिति",
       "languagesLabel": "बोली जाने वाली भाषाएँ",
       "languagesPlaceholder": "अल्पविराम से अलग करके भाषाएँ लिखें",
@@ -460,6 +470,7 @@
       "postJobPendingHint": "अनुमोदन के बाद उपलब्ध",
       "myJobs": "मेरी नौकरियां",
       "candidates": "उम्मीदवार",
+      "notifications": "सूचनाएं",
       "subscription": "सदस्यता",
       "profile": "कंपनी प्रोफ़ाइल"
     },
@@ -571,6 +582,22 @@
         "security": "सुरक्षा",
         "cleaning": "सफाई और सुविधा प्रबंधन",
         "other": "अन्य"
+      },
+      "nameTooLong": "कंपनी का नाम 100 अक्षरों से ज़्यादा नहीं हो सकता",
+      "nameNoAlnum": "कंपनी के नाम में कम से कम एक अक्षर या अंक होना चाहिए",
+      "phoneCodeLabel": "कोड",
+      "phoneCodeRequired": "देश का कोड चुनें",
+      "countryLabel": "देश",
+      "countryPlaceholder": "देश चुनें",
+      "countryRequired": "अपना देश चुनें",
+      "countries": {
+        "india": "भारत",
+        "uae": "संयुक्त अरब अमीरात",
+        "saudiArabia": "सऊदी अरब",
+        "qatar": "क़तर",
+        "kuwait": "कुवैत",
+        "oman": "ओमान",
+        "bahrain": "बहरीन"
       }
     },
     "dashboard": {
@@ -937,7 +964,8 @@
     "empty": {
       "all": "अभी कोई सूचना नहीं।",
       "filter": "इस श्रेणी में कोई सूचना नहीं।",
-      "unread": "कोई अपठित सूचना नहीं।"
+      "unread": "कोई अपठित सूचना नहीं।",
+      "allBody": "जब कोई कंपनी आपको शॉर्टलिस्ट करे, आपके काम से मिलती नौकरी आए, या प्रोफ़ाइल में कुछ ज़रूरी हो, तो वह यहाँ दिखेगा।"
     },
     "markAllRead": "सभी पढ़ा गया चिह्नित करें",
     "markRead": "पढ़ा गया चिह्नित करें",
@@ -965,7 +993,18 @@
       "yesterday": "कल",
       "thisWeek": "इस सप्ताह",
       "older": "पुराने"
-    }
+    },
+    "subtitle": "आपके आवेदन, नौकरी के मेल और प्रोफ़ाइल से जुड़ी जानकारी।",
+    "unreadCount": "{count, plural, one {# अपठित} other {# अपठित}}",
+    "allCaughtUp": "सब पढ़ लिया",
+    "justNow": "अभी",
+    "emptyTitles": {
+      "all": "अभी कोई सूचना नहीं",
+      "filter": "इस श्रेणी में कुछ नहीं",
+      "unread": "सब पढ़ लिया"
+    },
+    "actionBrowseJobs": "नौकरियाँ देखें",
+    "actionShowAll": "सभी सूचनाएँ दिखाएँ"
   },
   "jobform": {
     "createFormLabel": "नौकरी पोस्टिंग फ़ॉर्म बनाएं",
@@ -997,6 +1036,8 @@
       "marketLabel": "बाज़ार",
       "marketGulf": "खाड़ी (अंतर्राष्ट्रीय)",
       "marketLocal": "स्थानीय (भारत)",
+      "countryLabel": "देश",
+      "countryPlaceholder": "देश चुनें",
       "locationLabel": "स्थान",
       "locationPlaceholder": "जैसे दुबई, UAE या मुंबई, भारत"
     },
@@ -1550,7 +1591,11 @@
       "findJobs": "नौकरी खोजें",
       "hireWorkers": "मज़दूर भर्ती करें",
       "login": "लॉग इन",
-      "employerLogin": "नियोक्ता लॉगिन"
+      "employerLogin": "नियोक्ता लॉगिन",
+      "explore": "एक्सप्लोर करें",
+      "followUs": "हमें फ़ॉलो करें",
+      "callUs": "हमें कॉल करें",
+      "visitUs": "हमारा कार्यालय"
     },
     "carousel": {
       "label": "स्किलइंडियाकनेक्ट पर कुशल कारीगर",

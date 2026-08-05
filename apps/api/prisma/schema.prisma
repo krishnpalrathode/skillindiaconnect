@@ -438,9 +438,14 @@ model Company {
   name               String
   type               CompanyType
   status             CompanyStatus @default(PENDING)
-  registrationNumber String
+  registrationNumber String?
   industryType       String
+  // Dial code kept in its own column rather than merged into `phone`.
+  phoneCode          String?
   phone              String
+  // Nullable to stay backward compatible with companies registered before the
+  // field existed; the register DTO requires it for every NEW company.
+  country            String?
   location           String
   website            String?
   employeeRange      String
@@ -526,6 +531,11 @@ model Job {
   employmentType  EmploymentType @default(FULL_TIME)
   market          JobMarket
   status          JobStatus      @default(DRAFT)
+  // Recruiting country (canonical English name, e.g. "India", "United Arab
+  // Emirates"). Nullable for expand-safety — pre-feature rows have none — but
+  // REQUIRED on create/update via the DTO, and constrained to match `market`
+  // (India for LOCAL; the six GCC states for GULF) in the service layer.
+  country         String?
   location        String
   description     String
   categoryId      String
