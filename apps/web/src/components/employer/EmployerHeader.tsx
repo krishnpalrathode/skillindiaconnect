@@ -64,6 +64,9 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const { requestLogout } = useLogoutConfirm();
   const { user } = useAuth();
   const { company } = useEmployer();
+  // Needed by the notifications link. Sourced from next-intl (already imported
+  // for the language switcher) rather than re-adding a useParams read.
+  const locale = useLocale();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
