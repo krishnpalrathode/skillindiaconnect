@@ -57,6 +57,7 @@ const DEFAULTS: ResumeSettings = {
   showReligion: false,
   showFatherName: true,
   showPassportNumber: false,
+  template: 'CLASSIC',
 };
 
 beforeEach(() => {

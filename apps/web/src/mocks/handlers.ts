@@ -203,6 +203,7 @@ const authSignup = http.post(`${BASE}/auth/signup`, async ({ request }) => {
         showReligion: false,
         showFatherName: false,
         showPassportNumber: false,
+        template: 'CLASSIC',
       },
       lastRenderedAt: null,
     });

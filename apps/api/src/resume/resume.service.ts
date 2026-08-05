@@ -6,7 +6,7 @@ import { PrismaService } from '../core/prisma/prisma.service';
 import { StorageService } from '../core/storage/storage.service';
 import { CandidateReadService } from '../candidate/candidate-read.service';
 import { JOB_NAMES, QUEUE_NAMES } from '../queue/queue.constants';
-import { ResumeSettingsService } from './resume-settings.service';
+import { ResumeSettingsService, toSettings } from './resume-settings.service';
 import { ResumeRenderSettings } from './resume-view.mapper';
 import { StoredResumeView, WireResumeView, toWireResumeView } from './resume-view.wire';
 
@@ -90,13 +90,10 @@ export class ResumeService {
     const resume = await this.settingsService.getOrCreateResume(candidateId);
     const latest = await this.findLatestGeneration(resume.id);
     return {
-      settings: {
-        language: resume.language,
-        showPhone: resume.showPhone,
-        showReligion: resume.showReligion,
-        showFatherName: resume.showFatherName,
-        showPassportNumber: resume.showPassportNumber,
-      },
+      // toSettings is THE row→settings mapping (see resume-settings.service.ts).
+      // This used to hand-roll its own copy, which is how a new field ends up
+      // present in the PATCH response and missing from the overview read.
+      settings: toSettings(resume),
       lastRenderedAt: resume.lastRenderedAt?.toISOString() ?? null,
       current: latest ? await this.toDto(latest) : null,
     };
@@ -135,14 +132,10 @@ export class ResumeService {
     }
 
     // The settings are SNAPSHOT here, at enqueue — a PATCH landing between now
-    // and the render must not change what these bytes contain.
-    const settings: ResumeRenderSettings = {
-      language: resume.language,
-      showPhone: resume.showPhone,
-      showReligion: resume.showReligion,
-      showFatherName: resume.showFatherName,
-      showPassportNumber: resume.showPassportNumber,
-    };
+    // and the render must not change what these bytes contain. That now
+    // includes `template`, so the snapshot records which template produced the
+    // stored PDF without needing a column of its own.
+    const settings: ResumeRenderSettings = toSettings(resume);
 
     const generation = await this.prisma.resumeGeneration.create({
       data: {

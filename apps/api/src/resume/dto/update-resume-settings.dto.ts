@@ -1,4 +1,15 @@
+import { ResumeTemplate } from '@prisma/client';
 import { IsBoolean, IsIn, IsOptional } from 'class-validator';
+
+/**
+ * The templates the API ACCEPTS — deliberately narrower than the database enum.
+ *
+ * `ResumeTemplate` declares all four so B2 needs no enum migration, but only
+ * CLASSIC has a renderer today. Accepting MODERN here would store a value that
+ * silently renders as CLASSIC, which is precisely what the `language` field
+ * below refuses to do with hi/ar. B2 widens this list as it ships the renderers.
+ */
+export const ACCEPTED_RESUME_TEMPLATES: ResumeTemplate[] = [ResumeTemplate.CLASSIC];
 
 /**
  * PARTIAL ResumeSettings (S7-0). Every field optional — omitted toggles keep
@@ -30,4 +41,10 @@ export class UpdateResumeSettingsDto {
   @IsOptional()
   @IsBoolean()
   showPassportNumber?: boolean;
+
+  @IsOptional()
+  @IsIn(ACCEPTED_RESUME_TEMPLATES, {
+    message: 'That resume template is not available yet.',
+  })
+  template?: ResumeTemplate;
 }

@@ -164,6 +164,7 @@ describe('ResumePreview — reflects Resume Settings (mirrors the server)', () =
     showReligion: false,
     showFatherName: true,
     showPassportNumber: false,
+    template: 'CLASSIC',
   };
 
   it('view model OMITS passportNumber when showPassportNumber is off, INCLUDES it when on', () => {

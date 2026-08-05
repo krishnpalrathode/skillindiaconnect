@@ -2840,6 +2840,30 @@ export interface components {
              * @default false
              */
             showPassportNumber: boolean;
+            /**
+             * @description Which HTML template renders the PDF (CR-001 B1). Applied at
+             *     GENERATION time like every other setting — changing it does NOT
+             *     alter an already-generated PDF; the candidate regenerates.
+             *
+             *     **The enum lists only the templates that actually exist**, exactly
+             *     as `language` above lists only `en`, and for the same reason: a
+             *     client must not be able to request something that will not happen.
+             *     MODERN / COMPACT / MINIMAL are declared in the database enum but are
+             *     NOT accepted here until B2 ships their renderers, at which point
+             *     this enum widens with them.
+             *
+             *     The template is a RENDERING choice, never a privacy one. Every
+             *     template renders the same `ResumeView`, whose omissions are decided
+             *     by the toggles above BEFORE any template sees the data — so the
+             *     choice of template cannot change which fields reach the PDF.
+             *
+             *     CLASSIC is the default deliberately: it is the template that has
+             *     always rendered, and defaulting to a new look would silently change
+             *     the appearance of resumes candidates have already sent to employers.
+             * @default CLASSIC
+             * @enum {string}
+             */
+            template: "CLASSIC";
         };
         /**
          * @description One asynchronous PDF generation (S7-0). Generation is WORKER-SIDE and
@@ -5239,6 +5263,8 @@ export interface operations {
                     showReligion?: boolean;
                     showFatherName?: boolean;
                     showPassportNumber?: boolean;
+                    /** @enum {string} */
+                    template?: "CLASSIC";
                 };
             };
         };

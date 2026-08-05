@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Prisma, ResumeGenerationStatus } from '@prisma/client';
+import { CandidateResume, Prisma, ResumeGenerationStatus } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { StorageService } from '../core/storage/storage.service';
 import { CandidateReadService } from '../candidate/candidate-read.service';
@@ -9,8 +9,9 @@ import {
   ResumeRenderSettings,
   toResumeView,
 } from './resume-view.mapper';
+import { toSettings } from './resume-settings.service';
 import { toStoredResumeView } from './resume-view.wire';
-import { renderResumeHtml } from './templates/resume.template';
+import { selectTemplate } from './templates/registry';
 
 export interface RenderResumeResult {
   resumeId: string;
@@ -84,8 +85,11 @@ export class ResumeRenderService {
     }
 
     const photoDataUri = await this.loadPhotoDataUri(source.photoKey);
+    // The mapper runs FIRST and unconditionally: omissions are decided here,
+    // before any template exists in the picture. The template then renders
+    // whatever survived — it cannot reinstate a field the mapper dropped.
     const view = toResumeView(source, settings, photoDataUri);
-    const html = renderResumeHtml(view);
+    const html = selectTemplate(settings.template)(view);
 
     const { r2Key, sizeBytes, contentHash } = await this.pdfRender.renderToR2(html, {
       keyPrefix: `resumes/${candidateId}`,
@@ -134,13 +138,7 @@ export class ResumeRenderService {
 
   private resolveSettings(
     snapshot: Prisma.JsonValue,
-    resume: {
-      language: string;
-      showPhone: boolean;
-      showReligion: boolean;
-      showFatherName: boolean;
-      showPassportNumber: boolean;
-    },
+    resume: CandidateResume,
   ): ResumeRenderSettings {
     const snap = (snapshot ?? {}) as Partial<ResumeRenderSettings>;
     if (typeof snap.showPhone === 'boolean') {
@@ -151,15 +149,13 @@ export class ResumeRenderService {
         showFatherName: snap.showFatherName ?? RESUME_SETTINGS_DEFAULTS.showFatherName,
         showPassportNumber:
           snap.showPassportNumber ?? RESUME_SETTINGS_DEFAULTS.showPassportNumber,
+        // A snapshot written before this column existed carries no template.
+        // CLASSIC is the right answer for exactly those rows: it is what they
+        // WERE rendered with, so a re-render reproduces the same document.
+        template: snap.template ?? RESUME_SETTINGS_DEFAULTS.template,
       };
     }
-    return {
-      language: resume.language,
-      showPhone: resume.showPhone,
-      showReligion: resume.showReligion,
-      showFatherName: resume.showFatherName,
-      showPassportNumber: resume.showPassportNumber,
-    };
+    return toSettings(resume);
   }
 
   private async loadPhotoDataUri(photoKey: string | null): Promise<string | null> {
