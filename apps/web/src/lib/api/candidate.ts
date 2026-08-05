@@ -116,6 +116,43 @@ export function confirmDocument(key: string, expiryDate?: string): Promise<Candi
   });
 }
 
+// ─── Profile photo (avatar) upload ────────────────────────────────────────────
+
+export interface PresignPhotoRequest {
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+}
+
+export function presignPhoto(body: PresignPhotoRequest): Promise<PresignResponse> {
+  return apiFetch<PresignResponse>('/candidates/me/photo/presign', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+/** Confirm the photo upload → the updated profile (with the signed photoUrl). */
+export function confirmPhoto(key: string): Promise<CandidateProfile> {
+  return apiFetch<CandidateProfile>('/candidates/me/photo/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ key }),
+  });
+}
+
+/**
+ * PUT the raw bytes straight to the presigned R2 url. NOT apiFetch — this is a
+ * cross-origin upload to R2/MinIO; the presigned url IS the authorization, so no
+ * bearer token is attached.
+ */
+export async function uploadToPresignedUrl(uploadUrl: string, file: File): Promise<void> {
+  const res = await fetch(uploadUrl, {
+    method: 'PUT',
+    body: file,
+    headers: { 'Content-Type': file.type },
+  });
+  if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+}
+
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
 export interface PatchCandidateSettingsBody {

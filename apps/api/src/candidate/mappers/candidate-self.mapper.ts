@@ -40,7 +40,12 @@ export interface CandidateSelfDto {
   religion: string | null;
   languages: string[];
   jobCategoryId: string | null;
-  photoKey: string | null;
+  /**
+   * Short-expiry SIGNED url for the profile photo (never the raw R2 key), or
+   * null when no photo is uploaded. Signed by the service layer — the mapper is
+   * pure, so the caller passes the already-signed url in.
+   */
+  photoUrl: string | null;
   currentLocation: string | null;
   nationality: string | null;
   noticePeriod: number | null;
@@ -74,7 +79,12 @@ export type CandidateProfileWithRelations = CandidateProfile & {
 // ─── Mapper — single chokepoint for candidate-self serialization ──────────────
 // employer / admin / pdf-renderer viewers are separate mappers (S3/S6/S7).
 
-export function toSelf(profile: CandidateProfileWithRelations): CandidateSelfDto {
+export function toSelf(
+  profile: CandidateProfileWithRelations,
+  // Defaults to null so callers that don't serve a photo (and unit tests) stay
+  // terse; the candidate.service passes the signed url explicitly.
+  photoUrl: string | null = null,
+): CandidateSelfDto {
   return {
     id: profile.id,
     userId: profile.userId,
@@ -88,7 +98,7 @@ export function toSelf(profile: CandidateProfileWithRelations): CandidateSelfDto
     religion: profile.religion,
     languages: profile.languages,
     jobCategoryId: profile.jobCategoryId,
-    photoKey: profile.photoKey,
+    photoUrl,
     currentLocation: profile.currentLocation,
     nationality: profile.nationality,
     noticePeriod: profile.noticePeriod,

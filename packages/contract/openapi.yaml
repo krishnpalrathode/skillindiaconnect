@@ -457,6 +457,12 @@ components:
           $ref: '#/components/schemas/UserRole'
         fullName:
           type: string
+        photoUrl:
+          type: [string, 'null']
+          description: >
+            Short-expiry SIGNED url for the profile photo (never the raw R2
+            key), or null when none is uploaded. Set via the
+            /candidates/me/photo/presign + /confirm flow.
         fatherName:
           type: string
         dob:
@@ -3632,6 +3638,104 @@ paths:
                 status: 422
                 detail: The uploaded file was not found in storage. Please try uploading again.
                 code: UPLOAD_NOT_FOUND
+
+  # ── Candidate: profile photo (avatar) ─────────────────────────────────────────
+  /candidates/me/photo/presign:
+    post:
+      operationId: postCandidateMePhotoPresign
+      tags: [candidate]
+      summary: Get a presigned R2 upload URL for the profile photo
+      description: |
+        Issues a short-lived presigned PUT URL for the candidate's avatar image.
+        Accepted: image/jpeg, image/png, image/webp — 5 MB max. The declared
+        mime/size are a first-line check; the authoritative gate is the HEAD
+        re-validation in confirm.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fileName, mimeType, sizeBytes]
+              properties:
+                fileName:
+                  type: string
+                  example: avatar.jpg
+                mimeType:
+                  type: string
+                  example: image/jpeg
+                sizeBytes:
+                  type: integer
+      responses:
+        '200':
+          description: Presigned URL ready
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [uploadUrl, key, expiresInSeconds]
+                    properties:
+                      uploadUrl:
+                        type: string
+                        format: uri
+                      key:
+                        type: string
+                      expiresInSeconds:
+                        type: integer
+                        example: 300
+        '422':
+          description: Invalid file type or size
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /candidates/me/photo/confirm:
+    post:
+      operationId: postCandidateMePhotoConfirm
+      tags: [candidate]
+      summary: Confirm an uploaded profile photo
+      description: |
+        Persists the uploaded avatar after OWNERSHIP (key prefix) + HEAD
+        verification (real mime/size), best-effort deletes the previous photo,
+        and returns the updated profile carrying a freshly-signed `photoUrl`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key]
+              properties:
+                key:
+                  type: string
+      responses:
+        '200':
+          description: Photo recorded; the updated profile is returned
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CandidateProfile'
+        '403':
+          description: The key is not owned by this candidate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Upload not found (HEAD check failed) or invalid file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   # ── Candidate: complete onboarding ────────────────────────────────────────────
   /candidates/me/complete-onboarding:

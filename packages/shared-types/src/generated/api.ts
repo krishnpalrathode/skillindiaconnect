@@ -469,6 +469,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/candidates/me/photo/presign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get a presigned R2 upload URL for the profile photo
+         * @description Issues a short-lived presigned PUT URL for the candidate's avatar image.
+         *     Accepted: image/jpeg, image/png, image/webp — 5 MB max. The declared
+         *     mime/size are a first-line check; the authoritative gate is the HEAD
+         *     re-validation in confirm.
+         */
+        post: operations["postCandidateMePhotoPresign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/candidates/me/photo/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm an uploaded profile photo
+         * @description Persists the uploaded avatar after OWNERSHIP (key prefix) + HEAD
+         *     verification (real mime/size), best-effort deletes the previous photo,
+         *     and returns the updated profile carrying a freshly-signed `photoUrl`.
+         */
+        post: operations["postCandidateMePhotoConfirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/candidates/me/complete-onboarding": {
         parameters: {
             query?: never;
@@ -2739,6 +2784,8 @@ export interface components {
             email: string;
             role: components["schemas"]["UserRole"];
             fullName?: string;
+            /** @description Short-expiry SIGNED url for the profile photo (never the raw R2 key), or null when none is uploaded. Set via the /candidates/me/photo/presign + /confirm flow. */
+            photoUrl?: string | null;
             fatherName?: string;
             /** Format: date */
             dob?: string;
@@ -5059,6 +5106,99 @@ export interface operations {
                      *       "code": "UPLOAD_NOT_FOUND"
                      *     }
                      */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postCandidateMePhotoPresign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @example avatar.jpg */
+                    fileName: string;
+                    /** @example image/jpeg */
+                    mimeType: string;
+                    sizeBytes: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Presigned URL ready */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** Format: uri */
+                            uploadUrl: string;
+                            key: string;
+                            /** @example 300 */
+                            expiresInSeconds: number;
+                        };
+                    };
+                };
+            };
+            /** @description Invalid file type or size */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postCandidateMePhotoConfirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    key: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Photo recorded; the updated profile is returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CandidateProfile"];
+                    };
+                };
+            };
+            /** @description The key is not owned by this candidate */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Upload not found (HEAD check failed) or invalid file */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };

@@ -673,6 +673,65 @@ const candidateDocumentsConfirm = http.post(
   },
 );
 
+const PHOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
+
+const candidatePhotoPresign = http.post(
+  `${BASE}/candidates/me/photo/presign`,
+  async ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const body = (await request.json()) as {
+      fileName: string;
+      mimeType: string;
+      sizeBytes: number;
+    };
+    if (!PHOTO_MIME_TYPES.includes(body.mimeType)) {
+      return errorResponse(422, 'INVALID_FILE_TYPE', 'Invalid file type', 'Use JPG, PNG or WebP.');
+    }
+    if (body.sizeBytes > PHOTO_MAX_BYTES) {
+      return errorResponse(422, 'FILE_TOO_LARGE', 'File too large', 'Photos must be under 5 MB.');
+    }
+
+    const key = `candidates/${user.id}/photo/${Date.now()}-${body.fileName}`;
+    return HttpResponse.json({
+      data: {
+        uploadUrl: `https://mock-r2.example.com/${key}?sig=mock`,
+        key,
+        expiresInSeconds: 300,
+      },
+    });
+  },
+);
+
+const candidatePhotoConfirm = http.post(
+  `${BASE}/candidates/me/photo/confirm`,
+  async ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const candidate = db.candidates.get(user.id);
+    if (!candidate)
+      return errorResponse(404, 'NOT_FOUND', 'Not found', 'Candidate profile not found.');
+
+    const body = (await request.json()) as { key: string };
+    if (!body.key || !body.key.startsWith(`candidates/${user.id}/photo/`)) {
+      return errorResponse(403, 'KEY_NOT_OWNED', 'Forbidden', 'This upload key is not yours.');
+    }
+
+    // A signed url the browser can render (the mock host DNS-fails on load, which
+    // is fine — the wiring is what's under test).
+    candidate.profile.photoUrl = `https://mock-r2.example.com/${body.key}?sig=mock`;
+    const { pct } = computeCompletion(candidate.profile);
+    candidate.profile.completionPct = pct;
+
+    return HttpResponse.json({ data: candidate.profile });
+  },
+);
+
 const candidateCompleteOnboarding = http.post(
   `${BASE}/candidates/me/complete-onboarding`,
   ({ request }) => {
@@ -4160,6 +4219,8 @@ export const handlers = [
   candidateSkillDelete,
   candidateDocumentsPresign,
   candidateDocumentsConfirm,
+  candidatePhotoPresign,
+  candidatePhotoConfirm,
   candidateCompleteOnboarding,
   // S2: Stats + Notifications
   candidateMeStats,

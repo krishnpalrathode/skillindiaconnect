@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
  */
 export function AdminHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const t = useTranslations('admin');
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const { role } = useAdmin();
   const router = useRouter();
   const params = useParams<{ locale: string }>();
@@ -44,7 +44,6 @@ export function AdminHeader({ onMenuClick }: { onMenuClick?: () => void }) {
       <div className="flex-1" />
 
       <div className="flex items-center gap-3">
-        <span className="hidden text-sm text-neutral-600 sm:inline">{user?.email}</span>
         {role && (
           <Badge variant="primary" aria-label={t('roleBadgeLabel', { role })}>
             {role}

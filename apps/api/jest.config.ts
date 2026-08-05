@@ -8,6 +8,16 @@ const config: Config = {
     '^.+\\.(t|j)s$': ['ts-jest', { isolatedModules: true }],
   },
   testEnvironment: 'node',
+  // The three REAL-Chromium specs are excluded here and run in their own serial
+  // pass (jest.chromium.config.ts) — see the note there. Keeping them out of the
+  // parallel pool is what stops a Chromium launch from colliding with a
+  // testcontainer spec and OOM-killing a worker on the constrained CI runner.
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    'pdf/browser-pool\\.spec\\.ts$',
+    'resume/resume-render\\.spec\\.ts$',
+    'payments/invoice-render\\.spec\\.ts$',
+  ],
   // Resolve @skillindiaconnect/* workspace packages to their TypeScript source
   moduleNameMapper: {
     '^@skillindiaconnect/shared-config$': '<rootDir>/../../packages/shared-config/src',
