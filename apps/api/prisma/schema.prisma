@@ -438,9 +438,14 @@ model Company {
   name               String
   type               CompanyType
   status             CompanyStatus @default(PENDING)
-  registrationNumber String
+  registrationNumber String?
   industryType       String
+  // Dial code kept in its own column rather than merged into `phone`.
+  phoneCode          String?
   phone              String
+  // Nullable to stay backward compatible with companies registered before the
+  // field existed; the register DTO requires it for every NEW company.
+  country            String?
   location           String
   website            String?
   employeeRange      String

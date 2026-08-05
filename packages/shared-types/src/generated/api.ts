@@ -3004,9 +3004,21 @@ export interface components {
             name: string;
             type: components["schemas"]["CompanyType"];
             status: components["schemas"]["CompanyStatus"];
-            registrationNumber?: string;
+            /** @description Optional at registration; null when the employer did not supply one */
+            registrationNumber?: string | null;
             industryType?: string;
+            /**
+             * @description Dial code for `phone`, e.g. "+91". Null for companies registered before the field existed.
+             * @example +91
+             */
+            phoneCode?: string | null;
             phone?: string;
+            /**
+             * @description Company country. Null for companies registered before the field existed.
+             * @example India
+             */
+            country?: string | null;
+            /** @description City or area within `country` */
             location?: string;
             /** Format: uri */
             website?: string;
@@ -5598,11 +5610,17 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** @description Must contain at least one letter or digit — a name made only of punctuation/symbols is rejected. */
                     name: string;
                     type: components["schemas"]["CompanyType"];
                     registrationNumber?: string;
                     industryType?: string;
+                    /** @example +91 */
+                    phoneCode: string;
                     phone: string;
+                    /** @example India */
+                    country: string;
+                    /** @description City or area within `country` */
                     location: string;
                     /** Format: uri */
                     website?: string;
@@ -5727,10 +5745,16 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** @description Must contain at least one letter or digit — a name made only of punctuation/symbols is rejected. */
                     name?: string;
                     registrationNumber?: string;
                     industryType?: string;
+                    /** @example +91 */
+                    phoneCode?: string;
                     phone?: string;
+                    /** @example India */
+                    country?: string;
+                    /** @description City or area within `country` */
                     location?: string;
                     /** Format: uri */
                     website?: string;

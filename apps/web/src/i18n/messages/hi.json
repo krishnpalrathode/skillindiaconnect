@@ -574,6 +574,22 @@
         "security": "सुरक्षा",
         "cleaning": "सफाई और सुविधा प्रबंधन",
         "other": "अन्य"
+      },
+      "nameTooLong": "कंपनी का नाम 100 अक्षरों से ज़्यादा नहीं हो सकता",
+      "nameNoAlnum": "कंपनी के नाम में कम से कम एक अक्षर या अंक होना चाहिए",
+      "phoneCodeLabel": "कोड",
+      "phoneCodeRequired": "देश का कोड चुनें",
+      "countryLabel": "देश",
+      "countryPlaceholder": "देश चुनें",
+      "countryRequired": "अपना देश चुनें",
+      "countries": {
+        "india": "भारत",
+        "uae": "संयुक्त अरब अमीरात",
+        "saudiArabia": "सऊदी अरब",
+        "qatar": "क़तर",
+        "kuwait": "कुवैत",
+        "oman": "ओमान",
+        "bahrain": "बहरीन"
       }
     },
     "dashboard": {

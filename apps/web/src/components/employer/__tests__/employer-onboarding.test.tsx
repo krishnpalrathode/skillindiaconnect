@@ -326,6 +326,72 @@ describe('CompanyOnboardingForm — initial registration', () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
+  it('rejects a company name made only of special characters', async () => {
+    const user = userEvent.setup();
+    render(
+      <WithAll>
+        <CompanyOnboardingForm company={null} />
+      </WithAll>,
+    );
+
+    await user.type(screen.getByPlaceholderText(/your company legal name/i), '---@@@');
+    await user.click(screen.getByRole('button', { name: /submit for approval/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/company name must contain at least one letter or number/i),
+      ).toBeInTheDocument();
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('accepts punctuation INSIDE an otherwise real company name', async () => {
+    const user = userEvent.setup();
+    render(
+      <WithAll>
+        <CompanyOnboardingForm company={null} />
+      </WithAll>,
+    );
+
+    await user.type(screen.getByPlaceholderText(/your company legal name/i), 'L&T Ltd.');
+    await user.click(screen.getByRole('button', { name: /submit for approval/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/company phone is required/i)).toBeInTheDocument();
+    });
+    // The name passed — only the OTHER required fields complained.
+    expect(
+      screen.queryByText(/company name must contain at least one letter or number/i),
+    ).toBeNull();
+  });
+
+  it('caps the company name field at 100 characters', () => {
+    render(
+      <WithAll>
+        <CompanyOnboardingForm company={null} />
+      </WithAll>,
+    );
+    // 20 would reject real names like "Gulf Star Contracting LLC" (25 chars).
+    expect(screen.getByPlaceholderText(/your company legal name/i)).toHaveAttribute(
+      'maxLength',
+      '100',
+    );
+  });
+
+  it('defaults the dial code to +91 and re-syncs it when the country changes', async () => {
+    const user = userEvent.setup();
+    render(
+      <WithAll>
+        <CompanyOnboardingForm company={null} />
+      </WithAll>,
+    );
+
+    expect(screen.getByLabelText(/code/i)).toHaveValue('+91');
+
+    await user.selectOptions(screen.getByLabelText(/country/i), 'United Arab Emirates');
+    expect(screen.getByLabelText(/code/i)).toHaveValue('+971');
+  });
+
   it('blocks submit with cert-required error when no cert has been uploaded', async () => {
     const user = userEvent.setup();
     // mockCertState is 'idle' (no key) by default
@@ -339,6 +405,7 @@ describe('CompanyOnboardingForm — initial registration', () => {
     await user.type(screen.getByPlaceholderText(/your company legal name/i), 'Test Co');
     await user.type(screen.getByPlaceholderText(/\+91 98765 43210/i), '+919876543210');
     await user.type(screen.getByPlaceholderText(/city, state or country/i), 'Mumbai');
+    await user.selectOptions(screen.getByLabelText(/country/i), 'India');
     await user.selectOptions(screen.getByLabelText(/number of employees/i), '11-50');
 
     await user.click(screen.getByRole('button', { name: /submit for approval/i }));
@@ -370,6 +437,7 @@ describe('CompanyOnboardingForm — initial registration', () => {
     await user.type(screen.getByPlaceholderText(/your company legal name/i), 'Test Corp');
     await user.type(screen.getByPlaceholderText(/\+91 98765 43210/i), '+911234567890');
     await user.type(screen.getByPlaceholderText(/city, state or country/i), 'Delhi');
+    await user.selectOptions(screen.getByLabelText(/country/i), 'India');
     await user.selectOptions(screen.getByLabelText(/number of employees/i), '1-10');
 
     await user.click(screen.getByRole('button', { name: /submit for approval/i }));
@@ -401,6 +469,7 @@ describe('CompanyOnboardingForm — initial registration', () => {
     await user.type(screen.getByPlaceholderText(/your company legal name/i), 'Duplicate Co');
     await user.type(screen.getByPlaceholderText(/\+91 98765 43210/i), '+911234567890');
     await user.type(screen.getByPlaceholderText(/city, state or country/i), 'Mumbai');
+    await user.selectOptions(screen.getByLabelText(/country/i), 'India');
     await user.selectOptions(screen.getByLabelText(/number of employees/i), '1-10');
 
     await user.click(screen.getByRole('button', { name: /submit for approval/i }));
@@ -438,15 +507,18 @@ describe('CompanyOnboardingForm — resubmit', () => {
     expect(screen.queryByRole('button', { name: /^submit for approval$/i })).toBeNull();
   });
 
-  it('pre-fills company name, phone, and location from the rejected company', () => {
+  it('pre-fills company name, phone, country and location from the rejected company', () => {
     render(
       <WithAll>
         <CompanyOnboardingForm company={rejectedCompany} />
       </WithAll>,
     );
     expect(screen.getByDisplayValue('Apex Manpower Solutions')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('+919876500000')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Delhi, India')).toBeInTheDocument();
+    // Dial code and national number are separate controls, not one merged value.
+    expect(screen.getByLabelText(/code/i)).toHaveValue('+91');
+    expect(screen.getByLabelText(/company phone/i)).toHaveValue('9876500000');
+    expect(screen.getByLabelText(/country/i)).toHaveValue('India');
+    expect(screen.getByDisplayValue('Delhi')).toBeInTheDocument();
   });
 
   it('pre-selects LOCAL radio for a LOCAL company', () => {

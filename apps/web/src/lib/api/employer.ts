@@ -16,7 +16,11 @@ export interface EmployerSubscription {
 export interface RegisterCompanyBody {
   name: string;
   type: CompanyType;
+  /** Dial code, e.g. "+91". Stored separately from `phone`. */
+  phoneCode: string;
   phone: string;
+  country: string;
+  /** City or area within `country`. */
   location: string;
   employeeRange: EmployeeRange;
   registrationNumber?: string;

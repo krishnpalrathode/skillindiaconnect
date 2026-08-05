@@ -23,6 +23,8 @@ function makeCompany(overrides: Partial<Company> = {}): Company {
     status: CompanyStatus.PENDING,
     registrationNumber: 'REG1',
     industryType: 'IT',
+    phoneCode: '+91',
+    country: 'India',
     phone: '+91111',
     location: 'Delhi',
     website: null,

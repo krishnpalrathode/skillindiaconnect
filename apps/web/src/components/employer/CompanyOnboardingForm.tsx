@@ -10,6 +10,7 @@ import { ApiRequestError } from '@/lib/api/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
+import { COUNTRIES, DEFAULT_COUNTRY, DIAL_CODES, dialCodeForCountry } from '@/lib/countries';
 import { CompanyTypeRadio } from './CompanyTypeRadio';
 import { CertificateUpload } from './CertificateUpload';
 
@@ -31,6 +32,9 @@ interface CompanyOnboardingFormProps {
 }
 
 const EMPLOYEE_RANGES: EmployeeRange[] = ['1-10', '11-50', '51-200', '201-500', '500+'];
+
+/** Mirrors COMPANY_NAME_MAX in the API's register/update DTOs. */
+const COMPANY_NAME_MAX = 100;
 
 const INDUSTRY_KEYS = [
   'construction',
@@ -60,7 +64,9 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
   const [name, setName] = useState(company?.name ?? '');
   const [registrationNumber, setRegistrationNumber] = useState(company?.registrationNumber ?? '');
   const [industryType, setIndustryType] = useState(company?.industryType ?? '');
+  const [phoneCode, setPhoneCode] = useState(company?.phoneCode ?? DEFAULT_COUNTRY.dialCode);
   const [phone, setPhone] = useState(company?.phone ?? '');
+  const [country, setCountry] = useState(company?.country ?? '');
   const [location, setLocation] = useState(company?.location ?? '');
   const [website, setWebsite] = useState(company?.website ?? '');
   const [employeeRange, setEmployeeRange] = useState<EmployeeRange | ''>(
@@ -97,8 +103,18 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
   function validate(): boolean {
     const next: Record<string, string> = {};
     if (!companyType) next.companyType = t('companyTypeRequired');
-    if (!name.trim()) next.name = t('nameRequired');
+
+    const trimmedName = name.trim();
+    if (!trimmedName) next.name = t('nameRequired');
+    else if (trimmedName.length > COMPANY_NAME_MAX) next.name = t('nameTooLong');
+    // Blocks a name made only of punctuation/symbols ("---", "@@@") while still
+    // allowing punctuation inside a real name ("L&T Ltd."). Unicode-aware so
+    // Devanagari and Arabic names pass.
+    else if (!/[\p{L}\p{N}]/u.test(trimmedName)) next.name = t('nameNoAlnum');
+
+    if (!phoneCode.trim()) next.phoneCode = t('phoneCodeRequired');
     if (!phone.trim()) next.phone = t('phoneRequired');
+    if (!country) next.country = t('countryRequired');
     if (!location.trim()) next.location = t('locationRequired');
     if (!employeeRange) next.employeeRange = t('employeeRangeRequired');
     if (!certKeyRef.current) next.cert = t('certRequired');
@@ -118,7 +134,9 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
         await registerCompany({
           name: name.trim(),
           type: companyType as CompanyType,
+          phoneCode: phoneCode.trim(),
           phone: phone.trim(),
+          country,
           location: location.trim(),
           employeeRange: employeeRange as EmployeeRange,
           registrationNumber: registrationNumber.trim() || undefined,
@@ -131,7 +149,9 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
         await patchCompany({
           name: name.trim(),
           type: companyType as CompanyType,
+          phoneCode: phoneCode.trim(),
           phone: phone.trim(),
+          country,
           location: location.trim(),
           employeeRange: employeeRange as EmployeeRange,
           registrationNumber: registrationNumber.trim() || undefined,
@@ -170,7 +190,7 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6 max-w-2xl">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
       {submitSuccess && (
         <p
           role="status"
@@ -207,6 +227,7 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
             onChange={(e) => setName(e.target.value)}
             placeholder={t('namePlaceholder')}
             autoComplete="organization"
+            maxLength={COMPANY_NAME_MAX}
             hasError={!!errors.name}
           />
         </Field>
@@ -237,16 +258,64 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
           </select>
         </Field>
 
-        <Field id="ob-phone" label={t('phoneLabel')} error={errors.phone} required>
-          <Input
-            id="ob-phone"
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder={t('phonePlaceholder')}
-            autoComplete="tel"
-            hasError={!!errors.phone}
-          />
+        {/* Dial code + number share a row; the code is its own column server-side. */}
+        <div className="flex gap-2">
+          <div className="w-28 shrink-0">
+            <Field id="ob-phonecode" label={t('phoneCodeLabel')} error={errors.phoneCode} required>
+              <select
+                id="ob-phonecode"
+                value={phoneCode}
+                onChange={(e) => setPhoneCode(e.target.value)}
+                aria-invalid={!!errors.phoneCode}
+                className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {DIAL_CODES.map((code) => (
+                  <option key={code} value={code}>
+                    {code}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <Field id="ob-phone" label={t('phoneLabel')} error={errors.phone} required>
+              <Input
+                id="ob-phone"
+                type="tel"
+                inputMode="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder={t('phonePlaceholder')}
+                autoComplete="tel-national"
+                hasError={!!errors.phone}
+              />
+            </Field>
+          </div>
+        </div>
+
+        <Field id="ob-country" label={t('countryLabel')} error={errors.country} required>
+          <select
+            id="ob-country"
+            value={country}
+            onChange={(e) => {
+              const next = e.target.value;
+              setCountry(next);
+              // Keep the dial code in step with the country the employer picked;
+              // they can still override it for a company with a foreign line.
+              const code = dialCodeForCountry(next);
+              if (code) setPhoneCode(code);
+            }}
+            aria-invalid={!!errors.country}
+            className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="">{t('countryPlaceholder')}</option>
+            {COUNTRIES.map((c) => (
+              <option key={c.key} value={c.name}>
+                {t(`countries.${c.key}` as Parameters<typeof t>[0])}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <Field id="ob-location" label={t('locationLabel')} error={errors.location} required>

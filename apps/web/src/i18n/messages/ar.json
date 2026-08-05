@@ -574,6 +574,22 @@
         "security": "الأمن",
         "cleaning": "النظافة وإدارة المرافق",
         "other": "أخرى"
+      },
+      "nameTooLong": "لا يمكن أن يتجاوز اسم الشركة 100 حرف",
+      "nameNoAlnum": "يجب أن يحتوي اسم الشركة على حرف أو رقم واحد على الأقل",
+      "phoneCodeLabel": "الرمز",
+      "phoneCodeRequired": "اختر رمز الدولة",
+      "countryLabel": "الدولة",
+      "countryPlaceholder": "اختر الدولة",
+      "countryRequired": "اختر دولتك",
+      "countries": {
+        "india": "الهند",
+        "uae": "الإمارات العربية المتحدة",
+        "saudiArabia": "السعودية",
+        "qatar": "قطر",
+        "kuwait": "الكويت",
+        "oman": "عُمان",
+        "bahrain": "البحرين"
       }
     },
     "dashboard": {

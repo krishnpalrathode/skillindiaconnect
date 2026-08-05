@@ -5,23 +5,37 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  Matches,
   MaxLength,
 } from 'class-validator';
 import { CompanyType } from '@prisma/client';
+import {
+  COMPANY_COUNTRY_MAX,
+  COMPANY_NAME_HAS_ALNUM,
+  COMPANY_NAME_MAX,
+  COMPANY_NAME_MESSAGE,
+  PHONE_CODE_MESSAGE,
+  PHONE_CODE_PATTERN,
+} from './company-name.validator';
 
 export class RegisterCompanyDto {
   @IsString()
   @IsNotEmpty()
-  @MaxLength(200)
+  @MaxLength(COMPANY_NAME_MAX)
+  @Matches(COMPANY_NAME_HAS_ALNUM, { message: COMPANY_NAME_MESSAGE })
   name!: string;
 
   @IsEnum(CompanyType)
   type!: CompanyType;
 
+  // Optional: not every small employer has a registration number to hand at
+  // sign-up. Admins still see it (or "—") during review, and the uploaded
+  // registration certificate remains the mandatory proof.
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  registrationNumber!: string;
+  registrationNumber?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -30,8 +44,18 @@ export class RegisterCompanyDto {
 
   @IsString()
   @IsNotEmpty()
+  @Matches(PHONE_CODE_PATTERN, { message: PHONE_CODE_MESSAGE })
+  phoneCode!: string;
+
+  @IsString()
+  @IsNotEmpty()
   @MaxLength(20)
   phone!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(COMPANY_COUNTRY_MAX)
+  country!: string;
 
   @IsString()
   @IsNotEmpty()

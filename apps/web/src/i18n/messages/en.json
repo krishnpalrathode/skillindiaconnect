@@ -574,6 +574,22 @@
         "security": "Security",
         "cleaning": "Cleaning and Facility Management",
         "other": "Other"
+      },
+      "nameTooLong": "Company name cannot be longer than 100 characters",
+      "nameNoAlnum": "Company name must contain at least one letter or number",
+      "phoneCodeLabel": "Code",
+      "phoneCodeRequired": "Select a country code",
+      "countryLabel": "Country",
+      "countryPlaceholder": "Select country",
+      "countryRequired": "Select your country",
+      "countries": {
+        "india": "India",
+        "uae": "United Arab Emirates",
+        "saudiArabia": "Saudi Arabia",
+        "qatar": "Qatar",
+        "kuwait": "Kuwait",
+        "oman": "Oman",
+        "bahrain": "Bahrain"
       }
     },
     "dashboard": {
