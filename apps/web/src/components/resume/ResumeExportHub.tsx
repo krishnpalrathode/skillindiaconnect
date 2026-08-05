@@ -10,6 +10,7 @@ import { getResume, type ResumeInfo } from '@/lib/api/resume';
 import { ResumePreview } from './ResumePreview';
 import { DownloadResumeButton } from './DownloadResumeButton';
 import { ResumeSettingsPanel } from './ResumeSettingsPanel';
+import { TemplateGallery } from './TemplateGallery';
 import { RegeneratePrompt } from './RegeneratePrompt';
 import { SendWhatsAppButton } from './SendWhatsAppButton';
 import { EmailResumeButton } from './EmailResumeButton';
@@ -113,6 +114,15 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
       {/* ── S7-F2: Resume Settings + delivery (mounted into F1's seam). ── */}
       {settings && (
         <div data-f2-slot="resume-settings-delivery" className="flex flex-col gap-4">
+          {/* CR-001 F2: the template gallery. Shares the hub's settings state
+              and its commit signal, so choosing a template marks the last PDF
+              stale exactly the way a toggle does. */}
+          <TemplateGallery
+            settings={settings}
+            onSettingsChange={setSettings}
+            onCommitted={() => setDirtySinceGenerate(true)}
+          />
+
           <ResumeSettingsPanel
             settings={settings}
             onSettingsChange={setSettings}

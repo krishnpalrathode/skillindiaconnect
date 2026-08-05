@@ -72,6 +72,25 @@
       "retry": "फिर से प्रयास करें",
       "timeoutTitle": "अपेक्षा से अधिक समय लग रहा है",
       "timeoutBody": "आपका रिज्यूमे अभी तैयार हो रहा है। कृपया कुछ देर में फिर से प्रयास करें।"
+    },
+    "templates": {
+      "title": "[hi] Choose a template",
+      "subtitle": "[hi] Pick the look for your resume. Your details stay the same.",
+      "recommended": "[hi] Recommended",
+      "applyHint": "[hi] Changing the template applies the next time you generate your resume.",
+      "saveError": "[hi] We couldn't save that template. Please try again.",
+      "names": {
+        "CLASSIC": "[hi] Classic",
+        "MODERN": "[hi] Modern",
+        "COMPACT": "[hi] Compact",
+        "MINIMAL": "[hi] Minimal"
+      },
+      "descriptions": {
+        "CLASSIC": "[hi] Traditional and formal. A safe choice for Gulf employers.",
+        "MODERN": "[hi] Clean and spacious. Works well for most candidates.",
+        "COMPACT": "[hi] Two columns. Fits more experience on one page.",
+        "MINIMAL": "[hi] Plain and simple. Easiest for hiring software to read."
+      }
     }
   },
   "common": {
