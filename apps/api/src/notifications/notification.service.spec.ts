@@ -9,7 +9,7 @@
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bullmq';
-import { NotificationType, PrismaClient } from '@prisma/client';
+import { NotificationType, PrismaClient, UserRole } from '@prisma/client';
 import { execSync } from 'child_process';
 import * as path from 'path';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
@@ -208,6 +208,19 @@ describe('notify(JOB_CLOSING_SOON) â€” matrix: inApp âœ“ Â· whatsapp 
 });
 
 // â”€â”€ listNotifications + markRead â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+describe('role guards', () => {
+  it('assertEmployerRole allows EMPLOYER and rejects everyone else', () => {
+    expect(() => service.assertEmployerRole(UserRole.EMPLOYER)).not.toThrow();
+    expect(() => service.assertEmployerRole(UserRole.CANDIDATE)).toThrow(/NOT_EMPLOYER|Forbidden/);
+    expect(() => service.assertEmployerRole(UserRole.ADMIN)).toThrow(/NOT_EMPLOYER|Forbidden/);
+  });
+
+  it('assertCandidateRole allows CANDIDATE and rejects an EMPLOYER', () => {
+    expect(() => service.assertCandidateRole(UserRole.CANDIDATE)).not.toThrow();
+    expect(() => service.assertCandidateRole(UserRole.EMPLOYER)).toThrow(/NOT_CANDIDATE|Forbidden/);
+  });
+});
 
 describe('listNotifications + markRead', () => {
   it('listNotifications returns notifications for the user, newest first', async () => {

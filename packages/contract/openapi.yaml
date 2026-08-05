@@ -1016,6 +1016,12 @@ components:
           type: string
         market:
           $ref: '#/components/schemas/JobMarket'
+        country:
+          type: [string, 'null']
+          description: >
+            Recruiting country (canonical English name, e.g. "India", "United Arab
+            Emirates"). null on jobs created before the field existed.
+          example: United Arab Emirates
         location:
           type: string
         categoryId:

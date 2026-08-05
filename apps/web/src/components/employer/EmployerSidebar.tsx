@@ -5,7 +5,15 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useParams } from 'next/navigation';
-import { LayoutDashboard, PlusCircle, Briefcase, Users, CreditCard, User } from 'lucide-react';
+import {
+  LayoutDashboard,
+  PlusCircle,
+  Briefcase,
+  Users,
+  Bell,
+  CreditCard,
+  User,
+} from 'lucide-react';
 import { useEmployer } from '@/lib/employer/employer-context';
 import { PlanStatusWidget } from './PlanStatusWidget';
 import { cn } from '@/lib/utils';
@@ -81,6 +89,8 @@ export function EmployerSidebar({ onNavClick }: EmployerSidebarProps) {
   const isApproved = company?.status === 'APPROVED';
   const pendingHint = t('nav.postJobPendingHint');
 
+  const currentPath = pathname ?? '';
+
   const navItems = [
     {
       href: `/${locale}/employer/dashboard`,
@@ -109,6 +119,12 @@ export function EmployerSidebar({ onNavClick }: EmployerSidebarProps) {
       key: 'candidates',
     },
     {
+      href: `/${locale}/employer/notifications`,
+      icon: <Bell className="size-5" />,
+      label: t('nav.notifications'),
+      key: 'notifications',
+    },
+    {
       href: `/${locale}/employer/subscription`,
       icon: <CreditCard className="size-5" />,
       label: t('nav.subscription'),
@@ -121,6 +137,18 @@ export function EmployerSidebar({ onNavClick }: EmployerSidebarProps) {
       key: 'profile',
     },
   ];
+
+  // Active = the nav item whose href is the LONGEST prefix of the current path.
+  // A plain `startsWith` lights up BOTH "My Jobs" (/employer/jobs) and the more
+  // specific "Post a Job" (/employer/jobs/new) on the new-job route; picking the
+  // longest match makes the specific item win, while "My Jobs" still stays active
+  // on job detail routes (/employer/jobs/:id).
+  const matchedHrefs = navItems
+    .map((item) => item.href)
+    .filter((href) => currentPath === href || currentPath.startsWith(`${href}/`));
+  const activeHref = matchedHrefs.length
+    ? matchedHrefs.reduce((longest, href) => (href.length > longest.length ? href : longest))
+    : null;
 
   return (
     <div className="flex flex-col h-full">
@@ -154,7 +182,7 @@ export function EmployerSidebar({ onNavClick }: EmployerSidebarProps) {
             href={item.href}
             icon={item.icon}
             label={item.label}
-            active={pathname.startsWith(item.href)}
+            active={item.href === activeHref}
             disabled={item.disabled}
             disabledReason={item.disabledReason}
             onClick={onNavClick}

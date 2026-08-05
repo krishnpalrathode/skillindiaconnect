@@ -196,6 +196,7 @@ function baseDto(): CreateJobDto {
     title: 'Mason',
     employmentType: EmploymentType.FULL_TIME,
     market: JobMarket.LOCAL,
+    country: 'India',
     location: 'Delhi',
     description: '<p>Good job</p>',
     categoryId: CATEGORY_ID,
@@ -253,6 +254,23 @@ describe('JobsService', () => {
       const job = await service.create(dto, EMPLOYER_USER_ID, UserRole.EMPLOYER);
       expect(job.description).not.toContain('<script>');
       expect(job.description).toContain('Safe content');
+    });
+
+    it('persists the country', async () => {
+      if (dockerUnavailable) return;
+
+      const job = await service.create(baseDto(), EMPLOYER_USER_ID, UserRole.EMPLOYER);
+      expect(job.country).toBe('India');
+    });
+
+    it('rejects a country that does not match the market (server-side enforcement)', async () => {
+      if (dockerUnavailable) return;
+
+      // baseDto is LOCAL/India; a GCC country is invalid for a LOCAL job.
+      const dto = { ...baseDto(), country: 'Qatar' };
+      await expect(
+        service.create(dto, EMPLOYER_USER_ID, UserRole.EMPLOYER),
+      ).rejects.toMatchObject({ response: { code: 'COUNTRY_MARKET_MISMATCH' } });
     });
   });
 

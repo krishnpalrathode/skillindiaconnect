@@ -224,4 +224,10 @@ export class NotificationService {
       throw new ForbiddenException({ code: 'NOT_CANDIDATE' });
     }
   }
+
+  assertEmployerRole(role: UserRole): void {
+    if (role !== UserRole.EMPLOYER) {
+      throw new ForbiddenException({ code: 'NOT_EMPLOYER' });
+    }
+  }
 }

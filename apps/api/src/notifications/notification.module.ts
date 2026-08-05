@@ -3,6 +3,7 @@ import { QueueModule } from '../queue/queue.module';
 import { NotificationService } from './notification.service';
 import { NotificationSubscriber } from './notification.subscriber';
 import { NotificationsController } from './notifications.controller';
+import { EmployerNotificationsController } from './employer-notifications.controller';
 
 /**
  * API-process side of the Notifications module.
@@ -20,7 +21,7 @@ import { NotificationsController } from './notifications.controller';
  */
 @Module({
   imports: [QueueModule],
-  controllers: [NotificationsController],
+  controllers: [NotificationsController, EmployerNotificationsController],
   providers: [NotificationService, NotificationSubscriber],
   exports: [NotificationService],
 })

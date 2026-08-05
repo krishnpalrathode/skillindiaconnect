@@ -470,6 +470,7 @@
       "postJobPendingHint": "अनुमोदन के बाद उपलब्ध",
       "myJobs": "मेरी नौकरियां",
       "candidates": "उम्मीदवार",
+      "notifications": "सूचनाएं",
       "subscription": "सदस्यता",
       "profile": "कंपनी प्रोफ़ाइल"
     },
@@ -1035,6 +1036,8 @@
       "marketLabel": "बाज़ार",
       "marketGulf": "खाड़ी (अंतर्राष्ट्रीय)",
       "marketLocal": "स्थानीय (भारत)",
+      "countryLabel": "देश",
+      "countryPlaceholder": "देश चुनें",
       "locationLabel": "स्थान",
       "locationPlaceholder": "जैसे दुबई, UAE या मुंबई, भारत"
     },

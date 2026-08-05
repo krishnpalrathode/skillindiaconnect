@@ -3,6 +3,7 @@
 import React, { useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { Bell, Building2, ChevronDown, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLogoutConfirm } from '@/lib/auth/logout-confirm';
@@ -126,14 +127,14 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
           <HeaderLangSwitcher />
         </div>
 
-        {/* Notifications bell — stub; no endpoint in S2 */}
-        <button
-          type="button"
+        {/* Notifications — links to the employer notifications page */}
+        <Link
+          href={`/${locale}/employer/notifications`}
           aria-label={t('header.notifications')}
           className="relative flex items-center justify-center size-10 rounded-xl text-neutral-600 ring-1 ring-neutral-200/70 transition-all hover:text-[#0F3D91] hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >
           <Bell className="size-5" aria-hidden="true" />
-        </button>
+        </Link>
 
         {/* Account menu */}
         <div className="relative" ref={menuRef}>

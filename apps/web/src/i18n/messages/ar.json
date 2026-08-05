@@ -470,6 +470,7 @@
       "postJobPendingHint": "متاح بعد الموافقة",
       "myJobs": "وظائفي",
       "candidates": "المرشحون",
+      "notifications": "الإشعارات",
       "subscription": "الاشتراك",
       "profile": "ملف الشركة"
     },
@@ -1035,6 +1036,8 @@
       "marketLabel": "السوق",
       "marketGulf": "الخليج (دولي)",
       "marketLocal": "محلي (الهند)",
+      "countryLabel": "الدولة",
+      "countryPlaceholder": "اختر دولة",
       "locationLabel": "الموقع",
       "locationPlaceholder": "مثل: دبي، الإمارات أو مومباي، الهند"
     },

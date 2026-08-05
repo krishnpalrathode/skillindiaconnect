@@ -16,6 +16,7 @@ export const JOB_CARD_SELECT = {
   humanId: true,
   title: true,
   market: true,
+  country: true,
   location: true,
   employmentType: true,
   categoryId: true,
@@ -58,6 +59,7 @@ export const JOB_DETAIL_SELECT = {
   humanId: true,
   title: true,
   market: true,
+  country: true,
   location: true,
   employmentType: true,
   categoryId: true,
@@ -138,6 +140,8 @@ export interface JobCard {
   humanId: string;
   title: string;
   market: JobMarket;
+  /** Recruiting country (canonical English name); null on pre-feature jobs. */
+  country: string | null;
   location: string;
   employmentType: EmploymentType;
   category: PublicCategory;
@@ -186,6 +190,7 @@ export function toJobCard(job: JobCardData): JobCard {
     humanId: job.humanId,
     title: job.title,
     market: job.market,
+    country: job.country,
     location: job.location,
     employmentType: job.employmentType,
     category: {
@@ -226,6 +231,7 @@ export function toJobDetail(job: JobDetailData, similar: JobCard[]): JobDetail {
     humanId: job.humanId,
     title: job.title,
     market: job.market,
+    country: job.country,
     location: job.location,
     employmentType: job.employmentType,
     category: {

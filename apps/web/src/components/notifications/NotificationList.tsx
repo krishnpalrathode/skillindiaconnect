@@ -7,9 +7,8 @@ import { AlertCircle, CheckCheck } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { cn } from '@/lib/utils';
 import {
-  listNotifications,
-  markNotificationsRead,
-  markAllNotificationsRead,
+  candidateNotificationsApi,
+  type NotificationsApi,
   type NotificationListParams,
 } from '@/lib/api/notifications';
 import { NotificationFilters } from './NotificationFilters';
@@ -19,6 +18,11 @@ import { NotificationSkeleton } from './NotificationSkeleton';
 
 type Notification = components['schemas']['Notification'];
 type FilterValue = NonNullable<NotificationListParams['filter']>;
+
+interface NotificationListProps {
+  /** Which audience's feed to read/write. Defaults to the candidate feed. */
+  api?: NotificationsApi;
+}
 
 function getDateGroup(isoDate: string, now: Date): string {
   const date = new Date(isoDate);
@@ -45,7 +49,7 @@ function groupByDate(
   return ORDER.filter((g) => map.has(g)).map((g) => ({ group: g, items: map.get(g)! }));
 }
 
-export function NotificationList() {
+export function NotificationList({ api = candidateNotificationsApi }: NotificationListProps = {}) {
   const t = useTranslations('notifications');
   const params = useParams<{ locale: string }>();
   const locale = params?.locale ?? 'en';
@@ -62,7 +66,7 @@ export function NotificationList() {
   const fetchPage = useCallback(
     async (cursor?: string, replace = false) => {
       try {
-        const result = await listNotifications({
+        const result = await api.listNotifications({
           filter: activeFilter,
           unread: unreadOnly || undefined,
           cursor,
@@ -75,7 +79,7 @@ export function NotificationList() {
         setError(t('errorLoad'));
       }
     },
-    [activeFilter, unreadOnly, t],
+    [api, activeFilter, unreadOnly, t],
   );
 
   useEffect(() => {
@@ -90,16 +94,19 @@ export function NotificationList() {
     setLoadingMore(false);
   };
 
-  const handleMarkRead = useCallback((id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true, readAt: new Date().toISOString() } : n)),
-    );
-    markNotificationsRead([id]).catch(() => {
+  const handleMarkRead = useCallback(
+    (id: string) => {
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: false, readAt: null } : n)),
+        prev.map((n) => (n.id === id ? { ...n, read: true, readAt: new Date().toISOString() } : n)),
       );
-    });
-  }, []);
+      api.markNotificationsRead([id]).catch(() => {
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === id ? { ...n, read: false, readAt: null } : n)),
+        );
+      });
+    },
+    [api],
+  );
 
   const handleMarkAllRead = async () => {
     const prevState = notifications.map((n) => ({ ...n }));
@@ -107,7 +114,7 @@ export function NotificationList() {
       prev.map((n) => ({ ...n, read: true, readAt: new Date().toISOString() })),
     );
     try {
-      await markAllNotificationsRead();
+      await api.markAllNotificationsRead();
     } catch {
       setNotifications(prevState);
     }

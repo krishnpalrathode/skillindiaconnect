@@ -1,5 +1,6 @@
 import type { components } from '@skillindiaconnect/shared-types';
 import type { Job, CreateJobBody } from '@/lib/api/jobs-employer';
+import { countriesForMarket } from '@/lib/countries';
 
 type JobMarket = components['schemas']['JobMarket'];
 type GenderPreference = components['schemas']['GenderPreference'];
@@ -9,6 +10,7 @@ export interface JobFormValues {
   title: string;
   employmentType: EmploymentType;
   market: JobMarket;
+  country: string;
   categoryId: string;
   location: string;
   description: string;
@@ -39,6 +41,7 @@ export interface JobFormErrors {
   title?: string;
   employmentType?: string;
   market?: string;
+  country?: string;
   categoryId?: string;
   location?: string;
   description?: string;
@@ -62,6 +65,7 @@ export const DEFAULT_FORM_VALUES: JobFormValues = {
   title: '',
   employmentType: 'FULL_TIME',
   market: 'GULF',
+  country: '',
   categoryId: '',
   location: '',
   description: '',
@@ -86,6 +90,11 @@ export const DEFAULT_FORM_VALUES: JobFormValues = {
 export function validateJobForm(values: JobFormValues): JobFormErrors {
   const errors: JobFormErrors = {};
   if (!values.title.trim()) errors.title = 'Job title is required';
+  if (!values.country) {
+    errors.country = 'Country is required';
+  } else if (!countriesForMarket(values.market).some((c) => c.name === values.country)) {
+    errors.country = 'Select a country valid for the chosen market';
+  }
   if (!values.categoryId) errors.categoryId = 'Job category is required';
   if (!values.location.trim()) errors.location = 'Location is required';
   if (!values.description.trim()) errors.description = 'Job description is required';
@@ -128,6 +137,7 @@ export function formToPayload(values: JobFormValues): CreateJobBody {
     title: values.title.trim(),
     employmentType: values.employmentType,
     market: values.market,
+    country: values.country,
     location: values.location.trim(),
     description: values.description.trim(),
     categoryId: values.categoryId,
@@ -157,6 +167,7 @@ export function jobToFormValues(job: Job): JobFormValues {
     title: job.title,
     employmentType: job.employmentType,
     market: job.market,
+    country: job.country ?? '',
     categoryId: job.categoryId,
     location: job.location,
     description: job.description ?? '',
@@ -185,6 +196,7 @@ export interface PreviewJobCard {
   id: string;
   title: string;
   market: JobMarket;
+  country: string | null;
   location: string;
   salaryMin: number | null;
   salaryMax: number | null;
@@ -205,6 +217,7 @@ export function formToPreview(values: JobFormValues, companyName: string): Previ
     id: 'preview',
     title: values.title.trim() || 'Job Title',
     market: values.market,
+    country: values.country || null,
     location: values.location.trim() || 'Location',
     salaryMin: min !== null && !isNaN(min) ? min : null,
     salaryMax: max !== null && !isNaN(max) ? max : null,

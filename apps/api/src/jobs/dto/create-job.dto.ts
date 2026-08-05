@@ -2,6 +2,7 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -12,6 +13,7 @@ import {
   Min,
 } from 'class-validator';
 import { Currency, EmploymentType, JobMarket } from '@prisma/client';
+import { ALL_JOB_COUNTRIES } from '../job-countries';
 
 export class CreateJobDto {
   @IsString()
@@ -24,6 +26,13 @@ export class CreateJobDto {
 
   @IsEnum(JobMarket)
   market!: JobMarket;
+
+  // Canonical English country name; must match `market` (India for LOCAL, a GCC
+  // state for GULF) — that cross-field rule is enforced in the service.
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(ALL_JOB_COUNTRIES)
+  country!: string;
 
   @IsString()
   @IsNotEmpty()

@@ -64,7 +64,7 @@ export function JobLivePreview({ values, companyName, locale }: JobLivePreviewPr
 
           <p className="flex items-center gap-1 text-sm text-neutral-600">
             <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
-            {preview.location}
+            {preview.country ? `${preview.location}, ${preview.country}` : preview.location}
           </p>
 
           {salary && (

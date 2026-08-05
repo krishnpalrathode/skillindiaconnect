@@ -5,8 +5,9 @@ import { render } from '../../../test-utils';
 import { NotificationFilters } from '../NotificationFilters';
 import { NotificationItem } from '../NotificationItem';
 import { NotificationList } from '../NotificationList';
-import { db, makeAccessToken } from '../../../mocks/data';
+import { db, makeAccessToken, EMPLOYER_APPROVED_USER_ID } from '../../../mocks/data';
 import { setAccessToken, resetClient } from '../../../lib/api/client';
+import { employerNotificationsApi } from '../../../lib/api/notifications';
 import type { components } from '@skillindiaconnect/shared-types';
 
 type Notification = components['schemas']['Notification'];
@@ -200,6 +201,29 @@ describe('NotificationList', () => {
         markReadButtons.length,
       );
     });
+  });
+
+  it('reads the EMPLOYER feed when given the employer API (the fix for missing employer notifications)', async () => {
+    const token = makeAccessToken(EMPLOYER_APPROVED_USER_ID);
+    setAccessToken(token);
+    db.sessions.set(token, { userId: EMPLOYER_APPROVED_USER_ID, accessToken: token });
+    db.notifications.set(EMPLOYER_APPROVED_USER_ID, [
+      {
+        id: 'emp-approved-1',
+        type: 'EMPLOYER_APPROVED',
+        title: 'Company Approved',
+        body: 'Your company "Gulf Builders Arabia" has been approved. You can now post jobs.',
+        read: false,
+        readAt: null,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+
+    render(<NotificationList api={employerNotificationsApi} />);
+
+    await waitFor(() => expect(screen.getByText('Company Approved')).toBeInTheDocument());
+
+    db.notifications.delete(EMPLOYER_APPROVED_USER_ID);
   });
 
   it('shows empty state for unread-only filter when all are read', async () => {

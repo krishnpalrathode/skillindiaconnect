@@ -470,6 +470,7 @@
       "postJobPendingHint": "Available after approval",
       "myJobs": "My Jobs",
       "candidates": "Candidates",
+      "notifications": "Notifications",
       "subscription": "Subscription",
       "profile": "Company Profile"
     },
@@ -1035,6 +1036,8 @@
       "marketLabel": "Market",
       "marketGulf": "Gulf (International)",
       "marketLocal": "Local (India)",
+      "countryLabel": "Country",
+      "countryPlaceholder": "Select a country",
       "locationLabel": "Location",
       "locationPlaceholder": "e.g. Dubai, UAE or Mumbai, India"
     },
@@ -2097,6 +2100,8 @@
         "marketLabel": "Market",
         "marketGulf": "Gulf",
         "marketLocal": "India (Local)",
+        "countryLabel": "Country",
+        "countryPlaceholder": "Select a country",
         "categoryLabel": "Job category",
         "categoriesLoading": "Loading categories…",
         "categoryPlaceholder": "Select a category",

@@ -30,6 +30,18 @@ export const COUNTRIES: readonly CountryOption[] = [
   { key: 'bahrain', name: 'Bahrain', dialCode: '+973' },
 ] as const;
 
+/** Gulf (GCC) states — every country except India. */
+export const GULF_COUNTRIES: readonly CountryOption[] = COUNTRIES.filter((c) => c.name !== 'India');
+
+/**
+ * Countries a job may recruit into, by market: India for LOCAL, the six GCC
+ * states for GULF. Mirrors the server's `countriesForMarket`
+ * (apps/api/src/jobs/job-countries.ts).
+ */
+export function countriesForMarket(market: 'GULF' | 'LOCAL'): readonly CountryOption[] {
+  return market === 'LOCAL' ? [DEFAULT_COUNTRY] : GULF_COUNTRIES;
+}
+
 /** Dial codes, de-duplicated, for the phone-code select. */
 export const DIAL_CODES: readonly string[] = Array.from(new Set(COUNTRIES.map((c) => c.dialCode)));
 

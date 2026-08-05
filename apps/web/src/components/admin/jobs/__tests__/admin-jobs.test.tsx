@@ -405,6 +405,11 @@ describe('OnBehalfJobForm', () => {
 
     // Fill the minimum valid form.
     await user.type(screen.getByLabelText(/job title/i), 'Crane Operator');
+    // Market defaults to GULF → a GCC country is required to publish.
+    await user.selectOptions(
+      container.querySelector<HTMLSelectElement>('#ob-job-country')!,
+      'United Arab Emirates',
+    );
     const categorySelect = container.querySelector<HTMLSelectElement>('#ob-job-category')!;
     await waitFor(() => expect(categorySelect.options.length).toBeGreaterThan(1));
     await user.selectOptions(categorySelect, categorySelect.options[1]!.value);

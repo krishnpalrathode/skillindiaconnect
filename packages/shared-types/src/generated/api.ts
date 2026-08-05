@@ -3134,6 +3134,11 @@ export interface components {
             id: string;
             title: string;
             market: components["schemas"]["JobMarket"];
+            /**
+             * @description Recruiting country (canonical English name, e.g. "India", "United Arab Emirates"). null on jobs created before the field existed.
+             * @example United Arab Emirates
+             */
+            country?: string | null;
             location: string;
             /** Format: uuid */
             categoryId?: string | null;
