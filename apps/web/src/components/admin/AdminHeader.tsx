@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
 import { LogOut, Menu } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
+import { useToast } from '@/components/ui/toast';
 import { useAdmin } from '@/lib/admin/admin-context';
 import { Badge } from '@/components/ui/badge';
 
@@ -18,6 +19,8 @@ import { Badge } from '@/components/ui/badge';
  */
 export function AdminHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const t = useTranslations('admin');
+  const tCommon = useTranslations('common');
+  const { showToast } = useToast();
   const { logout } = useAuth();
   const { role } = useAdmin();
   const router = useRouter();
@@ -26,7 +29,9 @@ export function AdminHeader({ onMenuClick }: { onMenuClick?: () => void }) {
 
   async function handleLogout() {
     await logout();
-    router.replace(`/${locale}/login`);
+    showToast({ message: tCommon('logoutSuccess'), variant: 'success' });
+    // Landing page, not /login — see AppLayout.handleLogout for the reasoning.
+    router.replace(`/${locale}`);
   }
 
   return (

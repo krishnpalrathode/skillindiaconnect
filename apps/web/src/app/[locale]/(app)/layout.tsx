@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useRouter, usePathname, useParams } from 'next/navigation';
 import { User, Briefcase, FileText, Bell, Settings, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
+import { useToast } from '@/components/ui/toast';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
@@ -59,7 +60,9 @@ function NavItem({ href, icon, label, active, disabled }: NavItemProps) {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations('nav');
-  const { user, isLoading, logout } = useAuth();
+  const tCommon = useTranslations('common');
+  const { showToast } = useToast();
+  const { user, isLoading, isLoggingOut, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams<{ locale: string }>();
@@ -69,11 +72,26 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Every other route in this group is candidate-only.
   const isPublicPath = pathname.includes('/jobs');
 
+  /**
+   * Signs out to the LANDING page, not /login — a user who just left should
+   * land somewhere public, not on a form asking them to sign back in.
+   * The toast is raised before navigating; it survives because ToastProvider
+   * lives in the locale layout, above the routed page.
+   */
+  async function handleLogout() {
+    await logout();
+    showToast({ message: tCommon('logoutSuccess'), variant: 'success' });
+    router.replace(`/${locale}`);
+  }
+
   useEffect(() => {
-    if (!isLoading && !user && !isPublicPath) {
+    // `isLoggingOut` — a deliberate sign-out owns its own redirect (to the
+    // landing page). Without this check the guard fires the instant `user`
+    // clears and races it, dumping the user back on /login.
+    if (!isLoading && !user && !isPublicPath && !isLoggingOut) {
       router.replace(`/${locale}/login`);
     }
-  }, [user, isLoading, router, locale, isPublicPath]);
+  }, [user, isLoading, isLoggingOut, router, locale, isPublicPath]);
 
   // Guest (or auth still resolving) on a public path: render the page as-is,
   // no sidebar chrome and no blocking spinner — SSR content must never be
@@ -174,7 +192,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="px-3 py-4 border-t border-neutral-100">
           <button
             type="button"
-            onClick={() => logout().then(() => router.replace(`/${locale}/login`))}
+            onClick={handleLogout}
             className="flex w-full items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-neutral-600 hover:bg-error-bg hover:text-error-fg transition-all duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
             <LogOut className="size-5 shrink-0" aria-hidden="true" />
@@ -197,7 +215,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
         <button
           type="button"
-          onClick={() => logout().then(() => router.replace(`/${locale}/login`))}
+          onClick={handleLogout}
           aria-label={t('logout')}
           className="flex items-center justify-center size-9 rounded-lg text-neutral-600 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >

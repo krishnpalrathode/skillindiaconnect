@@ -34,6 +34,15 @@ function decodeToken(token: string): UserSummary | null {
 export interface AuthContextValue {
   user: UserSummary | null;
   isLoading: boolean;
+  /**
+   * True from the moment a DELIBERATE sign-out starts until the next sign-in.
+   *
+   * Route guards must skip their "no user → /login" redirect while this is set.
+   * Without it, clearing `user` makes every guard fire at once and the guard's
+   * redirect races — and beats — the sign-out's own redirect, so a user who
+   * signed out lands back on the login form instead of the landing page.
+   */
+  isLoggingOut: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithPhone: (phone: string, otp: string) => Promise<void>;
   signup: (body: SignupBody) => Promise<void>;
@@ -47,6 +56,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   // The in-flight refresh, SHARED. Concurrent callers must AWAIT the same
   // promise — the old boolean guard returned null to the second caller, which
   // meant "refresh failed": in dev StrictMode the double-mounted bootstrap's
@@ -95,6 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     authGeneration.current++;
+    setIsLoggingOut(false);
     const result = await postLogin({ email, password });
     setAccessToken(result.accessToken);
     setUser(result.user);
@@ -102,6 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithPhone = useCallback(async (phone: string, otp: string) => {
     authGeneration.current++;
+    setIsLoggingOut(false);
     const result = await postPhoneLoginVerify(phone, otp);
     setAccessToken(result.accessToken);
     setUser(result.user);
@@ -109,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signup = useCallback(async (body: SignupBody) => {
     authGeneration.current++;
+    setIsLoggingOut(false);
     const result = await postSignup(body);
     setAccessToken(result.accessToken);
     setUser(result.user);
@@ -116,6 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     authGeneration.current++;
+    setIsLoggingOut(true);
     try {
       await postLogout();
     } finally {
@@ -125,7 +139,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, loginWithPhone, signup, logout }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, isLoggingOut, login, loginWithPhone, signup, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

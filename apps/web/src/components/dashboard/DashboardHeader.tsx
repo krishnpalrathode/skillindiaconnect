@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { Bell, ChevronDown, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
+import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 
 interface DashboardHeaderProps {
@@ -24,6 +25,8 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ name, isAvailable, unreadCount, locale }: DashboardHeaderProps) {
   const t = useTranslations('dashboard');
   const tNav = useTranslations('nav');
+  const tCommon = useTranslations('common');
+  const { showToast } = useToast();
   const { logout } = useAuth();
   const router = useRouter();
 
@@ -144,7 +147,11 @@ export function DashboardHeader({ name, isAvailable, unreadCount, locale }: Dash
                 role="menuitem"
                 onClick={() => {
                   setMenuOpen(false);
-                  logout().then(() => router.replace(`/${locale}/login`));
+                  logout().then(() => {
+                    showToast({ message: tCommon('logoutSuccess'), variant: 'success' });
+                    // Landing page, not /login — see AppLayout.handleLogout.
+                    router.replace(`/${locale}`);
+                  });
                 }}
                 className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-error-fg transition-colors hover:bg-error-bg focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
               >

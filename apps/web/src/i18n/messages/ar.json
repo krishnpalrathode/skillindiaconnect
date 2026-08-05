@@ -93,7 +93,8 @@
     "no": "[ar] No",
     "or": "[ar] or",
     "and": "[ar] and",
-    "brand": "سكيل إنديا كونكت"
+    "brand": "سكيل إنديا كونكت",
+    "logoutSuccess": "تم تسجيل الخروج بنجاح"
   },
   "field": {
     "requiredError": "[ar] This field is required",

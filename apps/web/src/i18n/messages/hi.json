@@ -93,7 +93,8 @@
     "no": "[hi] No",
     "or": "[hi] or",
     "and": "[hi] and",
-    "brand": "स्किलइंडियाकनेक्ट"
+    "brand": "स्किलइंडियाकनेक्ट",
+    "logoutSuccess": "सफलतापूर्वक लॉग आउट हो गए"
   },
   "field": {
     "requiredError": "[hi] This field is required",

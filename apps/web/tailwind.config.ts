@@ -197,6 +197,18 @@ const config: Config = {
           from: { transform: 'scale(1)' },
           to: { transform: 'scale(1.04)' },
         },
+
+        /* Toast: slides in from the inline-end edge. Uses a logical custom
+           property so RTL enters from the opposite side (set in globals.css). */
+        'toast-in': {
+          from: { opacity: '0', transform: 'translate3d(var(--toast-enter-x, 16px), 0, 0)' },
+          to: { opacity: '1', transform: 'translate3d(0, 0, 0)' },
+        },
+        /* Countdown bar draining to zero over the toast's own lifetime. */
+        'toast-progress': {
+          from: { transform: 'scaleX(1)' },
+          to: { transform: 'scaleX(0)' },
+        },
       },
       animation: {
         'spin-smooth': 'spin-smooth 0.8s linear infinite',
@@ -216,6 +228,10 @@ const config: Config = {
 
         /* Runs across the full 5s dwell + the 700ms crossfade into the next. */
         'hero-kenburns': 'hero-kenburns 5700ms ease-out both',
+
+        'toast-in': 'toast-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        /* Duration is set inline per toast so the bar matches its real lifetime. */
+        'toast-progress': 'toast-progress linear both',
       },
     },
   },

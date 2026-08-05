@@ -93,7 +93,8 @@
     "no": "No",
     "or": "or",
     "and": "and",
-    "brand": "SkillIndiaConnect"
+    "brand": "SkillIndiaConnect",
+    "logoutSuccess": "Logged out successfully"
   },
   "field": {
     "requiredError": "This field is required",

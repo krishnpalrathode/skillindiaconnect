@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import { Bell, Building2, ChevronDown, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
+import { useToast } from '@/components/ui/toast';
 import { useEmployer } from '@/lib/employer/employer-context';
 import { cn } from '@/lib/utils';
 
@@ -59,6 +60,8 @@ function HeaderLangSwitcher() {
 
 export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const t = useTranslations('employer');
+  const tCommon = useTranslations('common');
+  const { showToast } = useToast();
   const { user, logout } = useAuth();
   const { company } = useEmployer();
   const router = useRouter();
@@ -77,7 +80,11 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
     .join('');
 
   function handleLogout() {
-    logout().then(() => router.replace(`/${locale}/login`));
+    logout().then(() => {
+      showToast({ message: tCommon('logoutSuccess'), variant: 'success' });
+      // Landing page, not /login — see AppLayout.handleLogout.
+      router.replace(`/${locale}`);
+    });
   }
 
   return (

@@ -13,9 +13,15 @@ import { PasswordField } from './PasswordField';
 
 interface LoginFormProps {
   onSuccess: () => void;
+  /**
+   * Supplied by hosts that render the reset form in place of this one (the
+   * login page). Omitted elsewhere, where "Forgot password?" stays a link to
+   * the standalone /forgot-password route.
+   */
+  onForgotPassword?: () => void;
 }
 
-export function LoginForm({ onSuccess }: LoginFormProps) {
+export function LoginForm({ onSuccess, onForgotPassword }: LoginFormProps) {
   const t = useTranslations('auth');
   const { login } = useAuth();
 
@@ -103,12 +109,25 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       />
 
       <div className="flex justify-end">
-        <Link
-          href="/forgot-password"
-          className="text-sm font-medium text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
-        >
-          {t('forgotPassword')}
-        </Link>
+        {/* When the host screen can swap the panel in place (the login page),
+            this stays on the same page. Without a handler it falls back to the
+            standalone route so other callers keep working. */}
+        {onForgotPassword ? (
+          <button
+            type="button"
+            onClick={onForgotPassword}
+            className="rounded text-sm font-medium text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+          >
+            {t('forgotPassword')}
+          </button>
+        ) : (
+          <Link
+            href="/forgot-password"
+            className="text-sm font-medium text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
+          >
+            {t('forgotPassword')}
+          </Link>
+        )}
       </div>
 
       <Button
