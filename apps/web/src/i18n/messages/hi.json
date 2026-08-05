@@ -1,5 +1,9 @@
 {
   "resume": {
+    "pageTitle": "[hi] Resume Builder",
+    "pageSubtitle": "[hi] Create a professional resume from your profile, then download it or send it to yourself.",
+    "loadingError": "[hi] We couldn't load your resume builder. Please try again.",
+    "retry": "[hi] Retry",
     "downloadPdf": "PDF डाउनलोड करें",
     "regenerate": "फिर से बनाएँ",
     "regeneratePrompt": "आपने अपनी रिज्यूमे सेटिंग्स बदलीं — डाउनलोड किए गए PDF पर लागू करने के लिए रिज्यूमे फिर से बनाएँ।",
@@ -68,6 +72,25 @@
       "retry": "फिर से प्रयास करें",
       "timeoutTitle": "अपेक्षा से अधिक समय लग रहा है",
       "timeoutBody": "आपका रिज्यूमे अभी तैयार हो रहा है। कृपया कुछ देर में फिर से प्रयास करें।"
+    },
+    "templates": {
+      "title": "[hi] Choose a template",
+      "subtitle": "[hi] Pick the look for your resume. Your details stay the same.",
+      "recommended": "[hi] Recommended",
+      "applyHint": "[hi] Changing the template applies the next time you generate your resume.",
+      "saveError": "[hi] We couldn't save that template. Please try again.",
+      "names": {
+        "CLASSIC": "[hi] Classic",
+        "MODERN": "[hi] Modern",
+        "COMPACT": "[hi] Compact",
+        "MINIMAL": "[hi] Minimal"
+      },
+      "descriptions": {
+        "CLASSIC": "[hi] Traditional and formal. A safe choice for Gulf employers.",
+        "MODERN": "[hi] Clean and spacious. Works well for most candidates.",
+        "COMPACT": "[hi] Two columns. Fits more experience on one page.",
+        "MINIMAL": "[hi] Plain and simple. Easiest for hiring software to read."
+      }
     }
   },
   "common": {
@@ -109,6 +132,9 @@
     "jobs": "[hi] Jobs",
     "applications": "[hi] Applications",
     "notifications": "[hi] Notifications",
+    "notificationsShort": "[hi] Alerts",
+    "resumeBuilder": "[hi] Resume Builder",
+    "resumeBuilderShort": "[hi] Resume",
     "settings": "[hi] Settings",
     "logout": "[hi] Log out",
     "login": "[hi] Log in"

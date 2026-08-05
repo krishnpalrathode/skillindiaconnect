@@ -5,11 +5,11 @@ type ResumeSettings = components['schemas']['ResumeSettings'];
 type ResumeGeneration = components['schemas']['ResumeGeneration'];
 type ResumeDeliveryResult = components['schemas']['ResumeDeliveryResult'];
 
-/** The editable subset of `ResumeSettings` (S7-F2 toggles + language). */
+/** The editable subset of `ResumeSettings` (S7-F2 toggles + language + CR-001 template). */
 export type ResumeSettingsPatch = Partial<
   Pick<
     ResumeSettings,
-    'language' | 'showPhone' | 'showReligion' | 'showFatherName' | 'showPassportNumber'
+    'language' | 'showPhone' | 'showReligion' | 'showFatherName' | 'showPassportNumber' | 'template'
   >
 >;
 

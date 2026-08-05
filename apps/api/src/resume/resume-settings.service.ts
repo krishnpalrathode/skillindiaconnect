@@ -57,12 +57,23 @@ export class ResumeSettingsService {
         ...(dto.showPassportNumber !== undefined && {
           showPassportNumber: dto.showPassportNumber,
         }),
+        ...(dto.template !== undefined && { template: dto.template }),
       },
     });
     return toSettings(updated);
   }
 }
 
+/**
+ * CandidateResume row → ResumeRenderSettings.
+ *
+ * THE single mapping. This was previously hand-rolled in three places (here,
+ * ResumeService.getResumeOverview and ResumeService.generate), which is exactly
+ * the shape where a newly-added field reaches two of them and the third quietly
+ * reports something stale — a settings read and the snapshot that actually
+ * renders disagreeing is the worst possible version of that bug. All three now
+ * call this.
+ */
 export function toSettings(row: CandidateResume): ResumeRenderSettings {
   return {
     language: row.language || RESUME_SETTINGS_DEFAULTS.language,
@@ -70,5 +81,6 @@ export function toSettings(row: CandidateResume): ResumeRenderSettings {
     showReligion: row.showReligion,
     showFatherName: row.showFatherName,
     showPassportNumber: row.showPassportNumber,
+    template: row.template,
   };
 }

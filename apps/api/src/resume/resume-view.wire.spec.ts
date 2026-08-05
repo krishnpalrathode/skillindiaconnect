@@ -7,6 +7,7 @@
  * the preview screen renders, and `photoDataUri` (kilobytes of base64) must
  * not travel at all.
  */
+import { ResumeTemplate } from '@prisma/client';
 import { ResumeSource } from '../candidate/candidate-read.service';
 import { RESUME_SETTINGS_DEFAULTS, toResumeView } from './resume-view.mapper';
 import { toStoredResumeView, toWireResumeView } from './resume-view.wire';
@@ -59,7 +60,7 @@ function roundTrip(settings: Parameters<typeof toResumeView>[1]) {
 describe('stored → wire resume view', () => {
   it('ALL TOGGLES ON: every opt-in field survives the round trip', () => {
     const { wire } = roundTrip({
-      language: 'en',
+      ...RESUME_SETTINGS_DEFAULTS,
       showPhone: true,
       showReligion: true,
       showFatherName: true,
@@ -86,7 +87,7 @@ describe('stored → wire resume view', () => {
 
   it('ALL TOGGLES OFF: none of the four values appears anywhere in the payload', () => {
     const { wire } = roundTrip({
-      language: 'en',
+      ...RESUME_SETTINGS_DEFAULTS,
       showPhone: false,
       showReligion: false,
       showFatherName: false,
@@ -114,18 +115,23 @@ describe('stored → wire resume view', () => {
 
   it('settingsApplied states exactly what rendered — the snapshot, not live settings', () => {
     const { wire } = roundTrip({
-      language: 'en',
+      ...RESUME_SETTINGS_DEFAULTS,
       showPhone: false,
       showReligion: false,
       showFatherName: false,
       showPassportNumber: true,
     });
+    // Exhaustive on purpose: toEqual fails if a NEW setting starts crossing the
+    // wire without anyone deciding it should. `template` is listed because it
+    // is a resume setting and the client needs it to show the current choice —
+    // it says how the PDF LOOKS, never what it contains.
     expect(wire.settingsApplied).toEqual({
       language: 'en',
       showPhone: false,
       showReligion: false,
       showFatherName: false,
       showPassportNumber: true,
+      template: ResumeTemplate.CLASSIC,
     });
   });
 });

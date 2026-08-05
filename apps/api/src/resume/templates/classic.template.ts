@@ -1,9 +1,21 @@
 import { ResumeViewDto } from '../resume-view.mapper';
+import {
+  contactParts,
+  documentLabel,
+  durationLabel,
+  esc,
+  factRows,
+  pageFrame,
+  safePhotoSrc,
+} from './shared';
 
 /**
- * The English resume template (S7-B1) — print-oriented A4, semantic HTML.
+ * CLASSIC (S7-B1, renamed in B2) — traditional single column, conservative
+ * type, clear section rules. The safe choice for formal Gulf employer
+ * submissions, and the DEFAULT: it is the template every existing resume was
+ * rendered with, so its output must not drift.
  *
- * Hard rules:
+ * Hard rules, shared by every template in this directory:
  * - EVERYTHING is inline: styles in a <style> block, the photo as a data URI
  *   supplied by the render service. Chromium never fetches anything at render
  *   time — nothing can hang the load and nothing leaves the machine.
@@ -17,47 +29,11 @@ import { ResumeViewDto } from '../resume-view.mapper';
  * - The Video Portfolio section renders only when a video exists (Phase 2;
  *   absent at MVP, not an empty placeholder).
  */
-function esc(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function contactLine(view: ResumeViewDto): string {
-  const parts: string[] = [esc(view.email)];
-  if (view.phone) parts.push(esc(view.phone));
-  if (view.currentLocation) parts.push(esc(view.currentLocation));
-  return parts.join(' &middot; ');
-}
-
-function factRows(view: ResumeViewDto): string {
-  const rows: Array<[string, string]> = [];
-  if (view.fatherName) rows.push(["Father's name", view.fatherName]);
-  if (view.dob) rows.push(['Date of birth', view.dob]);
-  if (view.nationality) rows.push(['Nationality', view.nationality]);
-  if (view.maritalStatus) rows.push(['Marital status', view.maritalStatus]);
-  if (view.religion) rows.push(['Religion', view.religion]);
-  if (view.languages.length > 0) rows.push(['Languages', view.languages.join(', ')]);
-  if (view.passportNumber) rows.push(['Passport number', view.passportNumber]);
-  return rows
-    .map(
-      ([label, value]) =>
-        `<tr><th scope="row">${esc(label)}</th><td>${esc(value)}</td></tr>`,
-    )
-    .join('\n');
-}
-
-function experienceItems(view: ResumeViewDto): string {
+function experienceSection(view: ResumeViewDto): string {
   if (view.experiences.length === 0) return '';
   const items = view.experiences
     .map((e) => {
-      const duration =
-        e.years > 0 || e.months > 0
-          ? `${e.years > 0 ? `${e.years} yr` : ''}${e.years > 0 && e.months > 0 ? ' ' : ''}${e.months > 0 ? `${e.months} mo` : ''}`
-          : '';
+      const duration = durationLabel(e.years, e.months);
       return `<li>
         <p class="role">${esc(e.role)} <span class="co">— ${esc(e.companyName)}</span></p>
         <p class="meta">${esc(e.country)}${duration ? ` &middot; ${esc(duration)}` : ''}${
@@ -82,19 +58,11 @@ function skillsSection(view: ResumeViewDto): string {
 
 function documentsSection(view: ResumeViewDto): string {
   if (view.documents.length === 0) return '';
-  const label = (t: string): string =>
-    t === 'PASSPORT'
-      ? 'Passport'
-      : t === 'EXPERIENCE_CERT'
-        ? 'Experience certificate'
-        : t === 'EDUCATIONAL_CERT'
-          ? 'Educational certificate'
-          : t;
   const items = view.documents
     .map((d) => {
       const validity =
         d.passportValid === undefined ? '' : d.passportValid ? ' (valid)' : ' (expired)';
-      return `<li>${esc(label(d.type))}${validity}</li>`;
+      return `<li>${esc(documentLabel(d.type))}${validity}</li>`;
     })
     .join('\n');
   return `<section>
@@ -103,30 +71,21 @@ function documentsSection(view: ResumeViewDto): string {
   </section>`;
 }
 
-export function renderResumeHtml(view: ResumeViewDto): string {
-  // SEC-004 (S8-H2): the photo data-URI is the ONE value that lands in an
-  // ATTRIBUTE rather than in text, and it was interpolated raw. A URI
-  // containing a double-quote closes src="" and the rest becomes attributes —
-  // e.g. `data:image/png" onload="alert(1)` yields a live onload handler
-  // executing inside the Chromium render context.
-  //
-  // Not reachable at MVP: photoDataUri is built server-side as
-  // `data:${mime};base64,…` from an R2 fetch, and no endpoint ships that lets a
-  // candidate set their photo (so `mime` is not attacker-controlled today).
-  // It is a landmine rather than a live hole — and the guard belongs here
-  // regardless, because the moment a photo-upload route lands, the upstream
-  // `contentType.startsWith('image/')` check would happily pass
-  // `image/png" onload="…`.
-  //
-  // Two independent guards, since either alone would do but both are cheap:
-  //   1. shape-validate that it really is a data: image URI, and
-  //   2. esc() it, so a quote can never terminate the attribute.
-  const safePhotoUri =
-    view.photoDataUri && /^data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]*$/.test(view.photoDataUri)
-      ? view.photoDataUri
-      : null;
-  const photo = safePhotoUri ? `<img class="photo" src="${esc(safePhotoUri)}" alt="" />` : '';
-  // Phase 2 (B6): a video section renders here ONLY when a video exists.
+function personalSection(view: ResumeViewDto): string {
+  const rows = factRows(view);
+  if (rows.length === 0) return '';
+  const html = rows
+    .map(([label, value]) => `<tr><th scope="row">${esc(label)}</th><td>${esc(value)}</td></tr>`)
+    .join('\n');
+  return `<section>
+    <h2>Personal Details</h2>
+    <table class="facts">${html}</table>
+  </section>`;
+}
+
+export function renderClassic(view: ResumeViewDto): string {
+  const src = safePhotoSrc(view);
+  const photo = src ? `<img class="photo" src="${src}" alt="" />` : '';
   const video = view.hasVideo
     ? `<section><h2>Video Portfolio</h2><p>A video introduction is available on SkillIndiaConnect.</p></section>`
     : '';
@@ -136,8 +95,7 @@ export function renderResumeHtml(view: ResumeViewDto): string {
 <head>
 <meta charset="utf-8" />
 <style>
-  @page { size: A4; margin: 16mm 14mm; }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  ${pageFrame('16mm 14mm')}
   body {
     font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-size: 10.5pt; color: #1a202c; line-height: 1.45;
@@ -167,16 +125,12 @@ export function renderResumeHtml(view: ResumeViewDto): string {
     <div>
       <h1>${esc(view.fullName)}</h1>
       ${view.jobCategory ? `<p class="headline">${esc(view.jobCategory)}</p>` : ''}
-      <p class="contact">${contactLine(view)}</p>
+      <p class="contact">${contactParts(view).map(esc).join(' &middot; ')}</p>
     </div>
   </header>
 
-  <section>
-    <h2>Personal Details</h2>
-    <table class="facts">${factRows(view)}</table>
-  </section>
-
-  ${experienceItems(view)}
+  ${personalSection(view)}
+  ${experienceSection(view)}
   ${skillsSection(view)}
   ${documentsSection(view)}
   ${video}

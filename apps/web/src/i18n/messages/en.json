@@ -1,5 +1,28 @@
 {
   "resume": {
+    "pageTitle": "Resume Builder",
+    "pageSubtitle": "Create a professional resume from your profile, then download it or send it to yourself.",
+    "loadingError": "We couldn't load your resume builder. Please try again.",
+    "retry": "Retry",
+    "templates": {
+      "title": "Choose a template",
+      "subtitle": "Pick the look for your resume. Your details stay the same.",
+      "recommended": "Recommended",
+      "applyHint": "Changing the template applies the next time you generate your resume.",
+      "saveError": "We couldn't save that template. Please try again.",
+      "names": {
+        "CLASSIC": "Classic",
+        "MODERN": "Modern",
+        "COMPACT": "Compact",
+        "MINIMAL": "Minimal"
+      },
+      "descriptions": {
+        "CLASSIC": "Traditional and formal. A safe choice for Gulf employers.",
+        "MODERN": "Clean and spacious. Works well for most candidates.",
+        "COMPACT": "Two columns. Fits more experience on one page.",
+        "MINIMAL": "Plain and simple. Easiest for hiring software to read."
+      }
+    },
     "downloadPdf": "Download PDF",
     "regenerate": "Regenerate",
     "regeneratePrompt": "You changed your resume settings — regenerate your resume to apply them to the downloaded PDF.",
@@ -109,6 +132,9 @@
     "jobs": "Jobs",
     "applications": "Applications",
     "notifications": "Notifications",
+    "notificationsShort": "Alerts",
+    "resumeBuilder": "Resume Builder",
+    "resumeBuilderShort": "Resume",
     "settings": "Settings",
     "logout": "Log out",
     "login": "Log in"

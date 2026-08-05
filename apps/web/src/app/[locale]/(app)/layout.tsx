@@ -5,7 +5,16 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname, useParams } from 'next/navigation';
-import { User, Briefcase, FileText, Bell, Settings, LogOut, LayoutDashboard } from 'lucide-react';
+import {
+  User,
+  Briefcase,
+  FileText,
+  Bell,
+  Settings,
+  LogOut,
+  LayoutDashboard,
+  ScrollText,
+} from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLogoutConfirm } from '@/lib/auth/logout-confirm';
 import { Spinner } from '@/components/ui/spinner';
@@ -15,6 +24,19 @@ interface NavItemProps {
   href: string;
   icon: React.ReactNode;
   label: string;
+  /**
+   * Optional shorter label for the MOBILE bottom bar only.
+   *
+   * The bar went from 4 items to 5 (CR-001: Resume Builder is a core
+   * destination and displacing Notifications to make room would have traded one
+   * discoverability win for a regression). Five items on a 360px device leaves
+   * ~72px each — ample for a 44px touch target, but not for a 13-character word
+   * at 10px. The constraint is LABEL WIDTH, not tap area, so the fix is a
+   * shorter word on mobile rather than smaller text or a truncated one.
+   *
+   * The desktop sidebar always renders the full `label`.
+   */
+  shortLabel?: string;
   active?: boolean;
   disabled?: boolean;
 }
@@ -98,6 +120,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isDashboard = pathname.endsWith('/dashboard');
   const isProfile = pathname.includes('/profile');
   const isNotifications = pathname.includes('/notifications');
+  const isResume = pathname.includes('/resume');
 
   // Explicitly typed: nothing is `disabled` right now, so inference would drop
   // that property from the union and break the mobile nav's disabled branch —
@@ -116,6 +139,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       active: isProfile,
     },
     {
+      // CR-001: the resume builder is a first-class destination, not a step
+      // buried inside onboarding. Positioned immediately after Profile because
+      // the resume is built FROM the profile — to a candidate they are one
+      // task, and separating them in the nav would imply otherwise.
+      href: `/${locale}/resume`,
+      icon: <ScrollText className="size-5" aria-hidden="true" />,
+      label: t('resumeBuilder'),
+      shortLabel: t('resumeBuilderShort'),
+      active: isResume,
+    },
+    {
       href: `/${locale}/jobs`,
       icon: <Briefcase className="size-5" aria-hidden="true" />,
       label: t('jobs'),
@@ -125,6 +159,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       href: `/${locale}/notifications`,
       icon: <Bell className="size-5" aria-hidden="true" />,
       label: t('notifications'),
+      // "Notifications" is 13 characters and was already the tightest label in
+      // the bar at four items; at five it no longer fits on one line at 360px.
+      // Shortened on MOBILE ONLY — the sidebar still says Notifications.
+      shortLabel: t('notificationsShort'),
       active: isNotifications,
     },
     {
@@ -218,23 +256,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         className="lg:hidden fixed bottom-0 inset-x-0 z-10 flex items-center justify-around bg-white border-t border-neutral-200 h-16 px-2"
         aria-label="Main navigation"
       >
-        {navItems.slice(0, 4).map((item) =>
+        {navItems.slice(0, 5).map((item) =>
           item.disabled ? (
             <span
               key={item.href}
               // eslint-disable-next-line no-restricted-syntax -- DISABLED control — WCAG 1.4.3 explicitly exempts disabled UI, and darkening it would stop it reading as unavailable.
-              className="flex flex-col items-center gap-0.5 px-2 py-1 text-neutral-400 cursor-not-allowed select-none"
+              className="flex flex-1 min-w-0 flex-col items-center gap-0.5 px-1 py-1 text-neutral-400 cursor-not-allowed select-none"
             >
               <span className="size-5 opacity-50">{item.icon}</span>
-              <span className="text-[10px]">{item.label}</span>
+              <span className="max-w-full truncate text-[10px]">
+                {item.shortLabel ?? item.label}
+              </span>
             </span>
           ) : (
             <Link
               key={item.href}
               href={item.href}
+              // The accessible name stays the FULL label — a screen reader must
+              // announce "Resume Builder", never the abbreviated bar text.
+              aria-label={item.label}
               aria-current={item.active ? 'page' : undefined}
               className={cn(
-                'flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl min-h-[44px] justify-center transition-colors',
+                // flex-1 + min-w-0: five equal columns that cannot overflow the
+                // bar. At 360px that is ~72px each — comfortably past the 44px
+                // minimum target, with min-h-[44px] guaranteeing the vertical.
+                'flex flex-1 min-w-0 flex-col items-center gap-0.5 px-1 py-1 rounded-xl min-h-[44px] justify-center transition-colors',
                 'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
                 item.active
                   ? 'bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] text-white shadow-md shadow-[#0F3D91]/25'
@@ -242,7 +288,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               )}
             >
               {item.icon}
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span aria-hidden="true" className="max-w-full truncate text-[10px] font-medium">
+                {item.shortLabel ?? item.label}
+              </span>
             </Link>
           ),
         )}

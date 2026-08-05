@@ -1,4 +1,24 @@
+import { ResumeTemplate } from '@prisma/client';
 import { IsBoolean, IsIn, IsOptional } from 'class-validator';
+
+/**
+ * The templates the API ACCEPTS.
+ *
+ * B1 deliberately accepted only CLASSIC because it was the only template with a
+ * renderer. B2 ships MODERN, COMPACT and MINIMAL, so the list widens with them.
+ *
+ * THE RULE THIS LIST ENCODES: a value is accepted only once a renderer exists
+ * for it. Accepting one earlier would store a choice that silently renders as
+ * something else — exactly what `language` below refuses to do with hi/ar. If a
+ * fifth template is ever declared in the Prisma enum ahead of its renderer, it
+ * does NOT belong here until that renderer lands.
+ */
+export const ACCEPTED_RESUME_TEMPLATES: ResumeTemplate[] = [
+  ResumeTemplate.CLASSIC,
+  ResumeTemplate.MODERN,
+  ResumeTemplate.COMPACT,
+  ResumeTemplate.MINIMAL,
+];
 
 /**
  * PARTIAL ResumeSettings (S7-0). Every field optional — omitted toggles keep
@@ -30,4 +50,10 @@ export class UpdateResumeSettingsDto {
   @IsOptional()
   @IsBoolean()
   showPassportNumber?: boolean;
+
+  @IsOptional()
+  @IsIn(ACCEPTED_RESUME_TEMPLATES, {
+    message: 'That resume template is not available yet.',
+  })
+  template?: ResumeTemplate;
 }

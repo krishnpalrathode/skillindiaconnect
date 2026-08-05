@@ -12,7 +12,7 @@
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PDFParse } from 'pdf-parse';
-import { ResumeGenerationStatus } from '@prisma/client';
+import { ResumeGenerationStatus, ResumeTemplate } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { StorageService } from '../core/storage/storage.service';
 import { CandidateReadService, ResumeSource } from '../candidate/candidate-read.service';
@@ -24,7 +24,8 @@ import {
   ResumeRenderSettings,
   toResumeView,
 } from './resume-view.mapper';
-import { renderResumeHtml } from './templates/resume.template';
+import { renderClassic } from './templates/classic.template';
+import { TEMPLATE_REGISTRY, selectTemplate } from './templates/registry';
 import { ResumeRenderService } from './resume-render.service';
 import { ResumeRenderProcessor } from './resume-render.processor';
 import { RESUME_EVENTS } from './resume.events';
@@ -74,15 +75,18 @@ const source: ResumeSource = {
   ],
 };
 
+// Spread the defaults so a future setting added to ResumeRenderSettings does
+// not have to be added by hand at every fixture site; only what the test is
+// ABOUT is stated explicitly.
 const allOn: ResumeRenderSettings = {
-  language: 'en',
+  ...RESUME_SETTINGS_DEFAULTS,
   showPhone: true,
   showReligion: true,
   showFatherName: true,
   showPassportNumber: true,
 };
 const allOff: ResumeRenderSettings = {
-  language: 'en',
+  ...RESUME_SETTINGS_DEFAULTS,
   showPhone: false,
   showReligion: false,
   showFatherName: false,
@@ -109,47 +113,103 @@ async function extractText(buffer: Buffer): Promise<string> {
   }
 }
 
+/** Renders through the REGISTRY, so the template under test is the real one. */
 async function renderToText(settings: ResumeRenderSettings): Promise<string> {
   const view = toResumeView(source, settings, null);
-  const buffer = await pool.render(renderResumeHtml(view));
+  const buffer = await pool.render(selectTemplate(settings.template)(view));
   return extractText(buffer);
 }
 
-describe('settings-driven omission — IN THE PDF BYTES', () => {
-  it('all toggles ON → passport number, religion, phone, father name are all PRESENT in the extracted text', async () => {
-    const text = await renderToText(allOn);
-    expect(text).toContain(PASSPORT_NUMBER);
-    expect(text).toContain(RELIGION);
-    expect(text).toContain(PHONE);
-    expect(text).toContain(FATHER_NAME);
-    // Sanity: the unconditional content rendered too.
-    expect(text).toContain('Suresh Kumar');
-    expect(text).toContain('Gulf Wiring LLC');
-  });
+/**
+ * Every registered template, so B2 inherits the privacy gate automatically:
+ * registering a renderer enrols it here with no test edit.
+ */
+const REGISTERED_TEMPLATES = Object.keys(TEMPLATE_REGISTRY) as ResumeTemplate[];
 
-  it('all toggles OFF → each value is ABSENT FROM THE BYTES (not merely hidden)', async () => {
-    const text = await renderToText(allOff);
-    expect(text).not.toContain(PASSPORT_NUMBER);
-    expect(text).not.toContain(RELIGION);
-    expect(text).not.toContain(PHONE);
-    expect(text).not.toContain(FATHER_NAME);
-    // The labels vanish with the values — no empty "Passport number:" row.
+it('the byte-level gate below covers EVERY declared template', () => {
+  // Without this, a registry that silently lost an entry would leave the loop
+  // green while proving nothing about the missing template — the failure mode
+  // of a parameterised suite is that it quietly shrinks.
+  expect(REGISTERED_TEMPLATES.sort()).toEqual(Object.values(ResumeTemplate).sort());
+});
+
+// ── THE BLOCKING PRIVACY GATE, PER TEMPLATE ─────────────────────────────────
+// Values only. Field LABELS are a template's own design decision (B2's
+// templates are free to word them differently), but no template may ever emit
+// a VALUE the mapper withheld. That rule is universal, so it is asserted for
+// every template; the CLASSIC-specific label expectations live below.
+describe.each(REGISTERED_TEMPLATES)(
+  'settings-driven omission — IN THE PDF BYTES [%s]',
+  (template) => {
+    const on: ResumeRenderSettings = { ...allOn, template };
+    const off: ResumeRenderSettings = { ...allOff, template };
+
+    it('all toggles ON → passport number, religion, phone, father name are all PRESENT', async () => {
+      const text = await renderToText(on);
+      expect(text).toContain(PASSPORT_NUMBER);
+      expect(text).toContain(RELIGION);
+      expect(text).toContain(PHONE);
+      expect(text).toContain(FATHER_NAME);
+      // Sanity: the unconditional content rendered too.
+      expect(text).toContain('Suresh Kumar');
+      expect(text).toContain('Gulf Wiring LLC');
+    });
+
+    it('all toggles OFF → each value is ABSENT FROM THE BYTES (not merely hidden)', async () => {
+      const text = await renderToText(off);
+      expect(text).not.toContain(PASSPORT_NUMBER);
+      expect(text).not.toContain(RELIGION);
+      expect(text).not.toContain(PHONE);
+      expect(text).not.toContain(FATHER_NAME);
+      // The resume is still a resume.
+      expect(text).toContain('Suresh Kumar');
+      expect(text).toContain('suresh@example.com');
+    });
+
+    it('each toggle omits ONLY its own field (the passport-number case)', async () => {
+      const text = await renderToText({ ...on, showPassportNumber: false });
+      expect(text).not.toContain(PASSPORT_NUMBER);
+      expect(text).toContain(RELIGION);
+      expect(text).toContain(PHONE);
+      expect(text).toContain(FATHER_NAME);
+    });
+
+    it('renders a SPARSE profile without breaking', async () => {
+      // Many of our candidates' profiles are sparse — this is the common case,
+      // not an edge case.
+      const sparse: ResumeSource = {
+        ...source,
+        photoKey: null,
+        skills: [],
+        languages: [],
+        experiences: [source.experiences[0]!],
+        documents: [],
+      };
+      const view = toResumeView(sparse, on, null);
+      const text = await extractText(await pool.render(selectTemplate(template)(view)));
+      expect(text).toContain('Suresh Kumar');
+      // No video → the section must be absent, never an empty placeholder.
+      expect(text).not.toContain('Video Portfolio');
+    });
+  },
+);
+
+describe('CLASSIC label discipline (template-specific)', () => {
+  it('omits the LABEL along with the value — no empty "Passport number:" row', async () => {
+    const text = await renderToText({ ...allOff, template: ResumeTemplate.CLASSIC });
     expect(text).not.toContain('Passport number');
     expect(text).not.toContain('Religion');
     expect(text).not.toContain("Father's name");
-    // The resume is still a resume.
-    expect(text).toContain('Suresh Kumar');
-    expect(text).toContain('suresh@example.com');
   });
 
-  it('each toggle omits ONLY its own field (passport-number case, the one that matters most)', async () => {
-    const text = await renderToText({ ...allOn, showPassportNumber: false });
-    expect(text).not.toContain(PASSPORT_NUMBER);
-    expect(text).toContain(RELIGION);
-    expect(text).toContain(PHONE);
-    expect(text).toContain(FATHER_NAME);
-    // The documents SUMMARY still lists the passport (validity, no number).
+  it('still lists the passport in the documents summary (validity, no number)', async () => {
+    const text = await renderToText({
+      ...allOn,
+      showPassportNumber: false,
+      template: ResumeTemplate.CLASSIC,
+    });
     expect(text).toContain('Passport');
+    expect(text).not.toContain(PASSPORT_NUMBER);
   });
 });
 
@@ -173,7 +233,7 @@ describe('toResumeView (the chokepoint, object level)', () => {
   });
 
   it('no video → the video section is ABSENT from the HTML (not an empty placeholder)', () => {
-    const html = renderResumeHtml(toResumeView(source, allOn, null));
+    const html = renderClassic(toResumeView(source, allOn, null));
     expect(html).not.toContain('Video Portfolio');
   });
 
@@ -187,7 +247,7 @@ describe('toResumeView (the chokepoint, object level)', () => {
         currentLocation: `"><svg/onload=alert(2)>`,
         nationality: `</table><h1>INJECTED`,
       };
-      const html = renderResumeHtml(toResumeView(hostile, allOn, null));
+      const html = renderClassic(toResumeView(hostile, allOn, null));
 
       for (const live of ['<script>', '<img src=x', '<svg/onload', '</table><h1>']) {
         expect({ marker: live, present: html.includes(live) }).toEqual({ marker: live, present: false });
@@ -202,7 +262,7 @@ describe('toResumeView (the chokepoint, object level)', () => {
       // The photo data-URI is the one value landing in an attribute rather than
       // in text. A quote in it would close src="" and turn the remainder into
       // attributes — a live event handler inside the Chromium render context.
-      const html = renderResumeHtml(
+      const html = renderClassic(
         toResumeView(source, allOn, `data:image/png" onload="alert(1)`),
       );
       expect(/<img[^>]*\sonload=/i.test(html)).toBe(false);
@@ -210,7 +270,7 @@ describe('toResumeView (the chokepoint, object level)', () => {
 
     it('still renders a well-formed photo when the data-URI is legitimate', () => {
       const good = 'data:image/png;base64,iVBORw0KGgo=';
-      const html = renderResumeHtml(toResumeView(source, allOn, good));
+      const html = renderClassic(toResumeView(source, allOn, good));
       expect(html).toContain(`src="${good}"`);
     });
   });

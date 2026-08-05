@@ -1,8 +1,16 @@
+import { ResumeTemplate } from '@prisma/client';
 import { ResumeSource } from '../candidate/candidate-read.service';
 
 /**
  * Resume settings as they drive rendering (the CandidateResume columns /
  * the S7-0 `ResumeSettings` schema).
+ *
+ * `template` (CR-001 B1) is the odd one out: every other field here decides
+ * WHAT the PDF contains, and is applied by the mapper below. `template` decides
+ * how it LOOKS and is applied by the registry AFTER the mapper has already run.
+ * It rides in this interface because it is a resume setting with the same
+ * apply-at-generation semantics — not because the mapper consults it. It does
+ * not, and must not.
  */
 export interface ResumeRenderSettings {
   language: string;
@@ -10,6 +18,7 @@ export interface ResumeRenderSettings {
   showReligion: boolean;
   showFatherName: boolean;
   showPassportNumber: boolean;
+  template: ResumeTemplate;
 }
 
 /** The S7-0 `ResumeView` — exactly the field set the PDF renders. */
@@ -54,6 +63,7 @@ export const RESUME_SETTINGS_DEFAULTS: ResumeRenderSettings = {
   // S7-0 freeze: father's name shows by default.
   showFatherName: true,
   showPassportNumber: false,
+  template: ResumeTemplate.CLASSIC,
 };
 
 /**

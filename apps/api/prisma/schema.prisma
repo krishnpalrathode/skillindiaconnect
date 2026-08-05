@@ -388,6 +388,10 @@ model CandidateResume {
   showReligion       Boolean          @default(false)
   showFatherName     Boolean          @default(true)
   showPassportNumber Boolean          @default(false)
+  // CLASSIC, not MODERN: this is the template that has always rendered, and
+  // defaulting existing rows to a new look would silently change the appearance
+  // of resumes candidates have already sent to employers. MODERN is opt-in.
+  template           ResumeTemplate   @default(CLASSIC)
   publicSlug         String?          @unique
   visibility         ResumeVisibility @default(DISABLED)
   lastRenderHash     String?
@@ -430,6 +434,20 @@ enum ResumeGenerationStatus {
   PENDING
   READY
   FAILED
+}
+
+/// Which HTML template renders the resume PDF (CR-001 B1).
+///
+/// All four values are declared NOW so that B2 — which ships the MODERN,
+/// COMPACT and MINIMAL renderers — needs no enum migration. Declaring a value
+/// the API does not yet accept is deliberate and safe: the DTO and the OpenAPI
+/// enum are the gate, and they list only templates that actually exist, so a
+/// client cannot select one that would silently render as something else.
+enum ResumeTemplate {
+  CLASSIC
+  MODERN
+  COMPACT
+  MINIMAL
 }
 
 // ───────── EMPLOYER ─────────

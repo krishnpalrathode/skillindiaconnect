@@ -1,5 +1,9 @@
 {
   "resume": {
+    "pageTitle": "[ar] Resume Builder",
+    "pageSubtitle": "[ar] Create a professional resume from your profile, then download it or send it to yourself.",
+    "loadingError": "[ar] We couldn't load your resume builder. Please try again.",
+    "retry": "[ar] Retry",
     "downloadPdf": "تنزيل PDF",
     "regenerate": "إعادة الإنشاء",
     "regeneratePrompt": "لقد غيّرت إعدادات سيرتك الذاتية — أعد إنشاء سيرتك الذاتية لتطبيقها على ملف PDF المُنزَّل.",
@@ -68,6 +72,25 @@
       "retry": "حاول مرة أخرى",
       "timeoutTitle": "يستغرق وقتًا أطول من المتوقع",
       "timeoutBody": "لا تزال سيرتك الذاتية قيد الإعداد. يرجى المحاولة مرة أخرى بعد قليل."
+    },
+    "templates": {
+      "title": "[ar] Choose a template",
+      "subtitle": "[ar] Pick the look for your resume. Your details stay the same.",
+      "recommended": "[ar] Recommended",
+      "applyHint": "[ar] Changing the template applies the next time you generate your resume.",
+      "saveError": "[ar] We couldn't save that template. Please try again.",
+      "names": {
+        "CLASSIC": "[ar] Classic",
+        "MODERN": "[ar] Modern",
+        "COMPACT": "[ar] Compact",
+        "MINIMAL": "[ar] Minimal"
+      },
+      "descriptions": {
+        "CLASSIC": "[ar] Traditional and formal. A safe choice for Gulf employers.",
+        "MODERN": "[ar] Clean and spacious. Works well for most candidates.",
+        "COMPACT": "[ar] Two columns. Fits more experience on one page.",
+        "MINIMAL": "[ar] Plain and simple. Easiest for hiring software to read."
+      }
     }
   },
   "common": {
@@ -109,6 +132,9 @@
     "jobs": "[ar] Jobs",
     "applications": "[ar] Applications",
     "notifications": "[ar] Notifications",
+    "notificationsShort": "[ar] Alerts",
+    "resumeBuilder": "[ar] Resume Builder",
+    "resumeBuilderShort": "[ar] Resume",
     "settings": "[ar] Settings",
     "logout": "[ar] Log out",
     "login": "[ar] Log in"
