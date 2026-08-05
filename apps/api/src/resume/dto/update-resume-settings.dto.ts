@@ -2,14 +2,23 @@ import { ResumeTemplate } from '@prisma/client';
 import { IsBoolean, IsIn, IsOptional } from 'class-validator';
 
 /**
- * The templates the API ACCEPTS — deliberately narrower than the database enum.
+ * The templates the API ACCEPTS.
  *
- * `ResumeTemplate` declares all four so B2 needs no enum migration, but only
- * CLASSIC has a renderer today. Accepting MODERN here would store a value that
- * silently renders as CLASSIC, which is precisely what the `language` field
- * below refuses to do with hi/ar. B2 widens this list as it ships the renderers.
+ * B1 deliberately accepted only CLASSIC because it was the only template with a
+ * renderer. B2 ships MODERN, COMPACT and MINIMAL, so the list widens with them.
+ *
+ * THE RULE THIS LIST ENCODES: a value is accepted only once a renderer exists
+ * for it. Accepting one earlier would store a choice that silently renders as
+ * something else — exactly what `language` below refuses to do with hi/ar. If a
+ * fifth template is ever declared in the Prisma enum ahead of its renderer, it
+ * does NOT belong here until that renderer lands.
  */
-export const ACCEPTED_RESUME_TEMPLATES: ResumeTemplate[] = [ResumeTemplate.CLASSIC];
+export const ACCEPTED_RESUME_TEMPLATES: ResumeTemplate[] = [
+  ResumeTemplate.CLASSIC,
+  ResumeTemplate.MODERN,
+  ResumeTemplate.COMPACT,
+  ResumeTemplate.MINIMAL,
+];
 
 /**
  * PARTIAL ResumeSettings (S7-0). Every field optional — omitted toggles keep

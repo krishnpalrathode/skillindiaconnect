@@ -12,7 +12,7 @@ import {
   TEMPLATE_REGISTRY,
   selectTemplate,
 } from './registry';
-import { renderResumeHtml } from './resume.template';
+import { renderClassic } from './classic.template';
 
 describe('TEMPLATE_REGISTRY', () => {
   it('has an entry for EVERY declared ResumeTemplate value', () => {
@@ -25,7 +25,7 @@ describe('TEMPLATE_REGISTRY', () => {
   });
 
   it('resolves CLASSIC to the existing renderer', () => {
-    expect(selectTemplate(ResumeTemplate.CLASSIC)).toBe(renderResumeHtml);
+    expect(selectTemplate(ResumeTemplate.CLASSIC)).toBe(renderClassic);
   });
 
   it('defaults to CLASSIC', () => {

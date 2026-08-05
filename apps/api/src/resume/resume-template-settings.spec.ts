@@ -9,7 +9,11 @@
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 import { CandidateResume, ResumeTemplate } from '@prisma/client';
-import { UpdateResumeSettingsDto } from './dto/update-resume-settings.dto';
+import {
+  ACCEPTED_RESUME_TEMPLATES,
+  UpdateResumeSettingsDto,
+} from './dto/update-resume-settings.dto';
+import { TEMPLATE_REGISTRY } from './templates/registry';
 import { toSettings } from './resume-settings.service';
 import { RESUME_SETTINGS_DEFAULTS } from './resume-view.mapper';
 
@@ -76,18 +80,38 @@ describe('UpdateResumeSettingsDto — the honest-contract gate', () => {
   });
 
   it.each([ResumeTemplate.MODERN, ResumeTemplate.COMPACT, ResumeTemplate.MINIMAL])(
-    'REJECTS %s — declared in the DB enum but it has no renderer yet',
+    'accepts %s — B2 shipped its renderer',
     (template) => {
-      // The same rule `language` applies to hi/ar: accepting a value that would
-      // quietly render as something else is worse than refusing it. B2 widens
-      // this list as it ships the renderers.
-      const errors = validateDto({ template });
-      expect(errors).toHaveLength(1);
-      expect(errors[0]?.property).toBe('template');
+      expect(validateDto({ template })).toHaveLength(0);
     },
   );
 
   it('rejects an unknown string', () => {
     expect(validateDto({ template: 'HOLOGRAPHIC' })).toHaveLength(1);
+  });
+
+  /**
+   * THE DURABLE RULE, stated structurally rather than as a list.
+   *
+   * B1 asserted "MODERN is rejected", which was true then and became wrong the
+   * moment B2 shipped its renderer — a test that encodes a snapshot of the
+   * roadmap has to be rewritten every time the roadmap moves, and rewriting it
+   * is indistinguishable from deleting the guarantee.
+   *
+   * What actually matters is the INVARIANT the `language: enum [en]` precedent
+   * expresses: never accept a value that would quietly render as something
+   * else. That holds for any future template without an edit.
+   */
+  it('every ACCEPTED template has a real renderer behind it', () => {
+    for (const template of ACCEPTED_RESUME_TEMPLATES) {
+      expect(typeof TEMPLATE_REGISTRY[template]).toBe('function');
+    }
+  });
+
+  it('a template with no renderer could never be accepted', () => {
+    const registered = Object.keys(TEMPLATE_REGISTRY);
+    for (const template of ACCEPTED_RESUME_TEMPLATES) {
+      expect(registered).toContain(template);
+    }
   });
 });

@@ -623,19 +623,27 @@ components:
             not governed by this toggle — only the number itself is.
         template:
           type: string
-          enum: [CLASSIC]
+          enum: [CLASSIC, MODERN, COMPACT, MINIMAL]
           default: CLASSIC
           description: |
-            Which HTML template renders the PDF (CR-001 B1). Applied at
+            Which HTML template renders the PDF (CR-001 B1/B2). Applied at
             GENERATION time like every other setting — changing it does NOT
             alter an already-generated PDF; the candidate regenerates.
 
             **The enum lists only the templates that actually exist**, exactly
             as `language` above lists only `en`, and for the same reason: a
             client must not be able to request something that will not happen.
-            MODERN / COMPACT / MINIMAL are declared in the database enum but are
-            NOT accepted here until B2 ships their renderers, at which point
-            this enum widens with them.
+            B1 shipped this enum as `[CLASSIC]` alone; B2 widened it as it added
+            the three renderers. A future template belongs here only once its
+            renderer does.
+
+            - `CLASSIC` — traditional single column. The safe choice for formal
+              Gulf employer submissions, and the default.
+            - `MODERN` — clean single column with an accent colour and generous
+              whitespace. Recommended for most candidates.
+            - `COMPACT` — two columns; fits more experience on one page.
+            - `MINIMAL` — plain linear structure, no photo, the most
+              ATS-friendly.
 
             The template is a RENDERING choice, never a privacy one. Every
             template renders the same `ResumeView`, whose omissions are decided
@@ -3893,7 +3901,7 @@ paths:
                   # ResumeSettings.template description. This body carries
                   # additionalProperties: false, so the property must be listed
                   # explicitly to be accepted at all.
-                  enum: [CLASSIC]
+                  enum: [CLASSIC, MODERN, COMPACT, MINIMAL]
       responses:
         '200':
           description: Settings updated (the FULL resulting settings)

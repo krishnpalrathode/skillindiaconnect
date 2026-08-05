@@ -2841,16 +2841,24 @@ export interface components {
              */
             showPassportNumber: boolean;
             /**
-             * @description Which HTML template renders the PDF (CR-001 B1). Applied at
+             * @description Which HTML template renders the PDF (CR-001 B1/B2). Applied at
              *     GENERATION time like every other setting — changing it does NOT
              *     alter an already-generated PDF; the candidate regenerates.
              *
              *     **The enum lists only the templates that actually exist**, exactly
              *     as `language` above lists only `en`, and for the same reason: a
              *     client must not be able to request something that will not happen.
-             *     MODERN / COMPACT / MINIMAL are declared in the database enum but are
-             *     NOT accepted here until B2 ships their renderers, at which point
-             *     this enum widens with them.
+             *     B1 shipped this enum as `[CLASSIC]` alone; B2 widened it as it added
+             *     the three renderers. A future template belongs here only once its
+             *     renderer does.
+             *
+             *     - `CLASSIC` — traditional single column. The safe choice for formal
+             *       Gulf employer submissions, and the default.
+             *     - `MODERN` — clean single column with an accent colour and generous
+             *       whitespace. Recommended for most candidates.
+             *     - `COMPACT` — two columns; fits more experience on one page.
+             *     - `MINIMAL` — plain linear structure, no photo, the most
+             *       ATS-friendly.
              *
              *     The template is a RENDERING choice, never a privacy one. Every
              *     template renders the same `ResumeView`, whose omissions are decided
@@ -2863,7 +2871,7 @@ export interface components {
              * @default CLASSIC
              * @enum {string}
              */
-            template: "CLASSIC";
+            template: "CLASSIC" | "MODERN" | "COMPACT" | "MINIMAL";
         };
         /**
          * @description One asynchronous PDF generation (S7-0). Generation is WORKER-SIDE and
@@ -5264,7 +5272,7 @@ export interface operations {
                     showFatherName?: boolean;
                     showPassportNumber?: boolean;
                     /** @enum {string} */
-                    template?: "CLASSIC";
+                    template?: "CLASSIC" | "MODERN" | "COMPACT" | "MINIMAL";
                 };
             };
         };

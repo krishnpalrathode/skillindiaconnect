@@ -1,7 +1,10 @@
 import { Logger } from '@nestjs/common';
 import { ResumeTemplate } from '@prisma/client';
 import { ResumeViewDto } from '../resume-view.mapper';
-import { renderResumeHtml } from './resume.template';
+import { renderClassic } from './classic.template';
+import { renderModern } from './modern.template';
+import { renderCompact } from './compact.template';
+import { renderMinimal } from './minimal.template';
 
 /**
  * A template is a PURE function of the ResumeView and nothing else.
@@ -27,16 +30,16 @@ export const DEFAULT_TEMPLATE = ResumeTemplate.CLASSIC;
  * anything for it — a gap that would otherwise surface at runtime as a resume
  * silently rendered in the wrong template.
  *
- * MODERN / COMPACT / MINIMAL currently point at the CLASSIC renderer. That is
- * safe ONLY because the DTO and the OpenAPI enum refuse those values today, so
- * no candidate can select one; the moment B2 accepts them it also replaces
- * these three entries. Do not widen the API enum without replacing them.
+ * All four now have real renderers (B2), and the API enum widened with them —
+ * those two things must always move together. A value accepted by the DTO with
+ * no renderer of its own would silently render as something else, which is the
+ * failure the `language: enum [en]` precedent exists to prevent.
  */
 export const TEMPLATE_REGISTRY: Record<ResumeTemplate, TemplateRenderer> = {
-  [ResumeTemplate.CLASSIC]: renderResumeHtml,
-  [ResumeTemplate.MODERN]: renderResumeHtml, // B2: replace with renderModern
-  [ResumeTemplate.COMPACT]: renderResumeHtml, // B2: replace with renderCompact
-  [ResumeTemplate.MINIMAL]: renderResumeHtml, // B2: replace with renderMinimal
+  [ResumeTemplate.CLASSIC]: renderClassic,
+  [ResumeTemplate.MODERN]: renderModern,
+  [ResumeTemplate.COMPACT]: renderCompact,
+  [ResumeTemplate.MINIMAL]: renderMinimal,
 };
 
 const logger = new Logger('TemplateRegistry');

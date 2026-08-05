@@ -24,7 +24,7 @@ import {
   ResumeRenderSettings,
   toResumeView,
 } from './resume-view.mapper';
-import { renderResumeHtml } from './templates/resume.template';
+import { renderClassic } from './templates/classic.template';
 import { TEMPLATE_REGISTRY, selectTemplate } from './templates/registry';
 import { ResumeRenderService } from './resume-render.service';
 import { ResumeRenderProcessor } from './resume-render.processor';
@@ -233,7 +233,7 @@ describe('toResumeView (the chokepoint, object level)', () => {
   });
 
   it('no video → the video section is ABSENT from the HTML (not an empty placeholder)', () => {
-    const html = renderResumeHtml(toResumeView(source, allOn, null));
+    const html = renderClassic(toResumeView(source, allOn, null));
     expect(html).not.toContain('Video Portfolio');
   });
 
@@ -247,7 +247,7 @@ describe('toResumeView (the chokepoint, object level)', () => {
         currentLocation: `"><svg/onload=alert(2)>`,
         nationality: `</table><h1>INJECTED`,
       };
-      const html = renderResumeHtml(toResumeView(hostile, allOn, null));
+      const html = renderClassic(toResumeView(hostile, allOn, null));
 
       for (const live of ['<script>', '<img src=x', '<svg/onload', '</table><h1>']) {
         expect({ marker: live, present: html.includes(live) }).toEqual({ marker: live, present: false });
@@ -262,7 +262,7 @@ describe('toResumeView (the chokepoint, object level)', () => {
       // The photo data-URI is the one value landing in an attribute rather than
       // in text. A quote in it would close src="" and turn the remainder into
       // attributes — a live event handler inside the Chromium render context.
-      const html = renderResumeHtml(
+      const html = renderClassic(
         toResumeView(source, allOn, `data:image/png" onload="alert(1)`),
       );
       expect(/<img[^>]*\sonload=/i.test(html)).toBe(false);
@@ -270,7 +270,7 @@ describe('toResumeView (the chokepoint, object level)', () => {
 
     it('still renders a well-formed photo when the data-URI is legitimate', () => {
       const good = 'data:image/png;base64,iVBORw0KGgo=';
-      const html = renderResumeHtml(toResumeView(source, allOn, good));
+      const html = renderClassic(toResumeView(source, allOn, good));
       expect(html).toContain(`src="${good}"`);
     });
   });
