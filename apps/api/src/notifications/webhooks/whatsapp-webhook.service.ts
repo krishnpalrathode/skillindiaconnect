@@ -78,6 +78,11 @@ export class WhatsappWebhookService {
    */
   verifyHandshake(mode: unknown, token: unknown, challenge: unknown): string | null {
     const expected = this.config.get<string>('WHATSAPP_VERIFY_TOKEN');
+
+    // ═══ TEMPORARY DEBUG — DELETE THIS LINE AND logHandshakeDebug() BELOW ═════
+    this.logHandshakeDebug(mode, token, expected);
+    // ═════════════════════════════════════════════════════════════════════════
+
     if (!expected) {
       this.logger.error('WHATSAPP_VERIFY_TOKEN is not set — refusing the subscription handshake');
       return null;
@@ -91,6 +96,66 @@ export class WhatsappWebhookService {
     }
     return challenge;
   }
+
+  /**
+   * ═══ TEMPORARY DEBUG — REMOVE ONCE THE HANDSHAKE VERIFIES ═══════════════════
+   *
+   * Logs ONLY. It computes nothing the caller uses and changes no behaviour:
+   * `verifyHandshake` above is byte-for-byte the logic it always was, and the
+   * existing handshake tests still pass unchanged, which is what proves that.
+   *
+   * Fires ONLY on the GET verification path — `verifyHandshake` has exactly one
+   * caller (the GET handler). The POST status path is untouched, so this cannot
+   * add log volume under Meta's callback traffic.
+   *
+   * ⚠️ WHY THE RECEIVED TOKEN IS LOGGED ONLY ON A MISMATCH.
+   *
+   * "Log the received token but never the configured one" cannot hold on the
+   * success path: when they match they are THE SAME STRING, so logging the
+   * received value would put the live shared secret into Render's log stream —
+   * a place it is not redacted, is retained, and is readable by anyone with
+   * dashboard access. `tokens` are named explicitly in this repo's no-secrets-
+   * in-logs rule (CLAUDE.md).
+   *
+   * On a MISMATCH the received value is by definition not the working secret,
+   * and seeing it is the entire point of the exercise — so it is logged there,
+   * JSON-escaped so an invisible `\n` or trailing space is actually visible.
+   *
+   * `matchesAfterTrim` is the field most likely to end this: a newline pasted
+   * into either the Render env var or the Meta dashboard field is invisible in
+   * both UIs and fails verification with a generic error that reads like a wrong
+   * URL. If that field says `true`, the tokens are identical and the whitespace
+   * is the whole bug.
+   */
+  private logHandshakeDebug(mode: unknown, token: unknown, expected: string | undefined): void {
+    const received = typeof token === 'string' ? token : null;
+    const matched =
+      received !== null && expected !== undefined && constantTimeEquals(received, expected);
+
+    const parts = [
+      `mode=${JSON.stringify(mode)}`,
+      // Distinguishes "the env var is missing on this service" from "the tokens
+      // differ" — the two failures look identical from the Meta dashboard.
+      `configuredTokenPresent=${expected !== undefined && expected !== ''}`,
+      `receivedTokenPresent=${received !== null}`,
+      `tokenMatched=${matched}`,
+    ];
+
+    if (received !== null && expected !== undefined && !matched) {
+      parts.push(
+        `receivedLength=${received.length}`,
+        `configuredLength=${expected.length}`,
+        `matchesAfterTrim=${constantTimeEquals(received.trim(), expected.trim())}`,
+        `receivedHasSurroundingWhitespace=${received !== received.trim()}`,
+        `configuredHasSurroundingWhitespace=${expected !== expected.trim()}`,
+        // Mismatch only — see the note above.
+        `receivedToken=${JSON.stringify(received)}`,
+      );
+    }
+
+    this.logger.warn(`[TEMP DEBUG] WhatsApp handshake — ${parts.join(' ')}`);
+  }
+  // ═══ END TEMPORARY DEBUG ═══════════════════════════════════════════════════
 
   // ── Signature ─────────────────────────────────────────────────────────────
 
