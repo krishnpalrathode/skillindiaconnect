@@ -98,6 +98,32 @@ export const envSchema = z.object({
   // what made the Titan→Resend swap touch zero callers.
   EMAIL_FROM: z.preprocess((v) => (v === '' ? undefined : v), z.string().email().optional()),
 
+  // ── WhatsApp (Meta Cloud API) — CR-WA W1 ────────────────────────────────────
+  // WHATSAPP_PROVIDER selects the adapter; `mock` is the safe default and the
+  // ROLLBACK. Credentials are OPTIONAL at boot (a `mock` deploy needs none) and
+  // REQUIRED-AT-USE: MetaWhatsappChannel throws at construction if either is
+  // missing, so a `meta` deploy fails loudly rather than silently sending nothing.
+  //
+  // ⚠️ THESE ARE NEEDED ON *BOTH* SERVICES. The worker sends notifications, and
+  // the API sends login OTPs inline (the documented exception in
+  // worker-and-external-sends.md). Setting them on only one leaves the other
+  // silently on the mock — real notifications but no OTPs, or the reverse.
+  WHATSAPP_PROVIDER: z.enum(['meta', 'mock']).default('mock'),
+  WHATSAPP_ACCESS_TOKEN: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().min(1).optional(),
+  ),
+  WHATSAPP_PHONE_NUMBER_ID: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().min(1).optional(),
+  ),
+  // Pinned deliberately: Meta deprecates Graph versions on a schedule, and an
+  // unpinned version changes payload behaviour under you.
+  WHATSAPP_GRAPH_VERSION: z.string().min(1).default('v21.0'),
+  // An EXPLICIT timeout. The OTP send is on the auth request path, so an
+  // unbounded wait is a hung login, not just a slow job.
+  WHATSAPP_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
+
   // S7-B1: WORKER-only Chromium. OPTIONAL — when absent, puppeteer uses its
   // own downloaded Chrome (local dev). The alpine container sets it to the
   // apk-installed binary (/usr/bin/chromium-browser) because the image build

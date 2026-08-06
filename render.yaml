@@ -73,6 +73,19 @@ services:
         sync: false
       - key: RAZORPAY_WEBHOOK_SECRET
         sync: false
+      # WhatsApp (Meta Cloud API) — CR-WA W1. Required on BOTH services: the
+      # worker sends notifications, the API sends login OTPs inline (the
+      # documented exception in worker-and-external-sends.md). WHATSAPP_PROVIDER
+      # defaults to 'mock', so a missing var means nothing is ever sent and
+      # nothing errors — set it explicitly to 'meta' to go live.
+      - key: WHATSAPP_PROVIDER
+        value: mock
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_GRAPH_VERSION
+        value: v21.0
 
   # ── Worker (BullMQ consumers + cron; no HTTP listener) ─────────────────────
   - type: worker
@@ -123,6 +136,19 @@ services:
         sync: false
       - key: RAZORPAY_WEBHOOK_SECRET
         sync: false
+      # WhatsApp (Meta Cloud API) — CR-WA W1. Required on BOTH services: the
+      # worker sends notifications, the API sends login OTPs inline (the
+      # documented exception in worker-and-external-sends.md). WHATSAPP_PROVIDER
+      # defaults to 'mock', so a missing var means nothing is ever sent and
+      # nothing errors — set it explicitly to 'meta' to go live.
+      - key: WHATSAPP_PROVIDER
+        value: mock
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_GRAPH_VERSION
+        value: v21.0
       # CHROMIUM_EXECUTABLE_PATH is baked into the image (/usr/bin/chromium-browser)
       # for the worker's PDF rendering. Only override to move the binary.
       #

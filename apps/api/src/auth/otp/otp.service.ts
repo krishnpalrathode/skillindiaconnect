@@ -3,6 +3,7 @@ import {
   HttpStatus,
   Inject,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { createHash } from 'node:crypto';
@@ -10,7 +11,11 @@ import { DeliveryStatus, OtpChallenge, OtpPurpose, Prisma, WaMessageKind } from 
 import type { Redis } from 'ioredis';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { REDIS_CLIENT } from '../../core/redis/redis.provider';
-import { WHATSAPP_CHANNEL, WhatsappChannel } from '../../notifications/channels/whatsapp.channel';
+import {
+  WHATSAPP_CHANNEL,
+  WhatsappChannel,
+  WhatsappSendResult,
+} from '../../notifications/channels/whatsapp.channel';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -25,6 +30,8 @@ const SEND_WINDOW_S = 3600; // 1 hour in seconds
 
 @Injectable()
 export class OtpService {
+  private readonly logger = new Logger(OtpService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
@@ -62,7 +69,34 @@ export class OtpService {
       });
     });
 
-    const result = await this.whatsapp.sendOtp(phone, code, purpose as 'PHONE_VERIFY' | 'LOGIN');
+    /**
+     * DEFENSIVE CATCH (CR-WA W1) — a guarantee, not a request.
+     *
+     * The channel contract is that a send NEVER throws: every failure comes back
+     * as `ok:false` (see meta-whatsapp.channel.ts, which proves it across every
+     * rejection path). That contract is well-tested — but this is the AUTH PATH,
+     * and it is the one place where the OTP exception in
+     * worker-and-external-sends.md puts a single class's discipline between a
+     * user and their account. Elsewhere a thrown adapter error costs a retried
+     * background job; here it costs a 500 on the login screen, and a user who
+     * cannot get in has no workaround.
+     *
+     * So the guarantee lives here rather than resting on the adapter's good
+     * behaviour: a throw is folded into the SAME `ok:false` handling below, and
+     * the delivery row is written FAILED like any other failed send.
+     */
+    let result: WhatsappSendResult;
+    try {
+      result = await this.whatsapp.sendOtp(phone, code, purpose as 'PHONE_VERIFY' | 'LOGIN');
+    } catch (err) {
+      // No phone, no code — the redaction rule applies to logs.
+      this.logger.error(
+        'WhatsApp OTP adapter THREW, violating its no-throw contract; treating as a ' +
+          `failed send: ${err instanceof Error ? err.name : 'unknown error'}`,
+      );
+      result = { ok: false, errorCode: 'ADAPTER_THREW' };
+    }
+
     if (result.notOnWhatsapp) {
       return { sent: false, notOnWhatsapp: true };
     }
