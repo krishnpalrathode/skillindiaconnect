@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { formatDate } from '@/lib/format/date';
 import { CheckCircle2 } from 'lucide-react';
 
 interface WhatsAppReceiptProps {
@@ -17,11 +18,7 @@ interface WhatsAppReceiptProps {
  */
 export function WhatsAppReceipt({ notifiedAt, locale }: WhatsAppReceiptProps) {
   const t = useTranslations('applications.receipt');
-  const date = new Date(notifiedAt).toLocaleDateString(locale, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
+  const date = formatDate(notifiedAt, locale);
   return (
     <p className="flex items-center gap-1.5 text-xs font-medium text-success-fg">
       <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" />

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { formatDate } from '@/lib/format/date';
 import { Lock, Trash2 } from 'lucide-react';
 import { listNotes, addNote, deleteNote, type NoteEntry } from '@/lib/api/admin-applications';
 import { ApiRequestError } from '@/lib/api/client';
@@ -113,11 +114,7 @@ export function NotesPanel({ applicationId }: { applicationId: string }) {
                   <p className="text-xs text-neutral-600">
                     {t('byline', {
                       role: n.authorRole,
-                      date: new Date(n.createdAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      }),
+                      date: formatDate(n.createdAt),
                     })}
                   </p>
                   <p className="mt-0.5 whitespace-pre-line text-sm text-neutral-800">{n.body}</p>

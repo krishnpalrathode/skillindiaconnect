@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { formatDate } from '@/lib/format/date';
 import { ArrowLeft } from 'lucide-react';
 import {
   approveEmployer,
@@ -221,14 +222,7 @@ export function EmployerReviewPanel({ companyId }: { companyId: string }) {
             <Fact label={t('fact.location')} value={company.location} />
             <Fact label={t('fact.employeeRange')} value={company.employeeRange} />
             <Fact label={t('fact.website')} value={company.website} />
-            <Fact
-              label={t('fact.submitted')}
-              value={new Date(company.createdAt).toLocaleDateString('en-IN', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-              })}
-            />
+            <Fact label={t('fact.submitted')} value={formatDate(company.createdAt, locale)} />
           </dl>
           {company.description && (
             <div className="mt-4">

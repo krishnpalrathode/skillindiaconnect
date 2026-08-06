@@ -16,6 +16,7 @@ import { ForbiddenState } from '@/components/admin/ForbiddenState';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/format/date';
 import { CandidateStatusBadge, accountState } from './CandidateStatusBadge';
 import { daysUntil } from './DeletionStateBanner';
 
@@ -276,13 +277,7 @@ export function CandidateTable() {
                         )}
                       </div>
                     </td>
-                    <td className="p-3 text-neutral-600">
-                      {new Date(c.createdAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </td>
+                    <td className="p-3 text-neutral-600">{formatDate(c.createdAt, locale)}</td>
                     <td className="p-3 text-end">
                       {/* A tombstone has NO actions — nothing is left to do to it. */}
                       {!purged && (

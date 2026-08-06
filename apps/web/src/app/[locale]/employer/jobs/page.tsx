@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { MyJobsTable } from '@/components/employer/myjobs/MyJobsTable';
+import { EMPLOYER_PAGE_SHELL } from '@/lib/page-shell';
 
 export default function MyJobsPage() {
   const t = useTranslations('myjobs');
@@ -19,7 +20,7 @@ export default function MyJobsPage() {
   }, [published]);
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6">
+    <div className={EMPLOYER_PAGE_SHELL}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">

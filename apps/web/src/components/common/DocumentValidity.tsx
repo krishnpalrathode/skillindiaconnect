@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/format/date';
 
 interface DocumentValidityProps {
   expiryDate: string | null | undefined;
@@ -23,11 +24,7 @@ export function DocumentValidity({ expiryDate, className }: DocumentValidityProp
 
   const expiry = new Date(expiryDate);
   const isExpired = expiry < new Date();
-  const formatted = expiry.toLocaleDateString('en-IN', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  const formatted = formatDate(expiry);
 
   if (isExpired) {
     return (

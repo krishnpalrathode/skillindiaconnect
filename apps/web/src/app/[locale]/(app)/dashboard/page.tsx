@@ -22,6 +22,7 @@ import { MyApplicationsMini } from '@/components/dashboard/MyApplicationsMini';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import type { CandidateStats } from '@/lib/api/dashboard';
 import { homePathForRole } from '@/lib/auth/home-path';
+import { PAGE_SHELL } from '@/lib/page-shell';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type CompletionResult = components['schemas']['CompletionResult'];
@@ -140,7 +141,7 @@ export default function DashboardPage() {
   const { profile, completion, stats, unreadCount, recommendedJobs, profileViews } = data;
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:gap-7 lg:px-8 lg:py-8">
+    <div className={PAGE_SHELL}>
       <DashboardHeader
         name={profile.fullName ?? profile.email}
         photoUrl={profile.photoUrl}

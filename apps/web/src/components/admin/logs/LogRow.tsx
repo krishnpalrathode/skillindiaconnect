@@ -7,6 +7,7 @@ import type { AuditLogEntry } from '@/lib/api/admin-logs';
 import { Badge } from '@/components/ui/badge';
 import { LogMetaViewer } from './LogMetaViewer';
 import { cn } from '@/lib/utils';
+import { formatDateTime } from '@/lib/format/date';
 
 const STATUS_BADGE: Record<string, 'success' | 'error' | 'warning' | 'info' | 'neutral'> = {
   SUCCESS: 'success',
@@ -47,12 +48,7 @@ export function LogRow({ entry }: { entry: AuditLogEntry }) {
           </button>
         </td>
         <td className="whitespace-nowrap p-2 text-xs tabular-nums text-neutral-600">
-          {new Date(entry.createdAt).toLocaleString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
+          {formatDateTime(entry.createdAt)}
         </td>
         <td className="p-2">
           <Badge variant="neutral">{entry.module}</Badge>

@@ -5,6 +5,7 @@ import { JobDetail } from '@/components/jobs/JobDetail';
 import { getJobServer } from '@/lib/api/jobs';
 import { ServerApiError } from '@/lib/api/server-fetch';
 import { formatSalaryRange } from '@/lib/jobs/format';
+import { PAGE_SHELL } from '@/lib/page-shell';
 
 interface JobDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -48,7 +49,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className={PAGE_SHELL}>
       <JobDetail job={job} locale={locale} />
     </main>
   );

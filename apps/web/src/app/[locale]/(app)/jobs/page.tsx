@@ -4,6 +4,7 @@ import { JobSearchControls } from '@/components/jobs/JobSearchControls';
 import { JobFilters } from '@/components/jobs/JobFilters';
 import { JobList } from '@/components/jobs/JobList';
 import { searchJobsServer } from '@/lib/api/jobs';
+import { PAGE_SHELL } from '@/lib/page-shell';
 import {
   buildJobSearchQuery,
   parseJobSearchParams,
@@ -41,7 +42,7 @@ export default async function JobsPage({ params, searchParams }: JobsPageProps) 
   const queryKey = buildJobSearchQuery(filters) || 'default';
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className={PAGE_SHELL}>
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-neutral-900 sm:text-3xl">{t('pageTitle')}</h1>
         <p className="mt-1 text-sm text-neutral-600">{t('pageSubtitle')}</p>

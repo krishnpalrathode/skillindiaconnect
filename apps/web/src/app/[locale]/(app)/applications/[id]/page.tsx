@@ -14,6 +14,7 @@ import { STATUS_VARIANT } from '@/components/applications/ApplicationCard';
 import { WhatsAppReceipt } from '@/components/applications/WhatsAppReceipt';
 import { ApplicationTimeline } from '@/components/applications/ApplicationTimeline';
 import { RejectionCard } from '@/components/applications/RejectionCard';
+import { PAGE_SHELL } from '@/lib/page-shell';
 
 type ApplicationDetail = components['schemas']['ApplicationDetail'];
 
@@ -56,7 +57,7 @@ export default function ApplicationDetailPage() {
   );
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-5 px-4 py-6 sm:px-6">
+    <main className={PAGE_SHELL}>
       {backLink}
 
       {state === 'loading' && (

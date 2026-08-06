@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import type { components } from '@skillindiaconnect/shared-types';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/format/date';
 
 type ApplicationTimelineEntry = components['schemas']['ApplicationTimelineEntry'];
 
@@ -33,8 +34,7 @@ interface Step {
 export function ApplicationTimeline({ timeline, appliedAt, locale }: ApplicationTimelineProps) {
   const t = useTranslations('applications.timeline');
 
-  const fmt = (iso: string) =>
-    new Date(iso).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+  const fmt = (iso: string) => formatDate(iso, locale);
 
   const steps: Step[] = [
     { key: 'applied', label: t('applied'), date: fmt(appliedAt), isAdminOverride: false },

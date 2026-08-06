@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { formatDate } from '@/lib/format/date';
 import { AlertTriangle, MapPin, Users, Briefcase, Eye } from 'lucide-react';
 import { getAdminJob, pauseJob, archiveJob, type AdminJobDetail } from '@/lib/api/admin-jobs';
 import { ApiRequestError } from '@/lib/api/client';
@@ -274,13 +275,7 @@ export function JobReviewPanel({ jobId }: { jobId: string }) {
               </div>
               <div className="flex justify-between gap-2">
                 <dt className="text-neutral-600">{t('facts.submitted')}</dt>
-                <dd className="text-neutral-900">
-                  {new Date(job.createdAt).toLocaleDateString('en-IN', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })}
-                </dd>
+                <dd className="text-neutral-900">{formatDate(job.createdAt, locale)}</dd>
               </div>
               <div className="flex justify-between gap-2">
                 <dt className="text-neutral-600">{t('facts.applicants')}</dt>

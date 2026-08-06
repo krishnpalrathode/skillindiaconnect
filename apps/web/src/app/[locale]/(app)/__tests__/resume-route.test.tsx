@@ -32,6 +32,10 @@ import { render } from '../../../../test-utils';
 import { db, makeAccessToken } from '../../../../mocks/data';
 import { setAccessToken, resetClient } from '../../../../lib/api/client';
 import AppLayout from '../layout';
+// AppLayout's sign-out button reads useLogoutConfirm(), and that provider reads
+// useToast() — the real app supplies both from app/[locale]/layout.tsx. Supplied
+// here so the shell can be rendered in isolation; this file already mocks
+// next/navigation, which the provider needs.
 import { LogoutConfirmProvider } from '../../../../lib/auth/logout-confirm';
 import { ToastProvider } from '../../../../components/ui/toast';
 import ResumeBuilderPage from '../resume/page';

@@ -61,6 +61,11 @@ export function DocumentsSkillsStep({
   const hasPassport = (profile.documents ?? []).some((d) => d.type === 'PASSPORT');
   const hasSkills = (profile.skills?.length ?? 0) > 0;
 
+  // Passport expiry must be in the future — a back-dated (already-expired)
+  // passport can't be used to apply. YYYY-MM-DD strings compare chronologically.
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const passportExpiryIsPast = passportExpiry !== '' && passportExpiry < todayIso;
+
   const handleSkillsChange = (skills: CandidateSkill[]) => {
     onProfileUpdate({ ...profile, skills });
   };
@@ -168,11 +173,16 @@ export function DocumentsSkillsStep({
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <Field id="ds-passport-expiry" label={t('passportExpiryLabel')} required>
+            <Field
+              id="ds-passport-expiry"
+              label={t('passportExpiryLabel')}
+              required
+              error={passportExpiryIsPast ? t('passportExpiryPast') : undefined}
+            >
               <Input
                 type="date"
                 value={passportExpiry}
-                min={new Date().toISOString().slice(0, 10)}
+                min={todayIso}
                 onChange={(e) => setPassportExpiry(e.target.value)}
                 className="h-12 rounded-xl"
               />

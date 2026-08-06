@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { formatMonthYear } from '@/lib/format/date';
 import {
   MapPin,
   Calendar,
@@ -42,9 +43,7 @@ export function ProfileHero({ profile, completion }: ProfileHeroProps) {
   const [photoBusy, setPhotoBusy] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
 
-  const joinedDate = profile.createdAt
-    ? new Date(profile.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long' })
-    : null;
+  const joinedDate = profile.createdAt ? formatMonthYear(profile.createdAt) : null;
 
   /**
    * Download resume (S7). Reuse an already-READY render when one exists (instant,

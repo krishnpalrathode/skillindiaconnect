@@ -14,6 +14,7 @@ import { ContactPersonsSection } from '@/components/employer/profile/ContactPers
 import { CompanyDocumentsSection } from '@/components/employer/profile/CompanyDocumentsSection';
 import { AccountSettingsSection } from '@/components/employer/profile/AccountSettingsSection';
 import type { components } from '@skillindiaconnect/shared-types';
+import { EMPLOYER_PAGE_SHELL } from '@/lib/page-shell';
 
 type EmployerProfile = components['schemas']['EmployerProfile'];
 type Company = components['schemas']['Company'];
@@ -104,7 +105,7 @@ export default function EmployerProfilePage() {
   if (!profile) return null;
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6">
+    <div className={EMPLOYER_PAGE_SHELL}>
       <EmployerProfileHero profile={profile} onProfileUpdate={setProfile} />
 
       <CompanyInfoSection company={profile.company} onUpdated={handleCompanyUpdated} />

@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { formatMonthYear } from '@/lib/format/date';
 import { ArrowLeft, ShieldAlert } from 'lucide-react';
 import {
   getCandidate,
@@ -168,10 +169,7 @@ export function AdminCandidateProfile({ candidateId }: { candidateId: string }) 
               )}
               <span className="text-xs text-neutral-600">
                 {t('memberSince', {
-                  date: new Date(detail.createdAt).toLocaleDateString('en-IN', {
-                    month: 'short',
-                    year: 'numeric',
-                  }),
+                  date: formatMonthYear(detail.createdAt, locale),
                 })}
               </span>
             </div>

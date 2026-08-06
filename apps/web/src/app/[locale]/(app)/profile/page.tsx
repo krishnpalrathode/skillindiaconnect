@@ -16,6 +16,7 @@ import { getCandidateProfile, getCandidateCompletion } from '@/lib/api/candidate
 import { useAuth } from '@/lib/auth/auth-context';
 import { homePathForRole } from '@/lib/auth/home-path';
 import { ApiRequestError } from '@/lib/api/client';
+import { PAGE_SHELL } from '@/lib/page-shell';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type CompletionResult = components['schemas']['CompletionResult'];
@@ -95,7 +96,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 lg:py-8">
+    <div className={PAGE_SHELL}>
       <ProfileHero profile={profile} completion={completion} />
 
       <ProfileStats profile={profile} />

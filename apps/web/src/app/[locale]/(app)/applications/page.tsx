@@ -13,6 +13,7 @@ import { listMyApplications } from '@/lib/api/applications';
 import { ApplicationCard } from '@/components/applications/ApplicationCard';
 import { StatusFilterTabs, type StatusFilter } from '@/components/applications/StatusFilterTabs';
 import { cn } from '@/lib/utils';
+import { PAGE_SHELL } from '@/lib/page-shell';
 
 type ApplicationCardT = components['schemas']['ApplicationCard'];
 
@@ -87,7 +88,7 @@ export default function ApplicationsPage() {
   };
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6">
+    <main className={PAGE_SHELL}>
       <h1 className="text-xl font-bold text-neutral-900">{t('title')}</h1>
 
       <StatusFilterTabs value={status} onChange={onTab} />

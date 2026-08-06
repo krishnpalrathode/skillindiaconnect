@@ -2,15 +2,12 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import { formatDate as fmtDate } from '@/lib/format/date';
 import { Clock, Archive } from 'lucide-react';
 import type { AdminCandidateCard } from '@/lib/api/admin-candidates';
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
+  return fmtDate(iso);
 }
 
 /** Whole days until the ISO date, floored at 0 — display only, never computed into data. */
