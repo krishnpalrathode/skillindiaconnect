@@ -10,6 +10,7 @@ import type {
   WhatsappTemplateSend,
 } from './whatsapp.channel';
 import {
+  DEFAULT_TEMPLATE_LANGUAGE,
   META_OTP_TEMPLATE,
   assertTemplateMappingComplete,
   resolveMetaTemplate,
@@ -21,6 +22,8 @@ interface MetaConfig {
   phoneNumberId: string;
   graphVersion: string;
   timeoutMs: string | number;
+  /** Locale templates are requested in — see DEFAULT_TEMPLATE_LANGUAGE. */
+  templateLanguage: string;
 }
 
 /** Meta's error code for "this number is not on WhatsApp". */
@@ -74,7 +77,7 @@ export class MetaWhatsappChannel implements WhatsappChannel {
       type: 'template',
       template: {
         name: META_OTP_TEMPLATE.name,
-        language: { code: 'en' },
+        language: { code: this.languageFor(META_OTP_TEMPLATE) },
         components: [
           { type: 'body', parameters: [{ type: 'text', text: code }] },
           {
@@ -135,7 +138,7 @@ export class MetaWhatsappChannel implements WhatsappChannel {
       type: 'template',
       template: {
         name: template.name,
-        language: { code: 'en' },
+        language: { code: this.languageFor(template) },
         components: [
           ...(headerComponent ? [headerComponent] : []),
           {
@@ -267,6 +270,16 @@ export class MetaWhatsappChannel implements WhatsappChannel {
     }
   }
 
+  /**
+   * The locale to request a template in — per-template override, else the
+   * configured default. See DEFAULT_TEMPLATE_LANGUAGE: this is part of the
+   * template's identity to Meta, and getting it wrong 404s with code 132001
+   * saying the template "does not exist", which it does.
+   */
+  private languageFor(template: MetaTemplate): string {
+    return template.language ?? this.config.templateLanguage;
+  }
+
   private timeoutMs(): number {
     const n = Number(this.config.timeoutMs);
     return Number.isFinite(n) && n > 0 ? n : 10_000;
@@ -303,6 +316,8 @@ export class MetaWhatsappChannel implements WhatsappChannel {
       phoneNumberId,
       graphVersion: config.get<string>('WHATSAPP_GRAPH_VERSION') ?? 'v21.0',
       timeoutMs: config.get<string | number>('WHATSAPP_TIMEOUT_MS') ?? 10_000,
+      templateLanguage:
+        config.get<string>('WHATSAPP_TEMPLATE_LANGUAGE') ?? DEFAULT_TEMPLATE_LANGUAGE,
     };
   }
 }

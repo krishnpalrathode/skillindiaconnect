@@ -48,6 +48,58 @@ function res(status: number, body: unknown, opts?: { jsonThrows?: boolean }): Re
   } as unknown as Response;
 }
 
+/**
+ * TEMPLATE LOCALE — the field that cost a live bring-up.
+ *
+ * `language.code` is part of a template's IDENTITY to Meta, not a formatting
+ * preference: `en` and `en_US` are DIFFERENT templates. The adapter hardcoded
+ * 'en', so every send against templates approved as en_US failed with
+ *
+ *   404 / code 132001 — "template name (login_otp) does not exist in en"
+ *
+ * which reads like the template was never created. It was; it was mis-localed.
+ * Nothing asserted the outgoing locale, so nothing caught it.
+ */
+describe('template locale (the 132001 regression)', () => {
+  async function sentLanguage(overrides: Record<string, unknown> = {}): Promise<string> {
+    let body: Record<string, unknown> = {};
+    stubFetch((_url, init) => {
+      body = JSON.parse(String(init.body)) as Record<string, unknown>;
+      return Promise.resolve(res(200, { messages: [{ id: 'wamid.X' }] }));
+    });
+    await new MetaWhatsappChannel(makeConfig(overrides)).sendOtp(PHONE, '123456', 'LOGIN');
+    return ((body['template'] as { language: { code: string } }).language.code);
+  }
+
+  it('defaults to en_US — NOT the bare `en` that 404d in production', async () => {
+    await expect(sentLanguage()).resolves.toBe('en_US');
+  });
+
+  it('WHATSAPP_TEMPLATE_LANGUAGE overrides it without a redeploy', async () => {
+    await expect(sentLanguage({ WHATSAPP_TEMPLATE_LANGUAGE: 'en_GB' })).resolves.toBe('en_GB');
+  });
+
+  it('an unset value falls back to the default rather than sending undefined', async () => {
+    // `language: { code: undefined }` serialises the key away entirely, which
+    // Meta rejects with a different and even less obvious error.
+    await expect(sentLanguage({ WHATSAPP_TEMPLATE_LANGUAGE: undefined })).resolves.toBe('en_US');
+  });
+
+  it('applies to notification templates too, not just OTP', async () => {
+    let body: Record<string, unknown> = {};
+    stubFetch((_url, init) => {
+      body = JSON.parse(String(init.body)) as Record<string, unknown>;
+      return Promise.resolve(res(200, { messages: [{ id: 'wamid.X' }] }));
+    });
+    await new MetaWhatsappChannel(makeConfig({ WHATSAPP_TEMPLATE_LANGUAGE: 'en_GB' })).sendTemplate(
+      PHONE,
+      'wa.selected',
+      { bodyParams: ['Asha', 'Electrician', 'Gulf Wiring LLC'] },
+    );
+    expect((body['template'] as { language: { code: string } }).language.code).toBe('en_GB');
+  });
+});
+
 let fetchSpy: jest.SpyInstance;
 function stubFetch(impl: (url: string, init: RequestInit) => Promise<Response>) {
   fetchSpy = jest

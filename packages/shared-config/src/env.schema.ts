@@ -123,6 +123,13 @@ export const envSchema = z.object({
   // An EXPLICIT timeout. The OTP send is on the auth request path, so an
   // unbounded wait is a hung login, not just a slow job.
   WHATSAPP_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
+  // The locale templates are requested in. ⚠️ PART OF A TEMPLATE'S IDENTITY to
+  // Meta — `en` and `en_US` are DIFFERENT templates, and a mismatch fails with
+  // 404 / code 132001 "template name does not exist in <locale>", which reads
+  // like the template is missing rather than mis-localed. Default `en_US`
+  // because that is what WhatsApp Manager produces unless you deliberately pick
+  // plain "English"; read the real value off the template and override here.
+  WHATSAPP_TEMPLATE_LANGUAGE: z.string().min(1).default('en_US'),
   // ── The delivery webhook (CR-WA W2) — read by the API process ──────────────
   // A secret YOU invent and paste into the Meta dashboard; the two must match
   // exactly or every verification attempt fails with a generic error.

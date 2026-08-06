@@ -326,7 +326,12 @@ SELECT kind, "templateName", status, "errorCode", count(*)
    `errorCode` is `META_190` or the sends began failing all at once with no
    Meta status-page incident, assume the token.
 2. **Check [status.fb.com](https://status.fb.com)** for a genuine Cloud API incident.
-3. **`errorCode` tells you which failure it is:**
+3. **`META_132001` — "template does not exist" almost always means the WRONG
+   LOCALE, not a missing template.** `en` and `en_US` are different templates to
+   Meta. Check `WHATSAPP_TEMPLATE_LANGUAGE` against the locale shown on the
+   template in WhatsApp Manager; it must match, on **both** services. Fixing it
+   is an env change + restart, not a deploy.
+4. **`errorCode` tells you which failure it is:**
    `TEMPLATE_NOT_MAPPED` / `TEMPLATE_PARAM_MISMATCH` / `DOCUMENT_MISSING` are
    OUR bugs from a recent deploy, not Meta — roll back rather than wait.
    A template Meta un-approved also fails here.

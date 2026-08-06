@@ -86,6 +86,11 @@ services:
         sync: false
       - key: WHATSAPP_GRAPH_VERSION
         value: v21.0
+      # The locale templates are APPROVED in. `en` and `en_US` are DIFFERENT
+      # templates to Meta; a mismatch 404s with code 132001 saying the template
+      # "does not exist". Must MATCH on both services.
+      - key: WHATSAPP_TEMPLATE_LANGUAGE
+        value: en_US
       # The delivery webhook (CR-WA W2) — API ONLY; Meta calls this service.
       - key: WHATSAPP_VERIFY_TOKEN
         sync: false
@@ -154,6 +159,11 @@ services:
         sync: false
       - key: WHATSAPP_GRAPH_VERSION
         value: v21.0
+      # The locale templates are APPROVED in. `en` and `en_US` are DIFFERENT
+      # templates to Meta; a mismatch 404s with code 132001 saying the template
+      # "does not exist". Must MATCH on both services.
+      - key: WHATSAPP_TEMPLATE_LANGUAGE
+        value: en_US
       # CHROMIUM_EXECUTABLE_PATH is baked into the image (/usr/bin/chromium-browser)
       # for the worker's PDF rendering. Only override to move the binary.
       #

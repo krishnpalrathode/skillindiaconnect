@@ -41,6 +41,7 @@ uniform across them**. This table is the whole answer:
 | `WHATSAPP_PHONE_NUMBER_ID` | ✅ | ✅ | — | The **phone number ID**, not the phone number |
 | `WHATSAPP_GRAPH_VERSION` | ✅ | ✅ | — | Defaults to `v21.0`; pinned deliberately |
 | `WHATSAPP_TIMEOUT_MS` | ✅ | ✅ | — | Defaults to `10000`. On the API this bounds a **login request** |
+| `WHATSAPP_TEMPLATE_LANGUAGE` | ✅ | ✅ | — | Defaults to `en_US`. ⚠️ Must match the locale your templates are **approved in** — see below |
 | `WHATSAPP_VERIFY_TOKEN` | ✅ | ❌ | — | **API only** — Meta calls the API back |
 | `WHATSAPP_APP_SECRET` | ✅ | ❌ | — | **API only** |
 
@@ -134,10 +135,30 @@ failure path), then referenced by media id. It is not sent as a URL: every docum
 this platform mints is a short-expiry signed R2 URL and would routinely be dead by the
 time Meta fetched it.
 
-### Language is pinned to `en`
+### ⚠️ The locale is part of a template's IDENTITY — `en` ≠ `en_US`
 
-The adapter sends `language: { code: 'en' }`. A template approved only in another
-locale fails with an opaque error. English-only is the current product decision.
+**This is the single most likely thing to break your first send.** Meta treats
+each locale as a **different template**. Requesting a name in a locale it was not
+approved in fails with:
+
+```
+404  code=132001  "(#132001) Template name does not exist in the translation"
+     details=template name (login_otp) does not exist in en
+```
+
+which reads like the template was never created. It was — it is just registered
+under another locale. WhatsApp Manager offers both **English** (`en`) and
+**English (US)** (`en_US`), and a template created without deliberately changing
+the dropdown lands on `en_US`.
+
+Read the locale off the template in WhatsApp Manager and set
+`WHATSAPP_TEMPLATE_LANGUAGE` to match — **the same value on both services**. It
+is an env var rather than a constant precisely so this is a restart, not a
+redeploy, on the day you are trying to go live. A single template approved in a
+different locale from the others can override it per-entry via `language` in
+[meta-templates.ts](../apps/api/src/notifications/channels/meta-templates.ts).
+
+English-only is the current product decision; this is about *which* English.
 
 ---
 

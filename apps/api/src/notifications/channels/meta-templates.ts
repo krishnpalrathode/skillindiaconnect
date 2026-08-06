@@ -21,7 +21,34 @@ export interface MetaTemplate {
   params: number;
   /** True when the template carries a document HEADER (the resume). */
   document?: boolean;
+  /**
+   * Locale override, for a template approved in a DIFFERENT language from the
+   * others. Leave unset to use WHATSAPP_TEMPLATE_LANGUAGE.
+   */
+  language?: string;
 }
+
+/**
+ * The locale a template is requested in — and it is part of a template's
+ * IDENTITY to Meta, not a formatting preference.
+ *
+ * ⚠️ `en` AND `en_US` ARE DIFFERENT TEMPLATES. Asking for a name in a locale it
+ * was not approved in fails with 404 / code 132001:
+ *
+ *   "template name (login_otp) does not exist in en"
+ *
+ * which reads like the template is missing entirely. It is not — it exists, in
+ * another locale. This was hardcoded to 'en' and cost a live bring-up: the
+ * WhatsApp Manager UI offers both "English" (en) and "English (US)" (en_US),
+ * and a template created with the default lands on en_US.
+ *
+ * `en_US` is the default because it is what WhatsApp Manager produces unless
+ * you deliberately pick plain English. Read the actual value off the template
+ * in WhatsApp Manager and set WHATSAPP_TEMPLATE_LANGUAGE if yours differs —
+ * it is an env var precisely so this is a restart, not a redeploy, on the day
+ * you are trying to go live.
+ */
+export const DEFAULT_TEMPLATE_LANGUAGE = 'en_US';
 
 /**
  * The approved templates, keyed by the logical key the notification matrix uses.
