@@ -59,7 +59,14 @@ export const DEFAULT_TEMPLATE_LANGUAGE = 'en_US';
  */
 export const META_TEMPLATES = {
   'wa.selected': { name: 'job_selected', params: 3 },
-  'wa.resume_doc': { name: 'resume_generated', params: 1, document: true },
+  // ⚠️ THREE SIMILAR NAMES, ONE OF WHICH IS THE ONLY ONE META SEES:
+  //   resume_document   the APPROVED Meta template name — this value
+  //   wa.resume_doc     our logical key (matrix ↔ this map)
+  //   RESUME_DOCUMENT   the WaMessageKind on the delivery row
+  // This was `resume_generated`, which exists nowhere in WhatsApp Manager. It
+  // failed with 132001 "template does not exist" — the same error a wrong
+  // LOCALE produces, which is how it hid behind the en/en_US hunt.
+  'wa.resume_doc': { name: 'resume_document', params: 1, document: true },
 } as const satisfies Record<string, MetaTemplate>;
 
 export type MetaTemplateKey = keyof typeof META_TEMPLATES;

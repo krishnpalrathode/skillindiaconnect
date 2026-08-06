@@ -101,7 +101,7 @@ crashes the process at boot rather than failing sends silently for months.
 | --- | --- | :---: | --- | --- |
 | `login_otp` | *(none — `sendOtp`)* | 1 | — | `POST /auth/otp/send` (signup verify) and `POST /auth/login/phone/start` (login) |
 | `job_selected` | `wa.selected` | 3 | — | `APPLICATION_SELECTED` |
-| `resume_generated` | `wa.resume_doc` | 1 | **document** | `RESUME_SENT` |
+| `resume_document` | `wa.resume_doc` | 1 | **document** | `RESUME_SENT` |
 
 ### `job_selected` — the positional order IS the contract
 
@@ -128,7 +128,7 @@ It is also an **Authentication** template, which Meta requires to carry a **URL 
 component** with the code repeated as the button parameter; the adapter sends it.
 A body-only auth send is rejected.
 
-### `resume_generated` — the document header
+### `resume_document` — the document header
 
 The PDF is **uploaded as bytes** to `/media` first (a second network call with its own
 failure path), then referenced by media id. It is not sent as a URL: every document URL

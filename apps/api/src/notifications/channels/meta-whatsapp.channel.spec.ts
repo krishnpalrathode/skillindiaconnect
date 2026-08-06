@@ -122,8 +122,11 @@ describe('template mapping — the literal approved names', () => {
     expect(META_TEMPLATES['wa.selected'].params).toBe(3);
   });
 
-  it('maps wa.resume_doc → resume_generated with ONE parameter + a document', () => {
-    expect(META_TEMPLATES['wa.resume_doc'].name).toBe('resume_generated');
+  it('maps wa.resume_doc → resume_document with ONE parameter + a document', () => {
+    // The APPROVED name in WhatsApp Manager. Asserted as a literal because a
+    // wrong name here is not a crash: Meta answers 132001, the row is marked
+    // FAILED, and nobody learns the name was wrong.
+    expect(META_TEMPLATES['wa.resume_doc'].name).toBe('resume_document');
     expect(META_TEMPLATES['wa.resume_doc'].params).toBe(1);
     expect(META_TEMPLATES['wa.resume_doc'].document).toBe(true);
   });

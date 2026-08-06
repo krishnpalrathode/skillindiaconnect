@@ -47,7 +47,7 @@ const EXPLICIT_WABA = process.env.WHATSAPP_WABA_ID;
  * matrix). Every template Meta returns is printed regardless, so drift between
  * the two is visible rather than hidden.
  */
-const EXPECTED = ['login_otp', 'job_selected', 'resume_generated'];
+const EXPECTED = ['login_otp', 'job_selected', 'resume_document'];
 const PRIMARY = 'login_otp';
 
 interface Template {
