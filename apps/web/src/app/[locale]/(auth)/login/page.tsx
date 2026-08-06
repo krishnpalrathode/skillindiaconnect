@@ -171,8 +171,14 @@ export default function LoginPage() {
               {/* CR-WA W1.6: the escape hatch for a WhatsApp OTP that never
                   arrives. The page owns the method state, so the flow asks to
                   be switched rather than routing anywhere — the user keeps the
-                  card, the locale and any `next` param they arrived with. */}
-              <PhoneLoginFlow onSuccess={handleSuccess} onUseEmail={() => setMethod('email')} />
+                  card, the locale and any `next` param they arrived with.
+                  Switching to the email panel also puts the Google button back
+                  in view above it, which is the route for the Google-signup
+                  candidates who have no password at all. */}
+              <PhoneLoginFlow
+                onSuccess={handleSuccess}
+                onUseAnotherMethod={() => setMethod('email')}
+              />
             </div>
           )}
 

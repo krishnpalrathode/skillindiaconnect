@@ -200,7 +200,7 @@
     "otpDidntGet": "Didn't receive the code?",
     "wrongNumber": "Wrong number",
     "resendCode": "Resend",
-    "useEmailInstead": "Continue with email instead",
+    "useAnotherMethod": "Use another sign-in method",
     "forgotTitle": "Forgot password",
     "sendResetEmail": "Next",
     "forgotSentTitle": "Check your inbox",

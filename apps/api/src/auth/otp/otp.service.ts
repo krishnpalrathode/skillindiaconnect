@@ -10,6 +10,7 @@ import { createHash } from 'node:crypto';
 import { DeliveryStatus, OtpChallenge, OtpPurpose, Prisma, WaMessageKind } from '@prisma/client';
 import type { Redis } from 'ioredis';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { MetricsService } from '../../core/observability/metrics.service';
 import { REDIS_CLIENT } from '../../core/redis/redis.provider';
 import {
   WHATSAPP_CHANNEL,
@@ -59,6 +60,7 @@ export class OtpService {
     private readonly prisma: PrismaService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
     @Inject(WHATSAPP_CHANNEL) private readonly whatsapp: WhatsappChannel,
+    private readonly metrics: MetricsService,
   ) {}
 
   /**
@@ -119,6 +121,18 @@ export class OtpService {
     if (result.notOnWhatsapp) {
       return { outcome: 'NOT_ON_WHATSAPP' };
     }
+
+    /**
+     * The metric the login-availability alert fires on.
+     *
+     * Emitted for BOTH purposes and BOTH outcomes, including the ADAPTER_THREW
+     * case folded in above — a provider outage must be visible whether it
+     * arrives as `ok:false` or as an exception. `notOnWhatsapp` returns earlier
+     * and is deliberately NOT counted: that is one user's number, not our
+     * provider failing, and counting it would let a handful of bad numbers drag
+     * the ratio toward the alert threshold.
+     */
+    this.metrics.recordWhatsappSend(WaMessageKind.OTP, result.ok ? 'sent' : 'failed');
 
     // Persist a delivery-tracking row (kind=OTP) so OTP sends are traceable like
     // every other WhatsApp message. userId is unknown here (send is phone-only).

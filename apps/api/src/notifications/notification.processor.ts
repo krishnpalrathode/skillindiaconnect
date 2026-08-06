@@ -4,6 +4,7 @@ import { DeliveryStatus, NotificationType, WaMessageKind } from '@prisma/client'
 import { Job } from 'bullmq';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { StorageService } from '../core/storage/storage.service';
+import { MetricsService } from '../core/observability/metrics.service';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
 import { QUEUE_NAMES } from '../queue/queue.constants';
@@ -36,6 +37,7 @@ export class NotificationProcessor extends WorkerHost {
     @Inject(EMAIL_CHANNEL) private readonly emailChannel: EmailChannel,
     private readonly auditService: AuditService,
     private readonly storage: StorageService,
+    private readonly metrics: MetricsService,
   ) {
     super();
   }
@@ -132,6 +134,11 @@ export class NotificationProcessor extends WorkerHost {
     // The predicate is SHARED with the API (S7-B2 resume send reads it to state
     // the real channel in its 202) — one definition, no drift.
     if (!isWhatsappDeliverable(profile)) {
+      // NOT a failure — a deliberate decision not to attempt a send, for a user
+      // who is not WhatsApp-capable or has opted out. Counted separately so it
+      // stays OUT of the failure ratio the alerts fire on; folding it in would
+      // make them track opt-out rates instead of provider health.
+      this.metrics.recordWhatsappSend(kind, 'downgraded');
       if (profile?.phone) {
         // Record the downgrade attempt (phone present but not capable/opted-out)
         await this.prisma.whatsappMessage.create({
@@ -191,6 +198,10 @@ export class NotificationProcessor extends WorkerHost {
     try {
       const send = await this.buildTemplateSend(payload, msgRow.id);
       const result = await this.whatsappChannel.sendTemplate(profile.phone!, templateKey, send);
+
+      // Emitted BEFORE the throw below — a failure that rethrows for BullMQ to
+      // retry must still be counted, or the alert only ever sees successes.
+      this.metrics.recordWhatsappSend(kind, result.ok ? 'sent' : 'failed');
 
       await this.prisma.whatsappMessage.update({
         where: { id: msgRow.id },

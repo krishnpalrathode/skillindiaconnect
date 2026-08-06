@@ -20,6 +20,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DeliveryStatus } from '@prisma/client';
 import { createHmac } from 'node:crypto';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { MetricsService } from '../../core/observability/metrics.service';
 import { WhatsappWebhookController } from './whatsapp-webhook.controller';
 import { WhatsappWebhookService } from './whatsapp-webhook.service';
 
@@ -67,6 +68,7 @@ describe('WhatsApp delivery webhook', () => {
         WhatsappWebhookService,
         { provide: ConfigService, useValue: { get: (k: string) => env[k] } },
         { provide: PrismaService, useValue: { whatsappMessage: { updateMany, findFirst } } },
+        MetricsService,
       ],
     }).compile();
 
@@ -116,6 +118,7 @@ describe('WhatsApp delivery webhook', () => {
           WhatsappWebhookService,
           { provide: ConfigService, useValue: { get: () => undefined } },
           { provide: PrismaService, useValue: { whatsappMessage: { updateMany, findFirst } } },
+          MetricsService,
         ],
       }).compile();
       const bare = moduleRef.get(WhatsappWebhookService);

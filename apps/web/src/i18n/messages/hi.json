@@ -200,7 +200,7 @@
     "otpDidntGet": "कोड नहीं मिला?",
     "wrongNumber": "गलत नंबर",
     "resendCode": "फिर से भेजें",
-    "useEmailInstead": "इसके बजाय ईमेल से जारी रखें",
+    "useAnotherMethod": "साइन-इन का दूसरा तरीका चुनें",
     "forgotTitle": "पासवर्ड भूल गए",
     "sendResetEmail": "आगे बढ़ें",
     "forgotSentTitle": "अपना इनबॉक्स देखें",

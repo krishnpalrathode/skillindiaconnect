@@ -16,17 +16,17 @@ type Step = 'phone' | 'otp';
 interface PhoneLoginFlowProps {
   onSuccess: () => void;
   /**
-   * Switches the sign-in panel to the email method.
+   * Switches the sign-in panel away from phone, to where the OTHER methods are.
    *
    * REQUIRED, not optional, and that is the point: this is the only escape
    * hatch a user has when the WhatsApp OTP never arrives, and an optional prop
    * is one a caller can quietly drop. Making it required means the affordance
    * cannot go missing without the build failing.
    */
-  onUseEmail: () => void;
+  onUseAnotherMethod: () => void;
 }
 
-export function PhoneLoginFlow({ onSuccess, onUseEmail }: PhoneLoginFlowProps) {
+export function PhoneLoginFlow({ onSuccess, onUseAnotherMethod }: PhoneLoginFlowProps) {
   const t = useTranslations('auth');
   const { loginWithPhone } = useAuth();
 
@@ -117,15 +117,26 @@ export function PhoneLoginFlow({ onSuccess, onUseEmail }: PhoneLoginFlowProps) {
    * Without it the outage path is a dead end — the user waits on the OTP screen
    * for a code that was never dispatched, with no way forward and nothing on
    * screen suggesting one.
+   *
+   * ⚠️ THE COPY IS METHOD-NEUTRAL ON PURPOSE. It said "Continue with email
+   * instead", which is wrong for a large share of the people who need it:
+   * `users.passwordHash` is NULLABLE, so a candidate who signed up with Google
+   * and verified their phone during onboarding HAS NO PASSWORD. Pointing them
+   * at the email form sent them somewhere they could not get in —
+   * forgot-password correctly refuses and replies "this account uses Google
+   * sign-in". Their route is the Google button, which sits directly above the
+   * tabs on this same screen, so switching away from the phone panel reveals
+   * BOTH routes. Naming either one in the label would be wrong for the other
+   * half of the users.
    */
-  const emailFallback = (
+  const otherMethods = (
     <p className="text-center text-sm text-neutral-600">
       <button
         type="button"
-        onClick={onUseEmail}
+        onClick={onUseAnotherMethod}
         className="font-semibold text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
       >
-        {t('useEmailInstead')}
+        {t('useAnotherMethod')}
       </button>
     </p>
   );
@@ -171,7 +182,7 @@ export function PhoneLoginFlow({ onSuccess, onUseEmail }: PhoneLoginFlowProps) {
           {t('sendOtp')}
         </Button>
 
-        {emailFallback}
+        {otherMethods}
       </form>
     );
   }
@@ -218,7 +229,7 @@ export function PhoneLoginFlow({ onSuccess, onUseEmail }: PhoneLoginFlowProps) {
 
       {/* The step where the lockout actually bites: the user is watching an
           empty OTP field for a code that may never arrive. */}
-      {emailFallback}
+      {otherMethods}
     </div>
   );
 }

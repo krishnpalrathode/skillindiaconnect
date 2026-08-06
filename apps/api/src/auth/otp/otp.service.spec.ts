@@ -4,6 +4,7 @@ import { OtpPurpose } from '@prisma/client';
 import { createHash } from 'node:crypto';
 import { OtpService } from './otp.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { MetricsService } from '../../core/observability/metrics.service';
 import { REDIS_CLIENT } from '../../core/redis/redis.provider';
 import { WHATSAPP_CHANNEL } from '../../notifications/channels/whatsapp.channel';
 
@@ -74,6 +75,7 @@ describe('OtpService', () => {
         { provide: PrismaService, useValue: prismaMock },
         { provide: REDIS_CLIENT, useValue: redisMock },
         { provide: WHATSAPP_CHANNEL, useValue: whatsappMock },
+        MetricsService,
       ],
     }).compile();
 

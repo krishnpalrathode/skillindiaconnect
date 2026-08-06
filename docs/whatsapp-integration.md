@@ -271,6 +271,8 @@ half-configured state described above.
 
 ## Known gaps
 
+Tracked as accepted limitations in [known-deferrals.md](./known-deferrals.md).
+
 - **There is no email-OTP fallback.** WhatsApp is the only OTP transport: the matrix
   has no OTP entry and `OtpService` calls exactly one channel. A Meta outage therefore
   removes phone login entirely. *(A stale "OTP-via-email fallback" row in

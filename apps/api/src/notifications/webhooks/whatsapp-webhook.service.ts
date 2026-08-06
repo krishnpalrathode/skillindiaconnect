@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { DeliveryStatus } from '@prisma/client';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { MetricsService } from '../../core/observability/metrics.service';
 
 /**
  * Meta delivery status → our DeliveryStatus, with a RANK.
@@ -63,6 +64,7 @@ export class WhatsappWebhookService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly metrics: MetricsService,
   ) {}
 
   // ── Subscription handshake ────────────────────────────────────────────────
@@ -215,7 +217,14 @@ export class WhatsappWebhookService {
       },
     });
 
-    if (count > 0) return 'applied';
+    if (count > 0) {
+      // Counted only when the status actually ADVANCED a row. Counting every
+      // callback would inflate on Meta's retries and on out-of-order replays,
+      // making a "delivery rate" that measures Meta's retry behaviour rather
+      // than ours.
+      this.metrics.recordWhatsappDeliveryStatus(update.status);
+      return 'applied';
+    }
 
     // Nothing updated: either the row is already at or above this rank (a
     // replay, or an out-of-order callback) or we have never heard of the id.

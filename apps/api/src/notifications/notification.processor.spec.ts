@@ -15,6 +15,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DeliveryStatus, NotificationType, WaMessageKind } from '@prisma/client';
 import { Job } from 'bullmq';
 import { PrismaService } from '../core/prisma/prisma.service';
+import { MetricsService } from '../core/observability/metrics.service';
 import { AuditService } from '../audit/audit.service';
 import { StorageService } from '../core/storage/storage.service';
 import { QUEUE_NAMES } from '../queue/queue.constants';
@@ -167,6 +168,10 @@ describe('NotificationProcessor', () => {
             })),
           },
         },
+        // The REAL MetricsService — it has no dependencies, and using the real
+        // one means these specs exercise the counters the alerts fire on rather
+        // than a stub that would hide a broken call site.
+        MetricsService,
       ],
     })
       .overrideProvider(QUEUE_NAMES.NOTIFICATION as never)

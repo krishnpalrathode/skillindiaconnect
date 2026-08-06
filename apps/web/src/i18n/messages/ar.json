@@ -200,7 +200,7 @@
     "otpDidntGet": "لم تستلم الرمز؟",
     "wrongNumber": "رقم خاطئ",
     "resendCode": "إعادة الإرسال",
-    "useEmailInstead": "المتابعة عبر البريد الإلكتروني بدلاً من ذلك",
+    "useAnotherMethod": "استخدم طريقة تسجيل دخول أخرى",
     "forgotTitle": "نسيت كلمة المرور",
     "sendResetEmail": "التالي",
     "forgotSentTitle": "تحقّق من بريدك",
