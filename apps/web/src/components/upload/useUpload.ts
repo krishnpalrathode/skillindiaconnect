@@ -2,6 +2,7 @@
 import type { components } from '@skillindiaconnect/shared-types';
 import { presignDocument, confirmDocument } from '@/lib/api/candidate';
 import type { PresignRequest, PresignResponse } from '@/lib/api/candidate';
+import { ApiRequestError } from '@/lib/api/client';
 
 type CandidateDocument = components['schemas']['CandidateDocument'];
 type DocType = PresignRequest['type'];
@@ -12,6 +13,9 @@ export interface UploadState {
   status: UploadStatus;
   progress: number;
   document: CandidateDocument | null;
+  /** Machine-readable API error code (e.g. FILE_TOO_LARGE) — the UI localizes it. */
+  errorCode: string | null;
+  /** Fallback message for non-API (network) failures. */
   errorMessage: string | null;
 }
 
@@ -19,8 +23,22 @@ const INITIAL: UploadState = {
   status: 'idle',
   progress: 0,
   document: null,
+  errorCode: null,
   errorMessage: null,
 };
+
+/**
+ * Turn a thrown error into UI-friendly fields. API failures carry a stable
+ * `code` (the server sends a generic "Unprocessable Entity" *detail*, so we keep
+ * the code and let the component localize it); network failures keep their raw
+ * message as a last-resort fallback.
+ */
+function describeError(err: unknown): { errorCode: string | null; errorMessage: string | null } {
+  if (err instanceof ApiRequestError) {
+    return { errorCode: err.error.code ?? null, errorMessage: null };
+  }
+  return { errorCode: null, errorMessage: err instanceof Error ? err.message : null };
+}
 
 /**
  * Upload state machine with interrupted-upload resilience.
@@ -115,12 +133,15 @@ export function useUpload(docType: DocType, expiryDate?: string) {
         const presign = await doPresign(file);
         await doUpload(file, presign.uploadUrl);
         const doc = await doConfirm(presign.key);
-        setState({ status: 'done', progress: 100, document: doc, errorMessage: null });
-      } catch (err) {
-        setStatus({
-          status: 'error',
-          errorMessage: err instanceof Error ? err.message : 'Upload failed',
+        setState({
+          status: 'done',
+          progress: 100,
+          document: doc,
+          errorCode: null,
+          errorMessage: null,
         });
+      } catch (err) {
+        setStatus({ status: 'error', ...describeError(err) });
       }
     },
     [doPresign, doUpload, doConfirm],
@@ -133,14 +154,17 @@ export function useUpload(docType: DocType, expiryDate?: string) {
     // Case 1: confirm already ran but failed — retry confirm with stored key
     if (storedKey.current) {
       try {
-        setStatus({ status: 'confirming', errorMessage: null });
+        setStatus({ status: 'confirming', errorCode: null, errorMessage: null });
         const doc = await confirmDocument(storedKey.current, expiryDate);
-        setState({ status: 'done', progress: 100, document: doc, errorMessage: null });
-      } catch (err) {
-        setStatus({
-          status: 'error',
-          errorMessage: err instanceof Error ? err.message : 'Confirm failed',
+        setState({
+          status: 'done',
+          progress: 100,
+          document: doc,
+          errorCode: null,
+          errorMessage: null,
         });
+      } catch (err) {
+        setStatus({ status: 'error', ...describeError(err) });
       }
       return;
     }
@@ -153,7 +177,7 @@ export function useUpload(docType: DocType, expiryDate?: string) {
       if (!isPresignExpired() && storedPresign.current) {
         uploadUrl = storedPresign.current.uploadUrl;
         key = storedPresign.current.key;
-        setStatus({ errorMessage: null });
+        setStatus({ errorCode: null, errorMessage: null });
       } else {
         const presign = await doPresign(file);
         uploadUrl = presign.uploadUrl;
@@ -162,12 +186,15 @@ export function useUpload(docType: DocType, expiryDate?: string) {
 
       await doUpload(file, uploadUrl);
       const doc = await doConfirm(key);
-      setState({ status: 'done', progress: 100, document: doc, errorMessage: null });
-    } catch (err) {
-      setStatus({
-        status: 'error',
-        errorMessage: err instanceof Error ? err.message : 'Upload failed',
+      setState({
+        status: 'done',
+        progress: 100,
+        document: doc,
+        errorCode: null,
+        errorMessage: null,
       });
+    } catch (err) {
+      setStatus({ status: 'error', ...describeError(err) });
     }
   }, [expiryDate, doPresign, doUpload, doConfirm]);
 

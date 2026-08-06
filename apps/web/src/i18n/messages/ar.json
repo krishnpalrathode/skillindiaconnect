@@ -480,6 +480,9 @@
       "uploadComplete": "تم الرفع",
       "fileTooLarge": "الملف كبير جداً",
       "uploadFailed": "فشل الرفع. اضغط للمحاولة مجدداً.",
+      "errFileTooLarge": "هذا الملف كبير جدًا (بحد أقصى {max} ميجابايت). اختر ملفًا أصغر.",
+      "errInvalidType": "نوع الملف غير مدعوم. ارفع ملف PDF أو JPG أو PNG.",
+      "errUploadIncomplete": "لم يكتمل الرفع. يرجى المحاولة مرة أخرى.",
       "dropzoneHint": "اسحب وأفلت أو انقر للاختيار",
       "maxSize": "الحد الأقصى {size} ميغابايت"
     },

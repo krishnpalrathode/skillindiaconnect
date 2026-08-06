@@ -480,6 +480,9 @@
       "uploadComplete": "अपलोड हो गया",
       "fileTooLarge": "फ़ाइल बहुत बड़ी है",
       "uploadFailed": "अपलोड विफल। पुनः प्रयास करें।",
+      "errFileTooLarge": "यह फ़ाइल बहुत बड़ी है (अधिकतम {max} MB)। छोटी फ़ाइल चुनें।",
+      "errInvalidType": "यह फ़ाइल प्रकार समर्थित नहीं है। PDF, JPG या PNG अपलोड करें।",
+      "errUploadIncomplete": "अपलोड पूरा नहीं हुआ। कृपया पुनः प्रयास करें।",
       "dropzoneHint": "खींचें और छोड़ें या क्लिक करके चुनें",
       "maxSize": "अधिकतम {size} MB"
     },

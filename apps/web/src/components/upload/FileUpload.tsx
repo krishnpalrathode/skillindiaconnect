@@ -198,7 +198,15 @@ export function FileUpload({
         {state.status === 'error' && (
           <>
             <AlertCircle className="size-5 text-error-fg" aria-hidden="true" />
-            <span>{state.errorMessage ?? t('uploadFailed')}</span>
+            <span>
+              {state.errorCode === 'FILE_TOO_LARGE'
+                ? t('errFileTooLarge', { max: maxMb })
+                : state.errorCode === 'INVALID_FILE_TYPE'
+                  ? t('errInvalidType')
+                  : state.errorCode === 'UPLOAD_NOT_FOUND'
+                    ? t('errUploadIncomplete')
+                    : (state.errorMessage ?? t('uploadFailed'))}
+            </span>
             <div className="flex gap-2">
               <Button
                 type="button"

@@ -480,6 +480,9 @@
       "uploadComplete": "Uploaded",
       "fileTooLarge": "File is too large",
       "uploadFailed": "Upload failed. Tap to retry.",
+      "errFileTooLarge": "That file is too large (max {max} MB). Choose a smaller file.",
+      "errInvalidType": "That file type isn't supported. Upload a PDF, JPG, or PNG.",
+      "errUploadIncomplete": "The upload didn't finish. Please try again.",
       "dropzoneHint": "Drag & drop or click to select",
       "maxSize": "Max {size} MB"
     },
