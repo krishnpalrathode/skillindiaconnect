@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'node:crypto';
+// TEMPORARY DIAGNOSTICS — remove with logMetaFailure().
+import { redactText } from '../../core/observability/redaction';
 import type {
   WhatsappChannel,
   WhatsappDocument,
@@ -182,6 +184,11 @@ export class MetaWhatsappChannel implements WhatsappChannel {
       const mediaId = typeof body?.['id'] === 'string' ? (body['id'] as string) : null;
       if (!res.ok || !mediaId) {
         this.logger.error(`media upload FAILED status=${res.status}`);
+        // ═══ TEMPORARY DIAGNOSTICS ═══════════════════════════════════════════
+        // The other way a send dies. A 2xx with no `id` is indistinguishable
+        // from a rejection in the line above, so the body is what separates them.
+        logMetaFailure(this.logger, 'media-upload', res.status, body);
+        // ═════════════════════════════════════════════════════════════════════
         return { ok: false, result: { ok: false, errorCode: classifyStatus(res.status) } };
       }
       return { ok: true, mediaId };
@@ -226,6 +233,10 @@ export class MetaWhatsappChannel implements WhatsappChannel {
         return { ok: true, providerMessageId };
       }
 
+      // ═══ TEMPORARY DIAGNOSTICS — REMOVE ONCE THE PROVIDER ERROR IS UNDERSTOOD
+      logMetaFailure(this.logger, label, res.status, body);
+      // ═══════════════════════════════════════════════════════════════════════
+
       // Meta signals an unreachable number through an error CODE, not a status.
       const code = readErrorCode(body);
       if (code !== null && NOT_ON_WHATSAPP_CODES.has(code)) {
@@ -236,6 +247,19 @@ export class MetaWhatsappChannel implements WhatsappChannel {
       this.logSafe(phone, label, 'FAILED');
       return { ok: false, errorCode: code !== null ? `META_${code}` : classifyStatus(res.status) };
     } catch (err) {
+      // ═══ TEMPORARY DIAGNOSTICS ═════════════════════════════════════════════
+      // No HTTP response exists on this path — the request never completed — so
+      // the only new fact available is which failure it was. Name and message
+      // only; a fetch/undici message carries no PII but is redacted anyway.
+      this.logger.error(
+        `[TEMP DIAG] whatsapp transport FAILED template=${label} ` +
+          `name=${String((err as { name?: unknown })?.name ?? 'unknown')} ` +
+          `msg=${redactText(err instanceof Error ? err.message : String(err))} ` +
+          `cause=${redactText(String((err as { cause?: unknown })?.cause ?? 'none'))} ` +
+          `timeoutMs=${this.timeoutMs()}`,
+      );
+      // ═══════════════════════════════════════════════════════════════════════
+
       // Network, timeout, abort. Honest FAILED — the caller retries (worker) or
       // falls back (OTP). NEVER rethrown: on the auth path that would be a 500.
       this.logSafe(phone, label, 'FAILED');
@@ -282,6 +306,68 @@ export class MetaWhatsappChannel implements WhatsappChannel {
     };
   }
 }
+
+/**
+ * ═══ TEMPORARY DIAGNOSTICS — DELETE THIS FUNCTION AND ITS THREE CALL SITES ═══
+ *
+ * The full Meta error document for a failed send. `logSafe` deliberately emits
+ * only `whatsapp FAILED template=…`, which is correct for steady-state (it is
+ * the no-PII line that runs on every send) but tells you nothing about WHY when
+ * you are bringing the integration up. Meta's `code`/`error_subcode` pair is the
+ * only thing that distinguishes an expired token from an unapproved template
+ * from a number outside the allow-list.
+ *
+ * BEHAVIOUR IS UNCHANGED: this returns void, is called after the outcome is
+ * already decided, and nothing reads it. `errorCode` on the returned result is
+ * still derived exactly as before.
+ *
+ * ⚠️ EVERYTHING IS PUT THROUGH redactText, AND THAT IS NOT OPTIONAL.
+ * `error.message` and `error_data.details` ROUTINELY ECHO THE RECIPIENT'S
+ * NUMBER — e.g. "Message failed to send to +919876543210" — which is why W2
+ * stores the CODE only in `whatsapp_messages.errorCode`. redactText masks
+ * E.164 numbers and emails while leaving codes, subcodes and the actual
+ * failure text intact, so the whole diagnostic survives and the PII does not.
+ * Applied HERE rather than relying on the logger, because the structured
+ * logger's redaction only runs when LOG_FORMAT=json — local and any
+ * non-JSON-logging environment would otherwise print the number raw.
+ *
+ * The access token is never touched: it lives in the request headers, and
+ * nothing from the request is logged.
+ */
+function logMetaFailure(
+  logger: Logger,
+  label: string,
+  status: number,
+  body: Record<string, unknown> | null,
+): void {
+  const error = (body?.['error'] ?? null) as Record<string, unknown> | null;
+
+  if (error === null) {
+    // A non-JSON body is itself the finding: an edge proxy or WAF answered, not
+    // Meta. Truncated — an HTML error page can be large.
+    const raw = body === null ? '<unparseable/non-JSON body>' : JSON.stringify(body);
+    logger.error(
+      `[TEMP DIAG] whatsapp send FAILED template=${label} httpStatus=${status} ` +
+        `noMetaErrorObject body=${redactText(raw).slice(0, 500)}`,
+    );
+    return;
+  }
+
+  const errorData = (error['error_data'] ?? null) as Record<string, unknown> | null;
+  const parts = [
+    `httpStatus=${status}`,
+    `code=${String(error['code'] ?? 'none')}`,
+    `subcode=${String(error['error_subcode'] ?? 'none')}`,
+    `type=${String(error['type'] ?? 'none')}`,
+    `message=${redactText(String(error['message'] ?? 'none'))}`,
+    `details=${redactText(String(errorData?.['details'] ?? 'none'))}`,
+    // The id Meta support asks for first.
+    `fbtrace_id=${String(error['fbtrace_id'] ?? 'none')}`,
+  ];
+
+  logger.error(`[TEMP DIAG] whatsapp send FAILED template=${label} ${parts.join(' ')}`);
+}
+// ═══ END TEMPORARY DIAGNOSTICS ═══════════════════════════════════════════════
 
 /**
  * `res.json()` that cannot throw.
