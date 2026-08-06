@@ -52,6 +52,13 @@ export const NOT_ON_WHATSAPP_PHONE = '+919999999999';
  * is down", and the UI must not conflate them.
  */
 export const OTP_SEND_FAILS_PHONE = '+919888888888';
+/**
+ * Drives the 429 path. Distinct from OTP_SEND_FAILS_PHONE: a rate limit means
+ * "wait", a send failure means "try again or use another method", and the UI
+ * must not collapse them — telling a rate-limited user to retry is the one
+ * instruction that keeps the window open.
+ */
+export const OTP_RATE_LIMITED_PHONE = '+919777777777';
 export const NOT_WHATSAPP_CAPABLE_USER_ID = 'mock-user-no-wa';
 
 // Employer fixture user IDs (seeded into db.users + db.employers above)

@@ -5,6 +5,7 @@ import {
   buildProfile,
   MOCK_OTP,
   NOT_ON_WHATSAPP_PHONE,
+  OTP_RATE_LIMITED_PHONE,
   OTP_SEND_FAILS_PHONE,
   NOT_WHATSAPP_CAPABLE_USER_ID,
   makeAccessToken,
@@ -311,6 +312,18 @@ const authOtpSend = http.post(`${BASE}/auth/otp/send`, async ({ request }) => {
       'PHONE_NOT_ON_WHATSAPP',
       'Phone not on WhatsApp',
       'This number is not reachable via WhatsApp. Please try a different number.',
+    );
+  }
+
+  // The per-phone budget (5/hour) in OtpService. NOTE the code: the real API
+  // emits OTP_RATE_LIMITED here, NOT RATE_LIMIT_EXCEEDED — the mismatch that
+  // left the UI's rate-limit branch dead.
+  if (body.phone === OTP_RATE_LIMITED_PHONE) {
+    return errorResponse(
+      429,
+      'OTP_RATE_LIMITED',
+      'Too Many Requests',
+      'Too many verification codes requested. Please wait before trying again.',
     );
   }
 
