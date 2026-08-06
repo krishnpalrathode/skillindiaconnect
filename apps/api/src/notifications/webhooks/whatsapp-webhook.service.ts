@@ -33,6 +33,20 @@ const META_STATUS: Record<string, DeliveryStatus> = {
   failed: DeliveryStatus.FAILED,
 };
 
+/**
+ * Which handshake check failed. Describes the request SHAPE, never the secret,
+ * so it is safe to return to an unauthenticated caller.
+ */
+export type HandshakeFailure =
+  | 'VERIFY_TOKEN_NOT_CONFIGURED'
+  | 'BAD_HUB_MODE'
+  | 'MISSING_HUB_PARAMS'
+  | 'TOKEN_MISMATCH';
+
+export type HandshakeResult =
+  | { ok: true; challenge: string }
+  | { ok: false; reason: HandshakeFailure };
+
 /** One status update lifted out of Meta's nested envelope. */
 export interface WhatsappStatusUpdate {
   waMessageId: string;
@@ -70,92 +84,54 @@ export class WhatsappWebhookService {
   // ── Subscription handshake ────────────────────────────────────────────────
 
   /**
-   * Meta's GET verification. Returns the challenge to echo, or null to reject.
+   * Meta's GET verification.
    *
    * The token is compared CONSTANT-TIME, like the payments adapter does: a
    * length-leaking or early-exit comparison on a shared secret is the kind of
    * detail that is free to get right and awkward to explain afterwards.
+   *
+   * ⚠️ THE RESULT NAMES *WHICH* CHECK FAILED, and that is not cosmetic.
+   *
+   * This previously returned `string | null`, so all four rejection paths
+   * collapsed into one `null` and the controller answered every one of them
+   * with `INVALID_VERIFY_TOKEN`. Meta's dashboard reports a single generic
+   * error regardless, so those two facts together meant a missing
+   * `hub.challenge`, a wrong `hub.mode`, and an unset env var all presented as
+   * "wrong verify token" — sending you to re-check the one thing that was
+   * correct. Verified against production: a request with NO `hub.challenge`
+   * and a bad token returns the identical `403 INVALID_VERIFY_TOKEN` body as a
+   * plain token mismatch.
+   *
+   * The reason is safe to expose: it describes the SHAPE of the request, never
+   * the secret. `TOKEN_MISMATCH` still maps to the original
+   * `INVALID_VERIFY_TOKEN` code so the documented contract is unchanged.
    */
-  verifyHandshake(mode: unknown, token: unknown, challenge: unknown): string | null {
+  verifyHandshake(mode: unknown, token: unknown, challenge: unknown): HandshakeResult {
     const expected = this.config.get<string>('WHATSAPP_VERIFY_TOKEN');
-
-    // ═══ TEMPORARY DEBUG — DELETE THIS LINE AND logHandshakeDebug() BELOW ═════
-    this.logHandshakeDebug(mode, token, expected);
-    // ═════════════════════════════════════════════════════════════════════════
 
     if (!expected) {
       this.logger.error('WHATSAPP_VERIFY_TOKEN is not set — refusing the subscription handshake');
-      return null;
+      return { ok: false, reason: 'VERIFY_TOKEN_NOT_CONFIGURED' };
     }
-    if (mode !== 'subscribe') return null;
-    if (typeof token !== 'string' || typeof challenge !== 'string') return null;
+    if (mode !== 'subscribe') return { ok: false, reason: 'BAD_HUB_MODE' };
+    if (typeof token !== 'string' || typeof challenge !== 'string') {
+      return { ok: false, reason: 'MISSING_HUB_PARAMS' };
+    }
     if (!constantTimeEquals(token, expected)) {
       // The supplied token is NEVER logged — it is a guess at a shared secret.
-      this.logger.warn('WhatsApp webhook handshake rejected: verify token mismatch');
-      return null;
-    }
-    return challenge;
-  }
-
-  /**
-   * ═══ TEMPORARY DEBUG — REMOVE ONCE THE HANDSHAKE VERIFIES ═══════════════════
-   *
-   * Logs ONLY. It computes nothing the caller uses and changes no behaviour:
-   * `verifyHandshake` above is byte-for-byte the logic it always was, and the
-   * existing handshake tests still pass unchanged, which is what proves that.
-   *
-   * Fires ONLY on the GET verification path — `verifyHandshake` has exactly one
-   * caller (the GET handler). The POST status path is untouched, so this cannot
-   * add log volume under Meta's callback traffic.
-   *
-   * ⚠️ WHY THE RECEIVED TOKEN IS LOGGED ONLY ON A MISMATCH.
-   *
-   * "Log the received token but never the configured one" cannot hold on the
-   * success path: when they match they are THE SAME STRING, so logging the
-   * received value would put the live shared secret into Render's log stream —
-   * a place it is not redacted, is retained, and is readable by anyone with
-   * dashboard access. `tokens` are named explicitly in this repo's no-secrets-
-   * in-logs rule (CLAUDE.md).
-   *
-   * On a MISMATCH the received value is by definition not the working secret,
-   * and seeing it is the entire point of the exercise — so it is logged there,
-   * JSON-escaped so an invisible `\n` or trailing space is actually visible.
-   *
-   * `matchesAfterTrim` is the field most likely to end this: a newline pasted
-   * into either the Render env var or the Meta dashboard field is invisible in
-   * both UIs and fails verification with a generic error that reads like a wrong
-   * URL. If that field says `true`, the tokens are identical and the whitespace
-   * is the whole bug.
-   */
-  private logHandshakeDebug(mode: unknown, token: unknown, expected: string | undefined): void {
-    const received = typeof token === 'string' ? token : null;
-    const matched =
-      received !== null && expected !== undefined && constantTimeEquals(received, expected);
-
-    const parts = [
-      `mode=${JSON.stringify(mode)}`,
-      // Distinguishes "the env var is missing on this service" from "the tokens
-      // differ" — the two failures look identical from the Meta dashboard.
-      `configuredTokenPresent=${expected !== undefined && expected !== ''}`,
-      `receivedTokenPresent=${received !== null}`,
-      `tokenMatched=${matched}`,
-    ];
-
-    if (received !== null && expected !== undefined && !matched) {
-      parts.push(
-        `receivedLength=${received.length}`,
-        `configuredLength=${expected.length}`,
-        `matchesAfterTrim=${constantTimeEquals(received.trim(), expected.trim())}`,
-        `receivedHasSurroundingWhitespace=${received !== received.trim()}`,
-        `configuredHasSurroundingWhitespace=${expected !== expected.trim()}`,
-        // Mismatch only — see the note above.
-        `receivedToken=${JSON.stringify(received)}`,
+      // Lengths are, because a trailing newline pasted into either the platform
+      // env var or the Meta dashboard field is invisible in both UIs and is the
+      // single most common cause of a mismatch.
+      this.logger.warn(
+        'WhatsApp webhook handshake rejected: verify token mismatch ' +
+          `(receivedLength=${token.length} configuredLength=${expected.length} ` +
+          `matchesAfterTrim=${constantTimeEquals(token.trim(), expected.trim())})`,
       );
+      return { ok: false, reason: 'TOKEN_MISMATCH' };
     }
-
-    this.logger.warn(`[TEMP DEBUG] WhatsApp handshake — ${parts.join(' ')}`);
+    return { ok: true, challenge };
   }
-  // ═══ END TEMPORARY DEBUG ═══════════════════════════════════════════════════
+
 
   // ── Signature ─────────────────────────────────────────────────────────────
 

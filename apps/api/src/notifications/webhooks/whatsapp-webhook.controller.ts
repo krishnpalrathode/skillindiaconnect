@@ -55,12 +55,21 @@ export class WhatsappWebhookController {
     @Query('hub.verify_token') token: string,
     @Query('hub.challenge') challenge: string,
   ): string {
-    const echo = this.service.verifyHandshake(mode, token, challenge);
-    if (echo === null) {
-      // 403 is what Meta expects for a refused subscription.
-      throw new ForbiddenException({ code: 'INVALID_VERIFY_TOKEN' });
+    const result = this.service.verifyHandshake(mode, token, challenge);
+    if (!result.ok) {
+      /**
+       * 403 is what Meta expects for a refused subscription — but the CODE now
+       * names which check failed. Meta's dashboard shows one generic error for
+       * every rejection, so if the body does not say which, the only way to tell
+       * a missing `hub.challenge` from a wrong token is to read server logs and
+       * guess. `TOKEN_MISMATCH` keeps the original INVALID_VERIFY_TOKEN code so
+       * the documented contract does not move.
+       */
+      throw new ForbiddenException({
+        code: result.reason === 'TOKEN_MISMATCH' ? 'INVALID_VERIFY_TOKEN' : result.reason,
+      });
     }
-    return echo;
+    return result.challenge;
   }
 
   /**

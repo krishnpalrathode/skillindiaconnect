@@ -153,7 +153,62 @@ describe('WhatsApp delivery webhook', () => {
     });
 
     it('rejects when the verify token is not configured at all', () => {
-      expect(service.verifyHandshake('subscribe', '', 'C')).toBeNull();
+      expect(service.verifyHandshake('subscribe', '', 'C')).toEqual({
+        ok: false,
+        reason: 'TOKEN_MISMATCH',
+      });
+    });
+
+    /**
+     * THE DIAGNOSTIC DEFECT THAT STALLED THE GO-LIVE INVESTIGATION.
+     *
+     * Every rejection used to collapse into one `null`, so the controller
+     * answered all four with `INVALID_VERIFY_TOKEN`. Meta's dashboard shows a
+     * single generic error whatever we return, so a missing `hub.challenge`
+     * was indistinguishable from a wrong token — verified against production,
+     * where a request with NO `hub.challenge` returned the identical
+     * `403 INVALID_VERIFY_TOKEN` body as a plain mismatch.
+     *
+     * These assert the reasons stay DISTINCT. They describe the request shape,
+     * never the secret, so they are safe on an unauthenticated endpoint.
+     */
+    describe('the failure reason names which check failed', () => {
+      it.each([
+        ['bad mode', 'unsubscribe', VERIFY_TOKEN, 'C', 'BAD_HUB_MODE'],
+        ['missing challenge', 'subscribe', VERIFY_TOKEN, undefined, 'MISSING_HUB_PARAMS'],
+        ['missing token', 'subscribe', undefined, 'C', 'MISSING_HUB_PARAMS'],
+        ['wrong token', 'subscribe', 'not-it', 'C', 'TOKEN_MISMATCH'],
+      ])('%s → %s', (_label, mode, token, challenge, reason) => {
+        expect(service.verifyHandshake(mode, token, challenge)).toEqual({ ok: false, reason });
+      });
+
+      it('a missing challenge is NOT reported as a bad verify token', () => {
+        const err = (() => {
+          try {
+            controller.verify('subscribe', VERIFY_TOKEN, undefined as never);
+          } catch (e) {
+            return e as ForbiddenException;
+          }
+          throw new Error('expected a rejection');
+        })();
+        const body = err.getResponse() as { code: string };
+        // The whole point: this used to say INVALID_VERIFY_TOKEN and send you
+        // to re-check the one thing that was already correct.
+        expect(body.code).toBe('MISSING_HUB_PARAMS');
+        expect(body.code).not.toBe('INVALID_VERIFY_TOKEN');
+      });
+
+      it('a genuine token mismatch KEEPS the documented INVALID_VERIFY_TOKEN code', () => {
+        const err = (() => {
+          try {
+            controller.verify('subscribe', 'not-it', 'C');
+          } catch (e) {
+            return e as ForbiddenException;
+          }
+          throw new Error('expected a rejection');
+        })();
+        expect((err.getResponse() as { code: string }).code).toBe('INVALID_VERIFY_TOKEN');
+      });
     });
   });
 

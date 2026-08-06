@@ -175,7 +175,28 @@ export class HttpProblemFilter implements ExceptionFilter {
       ...(meta && { meta }),
     };
 
-    res.status(status).json(problem);
+    /**
+     * SET THE CONTENT TYPE EXPLICITLY.
+     *
+     * `res.json()` only DEFAULTS the header — it will not override one already
+     * on the response. A handler decorated with `@Header('content-type', ...)`
+     * (the WhatsApp webhook GET declares `text/plain`, because Meta compares the
+     * challenge body verbatim) has that header applied BEFORE the handler runs,
+     * so it survives into the error path and every rejection from that route
+     * went out as a JSON body labelled `text/plain; charset=utf-8`.
+     *
+     * Verified against production before this fix:
+     *   HTTP/1.1 403 Forbidden
+     *   Content-Type: text/plain; charset=utf-8
+     *   {"type":"about:blank","title":"Forbidden",...,"code":"INVALID_VERIFY_TOKEN"}
+     *
+     * A mislabelled body is a client's problem to parse and, with
+     * `X-Content-Type-Options: nosniff` set by helmet, one a browser will not
+     * rescue. This restores exactly what every other route already got by
+     * default, so no existing response shape changes.
+     */
+    res.status(status).setHeader('content-type', 'application/json; charset=utf-8');
+    res.json(problem);
   }
 }
 
