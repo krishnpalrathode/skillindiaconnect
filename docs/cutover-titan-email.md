@@ -55,7 +55,7 @@ confirm it **arrives in the INBOX, not spam** (this is what validates SPF/DKIM/D
 | Notification type | Trigger | Arrived | Inbox (not spam) |
 | --- | --- | --- | --- |
 | Employer approval | approve a pending employer | ☐ | ☐ |
-| OTP-via-email fallback | login where WhatsApp is unavailable | ☐ | ☐ |
+| Password reset | `POST /auth/forgot-password` for a password account | ☐ | ☐ |
 | Passport-expiry reminder | the cron / a manual enqueue | ☐ | ☐ |
 | Subscription purchased | a paid activation | ☐ | ☐ |
 | Resume (email-to-self) | `POST /candidates/me/resume/send-email` | ☐ | ☐ |
@@ -64,6 +64,14 @@ confirm it **arrives in the INBOX, not spam** (this is what validates SPF/DKIM/D
 - [ ] A forced bad send (e.g. an invalid recipient) marks the `email_messages` row **FAILED** and
       the S2-B3 retry/fallback runs — no false `SENT`.
 - [ ] Worker logs show `email SENT type=… to=<hash>@<domain>` — **no full address, no body**.
+
+> ⚠️ **Corrected 2026-08-06 — there is no OTP-via-email fallback.** This table previously
+> listed "OTP-via-email fallback — login where WhatsApp is unavailable" as a step to tick.
+> **No such notification type exists**: the matrix has no OTP entry, `OtpService` has one
+> transport (`WhatsappChannel.sendOtp`), and nothing sends a code by email. An operator
+> following the old row would have ticked a box for a message that cannot arrive and
+> concluded the fallback was verified. WhatsApp is currently the ONLY OTP transport — see
+> [whatsapp-integration.md](./whatsapp-integration.md#known-gaps).
 
 > Note on the resume attachment: the channel **supports** attachments today (proven in
 > `titan-smtp-email.channel.spec.ts`). Wiring the resume processor to actually fetch the PDF from

@@ -271,11 +271,20 @@ half-configured state described above.
 
 ## Known gaps
 
-- **There is no email-OTP fallback.** WhatsApp is the only OTP transport. When a send
-  fails, the user's route in is **email + password** — which is what W1.6's
-  unconditional "continue with email" affordance points at. *(Note:
-  [cutover-titan-email.md](./cutover-titan-email.md) lists an "OTP-via-email fallback"
-  row in its smoke table; no such notification type exists in the matrix.)*
+- **There is no email-OTP fallback.** WhatsApp is the only OTP transport: the matrix
+  has no OTP entry and `OtpService` calls exactly one channel. A Meta outage therefore
+  removes phone login entirely. *(A stale "OTP-via-email fallback" row in
+  [cutover-titan-email.md](./cutover-titan-email.md) claimed otherwise; corrected
+  2026-08-06.)*
+- **W1.6's "Continue with email instead" does not open for a Google-only account.**
+  `users.passwordHash` is nullable, so a candidate who signed up with Google and
+  verified their phone during onboarding has no password. The affordance switches them
+  to the email+password tab, which they cannot use; `POST /auth/forgot-password`
+  correctly refuses to issue a token and emails "this account uses Google sign-in"
+  instead. Their working route is the **Continue with Google** button, which is
+  rendered above the tabs on the same screen — so it is a mislabelled affordance
+  rather than a dead end, but it points the wrong way for exactly the users least
+  likely to have a password.
 - **Phone-login failures are invisible to the user by design.**
   `/auth/login/phone/start` always returns the same body: a send is only *attempted*
   for a registered number, so an honest error would make the endpoint an
