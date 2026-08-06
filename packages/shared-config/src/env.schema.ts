@@ -123,6 +123,20 @@ export const envSchema = z.object({
   // An EXPLICIT timeout. The OTP send is on the auth request path, so an
   // unbounded wait is a hung login, not just a slow job.
   WHATSAPP_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
+  // ── The delivery webhook (CR-WA W2) — read by the API process ──────────────
+  // A secret YOU invent and paste into the Meta dashboard; the two must match
+  // exactly or every verification attempt fails with a generic error.
+  WHATSAPP_VERIFY_TOKEN: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().min(1).optional(),
+  ),
+  // Meta's App Secret — signs the callback body (X-Hub-Signature-256). Absent
+  // means the webhook FAILS CLOSED and rejects everything; it never means
+  // "accept unsigned".
+  WHATSAPP_APP_SECRET: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().min(1).optional(),
+  ),
 
   // S7-B1: WORKER-only Chromium. OPTIONAL — when absent, puppeteer uses its
   // own downloaded Chrome (local dev). The alpine container sets it to the

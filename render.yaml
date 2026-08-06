@@ -86,6 +86,11 @@ services:
         sync: false
       - key: WHATSAPP_GRAPH_VERSION
         value: v21.0
+      # The delivery webhook (CR-WA W2) — API ONLY; Meta calls this service.
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false
+      - key: WHATSAPP_APP_SECRET
+        sync: false
 
   # ── Worker (BullMQ consumers + cron; no HTTP listener) ─────────────────────
   - type: worker

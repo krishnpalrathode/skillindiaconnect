@@ -21,7 +21,26 @@ import { json, raw, urlencoded } from 'express';
  * requests the raw parser already captured — the webhook body is never
  * JSON-parsed by the framework at all.
  */
-export const WEBHOOK_RAW_PATHS = ['/api/v1/webhooks/razorpay', '/api/v1/webhooks/stripe'];
+/**
+ * Every SIGNED webhook path in the platform.
+ *
+ * ⚠️ A NEW SIGNED WEBHOOK MUST BE ADDED HERE. This is a bootstrap-level registry
+ * (main.api.ts applies it before Nest routing exists), so it spans modules —
+ * `whatsapp` is served by the notifications module, not payments. The list and
+ * the controllers' routes have to AGREE, and nothing but a test can enforce
+ * that: omit a path and the body arrives already JSON-parsed, `req.body` is not
+ * a Buffer, and signature verification is computed over the wrong thing — or a
+ * defensive Buffer check short-circuits and the request is processed UNVERIFIED.
+ *
+ * That failure is invisible to unit tests, which construct the Buffer
+ * themselves. It is proven at the HTTP layer in raw-body.scoping.spec.ts, which
+ * is the only place it can be.
+ */
+export const WEBHOOK_RAW_PATHS = [
+  '/api/v1/webhooks/razorpay',
+  '/api/v1/webhooks/stripe',
+  '/api/v1/webhooks/whatsapp',
+];
 
 export function applyScopedBodyParsers(app: INestApplication): void {
   for (const path of WEBHOOK_RAW_PATHS) {

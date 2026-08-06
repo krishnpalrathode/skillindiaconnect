@@ -4,6 +4,8 @@ import { NotificationService } from './notification.service';
 import { NotificationSubscriber } from './notification.subscriber';
 import { NotificationsController } from './notifications.controller';
 import { EmployerNotificationsController } from './employer-notifications.controller';
+import { WhatsappWebhookController } from './webhooks/whatsapp-webhook.controller';
+import { WhatsappWebhookService } from './webhooks/whatsapp-webhook.service';
 
 /**
  * API-process side of the Notifications module.
@@ -21,8 +23,15 @@ import { EmployerNotificationsController } from './employer-notifications.contro
  */
 @Module({
   imports: [QueueModule],
-  controllers: [NotificationsController, EmployerNotificationsController],
-  providers: [NotificationService, NotificationSubscriber],
+  controllers: [
+    NotificationsController,
+    EmployerNotificationsController,
+    // CR-WA W2: Meta delivery statuses. API-side because the WEBHOOK is
+    // received by the API process — but note this only WRITES delivery state;
+    // it never sends anything, so worker-and-external-sends.md is untouched.
+    WhatsappWebhookController,
+  ],
+  providers: [NotificationService, NotificationSubscriber, WhatsappWebhookService],
   exports: [NotificationService],
 })
 export class NotificationModule {}
