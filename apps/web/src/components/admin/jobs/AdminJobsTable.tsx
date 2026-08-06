@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/format/date';
 import { ReviewQueueBanner } from './ReviewQueueBanner';
 
 /**
@@ -260,11 +261,7 @@ export function AdminJobsTable() {
                   <td className="p-3 text-neutral-600">{j.applicantCount ?? 0}</td>
                   <td className="p-3 text-neutral-600">{j.views ?? 0}</td>
                   <td className="p-3 text-neutral-600">
-                    {new Date(j.publishedAt ?? j.createdAt).toLocaleDateString('en-IN', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
+                    {formatDate(j.publishedAt ?? j.createdAt, locale)}
                   </td>
                 </tr>
               ))}

@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/format/date';
 import type { components } from '@skillindiaconnect/shared-types';
 
 type JobCard = components['schemas']['JobCard'];
@@ -118,7 +119,7 @@ export function RecentJobsTable({ jobs }: RecentJobsTableProps) {
                     <StatusBadge status="ACTIVE" />
                   </td>
                   <td className="px-4 py-3.5 text-neutral-600 hidden sm:table-cell">
-                    {job.createdAt ? new Date(job.createdAt).toLocaleDateString() : '—'}
+                    {job.createdAt ? formatDate(job.createdAt, locale) : '—'}
                   </td>
                 </tr>
               ))}

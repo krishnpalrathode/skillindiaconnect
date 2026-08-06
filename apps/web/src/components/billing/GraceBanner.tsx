@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import { formatDate } from '@/lib/format/date';
 import Link from 'next/link';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,11 +17,7 @@ interface GraceBannerProps {
 export function GraceBanner({ planName, graceEndsAt, daysRemaining, renewHref }: GraceBannerProps) {
   const t = useTranslations('billing.manage');
 
-  const graceEndDate = new Intl.DateTimeFormat(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(graceEndsAt));
+  const graceEndDate = formatDate(graceEndsAt);
 
   return (
     <div

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/format/date';
 import { GraceBanner } from './GraceBanner';
 import type { components } from '@skillindiaconnect/shared-types';
 
@@ -13,14 +14,6 @@ type SubscriptionStatus = components['schemas']['SubscriptionStatus'];
 
 interface CurrentPlanCardProps {
   subscription: SubscriptionStatus;
-}
-
-function formatDate(dateStr: string, locale: string): string {
-  return new Intl.DateTimeFormat(locale, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(dateStr));
 }
 
 export function CurrentPlanCard({ subscription }: CurrentPlanCardProps) {

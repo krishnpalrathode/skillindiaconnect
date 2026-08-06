@@ -94,6 +94,14 @@
     }
   },
   "common": {
+    "calendar": {
+      "prevMonth": "पिछला महीना",
+      "nextMonth": "अगला महीना",
+      "month": "महीना",
+      "year": "वर्ष",
+      "clear": "साफ़ करें",
+      "today": "आज"
+    },
     "continue": "[hi] Continue",
     "back": "[hi] Back",
     "save": "[hi] Save",
@@ -385,6 +393,7 @@
       "nameError": "कृपया अपना पूरा नाम दर्ज करें (कम से कम 2 अक्षर)।",
       "dobLabel": "जन्म तिथि",
       "dobHint": "पंजीकरण के लिए आपकी आयु कम से कम 18 वर्ष होनी चाहिए।",
+      "dobPlaceholder": "अपनी जन्म तिथि चुनें",
       "ageError": "पंजीकरण के लिए आपकी आयु कम से कम 18 वर्ष होनी चाहिए।",
       "maritalStatusLabel": "वैवाहिक स्थिति",
       "languagesLabel": "बोली जाने वाली भाषाएँ",
@@ -441,6 +450,7 @@
       "noticePeriodPlaceholder": "जैसे 30",
       "passportExpiryLabel": "पासपोर्ट की समाप्ति तिथि",
       "passportExpiryRequired": "अपलोड करने से पहले समाप्ति तिथि दर्ज करें",
+      "passportExpiryPast": "यह पासपोर्ट पहले ही समाप्त हो चुका है। भविष्य की वैध समाप्ति तिथि दर्ज करें।",
       "softBlockDocs": "अपनी प्रोफ़ाइल सुधारने के लिए पासपोर्ट अपलोड करें",
       "softBlockSkills": "मैच स्कोर सुधारने के लिए कौशल जोड़ें",
       "documentStatus": {

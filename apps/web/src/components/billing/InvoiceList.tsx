@@ -8,16 +8,9 @@ import { formatSubunits } from '@/lib/money';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import type { components } from '@skillindiaconnect/shared-types';
+import { formatDate } from '@/lib/format/date';
 
 type Invoice = components['schemas']['Invoice'];
-
-function formatDate(dateStr: string, locale: string): string {
-  return new Intl.DateTimeFormat(locale, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(dateStr));
-}
 
 export function InvoiceList() {
   const t = useTranslations('billing.manage');

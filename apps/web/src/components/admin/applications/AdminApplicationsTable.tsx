@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/format/date';
 
 /** Admin-context status colors — same palette semantics as the candidate card. */
 export const ADMIN_APP_STATUS_VARIANT: Record<
@@ -242,13 +243,7 @@ export function AdminApplicationsTable() {
                     </div>
                   </td>
                   <td className="p-3 text-neutral-600">{a.matchScore}</td>
-                  <td className="p-3 text-neutral-600">
-                    {new Date(a.appliedAt).toLocaleDateString('en-IN', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </td>
+                  <td className="p-3 text-neutral-600">{formatDate(a.appliedAt, locale)}</td>
                 </tr>
               ))}
             </tbody>

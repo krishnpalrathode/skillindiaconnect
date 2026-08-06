@@ -8,6 +8,7 @@ import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
+import { DatePicker } from '@/components/ui/date-picker';
 import { PhoneVerify } from '@/components/onboarding/PhoneVerify';
 import { patchCandidateProfile } from '@/lib/api/candidate';
 import type { PatchCandidateBody } from '@/lib/api/candidate';
@@ -58,6 +59,7 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
   const t = useTranslations('onboarding.personalInfo');
   const tStep = useTranslations('onboarding.nav');
   const tStatus = useTranslations('onboarding.maritalStatus');
+  const tCal = useTranslations('common.calendar');
 
   const [fullName, setFullName] = useState(profile.fullName ?? '');
   const [dob, setDob] = useState(profile.dob ?? '');
@@ -211,13 +213,21 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
           hint={t('dobHint')}
           error={showAgeError ? t('ageError') : undefined}
         >
-          <Input
-            type="date"
+          <DatePicker
             value={dob}
-            onChange={(e) => setDob(e.target.value)}
+            onChange={setDob}
             min={minDob}
             max={maxDob}
-            className="h-12 rounded-xl"
+            placeholder={t('dobPlaceholder')}
+            className="rounded-xl"
+            labels={{
+              prevMonth: tCal('prevMonth'),
+              nextMonth: tCal('nextMonth'),
+              month: tCal('month'),
+              year: tCal('year'),
+              clear: tCal('clear'),
+              today: tCal('today'),
+            }}
           />
         </Field>
 

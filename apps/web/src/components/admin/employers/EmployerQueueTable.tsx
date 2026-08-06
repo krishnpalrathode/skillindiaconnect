@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/format/date';
 
 const STATUS_TABS = ['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED', 'ALL'] as const;
 type StatusTab = (typeof STATUS_TABS)[number];
@@ -239,13 +240,7 @@ export function EmployerQueueTable() {
                     </Badge>
                   </td>
                   <td className="p-3 text-neutral-600">{c.registrationNumber ?? '—'}</td>
-                  <td className="p-3 text-neutral-600">
-                    {new Date(c.createdAt).toLocaleDateString('en-IN', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </td>
+                  <td className="p-3 text-neutral-600">{formatDate(c.createdAt, locale)}</td>
                   <td className="p-3">
                     <Badge variant={STATUS_BADGE[c.status]}>{t(`status.${c.status}`)}</Badge>
                   </td>

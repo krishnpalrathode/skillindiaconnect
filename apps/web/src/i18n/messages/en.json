@@ -94,6 +94,14 @@
     }
   },
   "common": {
+    "calendar": {
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "month": "Month",
+      "year": "Year",
+      "clear": "Clear",
+      "today": "Today"
+    },
     "continue": "Continue",
     "back": "Back",
     "save": "Save",
@@ -385,6 +393,7 @@
       "nameError": "Please enter your full name (at least 2 characters).",
       "dobLabel": "Date of birth",
       "dobHint": "You must be at least 18 years old to register.",
+      "dobPlaceholder": "Select your date of birth",
       "ageError": "You must be at least 18 years old to register.",
       "maritalStatusLabel": "Marital status",
       "languagesLabel": "Languages spoken",
@@ -441,6 +450,7 @@
       "noticePeriodPlaceholder": "e.g. 30",
       "passportExpiryLabel": "Passport expiry date",
       "passportExpiryRequired": "Enter expiry date before uploading",
+      "passportExpiryPast": "This passport has already expired. Enter a valid future expiry date.",
       "softBlockDocs": "Upload your passport to improve your profile",
       "softBlockSkills": "Add skills to improve your match score",
       "documentStatus": {

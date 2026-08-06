@@ -94,6 +94,14 @@
     }
   },
   "common": {
+    "calendar": {
+      "prevMonth": "الشهر السابق",
+      "nextMonth": "الشهر التالي",
+      "month": "الشهر",
+      "year": "السنة",
+      "clear": "مسح",
+      "today": "اليوم"
+    },
     "continue": "[ar] Continue",
     "back": "[ar] Back",
     "save": "[ar] Save",
@@ -385,6 +393,7 @@
       "nameError": "يرجى إدخال اسمك الكامل (حرفان على الأقل).",
       "dobLabel": "تاريخ الميلاد",
       "dobHint": "يجب أن يكون عمرك 18 عامًا على الأقل للتسجيل.",
+      "dobPlaceholder": "اختر تاريخ ميلادك",
       "ageError": "يجب أن يكون عمرك 18 عامًا على الأقل للتسجيل.",
       "maritalStatusLabel": "الحالة الاجتماعية",
       "languagesLabel": "اللغات المتحدث بها",
@@ -441,6 +450,7 @@
       "noticePeriodPlaceholder": "مثال: 30",
       "passportExpiryLabel": "تاريخ انتهاء صلاحية جواز السفر",
       "passportExpiryRequired": "أدخل تاريخ الانتهاء قبل الرفع",
+      "passportExpiryPast": "انتهت صلاحية هذا الجواز بالفعل. أدخل تاريخ انتهاء صالحًا في المستقبل.",
       "softBlockDocs": "ارفع جواز سفرك لتحسين ملفك الشخصي",
       "softBlockSkills": "أضف مهارات لتحسين نقاط المطابقة",
       "documentStatus": {

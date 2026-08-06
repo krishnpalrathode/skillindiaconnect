@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { formatDate as fmtDate } from '@/lib/format/date';
 import { ArrowRight, MessageSquareWarning } from 'lucide-react';
 import {
   getAdminApplication,
@@ -24,11 +25,7 @@ import { NotesPanel } from './NotesPanel';
 const BREAKDOWN_KEYS = ['category', 'experienceYears', 'foreignExperience', 'documents'] as const;
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
+  return fmtDate(iso);
 }
 
 /**

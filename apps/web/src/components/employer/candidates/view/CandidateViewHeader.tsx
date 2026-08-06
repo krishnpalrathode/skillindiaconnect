@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import { formatMonthYear } from '@/lib/format/date';
 import { MapPin, CalendarClock } from 'lucide-react';
 import { jobCategoryLabelKey } from '@/lib/jobs/categories';
 import type { CandidateEmployerView } from '@/lib/api/employer-candidates';
@@ -33,10 +34,7 @@ export function CandidateViewHeader({ candidate, locale }: CandidateViewHeaderPr
 
   const labelKey = jobCategoryLabelKey(candidate.jobCategoryId);
   const categoryLabel = labelKey ? tc(labelKey) : null;
-  const memberSince = new Date(candidate.createdAt).toLocaleDateString(locale, {
-    year: 'numeric',
-    month: 'long',
-  });
+  const memberSince = formatMonthYear(candidate.createdAt, locale);
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center">
