@@ -86,11 +86,16 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
       {/* Completion ring — server-computed, never client-side. */}
       <div className="flex flex-col items-center gap-3 rounded-[22px] bg-gradient-to-br from-neutral-50 to-[#E8F0FE]/40 px-4 py-6">
         <p className="text-sm font-bold text-neutral-700">{t('completionTitle')}</p>
+        {/* Same props as the Profile hero's ring — the two screens show the SAME
+            number, so they must not render it in two different styles. */}
         <CompletionRing
           pct={completion?.pct ?? profile.completionPct ?? 0}
           size={150}
           strokeWidth={13}
           gradient
+          gradientColors={['#0F3D91', '#F57C20']}
+          glow
+          milestones
         />
       </div>
 
