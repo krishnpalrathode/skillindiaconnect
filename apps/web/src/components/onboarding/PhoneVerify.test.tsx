@@ -70,6 +70,27 @@ describe('PhoneVerify — honest send failures (CR-WA W1.6)', () => {
     expect(screen.queryByText(/couldn't send your code/i)).not.toBeInTheDocument();
   });
 
+  /**
+   * THE 429 SEEN IN PRODUCTION.
+   *
+   * This screen had no rate-limit branch, so a 429 fell through to the generic
+   * "Something went wrong. Please try again." — telling the user to do the one
+   * thing guaranteed to keep failing, and (because every attempt increments the
+   * counter) to keep the window open longer.
+   *
+   * The branch matches on STATUS, not code: the API emits OTP_RATE_LIMITED from
+   * OtpService's budgets but RATE_LIMITED from ThrottlerGuard, and matching one
+   * string silently misses the other.
+   */
+  it('a 429 says WAIT — not "try again"', async () => {
+    await submit('9777777777'); // → OTP_RATE_LIMITED_PHONE
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/too many attempts/i));
+    expect(screen.getByRole('alert')).toHaveTextContent(/wait/i);
+    // The generic copy would have invited an immediate retry.
+    expect(screen.queryByText(/something went wrong/i)).not.toBeInTheDocument();
+  });
+
   it('a successful send still advances to OTP entry', async () => {
     await submit(WORKING_NUMBER);
 

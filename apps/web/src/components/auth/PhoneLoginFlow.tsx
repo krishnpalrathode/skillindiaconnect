@@ -47,7 +47,16 @@ export function PhoneLoginFlow({ onSuccess, onUseAnotherMethod }: PhoneLoginFlow
       // ENUMERATION-SAFE: always 200. Advance to OTP step regardless.
       await postPhoneLoginStart(fullPhone);
     } catch (err) {
-      if (err instanceof ApiRequestError && err.error.code === 'RATE_LIMIT_EXCEEDED') {
+      /**
+       * STATUS, NOT CODE — this checked `RATE_LIMIT_EXCEEDED`, which this
+       * endpoint NEVER RETURNS. A 429 here is `RATE_LIMITED` (ThrottlerGuard,
+       * 5/min) or `OTP_RATE_LIMITED` (OtpService's phone/IP budgets); only
+       * password-reset emits RATE_LIMIT_EXCEEDED. So the branch was dead and a
+       * rate-limited user was advanced to the OTP screen to wait for a code
+       * that was never sent — the same false-success shape W1.5 removed from
+       * the API, reintroduced by a string that did not match.
+       */
+      if (err instanceof ApiRequestError && err.error.status === 429) {
         setError(t('otpRateLimited'));
         setLoading(false);
         return;
@@ -87,7 +96,9 @@ export function PhoneLoginFlow({ onSuccess, onUseAnotherMethod }: PhoneLoginFlow
     try {
       await postPhoneLoginStart(fullPhone);
     } catch (err) {
-      if (err instanceof ApiRequestError && err.error.code === 'RATE_LIMIT_EXCEEDED') {
+      // Same dead-branch fix as above — resend is the button a rate-limited
+      // user reaches for, so it is the one that most needed to say so.
+      if (err instanceof ApiRequestError && err.error.status === 429) {
         setError(t('otpRateLimited'));
       }
     } finally {

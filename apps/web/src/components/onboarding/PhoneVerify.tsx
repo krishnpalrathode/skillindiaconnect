@@ -90,11 +90,25 @@ export function PhoneVerify({
        * The stage deliberately stays 'input' on every failure, so the send
        * button remains and retrying costs one tap.
        */
-      const code = err instanceof ApiRequestError ? err.error.code : null;
+      const apiErr = err instanceof ApiRequestError ? err.error : null;
+      const code = apiErr?.code ?? null;
       if (code === 'PHONE_NOT_ON_WHATSAPP') {
         setError(t('otpNotOnWhatsapp'));
       } else if (code === 'OTP_SEND_FAILED') {
         setError(t('otpSendFailed'));
+      } else if (apiErr?.status === 429) {
+        /**
+         * BRANCH ON THE STATUS, NOT THE CODE. A 429 reaches here under THREE
+         * different codes depending on which layer rejected it:
+         *   OTP_RATE_LIMITED   — OtpService's per-phone (5/h) and per-IP budgets
+         *   RATE_LIMITED       — ThrottlerGuard (5/min), via HttpProblemFilter's
+         *                        DEFAULT_CODES
+         *   RATE_LIMIT_EXCEEDED — password-reset only, but cheap to cover
+         * Matching on one code silently misses the others, which is exactly how
+         * this screen ended up telling a rate-limited user to "try again" —
+         * the one action guaranteed to keep failing and to extend the window.
+         */
+        setError(t('otpRateLimited'));
       } else {
         setError(t('otpSendError'));
       }

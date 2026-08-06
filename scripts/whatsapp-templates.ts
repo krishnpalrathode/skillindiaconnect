@@ -66,9 +66,75 @@ interface GraphError {
 const base = `https://graph.facebook.com/${GRAPH}`;
 let failed = false;
 
-async function get<T>(path: string): Promise<{ data: T | null; error: GraphError | null; status: number }> {
+/** debug_token is needed twice (permissions + WABA discovery); fetch it once. */
+interface DebugToken {
+  is_valid?: boolean;
+  app_id?: string;
+  application?: string;
+  type?: string;
+  expires_at?: number;
+  data_access_expires_at?: number;
+  scopes?: string[];
+  granular_scopes?: { scope: string; target_ids?: (string | number)[] }[];
+}
+interface DebugResult {
+  data: DebugToken | null;
+  error: GraphError | null;
+  /** Which credential was used to MAKE the call — not the one being inspected. */
+  credential: 'app access token' | 'the input token itself (see note)';
+}
+let cachedDebug: DebugResult | undefined;
+
+/**
+ * ⚠️ `debug_token`'s `access_token` PARAMETER IS NOT THE TOKEN BEING INSPECTED.
+ *
+ * Meta requires "an app access token or an app developer's user access token
+ * for the app associated with the input_token". A System User token — which is
+ * what this integration uses — is NEITHER, so passing it for both parameters
+ * can be refused on the credential used to MAKE the call, while the token being
+ * inspected is perfectly healthy.
+ *
+ * That is exactly what happened: the refusal was reported as "the token is
+ * unreadable, likely malformed", a claim about a completely different thing,
+ * and it sent an operator to re-check an environment variable that was correct.
+ *
+ * So: build a real app access token (`{app-id}|{app-secret}`) when WHATSAPP_APP_ID
+ * and WHATSAPP_APP_SECRET are available — APP_SECRET is already in the
+ * deployment env for the W2 webhook — and fall back to the input token only as a
+ * best-effort, saying so. Either way the REAL Graph error is returned rather
+ * than flattened to null.
+ *
+ * No Authorization header here: this endpoint takes its credential as a query
+ * parameter, and sending both is what made the failure ambiguous.
+ */
+async function debugToken(): Promise<DebugResult> {
+  if (cachedDebug !== undefined) return cachedDebug;
+
+  const appId = process.env.WHATSAPP_APP_ID;
+  const appSecret = process.env.WHATSAPP_APP_SECRET;
+  const useAppToken = Boolean(appId && appSecret);
+  const credential: DebugResult['credential'] = useAppToken
+    ? 'app access token'
+    : 'the input token itself (see note)';
+  const caller = useAppToken ? `${appId}|${appSecret}` : TOKEN!;
+
+  const { data, error } = await get<{ data?: DebugToken }>(
+    `/debug_token?input_token=${encodeURIComponent(TOKEN!)}&access_token=${encodeURIComponent(caller)}`,
+    { bearer: false },
+  );
+
+  cachedDebug = { data: data?.data ?? null, error, credential };
+  return cachedDebug;
+}
+
+async function get<T>(
+  path: string,
+  opts: { bearer?: boolean } = {},
+): Promise<{ data: T | null; error: GraphError | null; status: number }> {
   try {
-    const res = await fetch(`${base}${path}`, { headers: { Authorization: `Bearer ${TOKEN!}` } });
+    const res = await fetch(`${base}${path}`, {
+      headers: opts.bearer === false ? {} : { Authorization: `Bearer ${TOKEN!}` },
+    });
     const body = (await res.json().catch(() => null)) as (T & { error?: GraphError }) | null;
     if (!res.ok) return { data: null, error: body?.error ?? { message: `HTTP ${res.status}` }, status: res.status };
     return { data: body as T, error: null, status: res.status };
@@ -96,7 +162,81 @@ function requireEnv(): void {
   process.exit(2);
 }
 
-// ── 2. Identify the phone number ─────────────────────────────────────────────
+// ── 2. The token itself ──────────────────────────────────────────────────────
+
+/**
+ * Extra detail on error 200 / "API access blocked" — the 200-family is API
+ * PERMISSION, so the useful facts are validity, the whatsapp_business_* scopes,
+ * and expiry (a 24-hour tester token presents as a sudden total outage).
+ *
+ * BEST-EFFORT AND NON-FATAL, deliberately. An earlier revision made this a hard
+ * gate ahead of everything else, which was backwards: debug_token is
+ * INTROSPECTION, and it needs a credential this integration does not necessarily
+ * have. The authoritative access test is the direct call to the phone-number
+ * node above — that uses the real token against the real API, which is what the
+ * failing sends do. Gating on introspection meant a script that could not
+ * inspect refused to run the checks that would actually have answered the
+ * question.
+ */
+async function describeToken(): Promise<void> {
+  const { data: t, error, credential } = await debugToken();
+
+  if (!t) {
+    // NEVER claim the token is malformed from this. debug_token failing says
+    // something about THIS CALL — usually the credential used to make it — and
+    // the direct API calls above are the authoritative access test.
+    console.log(`  ⚠ Could not introspect the token (called with: ${credential}).`);
+    console.log(`      code=${error?.code ?? 'none'} message=${error?.message ?? 'unknown'}`);
+    if (credential !== 'app access token') {
+      console.log('');
+      console.log('    NOTE: debug_token wants an APP access token, not the System User');
+      console.log('    token being inspected. Supply both to get the scope readout:');
+      console.log('      WHATSAPP_APP_ID=<App Dashboard → Settings → Basic → App ID>');
+      console.log('      WHATSAPP_APP_SECRET=<same value the API already uses>');
+    }
+    console.log('');
+    console.log('    This does NOT mean your token is bad — the checks above already');
+    console.log('    exercised it directly. Scope detail is simply unavailable.');
+    return;
+  }
+
+  const when = (s?: number) => (!s ? 'never' : new Date(s * 1000).toISOString());
+  console.log(`  valid              ${t.is_valid === true ? 'yes' : 'NO'}`);
+  console.log(`  type               ${t.type ?? '(unknown)'}`);
+  console.log(`  app                ${t.application ?? '(unknown)'} (${t.app_id ?? '?'})`);
+  console.log(`  expires            ${when(t.expires_at)}`);
+  console.log(`  data access ends   ${when(t.data_access_expires_at)}`);
+
+  const granular = t.granular_scopes ?? [];
+  const flat = new Set([...(t.scopes ?? []), ...granular.map((g) => g.scope)]);
+  console.log(`  scopes             ${[...flat].join(', ') || '(none)'}`);
+
+  let ok = t.is_valid === true;
+  if (!ok) {
+    failed = true;
+    console.error('\n  ✗ TOKEN IS NOT VALID. Regenerate it (System User → Generate token).');
+  }
+
+  // The two that matter; absence of either produces the 200-family error.
+  for (const need of ['whatsapp_business_messaging', 'whatsapp_business_management']) {
+    const has = [...flat].some((s) => s === need);
+    if (!has) {
+      ok = false;
+      failed = true;
+      console.error(`  ✗ MISSING SCOPE: ${need}`);
+    }
+  }
+  if (ok && t.expires_at && t.expires_at * 1000 - Date.now() < 7 * 864e5) {
+    console.log('\n  ⚠ This token expires within a week — a tester token, most likely.');
+    console.log('    Its expiry will present as a sudden, total WhatsApp outage.');
+  }
+  if (!ok) {
+    console.error('\n  → This explains `code=200 API access blocked`: nothing works until');
+    console.error('    the token is valid AND carries both whatsapp_business_* scopes.');
+  }
+}
+
+// ── 3. Identify the phone number ─────────────────────────────────────────────
 
 async function describePhoneNumber(): Promise<boolean> {
   const { data, error, status } = await get<{
@@ -145,10 +285,8 @@ async function candidateWabas(): Promise<{ id: string; source: string }[]> {
 
   // The token's granular scopes are WABA-scoped. Undocumented as "these are
   // WABA ids", which is exactly why every candidate is verified below.
-  const dbg = await get<{
-    data?: { granular_scopes?: { scope: string; target_ids?: (string | number)[] }[] };
-  }>(`/debug_token?input_token=${encodeURIComponent(TOKEN!)}&access_token=${encodeURIComponent(TOKEN!)}`);
-  for (const g of dbg.data?.data?.granular_scopes ?? []) {
+  const dbg = await debugToken();
+  for (const g of dbg.data?.granular_scopes ?? []) {
     if (!g.scope.startsWith('whatsapp_business')) continue;
     for (const t of g.target_ids ?? []) add(t, `token scope ${g.scope}`);
   }
@@ -287,11 +425,22 @@ async function main(): Promise<void> {
   console.log(`WhatsApp template diagnostic — Graph ${GRAPH}`);
   console.log(line());
 
-  console.log(`\n▸ PHONE NUMBER\n`);
+  /**
+   * THE REAL ACCESS TEST GOES FIRST — a direct call with the actual token,
+   * against the same API the failing sends use. debug_token is introspection
+   * and needs a credential we may not have, so it cannot gate anything.
+   */
+  console.log(`\n▸ PHONE NUMBER (this is the access test)\n`);
   if (!(await describePhoneNumber())) {
-    console.log(`\n${line()}\nFAIL — could not read the phone number; nothing else can be trusted.\n`);
+    // Access is broken; the scope readout is exactly what explains why.
+    console.log(`\n▸ ACCESS TOKEN\n`);
+    await describeToken();
+    console.log(`\n${line()}\nFAIL — the token cannot reach the API. See above.\n`);
     process.exit(1);
   }
+
+  console.log(`\n▸ ACCESS TOKEN\n`);
+  await describeToken();
 
   console.log(`\n▸ RESOLVING THE WABA THAT OWNS IT\n`);
   const candidates = await candidateWabas();
