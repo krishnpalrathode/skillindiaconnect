@@ -4,6 +4,7 @@ import { OtpPurpose } from '@prisma/client';
 import { createHash } from 'node:crypto';
 import { OtpService } from './otp.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { MetricsService } from '../../core/observability/metrics.service';
 import { REDIS_CLIENT } from '../../core/redis/redis.provider';
 import { WHATSAPP_CHANNEL } from '../../notifications/channels/whatsapp.channel';
 
@@ -74,6 +75,7 @@ describe('OtpService', () => {
         { provide: PrismaService, useValue: prismaMock },
         { provide: REDIS_CLIENT, useValue: redisMock },
         { provide: WHATSAPP_CHANNEL, useValue: whatsappMock },
+        MetricsService,
       ],
     }).compile();
 
@@ -137,16 +139,16 @@ describe('OtpService', () => {
       expect(expiresAt.getTime()).toBeLessThanOrEqual(after + 5 * 60 * 1000 + 1000);
     });
 
-    it('returns { sent: true } for a normal number', async () => {
+    it('returns outcome SENT for a normal number', async () => {
       whatsappMock.sendOtp.mockResolvedValue({ ok: true, providerMessageId: 'mock-1' });
       const result = await service.issue('+911234567890', OtpPurpose.PHONE_VERIFY, '1.2.3.4');
-      expect(result).toEqual({ sent: true });
+      expect(result).toEqual({ outcome: 'SENT' });
     });
 
-    it('returns { sent: false, notOnWhatsapp: true } for a not-on-WhatsApp number', async () => {
+    it('returns outcome NOT_ON_WHATSAPP for a not-on-WhatsApp number', async () => {
       whatsappMock.sendOtp.mockResolvedValue({ ok: false, notOnWhatsapp: true });
       const result = await service.issue('+910000', OtpPurpose.PHONE_VERIFY, '1.2.3.4');
-      expect(result).toEqual({ sent: false, notOnWhatsapp: true });
+      expect(result).toEqual({ outcome: 'NOT_ON_WHATSAPP' });
     });
 
     it('invalidates prior unconsumed challenges before creating the new one', async () => {

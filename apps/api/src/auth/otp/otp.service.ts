@@ -3,14 +3,20 @@ import {
   HttpStatus,
   Inject,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import { DeliveryStatus, OtpChallenge, OtpPurpose, Prisma, WaMessageKind } from '@prisma/client';
 import type { Redis } from 'ioredis';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { MetricsService } from '../../core/observability/metrics.service';
 import { REDIS_CLIENT } from '../../core/redis/redis.provider';
-import { WHATSAPP_CHANNEL, WhatsappChannel } from '../../notifications/channels/whatsapp.channel';
+import {
+  WHATSAPP_CHANNEL,
+  WhatsappChannel,
+  WhatsappSendResult,
+} from '../../notifications/channels/whatsapp.channel';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -21,14 +27,40 @@ const SEND_BUDGET_PHONE = 5; // per hour, SHARED across PHONE_VERIFY + LOGIN
 const SEND_BUDGET_IP = 20; // per hour, per IP
 const SEND_WINDOW_S = 3600; // 1 hour in seconds
 
+/**
+ * What actually happened to an OTP send (CR-WA W1.5).
+ *
+ *   SENT             the provider accepted it; a code is on its way
+ *   NOT_ON_WHATSAPP  the number is confirmed not reachable on WhatsApp
+ *   SEND_FAILED      we TRIED and the provider refused or was unreachable
+ *
+ * SEND_FAILED exists because it used to be indistinguishable from SENT. The
+ * three are kept as one discriminated outcome rather than a pair of booleans so
+ * a caller cannot accidentally treat "not sent" as "sent" by checking the wrong
+ * field — which is exactly how the original bug read.
+ *
+ * ⚠️ WHETHER AN OUTCOME MAY BE SURFACED DEPENDS ON THE ENDPOINT, not on this
+ * type. See otp.controller.ts: the phone-LOGIN endpoint must answer identically
+ * regardless, because a send is only attempted there for a REGISTERED number,
+ * so any outcome-dependent response would leak account existence.
+ */
+export type OtpIssueOutcome = 'SENT' | 'NOT_ON_WHATSAPP' | 'SEND_FAILED';
+
+export interface OtpIssueResult {
+  outcome: OtpIssueOutcome;
+}
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 @Injectable()
 export class OtpService {
+  private readonly logger = new Logger(OtpService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
     @Inject(WHATSAPP_CHANNEL) private readonly whatsapp: WhatsappChannel,
+    private readonly metrics: MetricsService,
   ) {}
 
   /**
@@ -38,11 +70,7 @@ export class OtpService {
    * per-IP budget. On success the raw code is sent via WhatsApp; only its SHA-256
    * hash is persisted — the plaintext is never written to the DB or structured logs.
    */
-  async issue(
-    phone: string,
-    purpose: OtpPurpose,
-    ip: string,
-  ): Promise<{ sent: boolean; notOnWhatsapp?: boolean }> {
+  async issue(phone: string, purpose: OtpPurpose, ip: string): Promise<OtpIssueResult> {
     await this.checkPhoneBudget(phone);
     await this.applyIpBudget(ip);
 
@@ -62,10 +90,49 @@ export class OtpService {
       });
     });
 
-    const result = await this.whatsapp.sendOtp(phone, code, purpose as 'PHONE_VERIFY' | 'LOGIN');
-    if (result.notOnWhatsapp) {
-      return { sent: false, notOnWhatsapp: true };
+    /**
+     * DEFENSIVE CATCH (CR-WA W1) — a guarantee, not a request.
+     *
+     * The channel contract is that a send NEVER throws: every failure comes back
+     * as `ok:false` (see meta-whatsapp.channel.ts, which proves it across every
+     * rejection path). That contract is well-tested — but this is the AUTH PATH,
+     * and it is the one place where the OTP exception in
+     * worker-and-external-sends.md puts a single class's discipline between a
+     * user and their account. Elsewhere a thrown adapter error costs a retried
+     * background job; here it costs a 500 on the login screen, and a user who
+     * cannot get in has no workaround.
+     *
+     * So the guarantee lives here rather than resting on the adapter's good
+     * behaviour: a throw is folded into the SAME `ok:false` handling below, and
+     * the delivery row is written FAILED like any other failed send.
+     */
+    let result: WhatsappSendResult;
+    try {
+      result = await this.whatsapp.sendOtp(phone, code, purpose as 'PHONE_VERIFY' | 'LOGIN');
+    } catch (err) {
+      // No phone, no code — the redaction rule applies to logs.
+      this.logger.error(
+        'WhatsApp OTP adapter THREW, violating its no-throw contract; treating as a ' +
+          `failed send: ${err instanceof Error ? err.name : 'unknown error'}`,
+      );
+      result = { ok: false, errorCode: 'ADAPTER_THREW' };
     }
+
+    if (result.notOnWhatsapp) {
+      return { outcome: 'NOT_ON_WHATSAPP' };
+    }
+
+    /**
+     * The metric the login-availability alert fires on.
+     *
+     * Emitted for BOTH purposes and BOTH outcomes, including the ADAPTER_THREW
+     * case folded in above — a provider outage must be visible whether it
+     * arrives as `ok:false` or as an exception. `notOnWhatsapp` returns earlier
+     * and is deliberately NOT counted: that is one user's number, not our
+     * provider failing, and counting it would let a handful of bad numbers drag
+     * the ratio toward the alert threshold.
+     */
+    this.metrics.recordWhatsappSend(WaMessageKind.OTP, result.ok ? 'sent' : 'failed');
 
     // Persist a delivery-tracking row (kind=OTP) so OTP sends are traceable like
     // every other WhatsApp message. userId is unknown here (send is phone-only).
@@ -82,7 +149,18 @@ export class OtpService {
       },
     });
 
-    return { sent: true };
+    /**
+     * The send either happened or it did not — and the caller is told which.
+     *
+     * This previously returned `{ sent: true }` for EVERY non-notOnWhatsapp
+     * outcome, including outright failures. The delivery row said FAILED while
+     * the API said "sent", so during a provider outage a user was shown "code
+     * sent", waited for a code that was never dispatched, and had no way
+     * forward. On the login path that is a lockout, and it contradicts
+     * worker-and-external-sends.md's "never silently claim a notification was
+     * delivered".
+     */
+    return { outcome: result.ok ? 'SENT' : 'SEND_FAILED' };
   }
 
   /**

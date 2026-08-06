@@ -137,6 +137,7 @@ beforeAll(async () => {
       resumeService,
       notificationService,
       audit,
+      candidateRead,
     );
     subscriber = new ResumeSubscriber(candidateRead, notificationService);
   } catch (err: unknown) {

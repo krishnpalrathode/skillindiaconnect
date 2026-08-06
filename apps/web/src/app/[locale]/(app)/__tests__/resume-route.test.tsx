@@ -32,6 +32,8 @@ import { render } from '../../../../test-utils';
 import { db, makeAccessToken } from '../../../../mocks/data';
 import { setAccessToken, resetClient } from '../../../../lib/api/client';
 import AppLayout from '../layout';
+import { LogoutConfirmProvider } from '../../../../lib/auth/logout-confirm';
+import { ToastProvider } from '../../../../components/ui/toast';
 import ResumeBuilderPage from '../resume/page';
 
 const CANDIDATE = 'mock-user-candidate-1';
@@ -45,9 +47,17 @@ function loginAs(userId: string) {
 /** Both navs share the "Main navigation" name; the mobile bar is the second. */
 async function renderShell() {
   render(
-    <AppLayout>
-      <div>page content</div>
-    </AppLayout>,
+    // AppLayout's sign-out button reads useLogoutConfirm(), which the real app
+    // provides from app/[locale]/layout.tsx. Supplied here so the shell can be
+    // rendered in isolation; this file already mocks next/navigation, which the
+    // provider needs.
+    <ToastProvider>
+      <LogoutConfirmProvider>
+        <AppLayout>
+          <div>page content</div>
+        </AppLayout>
+      </LogoutConfirmProvider>
+    </ToastProvider>,
   );
   await waitFor(() => expect(screen.getAllByRole('navigation').length).toBeGreaterThan(1));
   const navs = screen.getAllByRole('navigation', { name: /main navigation/i });

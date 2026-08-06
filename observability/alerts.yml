@@ -136,6 +136,55 @@ groups:
           summary: "Webhook p95 processing above 3s — gateways will start retrying"
 
   # ───────────────────────────────────────────────────────────────────────────
+  - name: whatsapp
+    rules:
+      # CR-WA. WhatsApp is currently the ONLY OTP transport, so a Meta outage is
+      # not a degraded notification channel — it is LOGIN AVAILABILITY for every
+      # candidate who signs in by phone. This is the alert that would have caught
+      # the W1.5 bug in production, where failed sends were reported as successes.
+      #
+      # RATIO, NOT COUNT. An absolute count alarms on a quiet night (2 failures
+      # out of 3 sends) and stays silent under load (50 failures out of 5000).
+      # The denominator is sent+failed ONLY: `downgraded` is a user who opted out
+      # or is not WhatsApp-capable, which is not a provider failure, and folding
+      # it in would make this track opt-out rates instead.
+      #
+      # clamp_min keeps it from dividing by zero when nothing is being sent —
+      # without it the expression goes NaN overnight and the rule silently stops
+      # evaluating, which is the failure mode where you believe you are covered.
+      - alert: WhatsappOtpSendFailures
+        expr: >-
+          sum(rate(sic_whatsapp_sends_total{kind="OTP",outcome="failed"}[10m]))
+          / clamp_min(sum(rate(sic_whatsapp_sends_total{kind="OTP",outcome=~"sent|failed"}[10m])), 0.001)
+          > 0.1
+        for: 10m
+        labels: { severity: critical, runbook: "docs/runbook.md#whatsapp" }
+        annotations:
+          summary: "WhatsApp OTP failure ratio above 10% — candidates cannot log in by phone"
+          description: >-
+            WhatsApp is the only OTP transport. Password users can still sign in
+            with email and Google-signup users with Google, but phone-login users
+            have no route in. Check the Meta dashboard and the access token first
+            — an expired System User token presents exactly like an outage.
+
+      # Everything that is not an OTP degrades to email on failure, so this is
+      # urgent but not a page: the candidate still hears about being selected.
+      # It stays a distinct rule because sharing a threshold with OTP would mean
+      # either paging on a degraded notification or missing a login outage.
+      - alert: WhatsappNotificationFailures
+        expr: >-
+          sum(rate(sic_whatsapp_sends_total{kind!="OTP",outcome="failed"}[15m]))
+          / clamp_min(sum(rate(sic_whatsapp_sends_total{kind!="OTP",outcome=~"sent|failed"}[15m])), 0.001)
+          > 0.2
+        for: 15m
+        labels: { severity: warning, runbook: "docs/runbook.md#whatsapp" }
+        annotations:
+          summary: "WhatsApp notification failure ratio above 20% — falling back to email"
+          description: >-
+            Sends are failing but the email fallback should be covering it.
+            Confirm the fallback is actually running before standing down.
+
+  # ───────────────────────────────────────────────────────────────────────────
   - name: auth-and-abuse
     rules:
       # H2's brute-force concern made observable. A spike in auth failures is

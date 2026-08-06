@@ -15,9 +15,18 @@ type Step = 'phone' | 'otp';
 
 interface PhoneLoginFlowProps {
   onSuccess: () => void;
+  /**
+   * Switches the sign-in panel away from phone, to where the OTHER methods are.
+   *
+   * REQUIRED, not optional, and that is the point: this is the only escape
+   * hatch a user has when the WhatsApp OTP never arrives, and an optional prop
+   * is one a caller can quietly drop. Making it required means the affordance
+   * cannot go missing without the build failing.
+   */
+  onUseAnotherMethod: () => void;
 }
 
-export function PhoneLoginFlow({ onSuccess }: PhoneLoginFlowProps) {
+export function PhoneLoginFlow({ onSuccess, onUseAnotherMethod }: PhoneLoginFlowProps) {
   const t = useTranslations('auth');
   const { loginWithPhone } = useAuth();
 
@@ -38,7 +47,16 @@ export function PhoneLoginFlow({ onSuccess }: PhoneLoginFlowProps) {
       // ENUMERATION-SAFE: always 200. Advance to OTP step regardless.
       await postPhoneLoginStart(fullPhone);
     } catch (err) {
-      if (err instanceof ApiRequestError && err.error.code === 'RATE_LIMIT_EXCEEDED') {
+      /**
+       * STATUS, NOT CODE — this checked `RATE_LIMIT_EXCEEDED`, which this
+       * endpoint NEVER RETURNS. A 429 here is `RATE_LIMITED` (ThrottlerGuard,
+       * 5/min) or `OTP_RATE_LIMITED` (OtpService's phone/IP budgets); only
+       * password-reset emits RATE_LIMIT_EXCEEDED. So the branch was dead and a
+       * rate-limited user was advanced to the OTP screen to wait for a code
+       * that was never sent — the same false-success shape W1.5 removed from
+       * the API, reintroduced by a string that did not match.
+       */
+      if (err instanceof ApiRequestError && err.error.status === 429) {
         setError(t('otpRateLimited'));
         setLoading(false);
         return;
@@ -78,7 +96,9 @@ export function PhoneLoginFlow({ onSuccess }: PhoneLoginFlowProps) {
     try {
       await postPhoneLoginStart(fullPhone);
     } catch (err) {
-      if (err instanceof ApiRequestError && err.error.code === 'RATE_LIMIT_EXCEEDED') {
+      // Same dead-branch fix as above — resend is the button a rate-limited
+      // user reaches for, so it is the one that most needed to say so.
+      if (err instanceof ApiRequestError && err.error.status === 429) {
         setError(t('otpRateLimited'));
       }
     } finally {
@@ -87,6 +107,50 @@ export function PhoneLoginFlow({ onSuccess }: PhoneLoginFlowProps) {
   }
 
   // ─── Render ────────────────────────────────────────────────────────────────
+
+  /**
+   * CR-WA W1.6 — the escape hatch, rendered UNCONDITIONALLY on both steps.
+   *
+   * WHY IT CANNOT BE CONDITIONAL. `/auth/login/phone/start` deliberately
+   * swallows the send outcome and always answers with the same body: a send is
+   * only ATTEMPTED for a registered number, so any failure-triggered UI would
+   * tell an attacker that this number has an account. The honest
+   * OTP_SEND_FAILED that `/auth/otp/send` returns is exactly what this endpoint
+   * must NOT return.
+   *
+   * That leaves the client unable to know a send failed — so instead of
+   * reacting to a failure it can't see, it offers the alternative to EVERYONE,
+   * every time. An affordance present for every caller discriminates between
+   * none of them, which is what keeps it enumeration-safe. It is rendered
+   * outside every error/loading branch on purpose: nothing derived from a
+   * response may gate it.
+   *
+   * Without it the outage path is a dead end — the user waits on the OTP screen
+   * for a code that was never dispatched, with no way forward and nothing on
+   * screen suggesting one.
+   *
+   * ⚠️ THE COPY IS METHOD-NEUTRAL ON PURPOSE. It said "Continue with email
+   * instead", which is wrong for a large share of the people who need it:
+   * `users.passwordHash` is NULLABLE, so a candidate who signed up with Google
+   * and verified their phone during onboarding HAS NO PASSWORD. Pointing them
+   * at the email form sent them somewhere they could not get in —
+   * forgot-password correctly refuses and replies "this account uses Google
+   * sign-in". Their route is the Google button, which sits directly above the
+   * tabs on this same screen, so switching away from the phone panel reveals
+   * BOTH routes. Naming either one in the label would be wrong for the other
+   * half of the users.
+   */
+  const otherMethods = (
+    <p className="text-center text-sm text-neutral-600">
+      <button
+        type="button"
+        onClick={onUseAnotherMethod}
+        className="font-semibold text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
+      >
+        {t('useAnotherMethod')}
+      </button>
+    </p>
+  );
 
   if (step === 'phone') {
     return (
@@ -128,6 +192,8 @@ export function PhoneLoginFlow({ onSuccess }: PhoneLoginFlowProps) {
         <Button type="submit" variant="secondary" size="md" loading={loading} className="w-full">
           {t('sendOtp')}
         </Button>
+
+        {otherMethods}
       </form>
     );
   }
@@ -171,6 +237,10 @@ export function PhoneLoginFlow({ onSuccess }: PhoneLoginFlowProps) {
           {t('resendCode')}
         </Button>
       </div>
+
+      {/* The step where the lockout actually bites: the user is watching an
+          empty OTP field for a code that may never arrive. */}
+      {otherMethods}
     </div>
   );
 }

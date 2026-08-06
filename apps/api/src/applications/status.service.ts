@@ -14,6 +14,7 @@ import { NotificationService } from '../notifications/notification.service';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
 import { ActorType, allowedTransitions } from './transition.matrix';
+import { resolveSelectedTemplateVars } from './selected-template-vars';
 import {
   APPLICATION_EVENTS,
   ApplicationStatusChangedPayload,
@@ -203,6 +204,20 @@ export class StatusService {
 
       const notify = this.candidateNotification(c);
       if (!notify) return; // e.g. a move to PENDING has no candidate-facing notification
+
+      // CR-WA W0: SELECTED is the one candidate transition that sends a WhatsApp
+      // TEMPLATE, and a template needs its parameters. THIS module owns the
+      // application and can reach the job/company through their public services;
+      // the notification worker cannot (module-boundaries Rule 4), so the
+      // parameters are resolved here and travel with the payload.
+      if (notify.type === NotificationType.APPLICATION_SELECTED) {
+        const vars = await resolveSelectedTemplateVars(
+          { jobsService: this.jobsService, candidateRead: this.candidateRead, logger: this.logger },
+          app.jobId,
+          app.candidateId,
+        );
+        if (vars) notify.payload.data = { ...notify.payload.data, templateVars: vars };
+      }
 
       await this.notificationService.notify(candidateUserId, notify.type, notify.payload, {
         // SELECTED re-entry (guard already set, no bypass) → email + in-app only.

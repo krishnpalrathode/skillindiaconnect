@@ -45,6 +45,20 @@ type AdminRole = Extract<UserRole, 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR' | 'SUPP
 
 export const MOCK_OTP = '123456';
 export const NOT_ON_WHATSAPP_PHONE = '+919999999999';
+/**
+ * Drives the provider-outage path: POST /auth/otp/send answers 503
+ * OTP_SEND_FAILED (CR-WA W1.5). Distinct from NOT_ON_WHATSAPP_PHONE — that one
+ * means "this number cannot receive WhatsApp", this one means "WhatsApp itself
+ * is down", and the UI must not conflate them.
+ */
+export const OTP_SEND_FAILS_PHONE = '+919888888888';
+/**
+ * Drives the 429 path. Distinct from OTP_SEND_FAILS_PHONE: a rate limit means
+ * "wait", a send failure means "try again or use another method", and the UI
+ * must not collapse them — telling a rate-limited user to retry is the one
+ * instruction that keeps the window open.
+ */
+export const OTP_RATE_LIMITED_PHONE = '+919777777777';
 export const NOT_WHATSAPP_CAPABLE_USER_ID = 'mock-user-no-wa';
 
 // Employer fixture user IDs (seeded into db.users + db.employers above)

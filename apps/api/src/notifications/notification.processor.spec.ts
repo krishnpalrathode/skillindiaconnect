@@ -15,7 +15,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DeliveryStatus, NotificationType, WaMessageKind } from '@prisma/client';
 import { Job } from 'bullmq';
 import { PrismaService } from '../core/prisma/prisma.service';
+import { MetricsService } from '../core/observability/metrics.service';
 import { AuditService } from '../audit/audit.service';
+import { StorageService } from '../core/storage/storage.service';
 import { QUEUE_NAMES } from '../queue/queue.constants';
 import { WHATSAPP_CHANNEL, WhatsappSendResult } from './channels/whatsapp.channel';
 import { EMAIL_CHANNEL, EmailSendResult } from './channels/email.channel';
@@ -29,11 +31,20 @@ const USER_ID = 'user-abc';
 const PHONE = '+919876543210';
 const EMAIL = 'user@example.com';
 
+/** Params the raising module supplies for job_selected (CR-WA W0). */
+const SELECTED_VARS = ['Suresh Kumar', 'Senior Electrician', 'Gulf Wiring LLC'];
+
 const BASE_JOB_DATA: Omit<NotificationJobData, 'channel'> = {
   userId: USER_ID,
   type: NotificationType.APPLICATION_SELECTED,
-  payload: { title: 'You were selected', body: 'Congrats' },
+  // A REALISTIC job carries its template parameters — APPLICATION_SELECTED is a
+  // whatsapp:true type, so a payload without them is the failure case, not the
+  // norm. Tests that want that case override `payload` explicitly.
+  payload: { title: 'You were selected', body: 'Congrats', data: { templateVars: SELECTED_VARS } },
 };
+
+/** A payload with NO template parameters — the unresolvable-data case. */
+const PAYLOAD_WITHOUT_VARS = { title: 'You were selected', body: 'Congrats' };
 
 function makeJob(
   channel: 'whatsapp' | 'email',
@@ -120,11 +131,13 @@ describe('NotificationProcessor', () => {
   let waSendSpy: jest.Mock;
   let emailSendSpy: jest.Mock;
   let auditLogSpy: jest.Mock;
+  let storageGetSpy: jest.Mock;
   let prismaMock: ReturnType<typeof makePrismaMock>;
 
   async function buildProcessor(prismaOverrides: Parameters<typeof makePrismaMock>[0] = {}) {
     prismaMock = makePrismaMock(prismaOverrides);
     waSendSpy = jest.fn();
+    storageGetSpy = jest.fn();
     emailSendSpy = jest.fn();
     auditLogSpy = jest.fn().mockResolvedValue(undefined);
 
@@ -144,6 +157,21 @@ describe('NotificationProcessor', () => {
           provide: AuditService,
           useValue: { log: auditLogSpy, logInTransaction: jest.fn() },
         },
+        {
+          // CR-WA W0: resolves a document-template's R2 key to bytes at send
+          // time. Returns a real Buffer so the document path is exercised.
+          provide: StorageService,
+          useValue: {
+            getObjectBuffer: (storageGetSpy = jest.fn().mockResolvedValue({
+              body: Buffer.from('%PDF-1.4 fake'),
+              contentType: 'application/pdf',
+            })),
+          },
+        },
+        // The REAL MetricsService — it has no dependencies, and using the real
+        // one means these specs exercise the counters the alerts fire on rather
+        // than a stub that would hide a broken call site.
+        MetricsService,
       ],
     })
       .overrideProvider(QUEUE_NAMES.NOTIFICATION as never)
@@ -362,7 +390,12 @@ describe('NotificationProcessor', () => {
 
       const job = makeJob('whatsapp', {
         data: {
-          payload: { ...BASE_JOB_DATA.payload, data: { applicationId: 'app-123' } },
+          payload: {
+            ...BASE_JOB_DATA.payload,
+            // templateVars kept: a real APPLICATION_SELECTED payload carries
+            // both, and dropping them here would test the failure path instead.
+            data: { applicationId: 'app-123', templateVars: SELECTED_VARS },
+          },
         },
       });
       await processor.process(job);
@@ -384,7 +417,10 @@ describe('NotificationProcessor', () => {
 
       await processor.process(makeJob('whatsapp'));
 
-      expect(waSendSpy).toHaveBeenCalledWith(PHONE, 'wa.selected', {});
+      // CR-WA W0: the third argument is now the template send, not `{}`.
+      expect(waSendSpy).toHaveBeenCalledWith(PHONE, 'wa.selected', {
+        bodyParams: SELECTED_VARS,
+      });
     });
 
     it('creates a QUEUED whatsapp_messages row then updates to SENT', async () => {
@@ -483,6 +519,157 @@ describe('NotificationProcessor', () => {
       await processor.process(makeJob('email'));
       expect(emailSendSpy).not.toHaveBeenCalled();
       expect(prismaMock.emailMessage.create).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── CR-WA W0: the template-variable seam ─────────────────────────────────────
+
+  describe('WhatsApp — template parameters', () => {
+    beforeEach(() => buildProcessor({ whatsappCapable: true, phone: PHONE }));
+
+    it('passes the ORDERED params from the payload straight through', async () => {
+      waSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'wa-1' } satisfies WhatsappSendResult);
+      const vars = ['Suresh Kumar', 'Senior Electrician', 'Gulf Wiring LLC'];
+
+      await processor.process(
+        makeJob('whatsapp', { data: { payload: { ...BASE_JOB_DATA.payload, data: { templateVars: vars } } } }),
+      );
+
+      // Third argument, positionally intact — the send is the last place the
+      // order could be corrupted before it reaches Meta.
+      expect(waSendSpy).toHaveBeenCalledWith(PHONE, expect.any(String), {
+        bodyParams: vars,
+      });
+    });
+
+    it('FAILS the send when params are missing — never placeholders', async () => {
+      // The old behaviour passed {} here and the mock ignored it. Against the
+      // real API that is error 132000; against a candidate it would be
+      // "You have been selected for  at ".
+      emailSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'email-1' });
+
+      await expect(
+        processor.process(
+          makeJob('whatsapp', {
+            attemptsMade: 0,
+            opts: { attempts: 3 },
+            data: { payload: PAYLOAD_WITHOUT_VARS },
+          }),
+        ),
+      ).rejects.toThrow(/template variables/i);
+
+      expect(waSendSpy).not.toHaveBeenCalled();
+      expect(prismaMock.getWaMsgRow()?.['errorCode']).toBe('TEMPLATE_VARS_MISSING');
+      // NO ROW MAY REPORT SENT. The row is the delivery ledger; claiming SENT
+      // for a message that was never handed to a provider is the exact
+      // dishonesty worker-and-external-sends.md forbids.
+      expect(prismaMock.getWaMsgRow()?.['status']).not.toBe(DeliveryStatus.SENT);
+    });
+
+    it('missing params on the LAST attempt still fall back to email', async () => {
+      // The candidate must still hear about it — just by email.
+      emailSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'email-1' });
+
+      await expect(
+        processor.process(
+          makeJob('whatsapp', {
+            attemptsMade: 2,
+            opts: { attempts: 3 },
+            data: { payload: PAYLOAD_WITHOUT_VARS },
+          }),
+        ),
+      ).rejects.toThrow();
+
+      expect(emailSendSpy).toHaveBeenCalledTimes(1);
+      expect(prismaMock.getWaMsgRow()?.['status']).toBe(DeliveryStatus.FAILED);
+    });
+
+    it('attaches the document bytes when the payload carries an R2 key', async () => {
+      waSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'wa-2' });
+
+      await processor.process(
+        makeJob('whatsapp', {
+          data: {
+            payload: {
+              ...BASE_JOB_DATA.payload,
+              data: {
+                templateVars: ['Suresh Kumar'],
+                documentKey: 'resumes/c1/r.pdf',
+                documentFilename: 'Suresh-Kumar-Resume.pdf',
+              },
+            },
+          },
+        }),
+      );
+
+      expect(storageGetSpy).toHaveBeenCalledWith('resumes/c1/r.pdf');
+      const send = waSendSpy.mock.calls[0]?.[2];
+      expect(send.document.bytes.length).toBeGreaterThan(0);
+      // Human filename — this is what the candidate sees in WhatsApp.
+      expect(send.document.filename).toBe('Suresh-Kumar-Resume.pdf');
+    });
+
+    it('takes the filename from the PAYLOAD, never from bodyParams[0]', async () => {
+      // Guards the decoupling: the filename must not depend on a template's
+      // parameter ORDER. Here param 0 is deliberately NOT the filename source.
+      waSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'wa-3' });
+
+      await processor.process(
+        makeJob('whatsapp', {
+          data: {
+            payload: {
+              ...BASE_JOB_DATA.payload,
+              data: {
+                templateVars: ['Not The Filename'],
+                documentKey: 'resumes/c1/r.pdf',
+                documentFilename: 'Chosen-By-Producer.pdf',
+              },
+            },
+          },
+        }),
+      );
+
+      expect(waSendSpy.mock.calls[0]?.[2].document.filename).toBe('Chosen-By-Producer.pdf');
+    });
+
+    it('falls back to a NEUTRAL filename when the producer supplies none', async () => {
+      // Deliberately generic: the notification module cannot know what the
+      // document is, so guessing "Resume.pdf" would be worse than being plain.
+      waSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'wa-4' });
+
+      await processor.process(
+        makeJob('whatsapp', {
+          data: {
+            payload: {
+              ...BASE_JOB_DATA.payload,
+              data: { templateVars: ['Suresh Kumar'], documentKey: 'resumes/c1/r.pdf' },
+            },
+          },
+        }),
+      );
+
+      expect(waSendSpy.mock.calls[0]?.[2].document.filename).toBe('document.pdf');
+    });
+
+    it('FAILS when the document cannot be read — never sends a bodiless doc template', async () => {
+      storageGetSpy.mockResolvedValue(null);
+      emailSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'email-1' });
+
+      await expect(
+        processor.process(
+          makeJob('whatsapp', {
+            data: {
+              payload: {
+                ...BASE_JOB_DATA.payload,
+                data: { templateVars: ['Suresh Kumar'], documentKey: 'resumes/missing.pdf' },
+              },
+            },
+          }),
+        ),
+      ).rejects.toThrow(/document/i);
+
+      expect(waSendSpy).not.toHaveBeenCalled();
+      expect(prismaMock.getWaMsgRow()?.['errorCode']).toBe('DOCUMENT_UNAVAILABLE');
     });
   });
 });

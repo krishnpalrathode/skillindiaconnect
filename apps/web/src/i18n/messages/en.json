@@ -208,6 +208,7 @@
     "otpDidntGet": "Didn't receive the code?",
     "wrongNumber": "Wrong number",
     "resendCode": "Resend",
+    "useAnotherMethod": "Use another sign-in method",
     "forgotTitle": "Forgot password",
     "sendResetEmail": "Next",
     "forgotSentTitle": "Check your inbox",
@@ -408,6 +409,9 @@
       "otpSent": "Enter the 6-digit code sent to your number",
       "otpInvalid": "Invalid or expired OTP. Please try again.",
       "otpNotOnWhatsapp": "This number is not on WhatsApp. Please try another number.",
+      "otpSendFailed": "We couldn't send your code right now. Please try again in a moment — you can also verify your phone later.",
+      "otpSendError": "Something went wrong. Please try again.",
+      "otpRateLimited": "Too many attempts. Please wait a few minutes before trying again.",
       "resendOtp": "Resend OTP",
       "resendIn": "Resend in {seconds}s"
     },

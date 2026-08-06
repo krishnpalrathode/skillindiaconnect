@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { WHATSAPP_CHANNEL } from './whatsapp.channel';
 import { MockWhatsappChannel } from './whatsapp.mock';
+import { createWhatsappChannelProvider } from './whatsapp-channel.factory';
 import { EMAIL_CHANNEL } from './email.channel';
 import { MockEmailChannel } from './email.mock';
 import { createEmailChannelProvider } from './email-channel.factory';
@@ -27,7 +28,9 @@ import { BOUNCE_HANDLER, NoopBounceHandler } from './bounce-handler.port';
 @Module({
   providers: [
     MockWhatsappChannel,
-    { provide: WHATSAPP_CHANNEL, useClass: MockWhatsappChannel },
+    // CR-WA W1: config-driven, and the SAME factory whatsapp.module.ts uses.
+    // The two bindings must never diverge — see whatsapp-channel.factory.ts.
+    createWhatsappChannelProvider(),
     MockEmailChannel,
     createEmailChannelProvider(),
     { provide: BOUNCE_HANDLER, useClass: NoopBounceHandler },

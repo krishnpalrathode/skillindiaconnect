@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Post,
   Req,
+  ServiceUnavailableException,
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -41,8 +42,12 @@ export class OtpController {
 
   /**
    * Send a PHONE_VERIFY OTP to the given number.
-   * Enumeration-safe: 409 is only returned when the number is confirmed not on
-   * WhatsApp (not to reveal account existence — there is no account lookup here).
+   *
+   * ENUMERATION-SAFE: this endpoint performs NO ACCOUNT LOOKUP — it attempts a
+   * send for whatever number it is given. Its outcomes therefore describe
+   * WhatsApp and the provider, never whether an account exists, so they are
+   * safe to surface. (409 for a number confirmed not on WhatsApp is the
+   * pre-existing, documented behaviour.)
    */
   @Public()
   @Post('otp/send')
@@ -50,10 +55,25 @@ export class OtpController {
   @Throttle({ default: { ttl: 60_000, limit: 5 } })
   async sendOtp(@Body() dto: SendOtpDto, @Req() req: Request) {
     const ip = req.ip ?? '0.0.0.0';
-    const result = await this.otpService.issue(dto.phone, OtpPurpose.PHONE_VERIFY, ip);
-    if (result.notOnWhatsapp) {
+    const { outcome } = await this.otpService.issue(dto.phone, OtpPurpose.PHONE_VERIFY, ip);
+
+    if (outcome === 'NOT_ON_WHATSAPP') {
       throw new ConflictException({ code: 'PHONE_NOT_ON_WHATSAPP' });
     }
+
+    if (outcome === 'SEND_FAILED') {
+      // CR-WA W1.5. This used to return `{ sent: true }`: during a provider
+      // outage the user was shown "code sent", waited for a code that was never
+      // dispatched, and had no way forward. 503 because the dependency is down
+      // and a retry may well succeed; `fallbackAvailable` tells the UI it can
+      // offer the email route instead of leaving the user on a dead end.
+      throw new ServiceUnavailableException({
+        code: 'OTP_SEND_FAILED',
+        detail: "We couldn't send your code right now. Please try again, or continue with email.",
+        meta: { fallbackAvailable: true },
+      });
+    }
+
     return { data: { sent: true } };
   }
 
@@ -96,9 +116,23 @@ export class OtpController {
 
   /**
    * Initiate phone login.
-   * ENUMERATION-SAFE: always returns 200 with the same body regardless of whether
-   * the phone belongs to a registered candidate. An OTP is issued only when a
-   * verified CANDIDATE account exists; notOnWhatsapp is swallowed in that case.
+   *
+   * ENUMERATION-SAFE: always returns 200 with the SAME body regardless of
+   * whether the phone belongs to a registered candidate. An OTP is issued only
+   * when a verified CANDIDATE account exists.
+   *
+   * ⚠️ THE SEND OUTCOME IS DELIBERATELY SWALLOWED HERE (CR-WA W1.5), and this is
+   * the one place it must be. A send is only ATTEMPTED for a registered number,
+   * so any outcome-dependent response — including an honest "we couldn't send
+   * it" — would turn this endpoint into an account-existence oracle: an attacker
+   * would learn that a failure implies registration. That is a worse harm than
+   * the ambiguity it would remove.
+   *
+   * The user is not left stranded: the response deliberately promises nothing
+   * ("IF an account exists"), and the sign-in screen offers the email route
+   * UNCONDITIONALLY — an affordance that is present for every caller and
+   * therefore reveals nothing. Honesty is preserved in the delivery ledger
+   * (whatsapp_messages FAILED) and in the logs, which are not attacker-visible.
    */
   @Public()
   @Post('login/phone/start')

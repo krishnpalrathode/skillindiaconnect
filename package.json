@@ -29,6 +29,7 @@
     "db:reset": "pnpm --filter ./apps/api exec prisma migrate reset --force",
     "contract:generate": "pnpm --filter @skillindiaconnect/contract validate && pnpm --filter @skillindiaconnect/shared-types generate",
     "check:env": "tsx scripts/check-env-drift.ts",
+    "whatsapp:templates": "tsx scripts/whatsapp-templates.ts",
     "load:typecheck": "tsc -p load/tsconfig.json --noEmit",
     "load:seed": "pnpm --filter ./apps/api exec tsx ../../load/seed-load-data.ts",
     "load:chromium": "pnpm --filter ./apps/api exec tsx ../../load/chromium-pool-burst.ts",

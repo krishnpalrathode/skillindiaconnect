@@ -153,4 +153,42 @@ export class MetricsService {
       provider,
     });
   }
+
+  /**
+   * A WhatsApp send ATTEMPT and how it ended (CR-WA).
+   *
+   * `kind` is the WaMessageKind (`OTP`, `STATUS_UPDATE`, `RESUME_DOCUMENT`), which
+   * is what lets the alerting split login availability from notification delivery.
+   * An OTP failure is a user who cannot log in; a STATUS_UPDATE failure degrades
+   * to email. Those deserve different severities, and one counter without this
+   * label could not express that.
+   *
+   * ⚠️ `downgraded` is NOT a failure and MUST stay out of any failure ratio. It
+   * is a user who is not WhatsApp-capable or has opted out — a deliberate
+   * decision not to attempt a send. Counting it as failure would make the alert
+   * track opt-out rates, fire on nothing, and get muted.
+   *
+   * ATTEMPTS, NOT LOGICAL SENDS. The notification processor throws on failure so
+   * BullMQ retries, and each retry counts again. That is intended: this measures
+   * PROVIDER HEALTH, which is what the alert is about.
+   */
+  recordWhatsappSend(kind: string, outcome: 'sent' | 'failed' | 'downgraded'): void {
+    this.increment('sic_whatsapp_sends_total', 'WhatsApp send attempts by kind and outcome', {
+      kind,
+      outcome,
+    });
+  }
+
+  /**
+   * A delivery status LEARNED FROM META's webhook (CR-WA W2).
+   *
+   * Deliberately separate from `recordWhatsappSend`: "Meta accepted it" and "it
+   * reached the handset" are different facts, and collapsing them would hide the
+   * failure mode where every send succeeds and nothing is ever delivered.
+   */
+  recordWhatsappDeliveryStatus(status: string): void {
+    this.increment('sic_whatsapp_delivery_status_total', 'WhatsApp delivery statuses received', {
+      status,
+    });
+  }
 }

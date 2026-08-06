@@ -71,10 +71,46 @@ export function PhoneVerify({
       setOtpKey((k) => k + 1);
       startCooldown();
     } catch (err) {
-      if (err instanceof ApiRequestError && err.error.code === 'PHONE_NOT_ON_WHATSAPP') {
+      /**
+       * CR-WA W1.6 — the UI half of W1.5.
+       *
+       * The fallback branch here used to render t('otpSent') — literally "Enter
+       * the 6-digit code sent to your number" — AS THE ERROR. So a failed send
+       * told the user their code was on its way, then sat there while they
+       * waited for something that was never dispatched. That is the same false
+       * success W1.5 removed from the API, surviving one layer up: an honest
+       * 503 is worth nothing while the client still renders it as "sent".
+       *
+       * The two failures are kept DISTINCT because the user's next move
+       * differs. NOT_ON_WHATSAPP is about their number and needs a different
+       * one; OTP_SEND_FAILED is about our provider and retrying is the right
+       * move. Collapsing them would send people hunting for a second SIM during
+       * an outage.
+       *
+       * The stage deliberately stays 'input' on every failure, so the send
+       * button remains and retrying costs one tap.
+       */
+      const apiErr = err instanceof ApiRequestError ? err.error : null;
+      const code = apiErr?.code ?? null;
+      if (code === 'PHONE_NOT_ON_WHATSAPP') {
         setError(t('otpNotOnWhatsapp'));
+      } else if (code === 'OTP_SEND_FAILED') {
+        setError(t('otpSendFailed'));
+      } else if (apiErr?.status === 429) {
+        /**
+         * BRANCH ON THE STATUS, NOT THE CODE. A 429 reaches here under THREE
+         * different codes depending on which layer rejected it:
+         *   OTP_RATE_LIMITED   — OtpService's per-phone (5/h) and per-IP budgets
+         *   RATE_LIMITED       — ThrottlerGuard (5/min), via HttpProblemFilter's
+         *                        DEFAULT_CODES
+         *   RATE_LIMIT_EXCEEDED — password-reset only, but cheap to cover
+         * Matching on one code silently misses the others, which is exactly how
+         * this screen ended up telling a rate-limited user to "try again" —
+         * the one action guaranteed to keep failing and to extend the window.
+         */
+        setError(t('otpRateLimited'));
       } else {
-        setError(t('otpSent')); // fallback generic
+        setError(t('otpSendError'));
       }
     } finally {
       setLoading(false);

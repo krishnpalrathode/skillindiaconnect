@@ -5,6 +5,7 @@ import { REDIS_CLIENT } from '../core/redis/redis.provider';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
 import { NotificationService } from '../notifications/notification.service';
+import { CandidateReadService } from '../candidate/candidate-read.service';
 import { ResumeService } from './resume.service';
 
 /** CR-001: five WhatsApp resume sends per candidate per day. */
@@ -12,6 +13,19 @@ export const RESUME_SEND_CAP_PER_DAY = 5;
 const RESUME_SEND_WINDOW_S = 24 * 60 * 60;
 
 export type ResumeDeliveryChannel = 'WHATSAPP' | 'EMAIL_FALLBACK' | 'EMAIL';
+
+/**
+ * "Suresh Kumar Yadav" → "Suresh-Kumar-Yadav-Resume.pdf" (CR-WA W0).
+ *
+ * This is what the candidate sees in WhatsApp and what lands in their phone's
+ * downloads, so it is deliberately human rather than a uuid. Stripped to a safe
+ * ASCII subset because the name is user input and this string ends up in a
+ * Content-Disposition header at the provider.
+ */
+export function buildResumeFilename(name: string): string {
+  const safe = name.replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '-');
+  return safe ? `${safe}-Resume.pdf` : 'Resume.pdf';
+}
 
 /**
  * Resume delivery (S7-B2, API-PROCESS side).
@@ -36,6 +50,7 @@ export class ResumeDeliveryService {
     private readonly resumeService: ResumeService,
     private readonly notifications: NotificationService,
     private readonly audit: AuditService,
+    private readonly candidateRead: CandidateReadService,
   ) {}
 
   /**
@@ -69,13 +84,42 @@ export class ResumeDeliveryService {
     // (in-app + WhatsApp); when the candidate isn't deliverable the worker's
     // downgrade path emails them instead — the behavior this response already
     // promised. No second code path to keep in sync.
+    // CR-WA W0: the WhatsApp template's parameters are supplied by THIS module,
+    // which owns the resume — the notification worker must not go looking for a
+    // candidate's name (module-boundaries Rule 4).
+    //
+    // THE NAME COMES FROM THE GENERATION'S OWN SNAPSHOT, not the live profile.
+    // The candidate forwards the attached PDF; a greeting that disagrees with
+    // the name printed on the attachment reads as someone else's document. The
+    // snapshot IS what those bytes say, so they cannot drift.
+    //
+    // Legacy rows (pre-S7-B2) carry no viewSnapshot — those fall back to the
+    // live name, which is the best available answer for a PDF whose contents
+    // were never recorded.
+    const snapshot = generation.viewSnapshot as { fullName?: unknown } | null;
+    const snapshotName =
+      typeof snapshot?.fullName === 'string' && snapshot.fullName.length > 0
+        ? snapshot.fullName
+        : null;
+    const name =
+      snapshotName ?? (await this.candidateRead.getNamesByIds([candidateId])).get(candidateId) ?? '';
+
     await this.notifications.notify(userId, NotificationType.RESUME_SENT, {
       title: 'Your resume',
       body: 'Your resume PDF is on its way.',
-      // Ids only — the media binding is resolved worker-side at send time.
-      // No signed url travels in job data (it would outlive its 5 minutes in
-      // Redis and is a document url either way).
-      data: { generationId: generation.id, channel: delivered },
+      // Ids and an R2 KEY only — the media binding is resolved worker-side at
+      // send time. No signed url travels in job data (it would outlive its 5
+      // minutes in Redis and is a document url either way), and no bytes.
+      data: {
+        generationId: generation.id,
+        channel: delivered,
+        // Ordered {{1}}..{{n}} for the approved document template.
+        templateVars: [name],
+        documentKey: generation.r2Key,
+        // The filename the candidate sees and keeps. Named HERE because this is
+        // the module that knows the document is a résumé.
+        documentFilename: buildResumeFilename(name),
+      },
     });
 
     await this.auditDelivery(AUDIT_ACTIONS.RESUME_SENT, userId, generation.id, delivered);

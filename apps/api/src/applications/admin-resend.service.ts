@@ -4,15 +4,18 @@ import {
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
+  Logger,
 } from '@nestjs/common';
 import { ApplicationStatus, NotificationType, UserRole } from '@prisma/client';
 import { Redis } from 'ioredis';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { REDIS_CLIENT } from '../core/redis/redis.provider';
 import { CandidateReadService } from '../candidate/candidate-read.service';
+import { JobsService } from '../jobs/jobs.service';
 import { NotificationService } from '../notifications/notification.service';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
+import { resolveSelectedTemplateVars } from './selected-template-vars';
 
 /** Contract-fixed cap: 3 resends per application per rolling 24h. */
 export const RESEND_CAP = 3;
@@ -63,7 +66,10 @@ export class AdminResendService {
     private readonly notificationService: NotificationService,
     private readonly auditService: AuditService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    private readonly jobsService: JobsService,
   ) {}
+
+  private readonly logger = new Logger(AdminResendService.name);
 
   async resendSelectedWhatsapp(
     applicationId: string,
@@ -72,7 +78,8 @@ export class AdminResendService {
   ): Promise<ResendResult> {
     const app = await this.prisma.application.findUnique({
       where: { id: applicationId },
-      select: { id: true, status: true, candidateId: true },
+      // jobId: CR-WA W0 — the job_selected template needs the title + company.
+      select: { id: true, status: true, candidateId: true, jobId: true },
     });
     if (!app) throw new NotFoundException({ code: 'APPLICATION_NOT_FOUND' });
 
@@ -104,10 +111,23 @@ export class AdminResendService {
     // email + WhatsApp; nothing is suppressed — this IS the seam's
     // sendWhatsapp:true call. The API enqueues; the worker sends (and the
     // S2-B3 downgrade still applies for whatsappCapable=false).
+    // CR-WA W0: the resend exists TO send the WhatsApp, so its template
+    // parameters matter more here than anywhere — without them the worker fails
+    // the send and falls back to email, quietly defeating the whole feature.
+    const templateVars = await resolveSelectedTemplateVars(
+      { jobsService: this.jobsService, candidateRead: this.candidateRead, logger: this.logger },
+      app.jobId,
+      app.candidateId,
+    );
+
     await this.notificationService.notify(target.userId, NotificationType.APPLICATION_SELECTED, {
       title: 'You have been selected',
       body: 'Congratulations — an employer has selected your application.',
-      data: { applicationId: app.id, resend: true },
+      data: {
+        applicationId: app.id,
+        resend: true,
+        ...(templateVars ? { templateVars } : {}),
+      },
     });
 
     const resentAt = new Date();

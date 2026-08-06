@@ -7,6 +7,8 @@ condition. Where a decision is required, the decision criteria are stated
 inline — you should not have to reason from architecture to act.
 
 - **Symptom → section:** use the index below.
+- **Accepted limitations** (things that are deliberately not built, and who they
+  affect during an incident): [known-deferrals.md](./known-deferrals.md).
 - Every alert in `observability/alerts.yml` carries a `runbook:` label pointing
   at a section here.
 - Behaviour claims in this document were verified by injection in S8-H3; see
@@ -24,6 +26,7 @@ inline — you should not have to reason from architecture to act.
 | `ElevatedServerErrorRate` | [Elevated 5xx](#elevated-5xx) |
 | `ApiLatencyDegraded` | [Latency](#latency) |
 | `PaymentActivationFailures`, `WebhookProcessingSlow` | [Payments](#payments) |
+| `WhatsappOtpSendFailures`, `WhatsappNotificationFailures`, "nobody can log in by phone" | [WhatsApp](#whatsapp) |
 | `AuthFailureSpike`, `RateLimitSaturation` | [Auth spike](#auth-spike) |
 | `ApiInstanceNotReady`, API unreachable | [API down](#api-down) |
 | `DatabasePoolNearExhaustion` | [DB pool](#db-pool) |
@@ -289,6 +292,70 @@ SELECT provider, "eventId", status, "processedAt" FROM webhook_events
 timing-out gateway leaves the order `FAILED` with no invoice, no subscription and
 no payment row, and the client gets a `502` — never a false success. When the
 gateway recovers, normal webhooks activate correctly.
+
+---
+
+## <a id="whatsapp"></a>5.1 WhatsApp send failures / phone login down
+
+**`WhatsappOtpSendFailures` is a LOGIN AVAILABILITY incident, not a notification
+problem.** WhatsApp is currently the only OTP transport, so while it is down
+nobody can sign in by phone.
+
+**Who is still able to get in** (say this to support, it is the whole triage):
+
+| User | Route in |
+|---|---|
+| Signed up with email + password | Email tab — works normally |
+| Signed up with Google | **Continue with Google** — works normally |
+| Signed up by phone, no password set | **Blocked.** No route until WhatsApp recovers |
+
+```bash
+curl -s $API/metrics | grep sic_whatsapp_sends_total
+curl -s $API/metrics | grep sic_whatsapp_delivery_status_total
+```
+```sql
+-- What is actually failing, and with which provider code
+SELECT kind, "templateName", status, "errorCode", count(*)
+  FROM whatsapp_messages
+ WHERE "createdAt" > now() - interval '1 hour'
+ GROUP BY 1,2,3,4 ORDER BY 5 DESC;
+```
+
+1. **Check the access token first.** An expired System User token presents
+   EXACTLY like a Meta outage — every send fails, nothing else changes. If
+   `errorCode` is `META_190` or the sends began failing all at once with no
+   Meta status-page incident, assume the token.
+2. **Check [status.fb.com](https://status.fb.com)** for a genuine Cloud API incident.
+3. **`META_132001` — "template does not exist" almost always means the WRONG
+   LOCALE, not a missing template.** `en` and `en_US` are different templates to
+   Meta. Check `WHATSAPP_TEMPLATE_LANGUAGE` against the locale shown on the
+   template in WhatsApp Manager; it must match, on **both** services. Fixing it
+   is an env change + restart, not a deploy.
+4. **`errorCode` tells you which failure it is:**
+   `TEMPLATE_NOT_MAPPED` / `TEMPLATE_PARAM_MISMATCH` / `DOCUMENT_MISSING` are
+   OUR bugs from a recent deploy, not Meta — roll back rather than wait.
+   A template Meta un-approved also fails here.
+4. **If it is a real Meta outage, the mitigation is to stop pretending.**
+   `WHATSAPP_PROVIDER=mock` on both services makes sends fail fast instead of
+   burning the 10s timeout on every login request — the API sends OTPs inline,
+   so a hanging Meta is added latency on the login path for EVERYONE, including
+   the users whose route in still works.
+5. **Tell support the table above.** The one genuinely blocked group is
+   phone-signup users with no password; they must wait.
+
+**`WhatsappNotificationFailures` (warning) is different** — those degrade to
+email. Confirm the fallback is actually running before standing down:
+
+```sql
+SELECT status, count(*) FROM email_messages
+ WHERE "createdAt" > now() - interval '1 hour' GROUP BY 1;
+```
+
+**Sends succeeding but nothing arriving** is the third shape: check
+`sic_whatsapp_delivery_status_total`. If sends are `sent` and no `DELIVERED`
+statuses are arriving at all, the WEBHOOK is broken, not the sending — verify the
+subscription in the Meta dashboard and see
+[whatsapp-integration.md](./whatsapp-integration.md#the-webhook).
 
 ---
 
