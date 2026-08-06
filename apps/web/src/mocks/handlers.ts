@@ -5,6 +5,7 @@ import {
   buildProfile,
   MOCK_OTP,
   NOT_ON_WHATSAPP_PHONE,
+  OTP_SEND_FAILS_PHONE,
   NOT_WHATSAPP_CAPABLE_USER_ID,
   makeAccessToken,
   makeRefreshToken,
@@ -310,6 +311,18 @@ const authOtpSend = http.post(`${BASE}/auth/otp/send`, async ({ request }) => {
       'PHONE_NOT_ON_WHATSAPP',
       'Phone not on WhatsApp',
       'This number is not reachable via WhatsApp. Please try a different number.',
+    );
+  }
+
+  // CR-WA W1.5: the provider is reachable but the send failed. The API answers
+  // 503 rather than the `{ sent: true }` it used to lie with.
+  if (body.phone === OTP_SEND_FAILS_PHONE) {
+    return errorResponse(
+      503,
+      'OTP_SEND_FAILED',
+      'Could not send the code',
+      "We couldn't send your code right now. Please try again, or continue with email.",
+      { fallbackAvailable: true },
     );
   }
 

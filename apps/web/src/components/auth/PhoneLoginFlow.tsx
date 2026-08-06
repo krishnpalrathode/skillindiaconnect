@@ -15,9 +15,18 @@ type Step = 'phone' | 'otp';
 
 interface PhoneLoginFlowProps {
   onSuccess: () => void;
+  /**
+   * Switches the sign-in panel to the email method.
+   *
+   * REQUIRED, not optional, and that is the point: this is the only escape
+   * hatch a user has when the WhatsApp OTP never arrives, and an optional prop
+   * is one a caller can quietly drop. Making it required means the affordance
+   * cannot go missing without the build failing.
+   */
+  onUseEmail: () => void;
 }
 
-export function PhoneLoginFlow({ onSuccess }: PhoneLoginFlowProps) {
+export function PhoneLoginFlow({ onSuccess, onUseEmail }: PhoneLoginFlowProps) {
   const t = useTranslations('auth');
   const { loginWithPhone } = useAuth();
 
@@ -88,6 +97,39 @@ export function PhoneLoginFlow({ onSuccess }: PhoneLoginFlowProps) {
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
+  /**
+   * CR-WA W1.6 — the escape hatch, rendered UNCONDITIONALLY on both steps.
+   *
+   * WHY IT CANNOT BE CONDITIONAL. `/auth/login/phone/start` deliberately
+   * swallows the send outcome and always answers with the same body: a send is
+   * only ATTEMPTED for a registered number, so any failure-triggered UI would
+   * tell an attacker that this number has an account. The honest
+   * OTP_SEND_FAILED that `/auth/otp/send` returns is exactly what this endpoint
+   * must NOT return.
+   *
+   * That leaves the client unable to know a send failed — so instead of
+   * reacting to a failure it can't see, it offers the alternative to EVERYONE,
+   * every time. An affordance present for every caller discriminates between
+   * none of them, which is what keeps it enumeration-safe. It is rendered
+   * outside every error/loading branch on purpose: nothing derived from a
+   * response may gate it.
+   *
+   * Without it the outage path is a dead end — the user waits on the OTP screen
+   * for a code that was never dispatched, with no way forward and nothing on
+   * screen suggesting one.
+   */
+  const emailFallback = (
+    <p className="text-center text-sm text-neutral-600">
+      <button
+        type="button"
+        onClick={onUseEmail}
+        className="font-semibold text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
+      >
+        {t('useEmailInstead')}
+      </button>
+    </p>
+  );
+
   if (step === 'phone') {
     return (
       <form onSubmit={handlePhoneSubmit} noValidate className="flex flex-col gap-4">
@@ -128,6 +170,8 @@ export function PhoneLoginFlow({ onSuccess }: PhoneLoginFlowProps) {
         <Button type="submit" variant="secondary" size="md" loading={loading} className="w-full">
           {t('sendOtp')}
         </Button>
+
+        {emailFallback}
       </form>
     );
   }
@@ -171,6 +215,10 @@ export function PhoneLoginFlow({ onSuccess }: PhoneLoginFlowProps) {
           {t('resendCode')}
         </Button>
       </div>
+
+      {/* The step where the lockout actually bites: the user is watching an
+          empty OTP field for a code that may never arrive. */}
+      {emailFallback}
     </div>
   );
 }

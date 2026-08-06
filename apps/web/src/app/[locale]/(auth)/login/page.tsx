@@ -168,7 +168,11 @@ export default function LoginPage() {
             </div>
           ) : (
             <div role="tabpanel" id="login-panel-phone" aria-labelledby="login-tab-phone">
-              <PhoneLoginFlow onSuccess={handleSuccess} />
+              {/* CR-WA W1.6: the escape hatch for a WhatsApp OTP that never
+                  arrives. The page owns the method state, so the flow asks to
+                  be switched rather than routing anywhere — the user keeps the
+                  card, the locale and any `next` param they arrived with. */}
+              <PhoneLoginFlow onSuccess={handleSuccess} onUseEmail={() => setMethod('email')} />
             </div>
           )}
 

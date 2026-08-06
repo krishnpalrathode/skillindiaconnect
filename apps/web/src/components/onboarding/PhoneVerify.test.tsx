@@ -1,0 +1,82 @@
+import { describe, expect, it, vi } from 'vitest';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { render } from '../../test-utils';
+import { PhoneVerify } from './PhoneVerify';
+
+/**
+ * CR-WA W1.6 — the UI half of W1.5.
+ *
+ * W1.5 stopped the API reporting a failed OTP send as a success. That fix is
+ * worth nothing while the client renders the honest 503 as "code sent", which
+ * is exactly what this screen used to do: its catch-all branch displayed
+ * t('otpSent') — "Enter the 6-digit code sent to your number" — as the error.
+ *
+ * `/auth/otp/send` is the ONLY endpoint that surfaces OTP_SEND_FAILED. Its
+ * sibling `/auth/login/phone/start` deliberately stays silent to avoid becoming
+ * an account-existence oracle (see PhoneLoginFlow.test.tsx), so this screen is
+ * the only place the honest code can be acted on.
+ */
+describe('PhoneVerify — honest send failures (CR-WA W1.6)', () => {
+  /** Maps to OTP_SEND_FAILS_PHONE (+919888888888) through toE164. */
+  const OUTAGE_NUMBER = '9888888888';
+  /** Maps to NOT_ON_WHATSAPP_PHONE (+919999999999). */
+  const NOT_ON_WHATSAPP_NUMBER = '9999999999';
+  const WORKING_NUMBER = '9876543210';
+
+  async function submit(number: string) {
+    const user = userEvent.setup();
+    render(<PhoneVerify onVerified={vi.fn()} />);
+    await user.type(screen.getByLabelText(/mobile number/i), number);
+    await user.click(screen.getByRole('button', { name: /verify phone/i }));
+    return user;
+  }
+
+  it('a provider outage says so — and never claims the code was sent', async () => {
+    await submit(OUTAGE_NUMBER);
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(/couldn't send your code right now/i),
+    );
+
+    /**
+     * THE REGRESSION THIS FILE EXISTS FOR. The old fallback rendered the
+     * "sent" copy as the error, so a user whose code was never dispatched was
+     * told to go and enter it. Asserting the failure message alone would still
+     * pass if that string came back alongside it.
+     */
+    expect(screen.queryByText(/6-digit code sent to your number/i)).not.toBeInTheDocument();
+  });
+
+  it('a failed send does not advance to OTP entry — there is no code to type', async () => {
+    await submit(OUTAGE_NUMBER);
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+
+    // The phone field is still on screen, so retrying costs one tap.
+    expect(screen.getByLabelText(/mobile number/i)).toBeInTheDocument();
+  });
+
+  it('an unreachable NUMBER is a different message from a provider outage', async () => {
+    await submit(NOT_ON_WHATSAPP_NUMBER);
+
+    /**
+     * The two failures need different user actions: this one means "use another
+     * number", the outage means "try again shortly". Collapsing them into one
+     * generic error would send people hunting for a second SIM during an
+     * outage — which is why the component branches on the CODE rather than
+     * treating every rejection alike.
+     */
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/not on WhatsApp/i));
+    expect(screen.queryByText(/couldn't send your code/i)).not.toBeInTheDocument();
+  });
+
+  it('a successful send still advances to OTP entry', async () => {
+    await submit(WORKING_NUMBER);
+
+    await waitFor(() =>
+      expect(screen.getByText(/6-digit code sent to your number/i)).toBeInTheDocument(),
+    );
+    // The success copy is NOT an alert — it is guidance, not an error.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+});
