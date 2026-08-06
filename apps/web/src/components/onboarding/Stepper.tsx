@@ -58,17 +58,25 @@ export function Stepper({ current, className }: StepperProps) {
                 >
                   {done ? <Check className="size-5" /> : stepNum}
                 </div>
+                {/*
+                  Fixed 8rem column, wrapping instead of truncating. The old
+                  max-w-[84px] + truncate clipped every label to "Personal …" /
+                  "Work Ex…" — the step names are up to 18 characters ("Documents
+                  & Skills") and longer again in Hindi and Arabic, so no cap that
+                  fits them on one line is realistic. Wrapping to two lines shows
+                  the whole name; the fixed width keeps the four columns even.
+                */}
                 <span
                   className={cn(
-                    'hidden max-w-[84px] items-center gap-1 sm:flex',
+                    'hidden w-36 items-start justify-center gap-1 text-center sm:flex',
                     'text-xs font-semibold leading-tight',
                     active ? 'text-[#0F3D91]' : done ? 'text-success-fg' : 'text-neutral-600',
                   )}
                 >
-                  <span className="shrink-0" aria-hidden="true">
+                  <span className="mt-px shrink-0" aria-hidden="true">
                     {STEP_ICONS[key]}
                   </span>
-                  <span className="truncate">{t(key)}</span>
+                  <span>{t(key)}</span>
                 </span>
               </div>
 

@@ -112,11 +112,12 @@ export default function OnboardingPage() {
         </p>
       </div>
 
-      {/* Progress indicator */}
-      <Stepper current={step} />
+      {/* Progress indicator — capped so the connector lines between steps do
+          not stretch across the full shell on a wide screen. */}
+      <Stepper current={step} className="mx-auto w-full max-w-3xl" />
 
       {/* Step content */}
-      <div className="rounded-[24px] border border-neutral-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgb(15,61,145,0.06)] backdrop-blur-sm sm:p-8">
+      <div className="rounded-[24px] border border-neutral-200/70 bg-white/95 p-6 shadow-[0_8px_30px_rgb(15,61,145,0.06)] backdrop-blur-sm sm:p-8 lg:p-10">
         {step === 1 && (
           <PersonalInfoStep profile={profile} onProfileUpdate={setProfile} onNext={() => goTo(2)} />
         )}

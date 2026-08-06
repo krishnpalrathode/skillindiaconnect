@@ -141,7 +141,10 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
 
       {/* Profile photo (local preview — no API in S1) — premium dashed upload card */}
       <div
-        className="group flex cursor-pointer flex-col items-center gap-3 rounded-[22px] border-2 border-dashed border-neutral-200 bg-neutral-50/60 px-4 py-6 transition-all duration-200 hover:border-[#0F3D91]/40 hover:bg-[#E8F0FE]/40"
+        // Width-capped and centred: at the wider shell a full-bleed dropzone
+        // became a long empty band around a small avatar. Capping it keeps the
+        // target compact and deliberate rather than stretched.
+        className="group mx-auto flex w-full max-w-md cursor-pointer flex-col items-center gap-3 rounded-[22px] border-2 border-dashed border-neutral-200 bg-neutral-50/60 px-4 py-6 transition-all duration-200 hover:border-[#0F3D91]/40 hover:bg-[#E8F0FE]/40"
         onClick={() => photoInputRef.current?.click()}
       >
         <div className="relative h-24 w-24">
@@ -187,13 +190,18 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
         />
       </div>
 
-      {/* Required fields */}
-      <div className="flex flex-col gap-5">
+      {/*
+        Two columns from md up. Short fields (date, marital status) pair off;
+        long ones span the row via col-span-2 below. Single column on mobile is
+        unchanged.
+      */}
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-x-6">
         <Field
           id="pi-fullname"
           label={t('nameLabel')}
           required
           error={showNameError ? t('nameError') : undefined}
+          className="md:col-span-2"
         >
           <Input
             placeholder={t('namePlaceholder')}
@@ -223,7 +231,10 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
 
         {/* Marital status */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="pi-marital" className="text-sm font-medium text-neutral-700">
+          {/* leading-none matches the shared <Label>; without it this label is
+              ~7px taller than its neighbour and the select sits visibly lower
+              than the date input it now sits beside. */}
+          <label htmlFor="pi-marital" className="text-sm font-medium leading-none text-neutral-700">
             {t('maritalStatusLabel')}
           </label>
           <select
@@ -242,7 +253,12 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
         </div>
 
         {/* Languages (comma-separated) */}
-        <Field id="pi-languages" label={t('languagesLabel')} hint={t('languagesPlaceholder')}>
+        <Field
+          id="pi-languages"
+          label={t('languagesLabel')}
+          hint={t('languagesPlaceholder')}
+          className="md:col-span-2"
+        >
           <Input
             placeholder="Hindi, English, Arabic"
             value={languages}
@@ -253,7 +269,7 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
 
         {/* Display-only language chips mirroring the input above */}
         {languageChips.length > 0 && (
-          <ul className="-mt-2 flex flex-wrap gap-1.5" aria-hidden="true">
+          <ul className="-mt-2 flex flex-wrap gap-1.5 md:col-span-2" aria-hidden="true">
             {languageChips.map((lang) => (
               <li
                 key={lang}

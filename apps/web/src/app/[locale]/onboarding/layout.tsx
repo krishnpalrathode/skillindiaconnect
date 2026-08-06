@@ -31,7 +31,15 @@ export default function OnboardingLayout({ children }: { children: ReactNode }) 
         </div>
       </header>
 
-      <main className="relative mx-auto max-w-3xl px-4 py-8 sm:py-10">{children}</main>
+      {/*
+        Shell width. max-w-3xl (768px) read as a phone-sized card marooned on a
+        desktop screen. 1024px lets the field grid below run two comfortable
+        ~460px columns instead of one over-long line, which is what actually
+        removes the dead space — widening alone would just stretch the inputs.
+      */}
+      <main className="relative mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+        {children}
+      </main>
     </div>
   );
 }
