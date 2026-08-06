@@ -351,7 +351,8 @@
       "salaryMaxPlaceholder": "e.g. 50000",
       "saveSalary": "Save salary",
       "salaryNote": "Unscored — for matching guidance only"
-    }
+    },
+    "settingsPageSubtitle": "Control what employers can see and how we contact you."
   },
   "document": {
     "upload": "Upload document",

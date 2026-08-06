@@ -121,6 +121,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isProfile = pathname.includes('/profile');
   const isNotifications = pathname.includes('/notifications');
   const isResume = pathname.includes('/resume');
+  const isSettings = pathname.includes('/settings');
 
   // Explicitly typed: nothing is `disabled` right now, so inference would drop
   // that property from the union and break the mobile nav's disabled branch —
@@ -172,18 +173,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       active: pathname.includes('/applications'),
     },
     {
-      // Candidate settings live in the "Account Settings" card on /profile
-      // (privacy toggles, notification prefs, salary expectations) — there is no
-      // standalone /settings route. This item used to point at that
-      // never-built route AND was disabled, so the nav advertised settings the
-      // user could not reach while the real ones sat one scroll down on
-      // Profile. Deep-link to them instead of duplicating the screen.
-      //
-      // Deliberately no `active`: this IS the profile route, and marking both
-      // items current would announce two "page" nodes to a screen reader.
-      href: `/${locale}/profile#account-settings`,
+      // Settings now has its OWN route rather than deep-linking to
+      // /profile#account-settings. That deep link loaded the whole profile page
+      // and lit up "Profile" in the nav, so this item could never read as
+      // current — the URL it landed on was the profile route. The page is a thin
+      // wrapper mounting the SAME AccountSettingsSection the profile page uses,
+      // so there is still one implementation of the controls.
+      href: `/${locale}/settings`,
       icon: <Settings className="size-5" aria-hidden="true" />,
       label: t('settings'),
+      active: isSettings,
     },
   ];
 

@@ -15,6 +15,7 @@ import { PaymentConfirming } from '@/components/billing/PaymentConfirming';
 import { UpgradeContext } from '@/components/billing/UpgradeContext';
 import { CurrentPlanCard } from '@/components/billing/CurrentPlanCard';
 import { InvoiceList } from '@/components/billing/InvoiceList';
+import { EMPLOYER_PAGE_SHELL } from '@/lib/page-shell';
 
 type Plan = components['schemas']['Plan'];
 type PlanCode = components['schemas']['PlanCode'];
@@ -145,7 +146,7 @@ export default function SubscriptionPage() {
   const isLocal = company?.type === 'LOCAL';
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6">
+    <div className={EMPLOYER_PAGE_SHELL}>
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
           {t('pageTitle')}

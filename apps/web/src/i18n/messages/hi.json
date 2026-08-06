@@ -351,7 +351,8 @@
       "salaryMaxPlaceholder": "जैसे 50000",
       "saveSalary": "वेतन सहेजें",
       "salaryNote": "बिना स्कोर के — केवल मिलान मार्गदर्शन के लिए"
-    }
+    },
+    "settingsPageSubtitle": "तय करें कि कंपनियाँ क्या देख सकती हैं और हम आपसे कैसे संपर्क करें।"
   },
   "document": {
     "upload": "[hi] Upload document",

@@ -19,6 +19,7 @@ import {
 } from '@/components/employer/applicants/ApplicantFilters';
 import { ApplicantCard } from '@/components/employer/applicants/ApplicantCard';
 import { ApplicantDetail } from '@/components/employer/applicants/ApplicantDetail';
+import { EMPLOYER_PAGE_SHELL } from '@/lib/page-shell';
 
 type ApplicantCardT = components['schemas']['ApplicantCard'];
 type ApplicantCounts = components['schemas']['ApplicantCounts'];
@@ -203,7 +204,7 @@ export default function ApplicantsPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4">
+    <div className={EMPLOYER_PAGE_SHELL}>
       <Link
         href={`/${locale}/employer/jobs`}
         className="inline-flex items-center gap-1.5 rounded text-sm font-medium text-neutral-600 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"

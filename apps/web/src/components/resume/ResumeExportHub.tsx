@@ -82,22 +82,33 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Completion ring — server-computed, never client-side. */}
-      <div className="flex flex-col items-center gap-3 rounded-[22px] bg-gradient-to-br from-neutral-50 to-[#E8F0FE]/40 px-4 py-6">
-        <p className="text-sm font-bold text-neutral-700">{t('completionTitle')}</p>
+    <div className="flex flex-col gap-5">
+      {/*
+        Completion — server-computed, never client-side.
+
+        Laid out as a ROW from sm up: the ring on the start side with its label
+        beside it. Stacked and centred, this was a wide band of empty space
+        around one small ring on any screen past mobile.
+
+        Ring props match the Profile hero's exactly — both screens render the
+        SAME number, so rendering it in two different styles read as a bug.
+      */}
+      <section className="flex flex-col items-center gap-4 rounded-2xl border border-neutral-200/70 bg-gradient-to-br from-white to-[#E8F0FE]/50 px-5 py-5 shadow-sm sm:flex-row sm:gap-6 sm:px-6">
         {/* Same props as the Profile hero's ring — the two screens show the SAME
             number, so they must not render it in two different styles. */}
         <CompletionRing
           pct={completion?.pct ?? profile.completionPct ?? 0}
-          size={150}
-          strokeWidth={13}
+          size={132}
+          strokeWidth={12}
           gradient
           gradientColors={['#0F3D91', '#F57C20']}
           glow
           milestones
         />
-      </div>
+        <p className="text-center text-sm font-bold text-neutral-800 sm:text-start">
+          {t('completionTitle')}
+        </p>
+      </section>
 
       {/* Live preview (prominent) — reflects the current Resume Settings. */}
       {settings ? (
@@ -107,43 +118,54 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
       )}
 
       {/* Download PDF — the async generate→poll→download UX. A fresh generation
-          reflects the current settings, so it clears the "stale" flag. */}
-      <DownloadResumeButton
-        initialGeneration={info?.current ?? null}
-        onGenerated={(ts) => {
-          setLastRenderedAt(ts);
-          setDirtySinceGenerate(false);
-        }}
-      />
+          reflects the current settings, so it clears the "stale" flag.
+          Carded so the primary action reads as a deliberate block rather than a
+          button floating on the page background. */}
+      <section className="rounded-2xl border border-neutral-200/70 bg-white p-5 shadow-sm sm:p-6">
+        <DownloadResumeButton
+          initialGeneration={info?.current ?? null}
+          onGenerated={(ts) => {
+            setLastRenderedAt(ts);
+            setDirtySinceGenerate(false);
+          }}
+        />
+      </section>
 
       {/* ── S7-F2: Resume Settings + delivery (mounted into F1's seam). ── */}
       {settings && (
-        <div data-f2-slot="resume-settings-delivery" className="flex flex-col gap-4">
-          {/* CR-001 F2: the template gallery. Shares the hub's settings state
-              and its commit signal, so choosing a template marks the last PDF
-              stale exactly the way a toggle does. */}
-          <TemplateGallery
-            settings={settings}
-            onSettingsChange={setSettings}
-            onCommitted={() => setDirtySinceGenerate(true)}
-          />
+        <div data-f2-slot="resume-settings-delivery" className="flex flex-col gap-5">
+          {/* Each group gets the same card treatment the profile and dashboard
+              sections use, so this page stops looking like loose controls on a
+              background and matches the rest of the app. */}
+          <section className="rounded-2xl border border-neutral-200/70 bg-white p-5 shadow-sm sm:p-6">
+            {/* CR-001 F2: the template gallery. Shares the hub's settings state
+                and its commit signal, so choosing a template marks the last PDF
+                stale exactly the way a toggle does. */}
+            <TemplateGallery
+              settings={settings}
+              onSettingsChange={setSettings}
+              onCommitted={() => setDirtySinceGenerate(true)}
+            />
+          </section>
 
-          <ResumeSettingsPanel
-            settings={settings}
-            onSettingsChange={setSettings}
-            onCommitted={() => setDirtySinceGenerate(true)}
-          />
+          <section className="flex flex-col gap-4 rounded-2xl border border-neutral-200/70 bg-white p-5 shadow-sm sm:p-6">
+            <ResumeSettingsPanel
+              settings={settings}
+              onSettingsChange={setSettings}
+              onCommitted={() => setDirtySinceGenerate(true)}
+            />
 
-          {/* Editing settings doesn't change an already-generated PDF. */}
-          {dirtySinceGenerate && hasGenerated && <RegeneratePrompt />}
+            {/* Editing settings doesn't change an already-generated PDF. */}
+            {dirtySinceGenerate && hasGenerated && <RegeneratePrompt />}
+          </section>
 
-          <div>
+          <section className="rounded-2xl border border-neutral-200/70 bg-white p-5 shadow-sm sm:p-6">
             <p className="mb-2.5 text-sm font-bold text-neutral-800">{t('delivery.title')}</p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <SendWhatsAppButton />
               <EmailResumeButton />
             </div>
-          </div>
+          </section>
         </div>
       )}
     </div>

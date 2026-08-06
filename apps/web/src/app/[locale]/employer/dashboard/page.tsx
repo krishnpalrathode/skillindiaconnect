@@ -15,6 +15,7 @@ import { RecentApplicants } from '@/components/employer/dashboard/RecentApplican
 import { PostFirstJobCta } from '@/components/employer/dashboard/PostFirstJobCta';
 import { ChecklistCard } from '@/components/employer/dashboard/ChecklistCard';
 import type { components } from '@skillindiaconnect/shared-types';
+import { EMPLOYER_PAGE_SHELL } from '@/lib/page-shell';
 
 type EmployerDashboard = components['schemas']['EmployerDashboard'];
 
@@ -134,7 +135,7 @@ export default function EmployerDashboardPage() {
   const hasNoJobs = dashboard.recentJobs.length === 0;
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 lg:gap-7">
+    <div className={EMPLOYER_PAGE_SHELL}>
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
           {greeting}

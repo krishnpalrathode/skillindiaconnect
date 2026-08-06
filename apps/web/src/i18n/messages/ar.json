@@ -351,7 +351,8 @@
       "salaryMaxPlaceholder": "مثال: 50000",
       "saveSalary": "حفظ الراتب",
       "salaryNote": "غير مُقيَّم — للتوجيه في المطابقة فقط"
-    }
+    },
+    "settingsPageSubtitle": "تحكّم في ما يمكن لأصحاب العمل رؤيته وكيف نتواصل معك."
   },
   "document": {
     "upload": "[ar] Upload document",
