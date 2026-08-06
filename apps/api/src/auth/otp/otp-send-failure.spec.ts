@@ -77,8 +77,7 @@ describe('OtpService.issue — a send failure must never become a 500', () => {
     sendOtp.mockResolvedValue({ ok: false, notOnWhatsapp: true, errorCode: 'NOT_ON_WHATSAPP' });
 
     await expect(service.issue(PHONE, OtpPurpose.LOGIN, IP)).resolves.toEqual({
-      sent: false,
-      notOnWhatsapp: true,
+      outcome: 'NOT_ON_WHATSAPP',
     });
   });
 
@@ -132,8 +131,8 @@ describe('OtpService.issue — a send failure must never become a 500', () => {
     });
   });
 
-  it('a successful send reports sent:true', async () => {
+  it('a successful send reports outcome SENT', async () => {
     sendOtp.mockResolvedValue({ ok: true, providerMessageId: 'wamid.X' });
-    await expect(service.issue(PHONE, OtpPurpose.LOGIN, IP)).resolves.toEqual({ sent: true });
+    await expect(service.issue(PHONE, OtpPurpose.LOGIN, IP)).resolves.toEqual({ outcome: 'SENT' });
   });
 });

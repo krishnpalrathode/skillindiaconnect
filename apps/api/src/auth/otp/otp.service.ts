@@ -26,6 +26,29 @@ const SEND_BUDGET_PHONE = 5; // per hour, SHARED across PHONE_VERIFY + LOGIN
 const SEND_BUDGET_IP = 20; // per hour, per IP
 const SEND_WINDOW_S = 3600; // 1 hour in seconds
 
+/**
+ * What actually happened to an OTP send (CR-WA W1.5).
+ *
+ *   SENT             the provider accepted it; a code is on its way
+ *   NOT_ON_WHATSAPP  the number is confirmed not reachable on WhatsApp
+ *   SEND_FAILED      we TRIED and the provider refused or was unreachable
+ *
+ * SEND_FAILED exists because it used to be indistinguishable from SENT. The
+ * three are kept as one discriminated outcome rather than a pair of booleans so
+ * a caller cannot accidentally treat "not sent" as "sent" by checking the wrong
+ * field — which is exactly how the original bug read.
+ *
+ * ⚠️ WHETHER AN OUTCOME MAY BE SURFACED DEPENDS ON THE ENDPOINT, not on this
+ * type. See otp.controller.ts: the phone-LOGIN endpoint must answer identically
+ * regardless, because a send is only attempted there for a REGISTERED number,
+ * so any outcome-dependent response would leak account existence.
+ */
+export type OtpIssueOutcome = 'SENT' | 'NOT_ON_WHATSAPP' | 'SEND_FAILED';
+
+export interface OtpIssueResult {
+  outcome: OtpIssueOutcome;
+}
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 @Injectable()
@@ -45,11 +68,7 @@ export class OtpService {
    * per-IP budget. On success the raw code is sent via WhatsApp; only its SHA-256
    * hash is persisted — the plaintext is never written to the DB or structured logs.
    */
-  async issue(
-    phone: string,
-    purpose: OtpPurpose,
-    ip: string,
-  ): Promise<{ sent: boolean; notOnWhatsapp?: boolean }> {
+  async issue(phone: string, purpose: OtpPurpose, ip: string): Promise<OtpIssueResult> {
     await this.checkPhoneBudget(phone);
     await this.applyIpBudget(ip);
 
@@ -98,7 +117,7 @@ export class OtpService {
     }
 
     if (result.notOnWhatsapp) {
-      return { sent: false, notOnWhatsapp: true };
+      return { outcome: 'NOT_ON_WHATSAPP' };
     }
 
     // Persist a delivery-tracking row (kind=OTP) so OTP sends are traceable like
@@ -116,7 +135,18 @@ export class OtpService {
       },
     });
 
-    return { sent: true };
+    /**
+     * The send either happened or it did not — and the caller is told which.
+     *
+     * This previously returned `{ sent: true }` for EVERY non-notOnWhatsapp
+     * outcome, including outright failures. The delivery row said FAILED while
+     * the API said "sent", so during a provider outage a user was shown "code
+     * sent", waited for a code that was never dispatched, and had no way
+     * forward. On the login path that is a lockout, and it contradicts
+     * worker-and-external-sends.md's "never silently claim a notification was
+     * delivered".
+     */
+    return { outcome: result.ok ? 'SENT' : 'SEND_FAILED' };
   }
 
   /**

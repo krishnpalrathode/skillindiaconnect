@@ -90,7 +90,7 @@ describe('OtpController', () => {
 
   describe('sendOtp', () => {
     it('returns 200 { data: { sent: true } } on success', async () => {
-      otpMock.issue.mockResolvedValue({ sent: true });
+      otpMock.issue.mockResolvedValue({ outcome: 'SENT' });
       const result = await controller.sendOtp({ phone: '+911234567890' }, mockReq);
       expect(result).toEqual({ data: { sent: true } });
       expect(otpMock.issue).toHaveBeenCalledWith(
@@ -101,7 +101,7 @@ describe('OtpController', () => {
     });
 
     it('throws 409 PHONE_NOT_ON_WHATSAPP when channel returns notOnWhatsapp', async () => {
-      otpMock.issue.mockResolvedValue({ sent: false, notOnWhatsapp: true });
+      otpMock.issue.mockResolvedValue({ outcome: 'NOT_ON_WHATSAPP' });
       await expect(controller.sendOtp({ phone: '+910000' }, mockReq)).rejects.toThrow(
         ConflictException,
       );
@@ -164,7 +164,7 @@ describe('OtpController', () => {
         userId: 'user-1',
         candidateId: 'profile-1',
       });
-      otpMock.issue.mockResolvedValue({ sent: true });
+      otpMock.issue.mockResolvedValue({ outcome: 'SENT' });
 
       const result = await controller.phoneLoginStart({ phone: '+911234567890' }, mockReq);
       expect(result).toEqual({
@@ -189,7 +189,7 @@ describe('OtpController', () => {
         userId: 'user-1',
         candidateId: 'profile-1',
       });
-      otpMock.issue.mockResolvedValue({ sent: false, notOnWhatsapp: true });
+      otpMock.issue.mockResolvedValue({ outcome: 'NOT_ON_WHATSAPP' });
 
       const result = await controller.phoneLoginStart({ phone: '+910000' }, mockReq);
       expect(result).toEqual({
