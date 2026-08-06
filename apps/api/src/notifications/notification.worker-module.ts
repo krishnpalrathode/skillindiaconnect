@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { QueueModule } from '../queue/queue.module';
+import { R2Module } from '../core/storage/r2.module';
 import { ChannelsModule } from './channels/channels.module';
 import { NotificationProcessor } from './notification.processor';
 
@@ -21,6 +22,11 @@ import { NotificationProcessor } from './notification.processor';
 @Module({
   imports: [
     QueueModule,     // BullMQ connection + NOTIFICATION queue registration
+    // StorageService, for resolving a document-template's R2 key to bytes at
+    // send time. R2Module is @Global, but imported explicitly: this module must
+    // not depend on ANOTHER worker module happening to import it (the
+    // CandidateWorkerModule precedent — own your dependencies).
+    R2Module,
     ChannelsModule,  // WHATSAPP_CHANNEL + EMAIL_CHANNEL bindings
   ],
   providers: [NotificationProcessor],

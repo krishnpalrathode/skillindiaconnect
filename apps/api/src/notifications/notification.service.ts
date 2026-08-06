@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { DeliveryStatus, NotificationType, Prisma, UserRole } from '@prisma/client';
 import { Queue } from 'bullmq';
@@ -10,6 +10,7 @@ import {
   NotificationJobData,
   NOTIFICATION_JOB_ATTEMPTS,
   NOTIFICATION_JOB_BACKOFF_MS,
+  readTemplateVars,
 } from './notification.types';
 import {
   ListNotificationsDto,
@@ -26,6 +27,8 @@ export interface NotifyOptions {
 
 @Injectable()
 export class NotificationService {
+  private readonly logger = new Logger(NotificationService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     @InjectQueue(QUEUE_NAMES.NOTIFICATION) private readonly notificationQueue: Queue,
@@ -47,6 +50,32 @@ export class NotificationService {
     opts?: NotifyOptions,
   ): Promise<void> {
     const entry = NOTIFICATION_MATRIX[type];
+
+    /**
+     * CR-WA W0 — the guard against forgetting.
+     *
+     * A whatsapp-tier type needs its template parameters, and they are supplied
+     * by the RAISING module (see notification.types.ts). Nothing structural can
+     * enforce that: startup validation cannot see call sites, and a compile-time
+     * check does not bite because callers pass an already-widened
+     * NotificationType rather than a literal.
+     *
+     * So it is caught HERE, at the enqueue, where the omission was made — the
+     * worker would otherwise report it minutes later from a different process.
+     *
+     * LOGGED, NOT THROWN, on purpose: callers like StatusService.dispatchPostCommit
+     * wrap notify() in a best-effort try/catch, so a throw would be swallowed and
+     * would turn "degrades to email" into "the candidate hears nothing". The
+     * worker still marks the row FAILED and falls back to email; this only makes
+     * the cause visible at its source.
+     */
+    if (entry.whatsapp && !opts?.suppressWhatsapp && readTemplateVars(payload.data) === null) {
+      this.logger.error(
+        `notify(${type}) is a WhatsApp-tier type but carries no templateVars — ` +
+          'the WhatsApp send will FAIL and fall back to email. The module raising ' +
+          'this notification must supply them (see notification.types.ts).',
+      );
+    }
 
     // In-app is synchronous — written before we return so the feed is instantly updated.
     if (entry.inApp) {

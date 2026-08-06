@@ -3,14 +3,25 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { DeliveryStatus, NotificationType, WaMessageKind } from '@prisma/client';
 import { Job } from 'bullmq';
 import { PrismaService } from '../core/prisma/prisma.service';
+import { StorageService } from '../core/storage/storage.service';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
 import { QUEUE_NAMES } from '../queue/queue.constants';
 import { RESPONSIVE_WORKER_OPTS } from '../queue/worker-tuning';
-import { WHATSAPP_CHANNEL, WhatsappChannel } from './channels/whatsapp.channel';
+import {
+  WHATSAPP_CHANNEL,
+  WhatsappChannel,
+  WhatsappTemplateSend,
+} from './channels/whatsapp.channel';
 import { EMAIL_CHANNEL, EmailChannel } from './channels/email.channel';
 import { NOTIFICATION_MATRIX } from './notification.matrix';
-import { NotificationJobData, NotifyPayload } from './notification.types';
+import {
+  NotificationJobData,
+  NotifyPayload,
+  readDocumentFilename,
+  readDocumentKey,
+  readTemplateVars,
+} from './notification.types';
 import { isWhatsappDeliverable } from './whatsapp-deliverability';
 
 // RESPONSIVE tier: a candidate is waiting on the other end of these sends.
@@ -24,6 +35,7 @@ export class NotificationProcessor extends WorkerHost {
     @Inject(WHATSAPP_CHANNEL) private readonly whatsappChannel: WhatsappChannel,
     @Inject(EMAIL_CHANNEL) private readonly emailChannel: EmailChannel,
     private readonly auditService: AuditService,
+    private readonly storage: StorageService,
   ) {
     super();
   }
@@ -34,6 +46,60 @@ export class NotificationProcessor extends WorkerHost {
     } else {
       await this.processEmail(job);
     }
+  }
+
+  /**
+   * Build the template send from what the RAISING module supplied (CR-WA W0).
+   *
+   * The notification module deliberately does not know what a job title or a
+   * company name is — those belong to other modules, and querying their tables
+   * here would break Rule 4. The module raising the notification already holds
+   * the data and passes it in `payload.data` (see notification.types.ts).
+   *
+   * RESOLUTION FAILURE IS A FAILURE. If the params are absent or malformed we
+   * do NOT send with placeholders: a WhatsApp reading "You have been selected
+   * for  at " is worse than no message, and it cannot be unsent. Throwing puts
+   * this on the SAME path as a provider failure — the row is marked FAILED and,
+   * on the final attempt, the existing email fallback runs. The candidate still
+   * hears about it; they just hear by email.
+   */
+  private async buildTemplateSend(
+    payload: NotifyPayload,
+    msgRowId: string,
+  ): Promise<WhatsappTemplateSend> {
+    const bodyParams = readTemplateVars(payload.data);
+    if (bodyParams === null) {
+      await this.prisma.whatsappMessage
+        .update({ where: { id: msgRowId }, data: { errorCode: 'TEMPLATE_VARS_MISSING' } })
+        .catch(() => undefined);
+      throw new Error('WhatsApp template variables missing or malformed');
+    }
+
+    const documentKey = readDocumentKey(payload.data);
+    if (!documentKey) return { bodyParams };
+
+    // Resolved HERE, at send time — a signed url placed in the job data would
+    // routinely be expired by the time this ran, and bytes would bloat Redis.
+    const object = await this.storage.getObjectBuffer(documentKey);
+    if (!object) {
+      await this.prisma.whatsappMessage
+        .update({ where: { id: msgRowId }, data: { errorCode: 'DOCUMENT_UNAVAILABLE' } })
+        .catch(() => undefined);
+      throw new Error('WhatsApp document could not be read from storage');
+    }
+
+    return {
+      bodyParams,
+      document: {
+        // Supplied by the raising module — NOT derived from bodyParams[0].
+        // Deriving it would make the filename depend on a template's parameter
+        // ORDER, so a future template that puts something else first would
+        // silently produce a wrong name on a file the candidate keeps.
+        filename: readDocumentFilename(payload.data),
+        bytes: object.body,
+        mimeType: object.contentType || 'application/pdf',
+      },
+    };
   }
 
   // ── WhatsApp channel ─────────────────────────────────────────────────────────
@@ -123,7 +189,8 @@ export class NotificationProcessor extends WorkerHost {
     }
 
     try {
-      const result = await this.whatsappChannel.sendTemplate(profile.phone!, templateKey, {});
+      const send = await this.buildTemplateSend(payload, msgRow.id);
+      const result = await this.whatsappChannel.sendTemplate(profile.phone!, templateKey, send);
 
       await this.prisma.whatsappMessage.update({
         where: { id: msgRow.id },

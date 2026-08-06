@@ -2,6 +2,7 @@ import { ApplicationStatus, NotificationType, UserRole } from '@prisma/client';
 import { AdminResendService, RESEND_CAP, RESEND_WINDOW_S } from './admin-resend.service';
 import type { PrismaService } from '../core/prisma/prisma.service';
 import type { CandidateReadService } from '../candidate/candidate-read.service';
+import type { JobsService } from '../jobs/jobs.service';
 import type { NotificationService } from '../notifications/notification.service';
 import type { AuditService } from '../audit/audit.service';
 import type { Redis } from 'ioredis';
@@ -47,12 +48,22 @@ function build(overrides?: {
     expire: jest.fn().mockResolvedValue(1),
   } as unknown as Redis;
 
+  // CR-WA W0: the resend now resolves the job_selected template parameters.
+  const jobsService = {
+    getJobSubsets: jest
+      .fn()
+      .mockResolvedValue(
+        new Map([['job-1', { id: 'job-1', title: 'Senior Electrician', companyName: 'Gulf Wiring LLC' }]]),
+      ),
+  } as unknown as JobsService;
+
   const service = new AdminResendService(
     prisma,
     candidateRead,
     notificationService,
     auditService,
     redis,
+    jobsService,
   );
   return { service, prisma, candidateRead, notificationService, auditService, redis };
 }

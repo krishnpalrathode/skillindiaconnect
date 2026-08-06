@@ -52,7 +52,7 @@ describe('MockWhatsappChannel — sendTemplate (unit)', () => {
       typeof import('./whatsapp.mock')
     >('./whatsapp.mock');
     const wa = new MockWhatsappChannel();
-    const result = await wa.sendTemplate('+919876543210', 'wa.selected', { name: 'Alice' });
+    const result = await wa.sendTemplate('+919876543210', 'wa.selected', { bodyParams: ['Alice'] });
     expect(result.ok).toBe(true);
     expect(result.providerMessageId).toMatch(/^mock-tpl-/);
   });
@@ -62,7 +62,7 @@ describe('MockWhatsappChannel — sendTemplate (unit)', () => {
       typeof import('./whatsapp.mock')
     >('./whatsapp.mock');
     const wa = new MockWhatsappChannel();
-    const result = await wa.sendTemplate('+919876540000', 'wa.selected', {});
+    const result = await wa.sendTemplate('+919876540000', 'wa.selected', { bodyParams: [] });
     expect(result.ok).toBe(false);
     expect(result.notOnWhatsapp).toBe(true);
   });
@@ -73,7 +73,7 @@ describe('MockWhatsappChannel — sendTemplate (unit)', () => {
     >('./whatsapp.mock');
     const wa = new MockWhatsappChannel();
     await wa.sendOtp('+919876543210', '123456', 'LOGIN');
-    await wa.sendTemplate('+919876543210', 'wa.selected', {});
+    await wa.sendTemplate('+919876543210', 'wa.selected', { bodyParams: [] });
     expect(wa.getLastSentCode('+919876543210')).toBe('123456');
     expect(wa.getLastTemplateMessageId('+919876543210', 'wa.selected')).toMatch(/^mock-tpl-/);
   });
