@@ -5,27 +5,54 @@ import { useTranslations } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import type { JobCountryFacet } from '@/lib/api/jobs';
 import { cn } from '@/lib/utils';
-import {
-  nextJobSearchUrl,
-  type JobMarket,
-  type JobSearchFilters,
-  type JobSort,
-} from '@/lib/jobs/searchParams';
+import { nextJobSearchUrl, type JobSearchFilters, type JobSort } from '@/lib/jobs/searchParams';
 
 interface JobSearchControlsProps {
   filters: JobSearchFilters;
+  /** Countries with ACTIVE jobs, from GET /jobs/countries. */
+  countries: JobCountryFacet[];
 }
-
-const MARKET_TABS: { value: JobMarket | null; labelKey: string }[] = [
-  { value: null, labelKey: 'tabs.all' },
-  { value: 'LOCAL', labelKey: 'tabs.local' },
-  { value: 'GULF', labelKey: 'tabs.foreign' },
-];
 
 const SORT_OPTIONS: JobSort[] = ['recent', 'relevance', 'salary'];
 
-export function JobSearchControls({ filters }: JobSearchControlsProps) {
+function CountryTab({
+  label,
+  count,
+  selected,
+  onClick,
+}: {
+  label: string;
+  count?: number;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={selected}
+      onClick={onClick}
+      className={cn(
+        'inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 font-medium transition-colors',
+        'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
+        selected
+          ? 'bg-primary-600 text-white shadow-sm'
+          : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200',
+      )}
+    >
+      {label}
+      {count !== undefined && (
+        <span className={cn('text-xs', selected ? 'text-white/80' : 'text-neutral-600')}>
+          {count}
+        </span>
+      )}
+    </button>
+  );
+}
+
+export function JobSearchControls({ filters, countries }: JobSearchControlsProps) {
   const t = useTranslations('jobs');
   const router = useRouter();
   const pathname = usePathname();
@@ -79,33 +106,38 @@ export function JobSearchControls({ filters }: JobSearchControlsProps) {
       </form>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div
-          role="tablist"
-          aria-label={t('marketTabsLabel')}
-          className="flex rounded-md border border-border overflow-hidden text-sm"
-        >
-          {MARKET_TABS.map((tab) => {
-            const selected = filters.market === tab.value;
-            return (
-              <button
-                key={tab.labelKey}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                onClick={() => go({ market: tab.value })}
-                className={cn(
-                  'min-h-11 px-4 font-medium transition-colors',
-                  'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
-                  selected
-                    ? 'bg-primary-50 text-primary-700 border-b-2 border-primary-600'
-                    : 'text-neutral-600 hover:bg-neutral-50',
-                )}
-              >
-                {t(tab.labelKey)}
-              </button>
-            );
-          })}
-        </div>
+        {/*
+          Country tabs, built from the live job set (GET /jobs/countries) rather
+          than a hard-coded India/Gulf pair. A country appears the moment an
+          employer publishes a job there and drops off when the last one is
+          archived, so recruiting can open anywhere with no code change.
+
+          `countries` is empty only when nothing is published at all — then the
+          whole strip is hidden rather than showing a lone "All" that filters
+          nothing.
+        */}
+        {countries.length > 0 && (
+          <div
+            role="tablist"
+            aria-label={t('countryTabsLabel')}
+            className="flex flex-wrap items-center gap-1.5 text-sm"
+          >
+            <CountryTab
+              label={t('tabs.all')}
+              selected={filters.country === null}
+              onClick={() => go({ country: null })}
+            />
+            {countries.map(({ country, count }) => (
+              <CountryTab
+                key={country}
+                label={country}
+                count={count}
+                selected={filters.country === country}
+                onClick={() => go({ country })}
+              />
+            ))}
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           <label htmlFor="job-sort" className="text-sm text-neutral-600">

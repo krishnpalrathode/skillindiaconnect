@@ -44,6 +44,7 @@ export function JobFilters({ filters, locale }: JobFiltersProps) {
 
   const hasActiveFilters =
     filters.market ||
+    filters.country ||
     filters.category ||
     filters.salaryMin != null ||
     filters.salaryMax != null ||

@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { JobSearchControls } from '@/components/jobs/JobSearchControls';
 import { JobFilters } from '@/components/jobs/JobFilters';
 import { JobList } from '@/components/jobs/JobList';
-import { searchJobsServer } from '@/lib/api/jobs';
+import { searchJobsServer, getJobCountriesServer } from '@/lib/api/jobs';
 import { PAGE_SHELL } from '@/lib/page-shell';
 import {
   buildJobSearchQuery,
@@ -34,7 +34,12 @@ export default async function JobsPage({ params, searchParams }: JobsPageProps) 
 
   // Fetch the first page on the server; the SSR result seeds JobList so the
   // page is fully populated in the initial HTML response (crawlable, no CLS).
-  const initialData = await searchJobsServer(filters, { limit: DEFAULT_PAGE_SIZE });
+  // Both server-side and in parallel: the country strip must be populated in the
+  // first HTML response, and a facet failure must not take the whole page down.
+  const [initialData, countries] = await Promise.all([
+    searchJobsServer(filters, { limit: DEFAULT_PAGE_SIZE }),
+    getJobCountriesServer().catch(() => []),
+  ]);
 
   // A stable string that changes whenever any filter changes — used as the
   // `key` prop on JobList to force a remount when the user applies filters,
@@ -48,7 +53,7 @@ export default async function JobsPage({ params, searchParams }: JobsPageProps) 
         <p className="mt-1 text-sm text-neutral-600">{t('pageSubtitle')}</p>
       </header>
 
-      <JobSearchControls filters={filters} />
+      <JobSearchControls filters={filters} countries={countries} />
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
         <aside aria-label={t('filtersLabel')}>

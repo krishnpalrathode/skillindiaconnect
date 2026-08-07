@@ -955,7 +955,8 @@
       "notFoundTitle": "Job not found",
       "notFoundBody": "This job may have been filled or removed.",
       "backToJobs": "Back to jobs"
-    }
+    },
+    "countryTabsLabel": "Filter jobs by country"
   },
   "dashboard": {
     "metaTitle": "My Dashboard",

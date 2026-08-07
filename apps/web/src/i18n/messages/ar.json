@@ -955,7 +955,8 @@
       "notFoundTitle": "الوظيفة غير موجودة",
       "notFoundBody": "ربما تم شغل هذه الوظيفة أو إزالتها.",
       "backToJobs": "العودة إلى الوظائف"
-    }
+    },
+    "countryTabsLabel": "تصفية الوظائف حسب الدولة"
   },
   "dashboard": {
     "metaTitle": "لوحتي",

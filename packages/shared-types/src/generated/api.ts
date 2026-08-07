@@ -1239,6 +1239,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/jobs/countries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Countries that currently have ACTIVE jobs
+         * @description The recruiting countries a candidate can actually filter by, derived from
+         *     the live job set rather than a hard-coded list — a country appears here
+         *     as soon as an employer publishes a job there, and disappears when the
+         *     last one is archived. `count` lets the UI show how many jobs each has.
+         *
+         *     Public: no auth, same as the search itself.
+         */
+        get: operations["getJobCountries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/jobs/{id}": {
         parameters: {
             query?: never;
@@ -6482,6 +6507,11 @@ export interface operations {
         parameters: {
             query?: {
                 market?: components["schemas"]["JobMarket"];
+                /**
+                 * @description Exact recruiting-country match (canonical English name, e.g. "India", "Oman"). Not a fixed enum: the searchable set is whatever countries currently have ACTIVE jobs — see GET /jobs/countries.
+                 * @example Oman
+                 */
+                country?: string;
                 /** @description Filter by job category ID */
                 category?: string;
                 /** @description Minimum salary filter (inclusive) */
@@ -6569,6 +6599,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getJobCountries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Countries with at least one ACTIVE job, alphabetical */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** @example Oman */
+                            country: string;
+                            /** @example 1 */
+                            count: number;
+                        }[];
+                    };
                 };
             };
         };

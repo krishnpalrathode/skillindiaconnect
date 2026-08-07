@@ -5164,6 +5164,16 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/JobMarket'
+        - name: country
+          in: query
+          description: >
+            Exact recruiting-country match (canonical English name, e.g. "India",
+            "Oman"). Not a fixed enum: the searchable set is whatever countries
+            currently have ACTIVE jobs — see GET /jobs/countries.
+          schema:
+            type: string
+            maxLength: 60
+          example: Oman
         - name: category
           in: query
           description: Filter by job category ID
@@ -5275,6 +5285,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /jobs/countries:
+    get:
+      operationId: getJobCountries
+      tags: [jobs]
+      summary: Countries that currently have ACTIVE jobs
+      description: |
+        The recruiting countries a candidate can actually filter by, derived from
+        the live job set rather than a hard-coded list — a country appears here
+        as soon as an employer publishes a job there, and disappears when the
+        last one is archived. `count` lets the UI show how many jobs each has.
+
+        Public: no auth, same as the search itself.
+      security: []
+      responses:
+        '200':
+          description: Countries with at least one ACTIVE job, alphabetical
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [country, count]
+                      properties:
+                        country:
+                          type: string
+                          example: Oman
+                        count:
+                          type: integer
+                          example: 1
 
   /jobs/{id}:
     get:

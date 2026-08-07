@@ -162,6 +162,40 @@ export class JobsSearchService {
     }
   }
 
+  /**
+   * The recruiting countries that currently have ACTIVE jobs.
+   *
+   * Data-driven on purpose: the candidate-facing filter is built from this, so
+   * a country becomes searchable the moment an employer publishes a job there
+   * and drops off when the last one is archived — no hard-coded list to update.
+   *
+   * Cached under the SAME version counter as the search itself, so the existing
+   * job-state-change bump invalidates this too; a country cannot linger in the
+   * filter after its last job goes away (beyond the shared TTL).
+   */
+  async listCountries(): Promise<Array<{ country: string; count: number }>> {
+    const version = await this.cache.getSearchVersion();
+    const cacheKey = `search:${version}:countries`;
+
+    const cached = await this.cache.getSearch<Array<{ country: string; count: number }>>(cacheKey);
+    if (cached) return cached;
+
+    const rows = await this.prisma.$queryRaw<Array<{ country: string; count: bigint }>>(
+      Prisma.sql`
+        SELECT j.country AS country, COUNT(*) AS count
+        FROM jobs j
+        WHERE j.status = 'ACTIVE' AND j.country IS NOT NULL
+        GROUP BY j.country
+        ORDER BY j.country ASC
+      `,
+    );
+
+    // COUNT() comes back as bigint, which JSON.stringify throws on.
+    const result = rows.map((r) => ({ country: r.country, count: Number(r.count) }));
+    await this.cache.setSearch(cacheKey, result);
+    return result;
+  }
+
   private async searchPublic(
     dto: SearchQueryDto,
   ): Promise<{ data: JobCard[]; nextCursor: string | null }> {
@@ -171,6 +205,9 @@ export class JobsSearchService {
       const paramsHash = this.cache.hashParams({
         q: dto.q,
         market: dto.market,
+        // MUST be part of the key: two searches differing only by country would
+        // otherwise collide and one country's results would be served for another.
+        country: dto.country,
         category: dto.category,
         salaryMin: dto.salaryMin,
         salaryMax: dto.salaryMax,
@@ -299,6 +336,9 @@ export class JobsSearchService {
     }
     if (dto.market) {
       filters.push(Prisma.sql`j.market::text = ${dto.market}`);
+    }
+    if (dto.country) {
+      filters.push(Prisma.sql`j.country = ${dto.country}`);
     }
     if (dto.category) {
       filters.push(Prisma.sql`jc.slug = ${dto.category}`);

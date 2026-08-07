@@ -5,6 +5,9 @@ export type JobSort = 'relevance' | 'recent' | 'salary';
 
 export interface JobSearchFilters {
   market: JobMarket | null;
+  /** Canonical English country name. Free-form: the valid set is whatever
+   *  countries currently have ACTIVE jobs (GET /jobs/countries). */
+  country: string | null;
   category: string | null;
   salaryMin: number | null;
   salaryMax: number | null;
@@ -21,6 +24,7 @@ const VALID_SORTS: JobSort[] = ['relevance', 'recent', 'salary'];
 
 export const EMPTY_FILTERS: JobSearchFilters = {
   market: null,
+  country: null,
   category: null,
   salaryMin: null,
   salaryMax: null,
@@ -49,6 +53,10 @@ export function parseJobSearchParams(params: RawSearchParams): JobSearchFilters 
 
   return {
     market: market && VALID_MARKETS.includes(market as JobMarket) ? (market as JobMarket) : null,
+    // Not validated against a list: the server treats an unknown country as
+    // "matches nothing", and the set is data-driven so no client whitelist can
+    // stay correct.
+    country: first(params[`country`]) || null,
     category: first(params['category']) || null,
     salaryMin: parseNumber(first(params['salaryMin'])),
     salaryMax: parseNumber(first(params['salaryMax'])),
@@ -70,6 +78,7 @@ export function buildJobSearchQuery(
 ): string {
   const params = new URLSearchParams();
   if (filters.market) params.set('market', filters.market);
+  if (filters.country) params.set('country', filters.country);
   if (filters.category) params.set('category', filters.category);
   if (filters.salaryMin != null) params.set('salaryMin', String(filters.salaryMin));
   if (filters.salaryMax != null) params.set('salaryMax', String(filters.salaryMax));
