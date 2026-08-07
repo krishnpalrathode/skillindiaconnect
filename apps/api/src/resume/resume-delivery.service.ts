@@ -96,13 +96,7 @@ export class ResumeDeliveryService {
     // Legacy rows (pre-S7-B2) carry no viewSnapshot — those fall back to the
     // live name, which is the best available answer for a PDF whose contents
     // were never recorded.
-    const snapshot = generation.viewSnapshot as { fullName?: unknown } | null;
-    const snapshotName =
-      typeof snapshot?.fullName === 'string' && snapshot.fullName.length > 0
-        ? snapshot.fullName
-        : null;
-    const name =
-      snapshotName ?? (await this.candidateRead.getNamesByIds([candidateId])).get(candidateId) ?? '';
+    const name = await this.resolveSnapshotName(generation, candidateId);
 
     await this.notifications.notify(userId, NotificationType.RESUME_SENT, {
       title: 'Your resume',
@@ -127,6 +121,33 @@ export class ResumeDeliveryService {
   }
 
   /**
+   * THE NAME COMES FROM THE GENERATION'S OWN SNAPSHOT, not the live profile.
+   * The candidate forwards the attached PDF; a greeting or filename that
+   * disagrees with the name printed on the attachment reads as someone else's
+   * document. The snapshot IS what those bytes say, so they cannot drift.
+   *
+   * Legacy rows (pre-S7-B2) carry no viewSnapshot — those fall back to the live
+   * name, the best available answer for a PDF whose contents were never
+   * recorded.
+   *
+   * Shared by BOTH delivery paths deliberately: they must name the same file for
+   * the same generation, and two copies of this is how that drifts.
+   */
+  private async resolveSnapshotName(
+    generation: { viewSnapshot: unknown },
+    candidateId: string,
+  ): Promise<string> {
+    const snapshot = generation.viewSnapshot as { fullName?: unknown } | null;
+    const snapshotName =
+      typeof snapshot?.fullName === 'string' && snapshot.fullName.length > 0
+        ? snapshot.fullName
+        : null;
+    return (
+      snapshotName ?? (await this.candidateRead.getNamesByIds([candidateId])).get(candidateId) ?? ''
+    );
+  }
+
+  /**
    * POST /send-email — email-to-self.
    *
    * HARD RULE (viewer-aware-dto.md): the destination is the candidate's own
@@ -147,10 +168,21 @@ export class ResumeDeliveryService {
       HttpStatus.UNPROCESSABLE_ENTITY,
     );
 
+    // The document the body PROMISES. Without these two keys the worker had
+    // nothing to attach, so "Your resume PDF is attached" arrived with no PDF.
+    // Same keys the WhatsApp path supplies — the worker resolves the bytes from
+    // R2 at send time, so no signed url or payload bloat travels in job data.
+    const name = await this.resolveSnapshotName(generation, candidateId);
+
     await this.notifications.enqueueEmail(userId, NotificationType.RESUME_SENT, {
       title: 'Your resume',
       body: 'Your resume PDF is attached.',
-      data: { generationId: generation.id, channel: 'EMAIL' },
+      data: {
+        generationId: generation.id,
+        channel: 'EMAIL',
+        documentKey: generation.r2Key,
+        documentFilename: buildResumeFilename(name),
+      },
     });
 
     await this.auditDelivery(AUDIT_ACTIONS.RESUME_EMAILED, userId, generation.id, 'EMAIL');

@@ -73,11 +73,12 @@ confirm it **arrives in the INBOX, not spam** (this is what validates SPF/DKIM/D
 > concluded the fallback was verified. WhatsApp is currently the ONLY OTP transport — see
 > [whatsapp-integration.md](./whatsapp-integration.md#known-gaps).
 
-> Note on the resume attachment: the channel **supports** attachments today (proven in
-> `titan-smtp-email.channel.spec.ts`). Wiring the resume processor to actually fetch the PDF from
-> R2 and pass it via `payload.attachments` is a small caller-side follow-up — it needs **no port
-> or adapter change** (the `attachments` reserved key already exists). Until then the resume email
-> sends without the file attached.
+> **Resolved.** The resume email now carries the PDF. `attachments` was a reserved key on
+> the email port that every adapter honoured, with NO PRODUCER — so the body said "your
+> resume is attached" and the mail arrived empty, on both the email-to-self endpoint and
+> the whatsappCapable→email downgrade. The worker now resolves the R2 key to bytes at
+> send time; a document that cannot be read FAILS the send rather than shipping an email
+> that claims an attachment it does not have.
 
 ## The one honest asymmetry — bounces
 

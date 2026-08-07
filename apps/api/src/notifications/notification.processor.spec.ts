@@ -672,4 +672,107 @@ describe('NotificationProcessor', () => {
       expect(prismaMock.getWaMsgRow()?.['errorCode']).toBe('DOCUMENT_UNAVAILABLE');
     });
   });
+
+  // ── Email attachments (the resume PDF) ──────────────────────────────────────
+
+  /**
+   * THE BUG THIS BLOCK EXISTS FOR: `attachments` was a reserved key on the email
+   * port that every adapter honoured, and NOTHING EVER SET IT — consumers with
+   * no producer. So the resume email said "Your resume PDF is attached" and
+   * arrived empty, on both the email-to-self endpoint and the
+   * whatsappCapable→email downgrade, after the API had already answered
+   * `delivered: 'EMAIL_FALLBACK'`.
+   *
+   * Nothing caught it because every existing email test asserted only THAT a
+   * send happened, never WHAT it carried. These assert the payload.
+   */
+  describe('email attachments', () => {
+    const DOC_DATA = {
+      templateVars: ['Suresh Kumar'],
+      documentKey: 'resumes/c1/r.pdf',
+      documentFilename: 'Suresh-Kumar-Resume.pdf',
+    };
+
+    /** payload the email channel was actually handed. */
+    const sentPayload = () =>
+      emailSendSpy.mock.calls[0]?.[2] as { attachments?: { filename: string; content: Buffer; contentType: string }[] };
+
+    it('the whatsappCapable DOWNGRADE attaches the PDF', async () => {
+      // The path the API already promised as EMAIL_FALLBACK.
+      await buildProcessor({ whatsappCapable: false, phone: PHONE });
+      emailSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'e-1' });
+
+      await processor.process(
+        makeJob('whatsapp', {
+          data: { payload: { ...BASE_JOB_DATA.payload, data: DOC_DATA } },
+        }),
+      );
+
+      const att = sentPayload()?.attachments;
+      expect(att).toHaveLength(1);
+      expect(att![0]!.filename).toBe('Suresh-Kumar-Resume.pdf');
+      expect(att![0]!.content.length).toBeGreaterThan(0);
+      expect(att![0]!.contentType).toBe('application/pdf');
+    });
+
+    it('the DIRECT email path attaches the PDF (email-to-self)', async () => {
+      await buildProcessor({ whatsappCapable: true, phone: PHONE });
+      emailSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'e-2' });
+
+      await processor.process(
+        makeJob('email', {
+          data: { payload: { ...BASE_JOB_DATA.payload, data: DOC_DATA } },
+        }),
+      );
+
+      expect(sentPayload()?.attachments?.[0]?.filename).toBe('Suresh-Kumar-Resume.pdf');
+    });
+
+    it('the FAILURE-fallback attaches the PDF too', async () => {
+      await buildProcessor({ whatsappCapable: true, phone: PHONE });
+      waSendSpy.mockRejectedValue(new Error('Meta API error'));
+      emailSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'e-3' });
+
+      await expect(
+        processor.process(
+          makeJob(
+            'whatsapp',
+            { attemptsMade: 2, opts: { attempts: 3 },
+              data: { payload: { ...BASE_JOB_DATA.payload, data: DOC_DATA } } },
+          ),
+        ),
+      ).rejects.toThrow();
+
+      expect(sentPayload()?.attachments?.[0]?.filename).toBe('Suresh-Kumar-Resume.pdf');
+    });
+
+    it('a notification with NO document sends NO attachments key', async () => {
+      // Every other notification type must be byte-for-byte unaffected.
+      await buildProcessor({ whatsappCapable: true, phone: PHONE });
+      emailSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'e-4' });
+
+      await processor.process(makeJob('email'));
+
+      expect(sentPayload()).not.toHaveProperty('attachments');
+      expect(storageGetSpy).not.toHaveBeenCalled();
+    });
+
+    it('an UNREADABLE document fails the send — never an email claiming an attachment', async () => {
+      // The whole point. Sending anyway would reproduce the exact bug: a body
+      // that says "attached" with nothing attached, recorded as SENT.
+      await buildProcessor({ whatsappCapable: true, phone: PHONE });
+      storageGetSpy.mockResolvedValue(null);
+      emailSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'e-5' });
+
+      await expect(
+        processor.process(
+          makeJob('email', {
+            data: { payload: { ...BASE_JOB_DATA.payload, data: DOC_DATA } },
+          }),
+        ),
+      ).rejects.toThrow(/attachment/i);
+
+      expect(emailSendSpy).not.toHaveBeenCalled();
+    });
+  });
 });

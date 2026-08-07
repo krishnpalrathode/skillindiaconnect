@@ -14,7 +14,7 @@ import {
   WhatsappChannel,
   WhatsappTemplateSend,
 } from './channels/whatsapp.channel';
-import { EMAIL_CHANNEL, EmailChannel } from './channels/email.channel';
+import { EMAIL_CHANNEL, EmailAttachment, EmailChannel } from './channels/email.channel';
 import { NOTIFICATION_MATRIX } from './notification.matrix';
 import {
   NotificationJobData,
@@ -320,6 +320,47 @@ export class NotificationProcessor extends WorkerHost {
 
   // ── Shared email-send logic (direct, not enqueued) ───────────────────────────
 
+  /**
+   * Fetch the document a notification PROMISES to carry, as an email attachment.
+   *
+   * ⚠️ WHY THIS EXISTS. `attachments` has been a reserved key on the email port
+   * since S2-B3 and every adapter honours it — Resend and Titan both map it onto
+   * their SDK — but NOTHING EVER SET IT. There were consumers and no producer.
+   * So the resume email said "Your resume PDF is attached" and arrived empty, on
+   * BOTH paths that send it: the email-to-self endpoint, and the
+   * whatsappCapable→email downgrade where the API had already answered
+   * `delivered: 'EMAIL_FALLBACK'`. That is the same false success this codebase
+   * removes everywhere else — the response claims delivery and the delivery is
+   * hollow — and it hit exactly the candidates who cannot receive WhatsApp.
+   *
+   * Returns null when the notification carries no document, so every other
+   * notification type is byte-for-byte unaffected.
+   *
+   * THROWS when a document is named but unreadable. Sending anyway would
+   * reproduce the precise bug being fixed; throwing puts it on the same retry
+   * path as any other failure and leaves the row FAILED rather than a false
+   * SENT. Identical reasoning to buildTemplateSend's DOCUMENT_UNAVAILABLE.
+   */
+  private async resolveEmailAttachments(payload: NotifyPayload): Promise<EmailAttachment[] | null> {
+    const documentKey = readDocumentKey(payload.data);
+    if (!documentKey) return null;
+
+    // Resolved HERE, at send time, for the same reason the WhatsApp path does:
+    // job data holds an R2 KEY, never bytes and never a signed url.
+    const object = await this.storage.getObjectBuffer(documentKey);
+    if (!object) {
+      throw new Error('Email attachment could not be read from storage');
+    }
+
+    return [
+      {
+        filename: readDocumentFilename(payload.data),
+        content: object.body,
+        contentType: object.contentType || 'application/pdf',
+      },
+    ];
+  }
+
   private async sendEmailDirect(
     userId: string,
     toEmail: string,
@@ -336,7 +377,12 @@ export class NotificationProcessor extends WorkerHost {
       },
     });
 
-    const result = await this.emailChannel.send(toEmail, type, payload.data ?? {});
+    const attachments = await this.resolveEmailAttachments(payload);
+
+    const result = await this.emailChannel.send(toEmail, type, {
+      ...(payload.data ?? {}),
+      ...(attachments && { attachments }),
+    });
 
     const finalStatus = result.ok
       ? DeliveryStatus.SENT
