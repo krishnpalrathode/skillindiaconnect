@@ -51,8 +51,7 @@ interface PersonalInfoStepProps {
 
 /**
  * Step 1 — Personal Info.
- * Required to advance: fullName + dob.
- * Soft-block (non-blocking): phone verification.
+ * Required to advance: fullName + dob + a VERIFIED mobile number.
  * Profile photo: local preview only (no API endpoint in S1).
  */
 export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalInfoStepProps) {
@@ -63,6 +62,7 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
 
   const [fullName, setFullName] = useState(profile.fullName ?? '');
   const [dob, setDob] = useState(profile.dob ?? '');
+  const [phoneVerified, setPhoneVerified] = useState(!!profile.phoneVerifiedAt);
   const [maritalStatus, setMaritalStatus] = useState<MaritalStatus | ''>(
     profile.maritalStatus ?? '',
   );
@@ -85,7 +85,7 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
   const showNameError = fullName.trim().length > 0 && !nameValid;
   const showAgeError = dob.length > 0 && !ageValid;
 
-  const canAdvance = nameValid && ageValid;
+  const canAdvance = nameValid && ageValid && phoneVerified;
 
   // Display-only chips parsed from the comma-separated languages input — the
   // saved value remains the same comma string the API has always received.
@@ -293,11 +293,12 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
         )}
       </div>
 
-      {/* Phone verify (soft-block — non-required) */}
+      {/* Phone verify — REQUIRED: a verified mobile number gates advancing. */}
       <PhoneVerify
         initialPhone={profile.phone ?? ''}
         alreadyVerified={!!profile.phoneVerifiedAt}
         onVerified={(phone) => {
+          setPhoneVerified(true);
           onProfileUpdate({ ...profile, phone });
         }}
       />

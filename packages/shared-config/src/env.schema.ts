@@ -145,6 +145,15 @@ export const envSchema = z.object({
     z.string().min(1).optional(),
   ),
 
+  // ── Local-dev fixed OTP (see OtpService.devFixedCode) ───────────────────────
+  // A known code that every issued OTP becomes, so a developer running the MOCK
+  // WhatsApp channel — which delivers no message — is never blocked at the
+  // code-entry box. OPTIONAL. Kept a loose string here (not a 6-digit regex) so a
+  // typo can't crash boot: OtpService validates the format and ignores a bad
+  // value. Double-gated in code — inert unless WHATSAPP_PROVIDER≠meta AND
+  // NODE_ENV≠production — so a stray value in a real environment does nothing.
+  OTP_DEV_CODE: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
+
   // S7-B1: WORKER-only Chromium. OPTIONAL — when absent, puppeteer uses its
   // own downloaded Chrome (local dev). The alpine container sets it to the
   // apk-installed binary (/usr/bin/chromium-browser) because the image build

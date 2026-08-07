@@ -315,6 +315,16 @@ const authOtpSend = http.post(`${BASE}/auth/otp/send`, async ({ request }) => {
     );
   }
 
+  // Send-time duplicate guard: a number already verified by another candidate.
+  if (body.phone === '+919555555555') {
+    return errorResponse(
+      409,
+      'PHONE_ALREADY_IN_USE',
+      'Phone already registered',
+      'This number is already registered with another account.',
+    );
+  }
+
   // The per-phone budget (5/hour) in OtpService. NOTE the code: the real API
   // emits OTP_RATE_LIMITED here, NOT RATE_LIMIT_EXCEEDED — the mismatch that
   // left the UI's rate-limit branch dead.

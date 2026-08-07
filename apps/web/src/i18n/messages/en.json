@@ -410,6 +410,7 @@
       "otpSent": "Enter the 6-digit code sent to your number",
       "otpInvalid": "Invalid or expired OTP. Please try again.",
       "otpNotOnWhatsapp": "This number is not on WhatsApp. Please try another number.",
+      "phoneAlreadyRegistered": "This number is already registered with another account. Please use a different number.",
       "otpSendFailed": "We couldn't send your code right now. Please try again in a moment — you can also verify your phone later.",
       "otpSendError": "Something went wrong. Please try again.",
       "otpRateLimited": "Too many attempts. Please wait a few minutes before trying again.",
