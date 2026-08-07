@@ -81,9 +81,10 @@ export function LandingFooter() {
     },
     {
       heading: t('company'),
+      // No sign-in links here: the header already carries Login and Sign Up on
+      // every landing screen, and repeating them in the footer duplicated the
+      // primary call to action in the least prominent place on the page.
       links: [
-        { label: t('login'), href: `/${locale}/login` },
-        { label: t('employerLogin'), href: `/${locale}/employer-login` },
         { label: t('privacy'), href: `/${locale}/privacy` },
         { label: t('terms'), href: `/${locale}/terms` },
       ],

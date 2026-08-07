@@ -31,6 +31,21 @@ export class SearchQueryDto {
   @IsEnum(JobMarket)
   market?: JobMarket;
 
+  /**
+   * Exact recruiting-country match.
+   *
+   * Deliberately NOT an enum: the filterable set is whatever countries have
+   * ACTIVE jobs right now (see GET /jobs/countries), so pinning it to a
+   * whitelist here would mean a code change every time recruiting opens in a
+   * new country. An unknown value simply matches nothing — it cannot widen the
+   * result set, and it reaches SQL as a bound parameter like every other filter.
+   */
+  @IsOptional()
+  @Transform(stripNul) // SEC-002 — also reaches the raw query as a bound param
+  @IsString()
+  @MaxLength(60)
+  country?: string;
+
   /** Category slug (e.g. "plumbing") — whitelisted filter, not arbitrary field access */
   @IsOptional()
   @Transform(stripNul) // SEC-002 — also reaches the raw query as a bound param

@@ -696,6 +696,8 @@ async function main(): Promise<void> {
     title: string;
     market: JobMarket;
     status: JobStatus;
+    /** Canonical English country name — mirrors Job.country. */
+    country: string;
     location: string;
     description: string;
     salaryMin: number;
@@ -717,6 +719,7 @@ async function main(): Promise<void> {
       title: 'Senior Electrician',
       market: JobMarket.GULF,
       status: JobStatus.ACTIVE,
+      country: 'Oman',
       location: 'Muscat, Oman',
       description: 'Experienced electricians for ongoing infrastructure projects.',
       salaryMin: 180000,
@@ -733,6 +736,7 @@ async function main(): Promise<void> {
       title: 'Mason',
       market: JobMarket.LOCAL,
       status: JobStatus.ACTIVE,
+      country: 'India',
       location: 'Mumbai, India',
       description: 'Masons for residential construction projects.',
       salaryMin: 2200000,
@@ -747,6 +751,7 @@ async function main(): Promise<void> {
       title: 'Welder',
       market: JobMarket.GULF,
       status: JobStatus.DRAFT,
+      country: 'Qatar',
       location: 'Doha, Qatar',
       description: 'Draft posting for welders.',
       salaryMin: 170000,
@@ -760,6 +765,7 @@ async function main(): Promise<void> {
       title: 'Industrial Plumber',
       market: JobMarket.GULF,
       status: JobStatus.PENDING_REVIEW,
+      country: 'United Arab Emirates',
       location: 'Dubai, UAE',
       description: 'Awaiting admin review.',
       salaryMin: 160000,
@@ -773,6 +779,7 @@ async function main(): Promise<void> {
       title: 'Steel Fixer',
       market: JobMarket.GULF,
       status: JobStatus.PAUSED,
+      country: 'Saudi Arabia',
       location: 'Riyadh, Saudi Arabia',
       description: 'Paused by employer pending renegotiation.',
       salaryMin: 170000,
@@ -787,6 +794,7 @@ async function main(): Promise<void> {
       title: 'HVAC Technician',
       market: JobMarket.GULF,
       status: JobStatus.ARCHIVED,
+      country: 'Oman',
       location: 'Muscat, Oman',
       description: 'Archived after position was filled.',
       salaryMin: 180000,
@@ -808,6 +816,7 @@ async function main(): Promise<void> {
         categoryId: j.categoryId,
         title: j.title,
         market: j.market,
+        country: j.country,
         status: j.status,
         location: j.location,
         description: j.description,
@@ -824,7 +833,10 @@ async function main(): Promise<void> {
         autoArchiveAt: j.autoArchiveAt ?? null,
         ...baseBenefits,
       },
-      update: { status: j.status, title: j.title },
+      // `country` is in the update branch too: re-seeding an existing database
+      // must backfill it, otherwise rows created before the column existed keep
+      // a NULL country and never appear in the /jobs/countries facet.
+      update: { status: j.status, title: j.title, country: j.country },
     });
     jobIdByKey[j.key] = jobId;
   }

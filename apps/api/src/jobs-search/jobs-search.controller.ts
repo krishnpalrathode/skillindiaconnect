@@ -57,6 +57,21 @@ export class JobsSearchController {
   }
 
   /**
+   * Countries that currently have ACTIVE jobs — the source for the candidate
+   * search's country filter.
+   *
+   * MUST stay declared ABOVE `@Get(':id')`: Nest matches routes in declaration
+   * order, so the dynamic route would otherwise swallow "countries" and hand it
+   * to ParseUUIDPipe as an id.
+   */
+  @Get('countries')
+  @Public()
+  @Throttle({ default: RATE_LIMITS.search })
+  async countries() {
+    return { data: await this.searchService.listCountries() };
+  }
+
+  /**
    * Public job detail. 404 for non-ACTIVE (paused / draft / archived / pending).
    * No employer PII — public-subset only (enforced in the mapper).
    * Optional-auth: an authenticated candidate gets isSaved populated.

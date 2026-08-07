@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HttpException, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { OtpPurpose } from '@prisma/client';
 import { createHash } from 'node:crypto';
 import { OtpService } from './otp.service';
@@ -76,6 +77,8 @@ describe('OtpService', () => {
         { provide: REDIS_CLIENT, useValue: redisMock },
         { provide: WHATSAPP_CHANNEL, useValue: whatsappMock },
         MetricsService,
+        // Default: no OTP_DEV_CODE, so codes stay random as in production.
+        { provide: ConfigService, useValue: { get: () => undefined } },
       ],
     }).compile();
 
@@ -307,6 +310,54 @@ describe('OtpService', () => {
         await service.applyIpBudget('1.1.1.1');
       }
       await expect(service.applyIpBudget('1.1.1.1')).rejects.toThrow(HttpException);
+    });
+  });
+
+  // ─── OTP_DEV_CODE (local-dev fixed OTP) ──────────────────────────────────────
+
+  describe('OTP_DEV_CODE — a fixed, known code for local dev', () => {
+    async function buildService(env: Record<string, string | undefined>): Promise<OtpService> {
+      whatsappMock.sendOtp.mockResolvedValue({ ok: true, providerMessageId: 'mock-1' });
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          OtpService,
+          { provide: PrismaService, useValue: prismaMock },
+          { provide: REDIS_CLIENT, useValue: redisMock },
+          { provide: WHATSAPP_CHANNEL, useValue: whatsappMock },
+          MetricsService,
+          { provide: ConfigService, useValue: { get: (k: string) => env[k] } },
+        ],
+      }).compile();
+      return module.get(OtpService);
+    }
+
+    /** The hash the service should have stored, for a given plaintext code. */
+    function storedHash(): string {
+      const createArg = (prismaMock.otpChallenge.create as jest.Mock).mock.calls[0][0];
+      return createArg.data.codeHash as string;
+    }
+
+    it('issues the configured code when mock provider + OTP_DEV_CODE set', async () => {
+      const svc = await buildService({ WHATSAPP_PROVIDER: 'mock', OTP_DEV_CODE: '123456' });
+      await svc.issue('+911234567890', OtpPurpose.PHONE_VERIFY, '1.2.3.4');
+      expect(storedHash()).toBe(sha256('123456'));
+    });
+
+    it('IGNORES the dev code in production (WHATSAPP_PROVIDER=meta) — codes stay random', async () => {
+      const svc = await buildService({
+        WHATSAPP_PROVIDER: 'meta',
+        NODE_ENV: 'production',
+        OTP_DEV_CODE: '123456',
+      });
+      await svc.issue('+911234567890', OtpPurpose.PHONE_VERIFY, '1.2.3.4');
+      expect(storedHash()).not.toBe(sha256('123456'));
+    });
+
+    it('IGNORES a malformed dev code (not 6 digits) and falls back to a random one', async () => {
+      const svc = await buildService({ WHATSAPP_PROVIDER: 'mock', OTP_DEV_CODE: 'abc' });
+      await svc.issue('+911234567890', OtpPurpose.PHONE_VERIFY, '1.2.3.4');
+      expect(storedHash()).not.toBe(sha256('abc'));
+      expect(storedHash()).toMatch(/^[0-9a-f]{64}$/);
     });
   });
 });

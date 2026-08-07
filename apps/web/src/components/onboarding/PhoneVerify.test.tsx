@@ -56,6 +56,17 @@ describe('PhoneVerify — honest send failures (CR-WA W1.6)', () => {
     expect(screen.getByLabelText(/mobile number/i)).toBeInTheDocument();
   });
 
+  it('an already-registered NUMBER is rejected before OTP entry, with its own message', async () => {
+    // Maps to +919555555555 → 409 PHONE_ALREADY_IN_USE from the send endpoint.
+    await submit('9555555555');
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(/already registered/i),
+    );
+    // Rejected BEFORE the OTP step — no code to type.
+    expect(screen.getByLabelText(/mobile number/i)).toBeInTheDocument();
+  });
+
   it('an unreachable NUMBER is a different message from a provider outage', async () => {
     await submit(NOT_ON_WHATSAPP_NUMBER);
 

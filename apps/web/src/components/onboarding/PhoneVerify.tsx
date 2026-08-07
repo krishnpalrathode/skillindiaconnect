@@ -43,6 +43,7 @@ export function PhoneVerify({
 
   const [stage, setStage] = useState<Stage>(alreadyVerified ? 'verified' : 'input');
   const [phone, setPhone] = useState(initialPhone);
+  const phoneDigits = phone.replace(/\D/g, '');
   const [otpKey, setOtpKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +63,7 @@ export function PhoneVerify({
   }, []);
 
   const handleSend = useCallback(async () => {
-    if (!phone.trim()) return;
+    if (phone.replace(/\D/g, '').length < 10) return;
     setError(null);
     setLoading(true);
     try {
@@ -92,7 +93,9 @@ export function PhoneVerify({
        */
       const apiErr = err instanceof ApiRequestError ? err.error : null;
       const code = apiErr?.code ?? null;
-      if (code === 'PHONE_NOT_ON_WHATSAPP') {
+      if (code === 'PHONE_ALREADY_IN_USE') {
+        setError(t('phoneAlreadyRegistered'));
+      } else if (code === 'PHONE_NOT_ON_WHATSAPP') {
         setError(t('otpNotOnWhatsapp'));
       } else if (code === 'OTP_SEND_FAILED') {
         setError(t('otpSendFailed'));
@@ -126,12 +129,15 @@ export function PhoneVerify({
         setStage('verified');
         onVerified(toE164(phone));
       } catch (err) {
-        if (err instanceof ApiRequestError && err.error.code === 'INVALID_OTP') {
-          setError(t('otpInvalid'));
+        // A number claimed by another candidate is rejected here too (safety net
+        // for a race with the send-time guard) — send them back to enter a new one.
+        if (err instanceof ApiRequestError && err.error.code === 'PHONE_ALREADY_IN_USE') {
+          setError(t('phoneAlreadyRegistered'));
+          setStage('input');
         } else {
           setError(t('otpInvalid'));
+          setOtpKey((k) => k + 1);
         }
-        setOtpKey((k) => k + 1);
       } finally {
         setLoading(false);
       }
@@ -174,12 +180,16 @@ export function PhoneVerify({
 
       {stage === 'input' && (
         <div className="flex gap-2">
-          <Field id="onboarding-phone" label={t('phoneLabel')} className="flex-1">
+          <Field id="onboarding-phone" label={t('phoneLabel')} required className="flex-1">
             <Input
               type="tel"
+              inputMode="numeric"
+              autoComplete="tel"
+              maxLength={15}
               placeholder={t('phonePlaceholder')}
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              // Digits only — reject letters/spaces/symbols as they're typed or pasted.
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               disabled={loading}
               className="h-12 rounded-xl bg-white"
@@ -191,7 +201,7 @@ export function PhoneVerify({
               variant="secondary"
               size="md"
               loading={loading}
-              disabled={!phone.trim()}
+              disabled={phoneDigits.length < 10}
               onClick={handleSend}
               className="h-12 rounded-xl"
             >

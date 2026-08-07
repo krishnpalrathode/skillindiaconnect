@@ -15,6 +15,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { DeliveryStatus, OtpPurpose } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
 import { OtpService } from './otp.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { MetricsService } from '../../core/observability/metrics.service';
@@ -54,6 +55,7 @@ describe('OtpService.issue — a send failure must never become a 500', () => {
         { provide: REDIS_CLIENT, useValue: redisMock },
         { provide: WHATSAPP_CHANNEL, useValue: { sendOtp } },
         MetricsService,
+        { provide: ConfigService, useValue: { get: () => undefined } },
       ],
     }).compile();
 

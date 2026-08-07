@@ -20,6 +20,23 @@ export async function searchJobsServer(
   return serverFetch<JobSearchResult>(`/jobs${qs ? `?${qs}` : ''}`);
 }
 
+export interface JobCountryFacet {
+  country: string;
+  count: number;
+}
+
+/**
+ * SSR-only: the countries that currently have ACTIVE jobs.
+ *
+ * Drives the search's country filter. Fetched server-side alongside the first
+ * page so the filter renders with the list already populated rather than
+ * appearing a moment later.
+ */
+export async function getJobCountriesServer(): Promise<JobCountryFacet[]> {
+  const result = await serverFetch<{ data: JobCountryFacet[] }>('/jobs/countries');
+  return result.data;
+}
+
 /** SSR-only: single job detail. Throws ServerApiError (status 404) for unknown/inactive ids. */
 export async function getJobServer(id: string): Promise<JobDetail> {
   const result = await serverFetch<{ data: JobDetail }>(`/jobs/${encodeURIComponent(id)}`);

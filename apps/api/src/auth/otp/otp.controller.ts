@@ -43,11 +43,16 @@ export class OtpController {
   /**
    * Send a PHONE_VERIFY OTP to the given number.
    *
-   * ENUMERATION-SAFE: this endpoint performs NO ACCOUNT LOOKUP — it attempts a
-   * send for whatever number it is given. Its outcomes therefore describe
-   * WhatsApp and the provider, never whether an account exists, so they are
-   * safe to surface. (409 for a number confirmed not on WhatsApp is the
-   * pre-existing, documented behaviour.)
+   * ENUMERATION-SAFE FOR ANONYMOUS CALLERS: for an unauthenticated request this
+   * performs NO account lookup — outcomes describe WhatsApp/the provider, never
+   * whether an account exists. (409 PHONE_NOT_ON_WHATSAPP is pre-existing.)
+   *
+   * DUPLICATE GUARD FOR AUTHENTICATED CALLERS (onboarding): if a logged-in
+   * candidate enters a number already verified by ANOTHER candidate, we reject
+   * BEFORE spending an OTP send (PHONE_ALREADY_IN_USE) — the same rule the verify
+   * step enforces, moved earlier for a better UX. This is surfaced only to the
+   * authenticated caller and excludes their own number, so it is not a public
+   * enumeration oracle.
    */
   @Public()
   @Post('otp/send')
@@ -55,6 +60,22 @@ export class OtpController {
   @Throttle({ default: { ttl: 60_000, limit: 5 } })
   async sendOtp(@Body() dto: SendOtpDto, @Req() req: Request) {
     const ip = req.ip ?? '0.0.0.0';
+
+    const currentUserId = this.tryGetCurrentUserId(req);
+    if (currentUserId) {
+      const taken = await this.prisma.candidateProfile.findFirst({
+        where: {
+          phone: dto.phone,
+          phoneVerifiedAt: { not: null },
+          NOT: { userId: currentUserId },
+        },
+        select: { userId: true },
+      });
+      if (taken) {
+        throw new ConflictException({ code: 'PHONE_ALREADY_IN_USE' });
+      }
+    }
+
     const { outcome } = await this.otpService.issue(dto.phone, OtpPurpose.PHONE_VERIFY, ip);
 
     if (outcome === 'NOT_ON_WHATSAPP') {
@@ -206,6 +227,21 @@ export class OtpController {
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────
+
+  /**
+   * Best-effort caller identity on a @Public route: returns the userId from a
+   * valid access token if present, else null. Used to gate the duplicate-phone
+   * guard to authenticated (onboarding) callers without failing anonymous ones.
+   */
+  private tryGetCurrentUserId(req: Request): string | null {
+    const header = req.headers.authorization;
+    if (!header?.startsWith('Bearer ')) return null;
+    try {
+      return this.tokenService.verifyAccess(header.slice(7)).sub;
+    } catch {
+      return null;
+    }
+  }
 
   private setRefreshCookie(res: Response, token: string, exp: number): void {
     const nodeEnv = this.configService.get<string>('NODE_ENV') ?? 'development';

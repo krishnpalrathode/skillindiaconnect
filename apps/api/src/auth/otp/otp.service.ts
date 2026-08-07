@@ -6,6 +6,7 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { createHash } from 'node:crypto';
 import { DeliveryStatus, OtpChallenge, OtpPurpose, Prisma, WaMessageKind } from '@prisma/client';
 import type { Redis } from 'ioredis';
@@ -61,6 +62,7 @@ export class OtpService {
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
     @Inject(WHATSAPP_CHANNEL) private readonly whatsapp: WhatsappChannel,
     private readonly metrics: MetricsService,
+    private readonly config: ConfigService,
   ) {}
 
   /**
@@ -74,7 +76,7 @@ export class OtpService {
     await this.checkPhoneBudget(phone);
     await this.applyIpBudget(ip);
 
-    const code = generateCode();
+    const code = this.devFixedCode() ?? generateCode();
     const codeHash = hashCode(code);
     const expiresAt = new Date(Date.now() + CODE_TTL_MS);
 
@@ -219,6 +221,32 @@ export class OtpService {
     if (count > SEND_BUDGET_IP) {
       throw new HttpException({ code: 'OTP_RATE_LIMITED' }, HttpStatus.TOO_MANY_REQUESTS);
     }
+  }
+
+  /**
+   * LOCAL-DEV ONLY: a fixed, known OTP so a developer is never blocked at the
+   * code-entry box when no real WhatsApp message is delivered.
+   *
+   * Returns the configured `OTP_DEV_CODE` ONLY when the mock WhatsApp channel is
+   * bound (`WHATSAPP_PROVIDER` ≠ `meta`) AND we are not in production. This is NOT
+   * a verify-time bypass: it makes the genuine challenge code deterministic, so
+   * the normal hash/expiry/attempt checks in `verify()` are unchanged. With
+   * `WHATSAPP_PROVIDER=meta` (production) it always returns null and codes stay
+   * random — the two gates make a leaked env var inert where it would matter.
+   */
+  private devFixedCode(): string | null {
+    const provider = this.config.get<string>('WHATSAPP_PROVIDER') ?? 'mock';
+    const nodeEnv = this.config.get<string>('NODE_ENV') ?? 'development';
+    if (provider === 'meta' || nodeEnv === 'production') return null;
+
+    const fixed = this.config.get<string>('OTP_DEV_CODE');
+    if (!fixed) return null;
+    if (!/^\d{6}$/.test(fixed)) {
+      this.logger.warn(`OTP_DEV_CODE must be exactly 6 digits; ignoring '${fixed}'.`);
+      return null;
+    }
+    this.logger.debug(`OTP_DEV_CODE is active — all issued OTPs are the fixed dev code.`);
+    return fixed;
   }
 
   private async checkPhoneBudget(phone: string): Promise<void> {
