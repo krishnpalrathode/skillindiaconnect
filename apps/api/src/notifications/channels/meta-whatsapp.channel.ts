@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { createHash } from 'node:crypto';
 // TEMPORARY DIAGNOSTICS — remove with logMetaFailure().
 import { redactText } from '../../core/observability/redaction';
+// TEMPORARY DIAGNOSTICS — remove with whatsapp-pipeline.diag.ts.
+import { DIAG_TEMPLATE_KEY, diagLog, diagMark } from './whatsapp-pipeline.diag';
 import type {
   WhatsappChannel,
   WhatsappDocument,
@@ -132,6 +134,23 @@ export class MetaWhatsappChannel implements WhatsappChannel {
       };
     }
 
+    // ═══ TEMP DIAG — the assembled request, before it goes to Meta ═════════
+    if (templateKey === DIAG_TEMPLATE_KEY) {
+      const headerParam = headerComponent
+        ? (headerComponent['parameters'] as { type: string; document?: { id?: string } }[])[0]
+        : null;
+      diagLog(this.logger, 'TEMPLATE BUILD', {
+        templateName: template.name,
+        language: this.languageFor(template),
+        bodyParamCount: send.bodyParams.length,
+        headerType: headerParam?.type ?? 'none',
+        filename: send.document?.filename,
+        mediaIdPresent: Boolean(headerParam?.document?.id),
+      });
+      diagMark('templateBuilt', true);
+    }
+    // ═══════════════════════════════════════════════════════════════════════
+
     return this.post(phone, templateKey, {
       messaging_product: 'whatsapp',
       to: phone,
@@ -163,6 +182,14 @@ export class MetaWhatsappChannel implements WhatsappChannel {
   private async uploadMedia(
     doc: WhatsappDocument,
   ): Promise<{ ok: true; mediaId: string } | { ok: false; result: WhatsappSendResult }> {
+    // ═══ TEMP DIAG ═════════════════════════════════════════════════════════
+    // Byte LENGTH only — never the bytes.
+    diagLog(this.logger, 'MEDIA UPLOAD REQUEST', {
+      filename: doc.filename,
+      mimeType: doc.mimeType,
+      fileSizeBytes: doc.bytes.length,
+    });
+    // ═══════════════════════════════════════════════════════════════════════
     try {
       const form = new FormData();
       form.append('messaging_product', 'whatsapp');
@@ -185,6 +212,20 @@ export class MetaWhatsappChannel implements WhatsappChannel {
 
       const body = await safeJson(res);
       const mediaId = typeof body?.['id'] === 'string' ? (body['id'] as string) : null;
+
+      // ═══ TEMP DIAG ═══════════════════════════════════════════════════════
+      const uploadErr = (body?.['error'] ?? null) as Record<string, unknown> | null;
+      diagLog(this.logger, 'MEDIA UPLOAD RESPONSE', {
+        httpStatus: res.status,
+        media_id: mediaId,
+        graphError: uploadErr
+          ? `code=${String(uploadErr['code'])} subcode=${String(uploadErr['error_subcode'] ?? 'none')} ` +
+            `message=${String(uploadErr['message'])}`
+          : 'none',
+      });
+      diagMark('mediaUploaded', Boolean(res.ok && mediaId), res.ok && mediaId ? undefined : `HTTP ${res.status}`);
+      // ═════════════════════════════════════════════════════════════════════
+
       if (!res.ok || !mediaId) {
         this.logger.error(`media upload FAILED status=${res.status}`);
         // ═══ TEMPORARY DIAGNOSTICS ═══════════════════════════════════════════
@@ -197,6 +238,14 @@ export class MetaWhatsappChannel implements WhatsappChannel {
       return { ok: true, mediaId };
     } catch (err) {
       this.logger.error(`media upload FAILED ${classifyError(err)}`);
+      // ═══ TEMP DIAG — the upload never completed; no HTTP response exists ══
+      diagLog(this.logger, 'MEDIA UPLOAD RESPONSE', {
+        httpStatus: 'none (transport failure)',
+        media_id: null,
+        graphError: classifyError(err),
+      });
+      diagMark('mediaUploaded', false, classifyError(err));
+      // ═════════════════════════════════════════════════════════════════════
       return { ok: false, result: { ok: false, errorCode: classifyError(err) } };
     }
   }
@@ -222,6 +271,24 @@ export class MetaWhatsappChannel implements WhatsappChannel {
       );
 
       const body = await safeJson(res);
+
+      // ═══ TEMP DIAG — gated on the document key so OTP is untouched ════════
+      // The Meta REJECTION detail (code/subcode/type/message/details/
+      // fbtrace_id) is already emitted by logMetaFailure() below on any
+      // non-2xx; it is not duplicated here.
+      if (label === DIAG_TEMPLATE_KEY) {
+        const wamid =
+          Array.isArray(body?.['messages']) && typeof (body['messages'] as { id?: unknown }[])[0]?.id === 'string'
+            ? ((body['messages'] as { id: string }[])[0]!.id)
+            : null;
+        diagLog(this.logger, 'SEND MESSAGE', {
+          httpStatus: res.status,
+          metaResponse: JSON.stringify(body ?? null).slice(0, 400),
+          wamid,
+        });
+        diagMark('messageAccepted', Boolean(res.ok && wamid), res.ok ? undefined : `HTTP ${res.status}`);
+      }
+      // ═══════════════════════════════════════════════════════════════════════
 
       if (res.ok) {
         // W2's delivery webhook joins its callbacks on THIS id. Reading it from

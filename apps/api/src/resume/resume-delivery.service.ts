@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { NotificationType, UserRole } from '@prisma/client';
 import type { Redis } from 'ioredis';
 import { REDIS_CLIENT } from '../core/redis/redis.provider';
@@ -45,6 +45,9 @@ export function buildResumeFilename(name: string): string {
  */
 @Injectable()
 export class ResumeDeliveryService {
+  /** TEMPORARY DIAGNOSTICS — remove with whatsapp-pipeline.diag.ts. */
+  private readonly logger = new Logger(ResumeDeliveryService.name);
+
   constructor(
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
     private readonly resumeService: ResumeService,
@@ -103,6 +106,17 @@ export class ResumeDeliveryService {
         : null;
     const name =
       snapshotName ?? (await this.candidateRead.getNamesByIds([candidateId])).get(candidateId) ?? '';
+
+    // ═══ TEMP DIAG — API SIDE. Deliberately duplicated worker-side: this line
+    // proves what was ENQUEUED, the worker's proves what ARRIVED, and a job
+    // that never reaches the worker shows up as this line with no sequel.
+    // Remove with whatsapp-pipeline.diag.ts. ═════════════════════════════════
+    this.logger.log(
+      `[TEMP DIAG] [RESUME GENERATED] generationId=${generation.id} ` +
+        `documentKey=${generation.r2Key} pdfKey=${generation.r2Key} ` +
+        `deliverable=${String(deliverable)} channel=${delivered}`,
+    );
+    // ═════════════════════════════════════════════════════════════════════════
 
     await this.notifications.notify(userId, NotificationType.RESUME_SENT, {
       title: 'Your resume',
