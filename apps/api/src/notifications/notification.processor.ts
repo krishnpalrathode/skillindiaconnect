@@ -5,14 +5,6 @@ import { Job } from 'bullmq';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { StorageService } from '../core/storage/storage.service';
 import { MetricsService } from '../core/observability/metrics.service';
-// TEMPORARY DIAGNOSTICS — remove with whatsapp-pipeline.diag.ts.
-import {
-  DIAG_TEMPLATE_KEY,
-  diagLog,
-  diagMark,
-  diagReset,
-  diagSummary,
-} from './channels/whatsapp-pipeline.diag';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
 import { QUEUE_NAMES } from '../queue/queue.constants';
@@ -91,16 +83,6 @@ export class NotificationProcessor extends WorkerHost {
     // Resolved HERE, at send time — a signed url placed in the job data would
     // routinely be expired by the time this ran, and bytes would bloat Redis.
     const object = await this.storage.getObjectBuffer(documentKey);
-
-    // ═══ TEMP DIAG — byte LENGTH only, never the bytes ═════════════════════
-    diagLog(this.logger, 'PDF FETCH', {
-      storageKey: documentKey,
-      exists: Boolean(object),
-      byteLength: object?.body.length ?? 0,
-    });
-    diagMark('pdfFetched', Boolean(object), object ? undefined : 'object not found in R2');
-    // ═══════════════════════════════════════════════════════════════════════
-
     if (!object) {
       await this.prisma.whatsappMessage
         .update({ where: { id: msgRowId }, data: { errorCode: 'DOCUMENT_UNAVAILABLE' } })
@@ -139,20 +121,6 @@ export class NotificationProcessor extends WorkerHost {
 
     const matrixEntry = NOTIFICATION_MATRIX[type];
     const templateKey = matrixEntry.whatsappTemplate ?? type;
-
-    // ═══ TEMP DIAG — document pipeline only; OTP and job_selected untouched ═
-    const isDiagSend = templateKey === DIAG_TEMPLATE_KEY;
-    if (isDiagSend) {
-      diagReset();
-      // The job exists, so the generation and its R2 key already exist — the
-      // API recorded the same ids under [RESUME GENERATED] before enqueueing.
-      diagLog(this.logger, 'RESUME GENERATED', {
-        generationId: payload.data?.['generationId'],
-        documentKey: readDocumentKey(payload.data),
-      });
-      diagMark('generated', Boolean(readDocumentKey(payload.data)), 'no documentKey on the job');
-    }
-    // ═══════════════════════════════════════════════════════════════════════
     const kind = matrixEntry.whatsappKind ?? WaMessageKind.STATUS_UPDATE;
     // Application-linked sends (e.g. APPLICATION_SELECTED) carry the id in the
     // notify payload — thread it onto the delivery row for traceability.
@@ -193,19 +161,6 @@ export class NotificationProcessor extends WorkerHost {
         actorUserId: userId,
         meta: { type, channel: 'whatsapp→email', reason: 'whatsapp_downgrade' },
       });
-      // ═══ TEMP DIAG — no WhatsApp was ATTEMPTED; say so rather than leave a
-      // silent gap that reads like the pipeline vanished. ═══════════════════
-      if (isDiagSend) {
-        diagLog(this.logger, 'PIPELINE HALTED', {
-          reason: 'candidate is not WhatsApp-deliverable (unverified phone, not capable, or opted out)',
-          hasPhone: Boolean(profile?.phone),
-          whatsappCapable: profile?.whatsappCapable,
-          waNotifications: profile?.waNotifications,
-        });
-        diagSummary(this.logger);
-      }
-      // ═════════════════════════════════════════════════════════════════════
-
       // Fallback to email (downgrade, not failure — no rethrow)
       await this.sendEmailDirect(userId, user.email, type, payload, 'whatsapp-downgrade');
       return;
@@ -248,10 +203,6 @@ export class NotificationProcessor extends WorkerHost {
       // retry must still be counted, or the alert only ever sees successes.
       this.metrics.recordWhatsappSend(kind, result.ok ? 'sent' : 'failed');
 
-      // ═══ TEMP DIAG — idempotent, so the catch below can call it too ═══════
-      if (isDiagSend) diagSummary(this.logger);
-      // ═════════════════════════════════════════════════════════════════════
-
       await this.prisma.whatsappMessage.update({
         where: { id: msgRow.id },
         data: {
@@ -276,10 +227,6 @@ export class NotificationProcessor extends WorkerHost {
         meta: { type, channel: 'whatsapp', providerMessageId: result.providerMessageId },
       });
     } catch (err) {
-      // ═══ TEMP DIAG — covers a throw BEFORE any send (e.g. PDF fetch) ══════
-      if (isDiagSend) diagSummary(this.logger);
-      // ═════════════════════════════════════════════════════════════════════
-
       // ── Failure-fallback: fires ONLY on the last retry ────────────────────────
       // The downgrade path (above) is a deliberate decision not to try WA at all.
       // This path tried WA, failed after all retries, and falls back to email.
