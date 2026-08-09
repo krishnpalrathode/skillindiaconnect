@@ -87,6 +87,19 @@ export function DownloadResumeButton({
   const tToast = useTranslations('toast');
   const { showToast } = useToast();
 
+  /*
+    The toast helpers go through a ref, and that is load-bearing rather than
+    tidiness: next-intl hands back a BRAND NEW `t` on every render. Naming
+    `tToast` directly in `settle`'s dependency list made `settle` unstable,
+    which cascaded runPoll → startPolling → startGenerate, which re-ran the
+    `onRegenerateChange` effect below on every render. The hub answers that by
+    storing the callback in state, so the effect re-rendered the hub, which
+    re-rendered this, which minted another `tToast`… an infinite render loop
+    that pinned a core and hung the resume page (and the test that mounts it).
+  */
+  const toastRef = useRef({ showToast, tToast });
+  toastRef.current = { showToast, tToast };
+
   const initialPhase: Phase =
     initialGeneration?.status === 'READY'
       ? 'ready'
@@ -123,7 +136,7 @@ export function DownloadResumeButton({
         // Only on the POLLED transition — a resume that was already READY at
         // mount is not something the user just did, and announcing it on every
         // page load would be noise.
-        showToast({ message: tToast('resumeReady') });
+        toastRef.current.showToast({ message: toastRef.current.tToast('resumeReady') });
         return true;
       }
       if (gen.status === 'FAILED') {
@@ -132,7 +145,7 @@ export function DownloadResumeButton({
       }
       return false; // PENDING — keep waiting
     },
-    [download, onGenerated, showToast, tToast],
+    [download, onGenerated],
   );
 
   const scheduleNext = useCallback(
@@ -186,11 +199,24 @@ export function DownloadResumeButton({
     otherwise, so a host rendering the button elsewhere shows it under exactly
     the same condition this component would. Cleared on unmount so a stale
     closure can never trigger a generation from a screen that is gone.
+
+    The published function is created ONCE and calls through a ref. Publishing
+    `() => startGenerate()` inline instead minted a new function on every run
+    of the effect, and the host stores what it receives in state — so each
+    publish re-rendered the host, which re-rendered this, which published
+    again: an infinite loop no amount of equality-checking on the host side
+    could break, because the value really was new each time. A stable identity
+    is the only thing that terminates it, so the effect now depends on `phase`
+    alone in practice.
   */
+  const startGenerateRef = useRef(startGenerate);
+  startGenerateRef.current = startGenerate;
+  const publishedRegenerate = useCallback(() => void startGenerateRef.current(), []);
+
   useEffect(() => {
-    onRegenerateChange?.(phase === 'ready' ? () => void startGenerate() : null);
+    onRegenerateChange?.(phase === 'ready' ? publishedRegenerate : null);
     return () => onRegenerateChange?.(null);
-  }, [phase, startGenerate, onRegenerateChange]);
+  }, [phase, publishedRegenerate, onRegenerateChange]);
 
   // Resume polling if we mounted onto an in-flight (PENDING) generation.
   useEffect(() => {

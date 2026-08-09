@@ -55,10 +55,17 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
    */
   const [regenerateFn, setRegenerateFn] = useState<{ run: () => void } | null>(null);
   const regenerate = regenerateFn?.run ?? null;
-  const setRegenerate = useCallback(
-    (fn: (() => void) | null) => setRegenerateFn(fn ? { run: fn } : null),
-    [],
-  );
+  const setRegenerate = useCallback((fn: (() => void) | null) => {
+    // Bail out when nothing actually changed. Wrapping in a fresh `{ run }`
+    // unconditionally makes every publish a new object, so React can never
+    // skip the re-render — and this state feeds a child effect, so a child
+    // that re-publishes on each render would ping-pong with us forever. The
+    // child keeps its own identity stable too; this is the second lock.
+    setRegenerateFn((prev) => {
+      if (!fn) return prev === null ? prev : null;
+      return prev?.run === fn ? prev : { run: fn };
+    });
+  }, []);
   const [loading, setLoading] = useState(true);
 
   const hasGenerated = !!lastRenderedAt || info?.current?.status === 'READY';
