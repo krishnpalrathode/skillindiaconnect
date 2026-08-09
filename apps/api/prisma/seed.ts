@@ -58,7 +58,9 @@ async function main(): Promise<void> {
     ['worker_protection.transportation_required', true, true],
     ['jobs.auto_archive_days', 90, false],
     ['jobs.require_admin_approval', false, false],
-    ['jobs.free_max_active_jobs', 1, false],
+    // The enforced Free cap (SubscriptionReadService.effectivePlan reads this,
+    // never the FREE plan row). Super-Admin tunable on Screen 28.
+    ['jobs.free_max_active_jobs', 5, false],
     ['jobs.allow_local', true, false],
     ['jobs.allow_foreign', true, false],
     ['candidates.mandatory_documents', ['PASSPORT', 'EXPERIENCE_CERT', 'EDUCATIONAL_CERT'], false],
@@ -86,8 +88,10 @@ async function main(): Promise<void> {
       name: 'Free',
       priceSubunits: 0,
       period: PlanPeriod.FOREVER,
-      maxActiveJobs: 1,
-      features: ['1 active job', 'Basic candidate view', 'Email support'],
+      // Kept in step with the jobs.free_max_active_jobs SETTING below, which is
+      // what actually gates publishing. This column + features are display copy.
+      maxActiveJobs: 5,
+      features: ['5 active jobs', 'Basic candidate view', 'Email support'],
     },
     {
       code: 'PRO_MONTHLY',

@@ -109,3 +109,43 @@ export function isValidValue(type: SettingType, value: unknown): boolean {
       return Array.isArray(value) && (value as unknown[]).every((v) => typeof v === 'string');
   }
 }
+
+/**
+ * Optional numeric bounds, checked in ADDITION to the type.
+ *
+ * Type-checking alone let an admin save `jobs.free_max_active_jobs = 0` or `-1`
+ * — a value the API accepted happily and which then blocked EVERY Free employer
+ * from publishing anything, platform-wide, from one typo on a settings screen.
+ * A quota of "at least one" is a real business rule, so it is enforced at the
+ * boundary rather than trusted to the person typing.
+ *
+ * Only keys that have a meaningful floor/ceiling appear here; anything absent is
+ * type-checked exactly as before.
+ */
+export const NUMBER_BOUNDS: Record<string, { min?: number; max?: number }> = {
+  'jobs.free_max_active_jobs': { min: 1, max: 1000 },
+  'jobs.auto_archive_days': { min: 1, max: 3650 },
+  'candidates.min_completion_pct': { min: 0, max: 100 },
+  'candidates.match_alert_min_pct': { min: 0, max: 100 },
+  'candidates.video_max_minutes': { min: 1, max: 120 },
+  'candidates.video_max_mb': { min: 1, max: 5000 },
+  'payments.gst_rate_pct': { min: 0, max: 100 },
+};
+
+/** Range check for a numeric setting. Non-numeric keys always pass. */
+export function isWithinBounds(key: string, value: unknown): boolean {
+  const bounds = NUMBER_BOUNDS[key];
+  if (!bounds || typeof value !== 'number') return true;
+  if (bounds.min !== undefined && value < bounds.min) return false;
+  if (bounds.max !== undefined && value > bounds.max) return false;
+  return true;
+}
+
+/** Human-readable range, for the 422 detail. */
+export function describeBounds(key: string): string {
+  const b = NUMBER_BOUNDS[key];
+  if (!b) return '';
+  if (b.min !== undefined && b.max !== undefined) return `between ${b.min} and ${b.max}`;
+  if (b.min !== undefined) return `at least ${b.min}`;
+  return `at most ${b.max}`;
+}

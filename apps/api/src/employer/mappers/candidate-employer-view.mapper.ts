@@ -41,6 +41,11 @@ export interface CandidateEmployerViewDto {
   // Conditionally ABSENT (key does not exist) — not null — when toggle is false
   phone?: string;
   religion?: string;
+  /** Whether the VIEWING company has shortlisted them (set by the service,
+   *  not the mapper — the mapper stays viewer-agnostic). */
+  isInterested?: boolean;
+  /** Whether that company has already sent them the outreach message. */
+  interestNotified?: boolean;
 }
 
 // Source type passed by the service (adds pre-resolved photoUrl)

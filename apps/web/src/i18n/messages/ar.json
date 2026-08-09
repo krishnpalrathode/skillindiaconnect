@@ -560,7 +560,8 @@
       "candidates": "المرشحون",
       "notifications": "الإشعارات",
       "subscription": "الاشتراك",
-      "profile": "ملف الشركة"
+      "profile": "ملف الشركة",
+      "interested": "المهتم بهم"
     },
     "header": {
       "notifications": "الإشعارات",
@@ -909,6 +910,29 @@
           "proHint": "الوصول إلى المستندات متاح في خطة Pro."
         }
       }
+    },
+    "interest": {
+      "pageTitle": "المرشحون المهتم بهم",
+      "pageSubtitle": "العمال الذين اخترتهم. الاختيار خاص — لا يُبلَّغون إلا عند إرسال رسالة.",
+      "mark": "تحديد كمهتم به",
+      "marked": "مهتم به",
+      "markHint": "قائمة خاصة. لن يُبلَّغ المرشح.",
+      "markedHint": "تمت الإضافة. أرسل رسالة عندما تكون جاهزًا.",
+      "alreadyNotified": "لقد راسلت هذا المرشح من قبل.",
+      "toggleError": "تعذّر التحديث. حاول مرة أخرى.",
+      "selectAll": "تحديد كل من لم تتم مراسلتهم",
+      "selectCandidate": "تحديد {name}",
+      "notifySelected": "إشعار ({count})",
+      "notifyResult": "تم إرسال {queued}، وتخطّي {skipped} تمت مراسلتهم سابقًا.",
+      "notifyCostHint": "تُرسل كل رسالة إلى المرشح عبر واتساب والبريد الإلكتروني. يمكنك مراسلة كل مرشح مرة واحدة.",
+      "contacted": "تمت المراسلة",
+      "locationUnknown": "الموقع غير محدد",
+      "emptyTitle": "لا يوجد مرشحون مهتم بهم بعد",
+      "emptyBody": "تصفّح المرشحين وحدّد من تريد التواصل معهم.",
+      "browseCandidates": "تصفّح المرشحين",
+      "loadError": "تعذّر تحميل القائمة.",
+      "retry": "حاول مرة أخرى",
+      "sectionTitle": "الاهتمام"
     }
   },
   "jobs": {
@@ -1212,8 +1236,8 @@
       "violationAccommodation": "السكن",
       "violationHealthInsurance": "التأمين الصحي",
       "violationTransportation": "المواصلات",
-      "quotaTitle": "تم الوصول إلى حد الوظائف النشطة ({limit} وظيفة)",
-      "quotaBody": "تتيح خطتك المجانية وظيفة نشطة واحدة في كل مرة.",
+      "quotaTitle": "تم بلوغ حد الوظائف النشطة ({limit, plural, one {# وظيفة} other {# وظائف}})",
+      "quotaBody": "تتيح خطتك المجانية {limit, plural, one {# وظيفة نشطة} other {# وظائف نشطة}} في كل مرة. أوقف وظيفة نشطة أو أرشِفها لنشر أخرى، أو قم بالترقية إلى Pro لعدد غير محدود.",
       "quotaUpgradeLink": "الترقية إلى Pro",
       "genericTitle": "فشل النشر",
       "dismiss": "رفض"

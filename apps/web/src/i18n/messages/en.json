@@ -560,7 +560,8 @@
       "candidates": "Candidates",
       "notifications": "Notifications",
       "subscription": "Subscription",
-      "profile": "Company Profile"
+      "profile": "Company Profile",
+      "interested": "Interested"
     },
     "header": {
       "notifications": "Notifications",
@@ -909,6 +910,29 @@
           "proHint": "Document access is available on Pro."
         }
       }
+    },
+    "interest": {
+      "pageTitle": "Interested Candidates",
+      "pageSubtitle": "Workers you have shortlisted. Marking is private — they are only told when you send a message.",
+      "mark": "Mark as interested",
+      "marked": "Interested",
+      "markHint": "Private shortlist. The candidate is not told.",
+      "markedHint": "Shortlisted. Send a message from Interested Candidates when you are ready.",
+      "alreadyNotified": "You have already messaged this candidate.",
+      "toggleError": "Couldn't update. Please try again.",
+      "selectAll": "Select all not yet contacted",
+      "selectCandidate": "Select {name}",
+      "notifySelected": "Notify ({count})",
+      "notifyResult": "Queued {queued}, skipped {skipped} already contacted.",
+      "notifyCostHint": "Each message is sent to the candidate on WhatsApp and email. You can message each candidate once.",
+      "contacted": "Contacted",
+      "locationUnknown": "Location not set",
+      "emptyTitle": "No interested candidates yet",
+      "emptyBody": "Browse candidates and mark the ones you want to reach out to.",
+      "browseCandidates": "Browse candidates",
+      "loadError": "Couldn't load your interested candidates.",
+      "retry": "Try again",
+      "sectionTitle": "Interest"
     }
   },
   "jobs": {
@@ -1212,8 +1236,8 @@
       "violationAccommodation": "Accommodation",
       "violationHealthInsurance": "Health Insurance",
       "violationTransportation": "Transportation",
-      "quotaTitle": "Active job limit reached ({limit} job)",
-      "quotaBody": "Your Free plan allows 1 active job at a time. Archive or pause your existing active job to publish another, or upgrade to Pro for unlimited active jobs.",
+      "quotaTitle": "Active job limit reached ({limit, plural, one {# job} other {# jobs}})",
+      "quotaBody": "Your Free plan allows {limit, plural, one {# active job} other {# active jobs}} at a time. Archive or pause an active job to publish another, or upgrade to Pro for unlimited active jobs.",
       "quotaUpgradeLink": "Upgrade to Pro",
       "genericTitle": "Failed to publish",
       "dismiss": "Dismiss"

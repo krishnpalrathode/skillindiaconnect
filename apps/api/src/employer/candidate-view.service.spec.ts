@@ -12,6 +12,7 @@ import { EmployerService } from './employer.service';
 import { CandidateReadService } from '../candidate/candidate-read.service';
 import { ProfileViewService } from './profile-view.service';
 import { StorageService } from '../core/storage/storage.service';
+import { CandidateInterestService } from './candidate-interest.service';
 
 // ── Fixture builders ──────────────────────────────────────────────────────────
 
@@ -99,6 +100,7 @@ describe('CandidateViewService', () => {
       mockCandidateReadService as unknown as CandidateReadService,
       mockProfileViewService as unknown as ProfileViewService,
       mockStorage as unknown as StorageService,
+      { getInterestState: jest.fn().mockResolvedValue({ isInterested: false, interestNotified: false }) } as unknown as CandidateInterestService,
     );
   });
 

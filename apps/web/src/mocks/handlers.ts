@@ -2270,9 +2270,112 @@ const employersCandidatesBrowse = http.get(`${BASE}/employers/candidates`, ({ re
     });
   }
 
-  const cards = results.map((mc) => toCandidateBrowseCard(mc));
-  return HttpResponse.json(offsetPaginate([...cards].sort(byCreatedAtDesc), page, pageSize));
+  // Sort the SOURCE rows, not the cards: a browse card carries no timestamp
+  // (the real mapper emits none), so sorting cards by date compared undefineds.
+  // `id` is stable, which is all a fixture needs for deterministic paging.
+  const cards = [...results]
+    .sort((a, b) => a.profile.id.localeCompare(b.profile.id))
+    .map((mc) => toCandidateBrowseCard(mc));
+  return HttpResponse.json(offsetPaginate(cards, page, pageSize));
 });
+
+// ─── Employer → candidate interest (shortlist + outreach) ────────────────────
+
+/**
+ * In-memory interest store for the mock, keyed `companyId::candidateId`.
+ * Mirrors the real unique constraint on (companyId, candidateId).
+ */
+const mockInterests = new Map<string, { createdAt: string; notifiedAt: string | null }>();
+
+const employersMarkInterest = http.post(
+  `${BASE}/employers/candidates/:id/interest`,
+  ({ request, params }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+    const company = db.employers.get(user.id);
+    if (!company) return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Employer only.');
+
+    const key = `${company.id}::${params.id as string}`;
+    // Idempotent: re-marking must not reset notifiedAt.
+    if (!mockInterests.has(key)) {
+      mockInterests.set(key, { createdAt: new Date().toISOString(), notifiedAt: null });
+    }
+    return HttpResponse.json({ data: { interestedAt: mockInterests.get(key)!.createdAt } });
+  },
+);
+
+const employersRemoveInterest = http.delete(
+  `${BASE}/employers/candidates/:id/interest`,
+  ({ request, params }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+    const company = db.employers.get(user.id);
+    if (company) mockInterests.delete(`${company.id}::${params.id as string}`);
+    return new HttpResponse(null, { status: 204 });
+  },
+);
+
+const employersInterestedList = http.get(
+  `${BASE}/employers/interested-candidates`,
+  ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+    const company = db.employers.get(user.id);
+    if (!company) return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Employer only.');
+
+    const url = new URL(request.url);
+    const { page, pageSize } = readPaging(url);
+    const prefix = `${company.id}::`;
+
+    const rows = [...mockInterests.entries()]
+      .filter(([k]) => k.startsWith(prefix))
+      .map(([k, v]) => {
+        const candidateId = k.slice(prefix.length);
+        const mc = [...db.candidates.values()].find((c) => c.profile.id === candidateId);
+        if (!mc) return null;
+        return {
+          ...toCandidateBrowseCard(mc),
+          interestedAt: v.createdAt,
+          notifiedAt: v.notifiedAt,
+        };
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null);
+
+    return HttpResponse.json(offsetPaginate(rows, page, pageSize));
+  },
+);
+
+const employersNotifyInterest = http.post(
+  `${BASE}/employers/interested-candidates/notify`,
+  async ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+    const company = db.employers.get(user.id);
+    if (!company) return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Employer only.');
+
+    const body = (await request.json()) as { candidateIds?: string[] };
+    const ids = body?.candidateIds ?? [];
+
+    let queued = 0;
+    let skipped = 0;
+    for (const id of ids) {
+      const row = mockInterests.get(`${company.id}::${id}`);
+      // Not marked, or already contacted → skipped. The server never messages
+      // the same candidate twice for one company.
+      if (!row || row.notifiedAt) {
+        skipped++;
+        continue;
+      }
+      row.notifiedAt = new Date().toISOString();
+      queued++;
+    }
+    return HttpResponse.json({ data: { queued, skipped } }, { status: 202 });
+  },
+);
 
 const employersCandidateView = http.get(
   `${BASE}/employers/candidates/:id`,
@@ -4299,6 +4402,10 @@ export const handlers = [
   // S3: Candidate browse + view
   employersCandidatesBrowse,
   employersCandidateView,
+  employersMarkInterest,
+  employersRemoveInterest,
+  employersInterestedList,
+  employersNotifyInterest,
   // S3: Candidate profile views
   candidateMeProfileViews,
   // S4: Applications

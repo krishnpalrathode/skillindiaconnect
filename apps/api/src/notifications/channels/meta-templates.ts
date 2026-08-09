@@ -82,6 +82,16 @@ export const META_TEMPLATES = {
    * Params: {{1}} first name · {{2}} top-3 job summary · {{3}} link.
    */
   'wa.job_match': { name: 'job_match_alert', params: 3 },
+  /**
+   * ⚠️ NOT YET APPROVED IN WHATSAPP MANAGER — see docs/whatsapp-integration.md.
+   *
+   * Employer outreach to a candidate they marked as interesting. Mapped ahead of
+   * approval for the same reason as `wa.job_match`: enabling it is then a
+   * one-line matrix change.
+   *
+   * Params: {{1}} first name · {{2}} company name.
+   */
+  'wa.employer_interest': { name: 'employer_interest_notice', params: 2 },
 } as const satisfies Record<string, MetaTemplate>;
 
 export type MetaTemplateKey = keyof typeof META_TEMPLATES;

@@ -168,6 +168,10 @@ enum NotificationType {
   /// a feed entry announcing a reset would leak the event to a session that may
   /// not be theirs) and it ignores the marketing email opt-out.
   PASSWORD_RESET
+  /// An employer marked this candidate as one they are interested in and chose
+  /// to tell them. Employer-INITIATED outreach, so it is deliberately a
+  /// different type from PROFILE_VIEWED (passive, in-app only).
+  EMPLOYER_INTERESTED
 }
 
 enum DeliveryStatus {
@@ -345,6 +349,7 @@ model CandidateProfile {
   applications Application[]
   savedJobs   SavedJob[]
   profileViews ProfileView[]
+  interests    CandidateInterest[]
   @@index([jobCategoryId, isAvailable])
   @@index([completionPct])
   @@map("candidate_profiles")
@@ -500,6 +505,7 @@ model Company {
   orders         Order[]
   subscriptions  Subscription[]
   profileViews   ProfileView[]
+  interests      CandidateInterest[]
   @@index([status, type])
   @@map("companies")
 }
@@ -654,6 +660,30 @@ model ProfileView {
   company   Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   @@index([candidateId, viewedAt(sort: Desc)])
   @@map("profile_views")
+}
+
+/// An employer marking a candidate as one they are interested in, and the
+/// record of whether that candidate has been told.
+///
+/// SEPARATE from ProfileView (passive, auto-recorded on open) and from
+/// Application (candidate-initiated, gated). This one is employer-initiated and
+/// deliberate.
+model CandidateInterest {
+  id          String    @id @default(uuid())
+  companyId   String
+  candidateId String
+  createdAt   DateTime  @default(now())
+  /// Fire-once guard for the outreach message. NULL = marked but not yet told.
+  /// Set by the WORKER after the notification is raised, so un-marking and
+  /// re-marking cannot be used to message a candidate repeatedly.
+  notifiedAt  DateTime?
+  company   Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  /// One row per (company, candidate) — marking twice is idempotent, and it is
+  /// what makes `notifiedAt` a real once-per-employer guard.
+  @@unique([companyId, candidateId])
+  @@index([companyId, createdAt(sort: Desc)])
+  @@map("candidate_interests")
 }
 
 // ───────── APPLICATIONS ─────────

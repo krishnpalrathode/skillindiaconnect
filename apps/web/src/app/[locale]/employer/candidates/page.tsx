@@ -9,6 +9,7 @@ import { useEmployer } from '@/lib/employer/employer-context';
 import { parseCandidateFilters } from '@/lib/employer/candidateFilters';
 import { CandidateFilters } from '@/components/employer/candidates/CandidateFilters';
 import { CandidateBrowseList } from '@/components/employer/candidates/CandidateBrowseList';
+import { EMPLOYER_PAGE_SHELL } from '@/lib/page-shell';
 
 /**
  * Screen — Candidate browse (S3).
@@ -50,9 +51,14 @@ export default function CandidatesPage() {
   }
 
   return (
-    <div className="max-w-6xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">{t('title')}</h1>
+    // Same shell as every other employer tab. This was a bare `max-w-6xl` with no
+    // `mx-auto`, so the content hugged the left edge on wide screens instead of
+    // sitting where Dashboard and My Jobs put it.
+    <div className={EMPLOYER_PAGE_SHELL}>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
+          {t('title')}
+        </h1>
         <p className="mt-1 text-sm text-neutral-600">{t('subtitle')}</p>
       </div>
 

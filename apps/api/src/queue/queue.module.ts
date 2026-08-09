@@ -61,6 +61,8 @@ const FINISHED_JOB_RETENTION = {
       { name: QUEUE_NAMES.INVOICE_RENDER },
       // Profile-completion job-match alert — API enqueues, worker matches+sends.
       { name: QUEUE_NAMES.MATCH_ALERT },
+      // Employer → candidate outreach — API enqueues, worker sends.
+      { name: QUEUE_NAMES.INTEREST_NOTIFY },
     ),
   ],
   exports: [BullModule],

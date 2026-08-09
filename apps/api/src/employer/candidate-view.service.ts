@@ -8,6 +8,7 @@ import { pageMeta, resolvePaging, type Paginated } from '../core/pagination';
 import { toEmployerView, CandidateEmployerViewDto, EmployerViewSource } from './mappers/candidate-employer-view.mapper';
 import { toBrowseCard, BrowseCardSource, CandidateBrowseCardDto } from './mappers/candidate-browse-card.mapper';
 import { BrowseQueryDto } from './dto/browse-query.dto';
+import { CandidateInterestService } from './candidate-interest.service';
 
 /**
  * Orchestrates employer → candidate visibility:
@@ -27,6 +28,7 @@ export class CandidateViewService {
     private readonly candidateReadService: CandidateReadService,
     private readonly profileViewService: ProfileViewService,
     private readonly storage: StorageService,
+    private readonly interestService: CandidateInterestService,
   ) {}
 
   // ── GET /employers/candidates ─────────────────────────────────────────────
@@ -85,10 +87,14 @@ export class CandidateViewService {
 
     const dto = toEmployerView({ ...candidate, photoUrl } satisfies EmployerViewSource);
 
+    // Whether THIS company has shortlisted them — applied after the mapper, like
+    // isSaved on job cards, so the shared privacy mapper stays viewer-agnostic.
+    const interest = await this.interestService.getInterestState(company.id, candidate.id);
+
     // Fire-and-forget: view recording never blocks or fails the GET response
     this.fireAndForgetView(company.id, company.name, candidate.id, candidate.userId);
 
-    return dto;
+    return { ...dto, ...interest };
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

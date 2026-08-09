@@ -478,6 +478,52 @@ export class CandidateReadService {
   }
 
   /**
+   * Browse-card sources for a known set of ids, keyed by id.
+   *
+   * Applies the SAME visibility rule as the browse feed (profileVisible + ACTIVE
+   * user) rather than trusting the caller's list: an employer's saved interest
+   * row must not keep rendering a candidate who has since hidden their profile
+   * or been suspended. Missing ids are simply absent from the map.
+   */
+  async getBrowseCardsByIds(ids: string[]): Promise<Map<string, CandidateBrowseSource>> {
+    if (ids.length === 0) return new Map();
+
+    const rows = await this.prisma.candidateProfile.findMany({
+      where: {
+        id: { in: ids },
+        profileVisible: true,
+        user: { status: UserStatus.ACTIVE },
+      },
+      select: {
+        id: true,
+        fullName: true,
+        photoKey: true,
+        jobCategoryId: true,
+        currentLocation: true,
+        isAvailable: true,
+        completionPct: true,
+        updatedAt: true,
+        experiences: { select: { type: true, years: true, months: true } },
+        skills: { select: { name: true }, orderBy: { name: 'asc' }, take: 3 },
+      },
+    });
+
+    return new Map(
+      rows.map((row) => [
+        row.id,
+        {
+          ...row,
+          totalExperienceYears: row.experiences.reduce(
+            (sum, e) => sum + e.years + e.months / 12,
+            0,
+          ),
+          hasForeignExperience: row.experiences.some((e) => e.type === ExperienceType.FOREIGN),
+        },
+      ]),
+    );
+  }
+
+  /**
    * Browse visible candidates for the employer feed.
    *
    * - Only profileVisible=true candidates of ACTIVE users appear (S6b-B1:

@@ -13,6 +13,7 @@ import {
   Bell,
   CreditCard,
   User,
+  Star,
 } from 'lucide-react';
 import { useEmployer } from '@/lib/employer/employer-context';
 import { PlanStatusWidget } from './PlanStatusWidget';
@@ -117,6 +118,12 @@ export function EmployerSidebar({ onNavClick }: EmployerSidebarProps) {
       icon: <Users className="size-5" />,
       label: t('nav.candidates'),
       key: 'candidates',
+    },
+    {
+      href: `/${locale}/employer/interested-candidates`,
+      icon: <Star className="size-5" />,
+      label: t('nav.interested'),
+      key: 'interested',
     },
     {
       href: `/${locale}/employer/notifications`,

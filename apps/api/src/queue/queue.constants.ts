@@ -14,6 +14,8 @@ export const QUEUE_NAMES = {
    * crosses the threshold; the matching and the send happen in the WORKER.
    */
   MATCH_ALERT: 'match-alert',
+  /** Employer outreach to candidates they marked as interesting. */
+  INTEREST_NOTIFY: 'interest-notify',
 } as const;
 
 export const JOB_NAMES = {
@@ -35,6 +37,8 @@ export const JOB_NAMES = {
   INVOICE_BACKFILL_SWEEP: 'invoice-backfill-sweep',
   /** One per candidate who crossed the match-alert completion threshold. */
   SEND_MATCH_ALERT: 'send-match-alert',
+  /** One per (company, candidate) outreach. */
+  SEND_INTEREST_NOTICE: 'send-interest-notice',
 } as const;
 
 /**

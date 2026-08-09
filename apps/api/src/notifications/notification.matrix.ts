@@ -137,6 +137,21 @@ export const NOTIFICATION_MATRIX: Record<NotificationType, MatrixEntry> = {
     whatsapp: false,
     email: true,
   },
+  /**
+   * Employer outreach: "<Company> is interested in your profile."
+   *
+   * WhatsApp-tier by intent — this is the message the employer is choosing to
+   * pay to send — but `whatsapp` stays FALSE until `employer_interest_notice` is
+   * approved in WhatsApp Manager, for the same reason as NEW_JOB_MATCH above:
+   * assertTemplateMappingComplete would otherwise crash the worker at boot.
+   * The producer already supplies templateVars, so enabling it is this one line.
+   */
+  EMPLOYER_INTERESTED: {
+    inApp: true,
+    whatsapp: false,
+    whatsappTemplate: 'wa.employer_interest',
+    email: true,
+  },
   // ── Candidate/employer matching ───────────────────────────────────────────────
   // Spec: "whatsapp/email (open item)" — email chosen for MVP; WhatsApp opted-in when
   // the CANDIDATE_MATCHES template is approved.

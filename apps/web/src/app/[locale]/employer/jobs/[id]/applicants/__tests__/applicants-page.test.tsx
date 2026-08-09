@@ -32,7 +32,7 @@ function applicantCard(overrides: Partial<ApplicantCardT> = {}): ApplicantCardT 
     fullName: 'Rajan Patel',
     isAvailable: true,
     documentsStatus: [{ type: 'PASSPORT', uploaded: true, passportValid: true }],
-    createdAt: new Date().toISOString(),
+    memberSince: new Date().toISOString(),
     applicationId: 'app-5',
     humanId: 'AP-2026-5',
     status: 'PENDING',

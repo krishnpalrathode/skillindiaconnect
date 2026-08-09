@@ -560,7 +560,8 @@
       "candidates": "उम्मीदवार",
       "notifications": "सूचनाएं",
       "subscription": "सदस्यता",
-      "profile": "कंपनी प्रोफ़ाइल"
+      "profile": "कंपनी प्रोफ़ाइल",
+      "interested": "रुचि"
     },
     "header": {
       "notifications": "सूचनाएं",
@@ -909,6 +910,29 @@
           "proHint": "दस्तावेज़ पहुँच Pro पर उपलब्ध है।"
         }
       }
+    },
+    "interest": {
+      "pageTitle": "रुचि वाले उम्मीदवार",
+      "pageSubtitle": "आपने जिन मज़दूरों को चुना है। चुनना निजी है — संदेश भेजने पर ही उन्हें पता चलेगा।",
+      "mark": "रुचि दिखाएँ",
+      "marked": "रुचि है",
+      "markHint": "निजी सूची। उम्मीदवार को पता नहीं चलेगा।",
+      "markedHint": "सूची में जोड़ा गया। तैयार होने पर संदेश भेजें।",
+      "alreadyNotified": "आप इस उम्मीदवार को पहले ही संदेश भेज चुके हैं।",
+      "toggleError": "अपडेट नहीं हो सका। फिर कोशिश करें।",
+      "selectAll": "जिन्हें संदेश नहीं भेजा, सभी चुनें",
+      "selectCandidate": "{name} को चुनें",
+      "notifySelected": "सूचित करें ({count})",
+      "notifyResult": "{queued} भेजे गए, {skipped} पहले से संपर्क में थे।",
+      "notifyCostHint": "हर संदेश उम्मीदवार को WhatsApp और ईमेल पर जाता है। हर उम्मीदवार को एक बार ही संदेश भेज सकते हैं।",
+      "contacted": "संपर्क किया",
+      "locationUnknown": "जगह नहीं दी गई",
+      "emptyTitle": "अभी कोई रुचि वाला उम्मीदवार नहीं",
+      "emptyBody": "उम्मीदवार देखें और जिनसे बात करनी है उन्हें चुनें।",
+      "browseCandidates": "उम्मीदवार देखें",
+      "loadError": "सूची लोड नहीं हो सकी।",
+      "retry": "फिर कोशिश करें",
+      "sectionTitle": "रुचि"
     }
   },
   "jobs": {
@@ -1212,8 +1236,8 @@
       "violationAccommodation": "आवास",
       "violationHealthInsurance": "स्वास्थ्य बीमा",
       "violationTransportation": "परिवहन",
-      "quotaTitle": "सक्रिय नौकरी सीमा पहुंच गई ({limit} नौकरी)",
-      "quotaBody": "आपकी Free plan एक समय में 1 सक्रिय नौकरी की अनुमति देती है।",
+      "quotaTitle": "सक्रिय नौकरी की सीमा पूरी ({limit, plural, one {# नौकरी} other {# नौकरियाँ}})",
+      "quotaBody": "आपकी Free plan एक समय में {limit, plural, one {# सक्रिय नौकरी} other {# सक्रिय नौकरियाँ}} की अनुमति देती है। दूसरी नौकरी प्रकाशित करने के लिए किसी सक्रिय नौकरी को रोकें या संग्रह करें, या अनलिमिटेड के लिए Pro लें।",
       "quotaUpgradeLink": "Pro में अपग्रेड करें",
       "genericTitle": "प्रकाशित करने में विफल",
       "dismiss": "खारिज करें"

@@ -1,5 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { JobsModule } from '../jobs/jobs.module';
+import { QueueModule } from '../queue/queue.module';
 import { CandidateModule } from '../candidate/candidate.module';
 import { ApplicationsModule } from '../applications/applications.module';
 import { SubscriptionReadModule } from '../payments/subscription-read.module';
@@ -7,12 +8,14 @@ import { EmployerController } from './employer.controller';
 import { AdminEmployerController } from './admin-employer.controller';
 import { EmployerProfileController } from './employer-profile.controller';
 import { CandidateViewController } from './candidate-view.controller';
+import { CandidateInterestController } from './candidate-interest.controller';
 import { DocumentAccessController } from './document-access.controller';
 import { EmployerService } from './employer.service';
 import { EmployerApprovalService } from './employer-approval.service';
 import { EmployerProfileService } from './employer-profile.service';
 import { EmployerDashboardService } from './employer-dashboard.service';
 import { CandidateViewService } from './candidate-view.service';
+import { CandidateInterestService } from './candidate-interest.service';
 import { ProfileViewService } from './profile-view.service';
 import { DocumentAccessService } from './document-access.service';
 
@@ -31,12 +34,15 @@ import { DocumentAccessService } from './document-access.service';
     // effectivePlan(): the document gate's plan truth (S5-B3) — standalone module,
     // NOT PaymentsModule (which imports EmployerModule; that would be a cycle).
     SubscriptionReadModule,
+    // INTEREST_NOTIFY queue — the API enqueues onto it; the worker consumes.
+    QueueModule,
   ],
   controllers: [
     EmployerController,
     AdminEmployerController,
     EmployerProfileController,
     CandidateViewController,
+    CandidateInterestController,
     DocumentAccessController,
   ],
   providers: [
@@ -45,6 +51,7 @@ import { DocumentAccessService } from './document-access.service';
     EmployerProfileService,
     EmployerDashboardService,
     CandidateViewService,
+    CandidateInterestService,
     ProfileViewService,
     DocumentAccessService,
   ],

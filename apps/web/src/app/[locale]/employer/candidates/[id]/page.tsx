@@ -15,6 +15,8 @@ import { CandidateFacts } from '@/components/employer/candidates/view/CandidateF
 import { ExperienceTimeline } from '@/components/employer/candidates/view/ExperienceTimeline';
 import { SkillsList } from '@/components/employer/candidates/view/SkillsList';
 import { DocumentsStatusCard } from '@/components/employer/candidates/view/DocumentsStatusCard';
+import { InterestButton } from '@/components/employer/candidates/InterestButton';
+import { EMPLOYER_PAGE_SHELL } from '@/lib/page-shell';
 
 type Phase =
   | { kind: 'loading' }
@@ -107,8 +109,8 @@ export default function CandidateViewPage() {
 
   if (phase.kind === 'notFound') {
     return (
-      <div className="max-w-2xl">
-        <div className="mb-6">{backLink}</div>
+      <div className={EMPLOYER_PAGE_SHELL}>
+        <div>{backLink}</div>
         <div className="flex flex-col items-center gap-3 rounded-xl border border-neutral-200 bg-white py-16 px-4 text-center">
           <span className="flex size-12 items-center justify-center rounded-full bg-neutral-100">
             <UserX className="size-6 text-neutral-600" aria-hidden="true" />
@@ -127,8 +129,8 @@ export default function CandidateViewPage() {
 
   if (phase.kind === 'error') {
     return (
-      <div className="max-w-2xl">
-        <div className="mb-6">{backLink}</div>
+      <div className={EMPLOYER_PAGE_SHELL}>
+        <div>{backLink}</div>
         <div className="flex flex-col items-center gap-4 rounded-xl border border-neutral-200 bg-white py-16 text-center">
           <p className="text-sm text-neutral-600">{t('view.loadError')}</p>
           <Button variant="outline" size="sm" onClick={load}>
@@ -142,11 +144,22 @@ export default function CandidateViewPage() {
   const { candidate } = phase;
 
   return (
-    <div className="max-w-2xl">
-      <div className="mb-4">{backLink}</div>
+    // EMPLOYER_PAGE_SHELL, not a local max-width: this page was `max-w-2xl` and
+    // LEFT-aligned, so opening a candidate from the 6xl browse grid collapsed the
+    // content column to a third of the width and shunted it to one side. The
+    // shell is what keeps the content edge identical across every employer tab.
+    <div className={EMPLOYER_PAGE_SHELL}>
+      <div>{backLink}</div>
 
       <div className="flex flex-col gap-4">
         <CandidateViewHeader candidate={candidate} locale={locale} />
+
+        <InterestButton
+          candidateId={candidate.id}
+          initiallyInterested={candidate.isInterested ?? false}
+          alreadyNotified={candidate.interestNotified ?? false}
+        />
+
         <CandidateFacts candidate={candidate} />
         <ExperienceTimeline experiences={candidate.experiences ?? []} />
         <SkillsList skills={candidate.skills ?? []} />

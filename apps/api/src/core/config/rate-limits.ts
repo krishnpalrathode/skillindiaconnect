@@ -34,4 +34,16 @@ export const RATE_LIMITS = {
     ttl: MINUTE,
     limit: positiveInt(process.env.RATE_LIMIT_SEARCH_PER_MIN, 30),
   },
+  /**
+   * Employer → candidate outreach ("we are interested in your profile").
+   *
+   * Tighter than the global ceiling on purpose: this is the one route where an
+   * employer can cause messages to be delivered to workers' phones, and each one
+   * costs a paid WhatsApp conversation. The batch size is capped separately in
+   * NotifyInterestDto, so this bounds batches-per-minute, not candidates.
+   */
+  interestNotify: {
+    ttl: MINUTE,
+    limit: positiveInt(process.env.RATE_LIMIT_INTEREST_NOTIFY_PER_MIN, 5),
+  },
 } as const;

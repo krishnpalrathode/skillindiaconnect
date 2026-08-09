@@ -8,6 +8,7 @@ import { AuditModule } from './audit/audit.module';
 import { NotificationWorkerModule } from './notifications/notification.worker-module';
 import { JobsWorkerModule } from './jobs/jobs.worker-module';
 import { CandidateWorkerModule } from './candidate/candidate.worker-module';
+import { EmployerWorkerModule } from './employer/employer.worker-module';
 import { PaymentsWorkerModule } from './payments/payments.worker-module';
 import { ResumeWorkerModule } from './resume/resume.worker-module';
 
@@ -26,6 +27,7 @@ import { ResumeWorkerModule } from './resume/resume.worker-module';
     NotificationWorkerModule,
     JobsWorkerModule,
     CandidateWorkerModule,
+    EmployerWorkerModule,
     PaymentsWorkerModule,
     // S7-B1: Puppeteer renders (resume). Chromium lives HERE and only here —
     // AppApiModule must never import ResumeWorkerModule or PdfModule.
