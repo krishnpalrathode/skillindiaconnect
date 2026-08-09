@@ -65,8 +65,8 @@ function WithAll({ children }: { children: React.ReactNode }) {
     <NextIntlClientProvider locale="en" messages={enMessages}>
       <AuthProvider>
         <EmployerProvider>
-            <ToastProvider>{children}</ToastProvider>
-          </EmployerProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </EmployerProvider>
       </AuthProvider>
     </NextIntlClientProvider>
   );

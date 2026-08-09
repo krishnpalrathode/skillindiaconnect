@@ -178,9 +178,10 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
             >
               {companyInitials || <Building2 className="size-4" />}
             </span>
-            {/* The COMPANY, not the mailbox. Employers sign in from shared
-                inboxes like hr@ — "hr@gulfstar.ex…" told them nothing about
-                which company account they were operating. */}
+            {/* The COMPANY, not the mailbox — "hr@gulfstar.ex…" said nothing
+                about which account you were operating. Shown here and ONLY
+                here: the menu below is actions only, so the name never appears
+                twice. */}
             <span className="hidden max-w-[140px] truncate text-start text-sm font-semibold text-neutral-900 sm:block">
               {displayName}
             </span>
@@ -197,22 +198,18 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
             <div
               role="menu"
               aria-label={t('header.accountMenu')}
-              className="absolute end-0 top-[calc(100%+0.5rem)] z-30 w-56 overflow-hidden rounded-xl border border-neutral-200 bg-white p-1.5 shadow-xl"
+              // Compact menu, right-aligned under the chip — the company name
+              // already lives on the chip, so the dropdown is just the actions.
+              // Same geometry as the candidate menu in DashboardHeader, one step
+              // wider: that one is sized for the single word "Profile", and
+              // "Company Profile" wraps to two lines at w-44.
+              className="absolute end-0 top-[calc(100%+0.5rem)] z-30 w-52 overflow-hidden rounded-xl border border-neutral-200 bg-white p-1.5 shadow-xl"
             >
-              {/* Company first, mailbox second and muted. The email stays because
-                  it is the only way to tell WHICH login you are on when a team
-                  shares a machine — it just stops being the headline. */}
-              <div className="px-3 py-2">
-                <p className="truncate text-sm font-semibold text-neutral-900">{displayName}</p>
-                {user?.email && <p className="truncate text-xs text-neutral-600">{user.email}</p>}
-              </div>
-              <div className="my-1 border-t border-neutral-100" />
-
               <Link
                 href={`/${locale}/employer/profile`}
                 role="menuitem"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+                className="flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
               >
                 <User className="size-4 shrink-0" aria-hidden="true" />
                 {t('nav.profile')}
@@ -224,7 +221,7 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
                   setMenuOpen(false);
                   requestLogout();
                 }}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-error-fg transition-colors hover:bg-error-bg focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+                className="flex w-full items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium text-error-fg transition-colors hover:bg-error-bg focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
               >
                 <LogOut className="size-4 shrink-0" aria-hidden="true" />
                 {t('header.logout')}

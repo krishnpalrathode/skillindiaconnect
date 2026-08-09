@@ -1383,7 +1383,7 @@
       "category": "नौकरी श्रेणी",
       "experience": "अनुभव",
       "experienceBasis": "{raw} में से {clamped} वर्ष के आधार पर",
-      "foreign": "विदेशी अनुभव",
+      "foreign": "अंतर्राष्ट्रीय अनुभव",
       "foreignLocalNote": "भारत की नौकरियों के लिए स्कोर नहीं किया गया।",
       "documents": "दस्तावेज़",
       "componentScore": "{score}/{max}",
@@ -1484,7 +1484,7 @@
       "category": "नौकरी श्रेणी",
       "experience": "अनुभव",
       "experienceBasis": "{raw} में से {clamped} वर्ष के आधार पर",
-      "foreign": "विदेशी अनुभव",
+      "foreign": "अंतर्राष्ट्रीय अनुभव",
       "foreignLocalNote": "भारत की नौकरियों के लिए स्कोर नहीं किया गया।",
       "documents": "दस्तावेज़",
       "componentScore": "{score}/{max}"

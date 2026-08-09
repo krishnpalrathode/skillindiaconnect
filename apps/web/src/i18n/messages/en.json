@@ -1383,7 +1383,7 @@
       "category": "Job category",
       "experience": "Experience",
       "experienceBasis": "Based on {clamped} of {raw} yrs",
-      "foreign": "Foreign experience",
+      "foreign": "International experience",
       "foreignLocalNote": "Not scored for jobs in India.",
       "documents": "Documents",
       "componentScore": "{score}/{max}",
@@ -1484,7 +1484,7 @@
       "category": "Job category",
       "experience": "Experience",
       "experienceBasis": "Based on {clamped} of {raw} yrs",
-      "foreign": "Foreign experience",
+      "foreign": "International experience",
       "foreignLocalNote": "Not scored for jobs in India.",
       "documents": "Documents",
       "componentScore": "{score}/{max}"
@@ -1697,12 +1697,12 @@
       },
       "type": {
         "LOCAL": "India",
-        "FOREIGN": "Foreign"
+        "FOREIGN": "International"
       },
       "typeFilterLabel": "Type",
       "typeAll": "All types",
       "typeLocal": "India",
-      "typeForeign": "Foreign",
+      "typeForeign": "International",
       "searchLabel": "Search companies",
       "searchPlaceholder": "Search by company name…",
       "searchButton": "Search",
@@ -2294,7 +2294,7 @@
           "snapshotNote": "Computed once when the candidate applied — never recomputed.",
           "category": "Category",
           "experienceYears": "Experience",
-          "foreignExperience": "Foreign exp.",
+          "foreignExperience": "International exp.",
           "documents": "Documents"
         },
         "facts": {

@@ -94,9 +94,7 @@ export function PublishErrorHandler({ error, onDismiss }: PublishErrorHandlerPro
           <p className="text-sm font-semibold text-primary-800">
             {t('quotaTitle', { limit: planLimit })}
           </p>
-          <p className="mt-1 text-sm text-neutral-700">
-            {t('quotaBody', { limit: planLimit })}
-          </p>
+          <p className="mt-1 text-sm text-neutral-700">{t('quotaBody', { limit: planLimit })}</p>
           <Link
             href={`/${locale}/employer/subscription`}
             className="mt-2 inline-flex text-sm font-semibold text-primary-700 underline hover:text-primary-900"

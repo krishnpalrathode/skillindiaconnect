@@ -23,6 +23,26 @@ import { formatDate } from '@/lib/format/date';
 const STATUS_TABS = ['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED', 'ALL'] as const;
 type StatusTab = (typeof STATUS_TABS)[number];
 
+/**
+ * Display order: "All" pinned first, then the statuses A→Z by their VISIBLE
+ * label.
+ *
+ * Sorted at render rather than by reordering the constant above, because the
+ * labels are translated — a fixed array would only ever be alphabetical in
+ * English and would silently mis-order Hindi and Arabic. `localeCompare` with
+ * the active locale is what "alphabetical" actually means on a localised
+ * screen, and a status added later slots itself in with no edit here.
+ *
+ * This is presentation only: STATUS_TABS stays the source of truth for which
+ * values are valid, and PENDING remains the default tab regardless of position.
+ */
+function orderedStatusTabs(locale: string, label: (tab: StatusTab) => string): StatusTab[] {
+  const rest = STATUS_TABS.filter((tab) => tab !== 'ALL').sort((a, b) =>
+    label(a).localeCompare(label(b), locale),
+  );
+  return ['ALL', ...rest];
+}
+
 const STATUS_BADGE: Record<CompanyStatus, 'warning' | 'success' | 'error' | 'neutral'> = {
   PENDING: 'warning',
   APPROVED: 'success',
@@ -121,7 +141,7 @@ export function EmployerQueueTable() {
     <div className="flex flex-col gap-4">
       {/* Status tabs */}
       <div role="tablist" aria-label={t('statusFilterLabel')} className="flex flex-wrap gap-1">
-        {STATUS_TABS.map((tab) => (
+        {orderedStatusTabs(locale, (tab) => t(`statusTab.${tab}`)).map((tab) => (
           <button
             key={tab}
             type="button"

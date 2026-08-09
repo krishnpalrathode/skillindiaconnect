@@ -1383,7 +1383,7 @@
       "category": "فئة الوظيفة",
       "experience": "الخبرة",
       "experienceBasis": "بناءً على {clamped} من {raw} سنوات",
-      "foreign": "الخبرة الأجنبية",
+      "foreign": "خبرة دولية",
       "foreignLocalNote": "لا يُحتسب للوظائف داخل الهند.",
       "documents": "المستندات",
       "componentScore": "{score}/{max}",
@@ -1484,7 +1484,7 @@
       "category": "فئة الوظيفة",
       "experience": "الخبرة",
       "experienceBasis": "بناءً على {clamped} من {raw} سنوات",
-      "foreign": "الخبرة الأجنبية",
+      "foreign": "خبرة دولية",
       "foreignLocalNote": "لا يُحتسب للوظائف داخل الهند.",
       "documents": "المستندات",
       "componentScore": "{score}/{max}"
