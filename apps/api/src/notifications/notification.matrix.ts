@@ -68,9 +68,20 @@ export const NOTIFICATION_MATRIX: Record<NotificationType, MatrixEntry> = {
     email: true,
   },
   // ── Job discovery ─────────────────────────────────────────────────────────────
+  /**
+   * Profile-completion job-match alert (top 3 matches + a link to all of them).
+   *
+   * `whatsapp` is FALSE only because `job_match_alert` is not yet approved in
+   * WhatsApp Manager — `assertTemplateMappingComplete` would crash the worker at
+   * boot otherwise, which is the intended behaviour, not a bug to route around.
+   * The template key below is already wired and the producer
+   * (candidate/match-alert.processor.ts) already supplies templateVars, so
+   * enabling WhatsApp is exactly this one `false` → `true`.
+   */
   NEW_JOB_MATCH: {
     inApp: true,
     whatsapp: false,
+    whatsappTemplate: 'wa.job_match',
     email: true,
   },
   JOB_CLOSING_SOON: {

@@ -9,6 +9,11 @@ export const QUEUE_NAMES = {
   // the API process; the API merely enqueues onto these).
   RESUME_RENDER: 'resume-render',
   INVOICE_RENDER: 'invoice-render',
+  /**
+   * Profile-completion job-match alert. Enqueued by the API when a recompute
+   * crosses the threshold; the matching and the send happen in the WORKER.
+   */
+  MATCH_ALERT: 'match-alert',
 } as const;
 
 export const JOB_NAMES = {
@@ -28,6 +33,8 @@ export const JOB_NAMES = {
   // Daily sweep that enqueues RENDER_INVOICE for every invoice still carrying
   // pdfKey NULL — the S5-B2 backfill AND the retry net for failed renders.
   INVOICE_BACKFILL_SWEEP: 'invoice-backfill-sweep',
+  /** One per candidate who crossed the match-alert completion threshold. */
+  SEND_MATCH_ALERT: 'send-match-alert',
 } as const;
 
 /**

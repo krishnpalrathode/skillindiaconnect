@@ -59,6 +59,8 @@ const FINISHED_JOB_RETENTION = {
       // S7-B1: Puppeteer renders — the API only ever enqueues onto these.
       { name: QUEUE_NAMES.RESUME_RENDER },
       { name: QUEUE_NAMES.INVOICE_RENDER },
+      // Profile-completion job-match alert — API enqueues, worker matches+sends.
+      { name: QUEUE_NAMES.MATCH_ALERT },
     ),
   ],
   exports: [BullModule],

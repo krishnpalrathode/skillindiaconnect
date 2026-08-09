@@ -67,6 +67,21 @@ export const META_TEMPLATES = {
   // failed with 132001 "template does not exist" — the same error a wrong
   // LOCALE produces, which is how it hid behind the en/en_US hunt.
   'wa.resume_doc': { name: 'resume_document', params: 1, document: true },
+  /**
+   * ⚠️ NOT YET APPROVED IN WHATSAPP MANAGER — see docs/whatsapp-integration.md.
+   *
+   * Mapped ahead of approval so that enabling the alert is a ONE-LINE matrix
+   * change (`whatsapp: false` → `true` on NEW_JOB_MATCH) rather than a hunt
+   * across three files. Being listed here sends nothing on its own: only a
+   * matrix entry with `whatsapp: true` reaches the Graph API.
+   *
+   * Until Meta approves `job_match_alert`, flipping that switch will fail every
+   * send with 132001 and fall back to email. Confirm approval first with
+   * `pnpm whatsapp:templates`.
+   *
+   * Params: {{1}} first name · {{2}} top-3 job summary · {{3}} link.
+   */
+  'wa.job_match': { name: 'job_match_alert', params: 3 },
 } as const satisfies Record<string, MetaTemplate>;
 
 export type MetaTemplateKey = keyof typeof META_TEMPLATES;

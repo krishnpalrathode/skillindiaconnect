@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { DocumentType, WorkExperience } from '@prisma/client';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { QUEUE_NAMES, JOB_NAMES } from '../../queue/queue.constants';
 import {
+  DEFAULT_MATCH_ALERT_MIN_PCT,
   MVP_MANDATORY_DOC_COUNT,
   MVP_MANDATORY_DOC_TYPES,
   SETTING_KEY_MANDATORY_DOC_COUNT,
+  SETTING_KEY_MATCH_ALERT_MIN_PCT,
   WEIGHTS,
 } from './completion.constants';
 
@@ -127,7 +132,12 @@ export function compute(input: CompletionInput): CompletionResult {
 
 @Injectable()
 export class CompletionService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(CompletionService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    @InjectQueue(QUEUE_NAMES.MATCH_ALERT) private readonly matchAlertQueue: Queue,
+  ) {}
 
   /**
    * Load a candidate's profile + relations from DB, run compute(), persist
@@ -182,7 +192,59 @@ export class CompletionService {
       data: { completionPct: result.pct },
     });
 
+    await this.maybeEnqueueMatchAlert(candidateId, result.pct, profile.matchAlertSentAt);
+
     return result;
+  }
+
+  /**
+   * Enqueue the job-match alert when this recompute took the profile to (or
+   * past) the threshold for the first time.
+   *
+   * The API process does NOTHING here but write state and enqueue — the
+   * matching query and the WhatsApp/email sends belong to the WORKER
+   * (worker-and-external-sends.md). `matchAlertSentAt` read above is the
+   * fire-once guard; the worker re-checks it under its own read before sending,
+   * so two concurrent recomputes cannot both alert.
+   *
+   * The jobId is deterministic per candidate for the same reason cron jobs are
+   * (cron-queue-dedupe.md): profile edits fire recompute repeatedly, and every
+   * one of them would otherwise enqueue another copy.
+   *
+   * Failures here are logged and swallowed. A queue outage must not turn a
+   * successful profile save into a 500 — the alert is a nicety, the save is not.
+   */
+  private async maybeEnqueueMatchAlert(
+    candidateId: string,
+    pct: number,
+    matchAlertSentAt: Date | null,
+  ): Promise<void> {
+    if (matchAlertSentAt !== null) return;
+
+    const threshold = await this.getMatchAlertMinPct();
+    if (pct < threshold) return;
+
+    try {
+      await this.matchAlertQueue.add(
+        JOB_NAMES.SEND_MATCH_ALERT,
+        { candidateId },
+        // Hyphen, NOT colon: BullMQ 5 rejects ':' in a custom jobId
+        // ("Custom Id cannot contain :"). Matches `purge-${userId}` elsewhere.
+        { jobId: `match-alert-${candidateId}` },
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`match-alert enqueue failed for candidate ${candidateId}: ${msg}`);
+    }
+  }
+
+  /** Threshold from Settings, falling back to the default when unset. */
+  async getMatchAlertMinPct(): Promise<number> {
+    const setting = await this.prisma.setting.findUnique({
+      where: { key: SETTING_KEY_MATCH_ALERT_MIN_PCT },
+    });
+    const val = setting?.value;
+    return typeof val === 'number' && Number.isFinite(val) ? val : DEFAULT_MATCH_ALERT_MIN_PCT;
   }
 
   async getMandatoryDocCount(): Promise<number> {

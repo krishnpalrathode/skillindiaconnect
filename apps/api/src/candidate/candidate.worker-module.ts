@@ -7,6 +7,10 @@ import { PassportExpiryProcessor } from './passport-expiry.processor';
 import { PurgeCron } from './purge/purge.cron';
 import { PurgeProcessor } from './purge/purge.processor';
 import { PurgeService } from './purge/purge.service';
+import { MatchAlertProcessor } from './match-alert.processor';
+import { CompletionService } from './completion/completion.service';
+import { JobsMatchReadService } from '../jobs/jobs-match-read.service';
+import { MatchService } from '../applications/match/match.service';
 
 /**
  * Worker-process side of the Candidate module.
@@ -42,6 +46,13 @@ import { PurgeService } from './purge/purge.service';
     PurgeCron,                   // @Cron → enqueue the daily sweep
     PurgeProcessor,              // BullMQ processor → sweep fan-out + per-user purge
     PurgeService,                // the anonymization transaction + R2 destruction
+    // Profile-completion job-match alert. The three collaborators are provided
+    // DIRECTLY rather than by importing JobsModule/ApplicationsModule, which
+    // carry HTTP controllers — the worker root must never load those.
+    MatchAlertProcessor,         // BullMQ processor → match + notify
+    JobsMatchReadService,        // Jobs-owned narrow read (Prisma only)
+    MatchService,                // the same pure scoring engine apply-time uses
+    CompletionService,           // threshold + mandatory-doc count
   ],
 })
 export class CandidateWorkerModule {}

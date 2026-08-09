@@ -63,6 +63,7 @@ async function main(): Promise<void> {
     ['jobs.allow_foreign', true, false],
     ['candidates.mandatory_documents', ['PASSPORT', 'EXPERIENCE_CERT', 'EDUCATIONAL_CERT'], false],
     ['candidates.min_completion_pct', 70, false],
+    ['candidates.match_alert_min_pct', 80, false],
     ['candidates.video_max_minutes', 5, false],
     ['candidates.video_max_mb', 500, false],
     // S5-B1: Payments — GST for the LOCAL checkout split; Stripe routing flag

@@ -49,6 +49,19 @@ export const SETTING_KEYS = {
     core: false,
     type: 'number' as const,
   },
+  /**
+   * Completion % at which a candidate is sent their top matching jobs.
+   *
+   * DELIBERATELY SEPARATE from MIN_COMPLETION_PCT (the apply gate): the two
+   * answer different questions — "is this profile good enough to apply with"
+   * vs "is it complete enough to be worth matching". Sharing one number would
+   * mean raising the apply bar silently changed who gets alerted.
+   */
+  MATCH_ALERT_MIN_PCT: {
+    key: 'candidates.match_alert_min_pct',
+    core: false,
+    type: 'number' as const,
+  },
   VIDEO_MAX_MINUTES: {
     key: 'candidates.video_max_minutes',
     core: false,

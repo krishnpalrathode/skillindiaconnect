@@ -326,6 +326,10 @@ model CandidateProfile {
   waNotifications Boolean        @default(true)
   emailNotifs     Boolean        @default(true)
   completionPct   Int            @default(0)
+  /// Fire-once guard for the profile-completion job-match alert. Set by the
+  /// worker AFTER the notification is raised, mirroring `selectedNotifiedAt`:
+  /// crossing the threshold again (edit down, edit back up) must never re-send.
+  matchAlertSentAt DateTime?
   videoR2Key       String?
   videoDurationSec Int?
   videoSizeBytes   Int?

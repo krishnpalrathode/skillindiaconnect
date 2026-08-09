@@ -14,6 +14,7 @@ import * as path from 'path';
 import { SkillService } from './skill.service';
 import { CompletionService } from './completion/completion.service';
 import { PrismaService } from '../core/prisma/prisma.service';
+import type { Queue } from 'bullmq';
 
 jest.setTimeout(180_000);
 
@@ -49,7 +50,7 @@ beforeAll(async () => {
     prisma = new PrismaClient({ datasources: { db: { url } } });
     await prisma.$connect();
 
-    const completionService = new CompletionService(prisma as unknown as PrismaService);
+    const completionService = new CompletionService(prisma as unknown as PrismaService, { add: jest.fn() } as unknown as Queue);
     skillService = new SkillService(prisma as unknown as PrismaService, completionService, {
       emit: jest.fn(),
       emitAsync: jest.fn(),

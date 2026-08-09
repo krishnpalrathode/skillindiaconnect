@@ -48,3 +48,10 @@ export const DEFAULT_MIN_COMPLETION_FOR_APPLY = 60;
 // Setting keys
 export const SETTING_KEY_MANDATORY_DOC_COUNT = 'candidates.mandatory_documents';
 export const SETTING_KEY_MIN_COMPLETION_PCT = 'candidates.min_completion_pct';
+export const SETTING_KEY_MATCH_ALERT_MIN_PCT = 'candidates.match_alert_min_pct';
+
+/** Used when the Settings row is absent (fresh DB, or a wiped setting). */
+export const DEFAULT_MATCH_ALERT_MIN_PCT = 80;
+
+/** How many matching jobs ride in the alert (WhatsApp template + in-app body). */
+export const MATCH_ALERT_JOB_COUNT = 3;
