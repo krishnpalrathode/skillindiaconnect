@@ -314,7 +314,8 @@
       "locationPlaceholder": "शहर, राज्य या देश",
       "noticePeriodLabel": "नोटिस अवधि",
       "noticePeriodPlaceholder": "जैसे 30",
-      "noticePeriodUnit": "{days} दिन"
+      "noticePeriodUnit": "{days} दिन",
+      "addValue": "जोड़ें"
     },
     "documents": {
       "count": "{count} / 3 दस्तावेज़ अपलोड किए गए",
@@ -350,7 +351,8 @@
       "salaryMinPlaceholder": "जैसे 25000",
       "salaryMaxPlaceholder": "जैसे 50000",
       "saveSalary": "वेतन सहेजें",
-      "salaryNote": "बिना स्कोर के — केवल मिलान मार्गदर्शन के लिए"
+      "salaryNote": "बिना स्कोर के — केवल मिलान मार्गदर्शन के लिए",
+      "salaryRangeError": "अधिकतम राशि न्यूनतम के बराबर या उससे ज़्यादा होनी चाहिए"
     },
     "settingsPageSubtitle": "तय करें कि कंपनियाँ क्या देख सकती हैं और हम आपसे कैसे संपर्क करें।"
   },

@@ -55,7 +55,11 @@ export class CandidateService {
   // ─── Profile access ────────────────────────────────────────────────────────
 
   async getProfileByUserId(userId: string): Promise<CandidateSelfDto> {
-    const profile = await this.findOrCreateProfile(userId);
+    // WITH documents: the contract's CandidateProfile carries `documents`, and
+    // the profile screen's Documents section reads it. This used the lighter
+    // include, so uploads were persisted and counted toward completion but the
+    // section still rendered every row as "Not uploaded".
+    const profile = await this.findOrCreateProfileWithFullDocs(userId);
     // The wire carries a SHORT-EXPIRY SIGNED url, never the raw R2 key — the
     // key is private, the url is what the browser renders.
     const photoUrl = profile.photoKey
@@ -177,6 +181,27 @@ export class CandidateService {
 
   async updateSettings(userId: string, dto: UpdateSettingsDto): Promise<CandidateSelfDto> {
     const profile = await this.findOrCreateProfile(userId);
+
+    /*
+      Salary range: minimum must not exceed maximum.
+
+      Enforced HERE rather than in the DTO because this is a PATCH — a request
+      may carry only `salaryExpectationMax`, and the pair it has to be valid
+      against is the STORED min. Comparing the EFFECTIVE values (incoming, else
+      persisted) is the only check that cannot be bypassed by sending one field
+      at a time, which a DTO-level cross-field rule would miss entirely.
+
+      Equal values are allowed: an exact expectation is a legitimate answer.
+    */
+    const effectiveMin = dto.salaryExpectationMin ?? profile.salaryExpectationMin;
+    const effectiveMax = dto.salaryExpectationMax ?? profile.salaryExpectationMax;
+    if (effectiveMin != null && effectiveMax != null && effectiveMin > effectiveMax) {
+      throw new UnprocessableEntityException({
+        code: 'SALARY_RANGE_INVALID',
+        detail: 'Minimum salary expectation cannot be greater than the maximum.',
+        meta: { salaryExpectationMin: effectiveMin, salaryExpectationMax: effectiveMax },
+      });
+    }
 
     await this.prisma.candidateProfile.update({
       where: { id: profile.id },
@@ -308,6 +333,34 @@ export class CandidateService {
     const include = {
       experiences: { orderBy: { createdAt: 'desc' as const } },
       skills: { orderBy: { name: 'asc' as const } },
+    };
+    try {
+      return await this.prisma.candidateProfile.upsert({
+        where: { userId },
+        create: { userId, fullName: '' },
+        update: {},
+        include,
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        return this.prisma.candidateProfile.findUniqueOrThrow({ where: { userId }, include });
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Like findOrCreateProfile but with the FULL document rows the self mapper
+   * needs (id/key/uploadedAt), not just the type+expiryDate projection the
+   * completion calculation uses.
+   */
+  private async findOrCreateProfileWithFullDocs(
+    userId: string,
+  ): Promise<CandidateProfileWithRelations> {
+    const include = {
+      experiences: { orderBy: { createdAt: 'desc' as const } },
+      skills: { orderBy: { name: 'asc' as const } },
+      documents: { orderBy: { uploadedAt: 'desc' as const } },
     };
     try {
       return await this.prisma.candidateProfile.upsert({

@@ -1,4 +1,5 @@
 import {
+  CandidateDocument,
   CandidateProfile,
   CandidateSkill,
   Currency,
@@ -65,8 +66,19 @@ export interface CandidateSelfDto {
   // Relations
   experiences: WorkExperienceDto[];
   skills: CandidateSkillDto[];
+  documents: CandidateDocumentDto[];
   createdAt: string;
   updatedAt: string;
+}
+
+/** Mirrors the contract's CandidateDocument (self viewer). */
+export interface CandidateDocumentDto {
+  id: string;
+  type: string;
+  key: string;
+  status: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  uploadedAt: string;
+  expiryDate: string | null;
 }
 
 // ─── Relation type used by the mapper ────────────────────────────────────────
@@ -74,6 +86,12 @@ export interface CandidateSelfDto {
 export type CandidateProfileWithRelations = CandidateProfile & {
   experiences: WorkExperience[];
   skills: CandidateSkill[];
+  /**
+   * Optional so the callers that don't need documents (PATCH responses, the
+   * availability toggle) can keep their lighter include. When absent the mapper
+   * emits an empty list rather than inventing rows.
+   */
+  documents?: CandidateDocument[];
 };
 
 // ─── Mapper — single chokepoint for candidate-self serialization ──────────────
@@ -114,8 +132,31 @@ export function toSelf(
     completionPct: profile.completionPct,
     experiences: profile.experiences.map(mapExperience),
     skills: profile.skills.map(mapSkill),
+    documents: (profile.documents ?? []).map(mapDocument),
     createdAt: profile.createdAt.toISOString(),
     updatedAt: profile.updatedAt.toISOString(),
+  };
+}
+
+/**
+ * The candidate's OWN documents. `key` is included here on purpose — the
+ * contract's CandidateDocument carries it for the self viewer, and the UI shows
+ * the file name derived from it. The employer and admin viewers use separate
+ * mappers that expose status only, never the key.
+ *
+ * `status` is always PENDING: candidate documents have no verification
+ * workflow (unlike CompanyDocument, which stores verifiedAt/verifiedById), so
+ * there is no stored state to report. Claiming VERIFIED here would be a lie to
+ * both the candidate and the admin queue.
+ */
+function mapDocument(d: CandidateDocument): CandidateDocumentDto {
+  return {
+    id: d.id,
+    type: d.type,
+    key: d.r2Key,
+    status: 'PENDING',
+    uploadedAt: d.uploadedAt.toISOString(),
+    expiryDate: d.expiryDate ? d.expiryDate.toISOString().slice(0, 10) : null,
   };
 }
 

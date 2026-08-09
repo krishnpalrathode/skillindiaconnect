@@ -421,6 +421,52 @@ describe('CandidateService â€” integration (real DB)', () => {
 
   // â”€â”€ updateSettings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+  it('updateSettings: REJECTS a minimum salary above the maximum', async () => {
+    if (candDockerUnavailable) return;
+    const { id: userId } = await candUser();
+    await candService.getProfileByUserId(userId);
+
+    await expect(
+      candService.updateSettings(userId, {
+        salaryExpectationMin: 20000,
+        salaryExpectationMax: 200,
+      }),
+    ).rejects.toMatchObject({ response: { code: 'SALARY_RANGE_INVALID' } });
+
+    // Nothing was written — a rejected range must not partially persist.
+    const row = await candPrisma.candidateProfile.findUnique({ where: { userId } });
+    expect(row!.salaryExpectationMin).toBeNull();
+    expect(row!.salaryExpectationMax).toBeNull();
+  });
+
+  it('updateSettings: catches an invalid range built across TWO patches', async () => {
+    if (candDockerUnavailable) return;
+    const { id: userId } = await candUser();
+    await candService.getProfileByUserId(userId);
+
+    // A partial PATCH cannot be validated against itself — the max below is
+    // legal in isolation and only conflicts with the ALREADY-STORED minimum.
+    await candService.updateSettings(userId, { salaryExpectationMin: 20000 });
+    await expect(
+      candService.updateSettings(userId, { salaryExpectationMax: 200 }),
+    ).rejects.toMatchObject({ response: { code: 'SALARY_RANGE_INVALID' } });
+  });
+
+  it('updateSettings: allows an exact expectation (min === max)', async () => {
+    if (candDockerUnavailable) return;
+    const { id: userId } = await candUser();
+    await candService.getProfileByUserId(userId);
+
+    await candService.updateSettings(userId, {
+      salaryExpectationMin: 30000,
+      salaryExpectationMax: 30000,
+    });
+
+    const row = await candPrisma.candidateProfile.findUnique({ where: { userId } });
+    expect(row!.salaryExpectationMin).toBe(30000);
+    expect(row!.salaryExpectationMax).toBe(30000);
+  });
+
   it('updateSettings: persists showPhone and emailNotifs flags', async () => {
     if (candDockerUnavailable) return;
     const { id: userId } = await candUser();

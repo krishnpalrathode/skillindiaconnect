@@ -83,6 +83,7 @@ enum MaritalStatus {
 }
 
 enum Currency {
+  // India + the six GCC states — the original recruiting corridors.
   INR
   QAR
   AED
@@ -90,6 +91,17 @@ enum Currency {
   OMR
   KWD
   BHD
+  // Wider corridors. USD was already offered by the Account Settings dropdown
+  // while missing from this enum, so choosing "US Dollar" failed validation on
+  // save — the UI promised a currency the API rejected.
+  USD
+  EUR
+  GBP
+  CAD
+  AUD
+  JPY
+  SGD
+  MYR
 }
 
 enum Gateway {

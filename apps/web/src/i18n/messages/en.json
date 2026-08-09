@@ -314,7 +314,8 @@
       "locationPlaceholder": "City, State or Country",
       "noticePeriodLabel": "Notice period",
       "noticePeriodPlaceholder": "e.g. 30",
-      "noticePeriodUnit": "{days} days"
+      "noticePeriodUnit": "{days} days",
+      "addValue": "Add"
     },
     "documents": {
       "count": "{count} / 3 documents uploaded",
@@ -350,7 +351,8 @@
       "salaryMinPlaceholder": "e.g. 25000",
       "salaryMaxPlaceholder": "e.g. 50000",
       "saveSalary": "Save salary",
-      "salaryNote": "Unscored — for matching guidance only"
+      "salaryNote": "Unscored — for matching guidance only",
+      "salaryRangeError": "Maximum must be greater than or equal to the minimum"
     },
     "settingsPageSubtitle": "Control what employers can see and how we contact you."
   },

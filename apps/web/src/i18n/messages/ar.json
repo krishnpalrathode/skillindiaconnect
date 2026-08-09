@@ -314,7 +314,8 @@
       "locationPlaceholder": "المدينة أو الولاية أو البلد",
       "noticePeriodLabel": "فترة الإشعار",
       "noticePeriodPlaceholder": "مثال: 30",
-      "noticePeriodUnit": "{days} يوم"
+      "noticePeriodUnit": "{days} يوم",
+      "addValue": "إضافة"
     },
     "documents": {
       "count": "{count} / 3 وثائق مرفوعة",
@@ -350,7 +351,8 @@
       "salaryMinPlaceholder": "مثال: 25000",
       "salaryMaxPlaceholder": "مثال: 50000",
       "saveSalary": "حفظ الراتب",
-      "salaryNote": "غير مُقيَّم — للتوجيه في المطابقة فقط"
+      "salaryNote": "غير مُقيَّم — للتوجيه في المطابقة فقط",
+      "salaryRangeError": "يجب أن يكون الحد الأقصى مساوياً للحد الأدنى أو أكبر منه"
     },
     "settingsPageSubtitle": "تحكّم في ما يمكن لأصحاب العمل رؤيته وكيف نتواصل معك."
   },

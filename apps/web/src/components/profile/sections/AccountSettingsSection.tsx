@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
 import { Toggle } from '@/components/common/Toggle';
 import { patchCandidateSettings } from '@/lib/api/candidate';
+import { CURRENCIES } from '@/lib/currencies';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 
@@ -77,6 +78,21 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
   const [currency, setCurrency] = useState(profile.salaryExpectationCurrency ?? 'INR');
   const [salarySaving, setSalarySaving] = useState(false);
 
+  /*
+    Minimum must not exceed maximum. Only compares once BOTH are filled — while
+    the candidate is still typing the first number the other box is empty, and
+    flagging that would scold them mid-entry. Equal values are allowed: an exact
+    expectation is a legitimate answer, not an error.
+  */
+  const minNum = salaryMin === '' ? null : Number(salaryMin);
+  const maxNum = salaryMax === '' ? null : Number(salaryMax);
+  const salaryRangeInvalid =
+    minNum !== null &&
+    maxNum !== null &&
+    Number.isFinite(minNum) &&
+    Number.isFinite(maxNum) &&
+    minNum > maxNum;
+
   async function applyToggle(patch: Partial<Settings>) {
     const next = { ...settings, ...patch };
     setSettings(next);
@@ -90,6 +106,11 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
   }
 
   async function saveSalary() {
+    // Client-side mirror of the server rule (SALARY_RANGE_INVALID) so the user
+    // is told before a round-trip. The server remains the enforcement point —
+    // this only saves a failed request.
+    if (salaryRangeInvalid) return;
+
     setSalarySaving(true);
     try {
       const updated = await patchCandidateSettings({
@@ -188,7 +209,14 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
                   placeholder={t('salaryMinPlaceholder')}
                 />
               </Field>
-              <Field id="salary-max" label={t('salaryMaxLabel')}>
+              <Field
+                id="salary-max"
+                label={t('salaryMaxLabel')}
+                // Reported on MAX, not MIN: the maximum is the value that has to
+                // rise to resolve the conflict, so the message belongs where the
+                // fix is made.
+                error={salaryRangeInvalid ? t('salaryRangeError') : undefined}
+              >
                 <Input
                   className="h-12 rounded-xl"
                   type="number"
@@ -206,10 +234,11 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
                 onChange={(e) => setCurrency(e.target.value)}
                 className="h-12 w-full rounded-xl border border-input bg-background ps-3 pe-3 text-sm transition-colors focus-visible:border-primary-600 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
               >
-                <option value="INR">INR — Indian Rupee</option>
-                <option value="AED">AED — UAE Dirham</option>
-                <option value="SAR">SAR — Saudi Riyal</option>
-                <option value="USD">USD — US Dollar</option>
+                {CURRENCIES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.code} — {c.name}
+                  </option>
+                ))}
               </select>
             </Field>
             <p className="text-xs text-neutral-600">{t('salaryNote')}</p>
@@ -218,6 +247,7 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
               variant="secondary"
               size="sm"
               loading={salarySaving}
+              disabled={salaryRangeInvalid}
               onClick={saveSalary}
               className="min-h-10 self-start rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] px-5 text-white shadow-sm transition-all hover:shadow-md"
             >

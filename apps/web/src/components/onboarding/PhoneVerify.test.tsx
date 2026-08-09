@@ -60,9 +60,7 @@ describe('PhoneVerify — honest send failures (CR-WA W1.6)', () => {
     // Maps to +919555555555 → 409 PHONE_ALREADY_IN_USE from the send endpoint.
     await submit('9555555555');
 
-    await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent(/already registered/i),
-    );
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/already registered/i));
     // Rejected BEFORE the OTP step — no code to type.
     expect(screen.getByLabelText(/mobile number/i)).toBeInTheDocument();
   });

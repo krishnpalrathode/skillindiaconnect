@@ -36,6 +36,9 @@ export function ProfileHero({ profile, completion }: ProfileHeroProps) {
   const t = useTranslations('profile.hero');
 
   const [resumeBusy, setResumeBusy] = useState(false);
+  // Separate from resumeBusy so sharing doesn't put the Download button into a
+  // spinner (and vice versa) — they run the same pipeline but are two actions.
+  const [shareBusy, setShareBusy] = useState(false);
   const [resumeError, setResumeError] = useState(false);
 
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -51,33 +54,83 @@ export function ProfileHero({ profile, completion }: ProfileHeroProps) {
    * before opening the freshly-signed PDF url — rendering is worker-side and
    * never synchronous. FAILED / timeout / network errors surface an inline retry.
    */
+  /**
+   * Make sure a rendered PDF exists, then mint a fresh short-lived signed url.
+   * Shared by Download and Share so the generate→poll logic lives in one place.
+   */
+  async function ensureResumeUrl(): Promise<string> {
+    const info = await getResume();
+    let ready = info.current?.status === 'READY';
+
+    if (!ready) {
+      await generateResume();
+      // ~40s ceiling: a 30s render × retries settles well inside this.
+      for (let i = 0; i < 20 && !ready; i++) {
+        await new Promise((r) => setTimeout(r, 2000));
+        const status = await getResumeStatus();
+        if (status.status === 'READY') ready = true;
+        else if (status.status === 'FAILED') throw new Error('render failed');
+      }
+      if (!ready) throw new Error('render timed out');
+    }
+
+    const { url } = await getResumeDownloadUrl();
+    return url;
+  }
+
   async function handleDownloadResume() {
     if (resumeBusy) return;
     setResumeBusy(true);
     setResumeError(false);
     try {
-      const info = await getResume();
-      let ready = info.current?.status === 'READY';
-
-      if (!ready) {
-        await generateResume();
-        // ~40s ceiling: a 30s render × retries settles well inside this.
-        for (let i = 0; i < 20 && !ready; i++) {
-          await new Promise((r) => setTimeout(r, 2000));
-          const status = await getResumeStatus();
-          if (status.status === 'READY') ready = true;
-          else if (status.status === 'FAILED') throw new Error('render failed');
-        }
-        if (!ready) throw new Error('render timed out');
-      }
-
-      // Re-mint a fresh short-lived signed url and hand it to the browser.
-      const { url } = await getResumeDownloadUrl();
+      const url = await ensureResumeUrl();
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch {
       setResumeError(true);
     } finally {
       setResumeBusy(false);
+    }
+  }
+
+  /**
+   * Share the candidate's resume PDF through the OS share sheet.
+   *
+   * There is deliberately NO public profile page to link to — `publicSlug` is a
+   * dormant column with no endpoint, and exposing profile data at a guessable
+   * URL would sit outside the viewer-aware privacy rules. The resume IS the
+   * shareable form of the profile: the candidate already controls exactly which
+   * fields it carries via Resume Settings, so sharing the FILE leaks nothing the
+   * candidate has not opted into.
+   *
+   * Sharing the file rather than the signed url on purpose — that url is
+   * short-lived, so a shared link would break for the recipient soon after.
+   * Where file sharing is unavailable (most desktop browsers) it falls back to
+   * opening the PDF so the user can attach it themselves.
+   */
+  async function handleShareProfile() {
+    if (shareBusy) return;
+    setShareBusy(true);
+    setResumeError(false);
+    try {
+      const url = await ensureResumeUrl();
+      const blob = await (await fetch(url)).blob();
+      const file = new File([blob], `${profile.fullName || 'resume'}.pdf`, {
+        type: 'application/pdf',
+      });
+
+      const nav = navigator as Navigator & { canShare?: (d?: ShareData) => boolean };
+      if (nav.canShare?.({ files: [file] })) {
+        await nav.share({ files: [file], title: profile.fullName ?? undefined });
+      } else {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (err) {
+      // Dismissing the OS share sheet rejects with AbortError — a deliberate
+      // cancel is not a failure and must not surface an error message.
+      if ((err as Error)?.name === 'AbortError') return;
+      setResumeError(true);
+    } finally {
+      setShareBusy(false);
     }
   }
 
@@ -251,18 +304,23 @@ export function ProfileHero({ profile, completion }: ProfileHeroProps) {
             {resumeBusy ? t('preparingResume') : t('downloadResume')}
           </Button>
 
-          {/* Share profile — Phase 2 feature (public slug/page not built; no public endpoint) */}
+          {/* Share profile — hands the resume PDF to the OS share sheet. */}
           <Button
             type="button"
             variant="outline"
             size="sm"
-            disabled
-            title={t('comingSoon')}
-            aria-label={`${t('shareProfile')} — ${t('comingSoon')}`}
+            onClick={handleShareProfile}
+            disabled={shareBusy}
+            aria-label={t('shareProfile')}
+            aria-busy={shareBusy}
             className="min-h-10 gap-1.5 rounded-xl px-4"
           >
-            <Share2 className="size-3.5" aria-hidden="true" />
-            {t('shareProfile')}
+            {shareBusy ? (
+              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <Share2 className="size-3.5" aria-hidden="true" />
+            )}
+            {shareBusy ? t('preparingResume') : t('shareProfile')}
           </Button>
         </div>
 

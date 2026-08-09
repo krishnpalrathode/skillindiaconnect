@@ -2,9 +2,22 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { CheckCircle2 } from 'lucide-react';
+import {
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  Flag,
+  HeartHandshake,
+  Landmark,
+  Languages,
+  MapPin,
+  Phone,
+  User,
+  type LucideIcon,
+} from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
 import { EditableSection } from '@/components/profile/EditableSection';
@@ -21,13 +34,61 @@ interface PersonalInfoSectionProps {
   onCompletionRefetch: () => Promise<void>;
 }
 
-function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
+/**
+ * One field as a tile: icon chip, label, value.
+ *
+ * This was a bare label-over-value pair in a two-column list, which at a glance
+ * was an undifferentiated wall of small grey text — nothing to scan by. The icon
+ * gives each field a landmark, and an EMPTY field becomes a button that opens
+ * the edit form rather than rendering a dead "—": on a 20%-complete profile most
+ * of this grid is empty, and every one of those dashes is something the
+ * candidate needs to fill in to reach the 70% apply threshold.
+ */
+function InfoRow({
+  label,
+  value,
+  icon: Icon,
+  onAdd,
+  addLabel,
+}: {
+  label: string;
+  value: React.ReactNode;
+  icon: LucideIcon;
+  onAdd?: () => void;
+  addLabel: string;
+}) {
+  const filled = Boolean(value);
+
   return (
-    <div className="flex flex-col gap-1">
-      <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-600">{label}</dt>
-      <dd className="text-sm font-medium text-neutral-900">
-        {value || <span className="font-normal text-neutral-600">—</span>}
-      </dd>
+    <div className="flex items-start gap-3 rounded-xl border border-neutral-200/60 bg-neutral-50/40 p-3 transition-colors hover:border-neutral-200 hover:bg-white">
+      <span
+        className={cn(
+          'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors',
+          filled ? 'bg-[#E8F0FE] text-[#0F3D91]' : 'bg-neutral-100 text-neutral-600',
+        )}
+        aria-hidden="true"
+      >
+        <Icon className="size-4" />
+      </span>
+
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-600">{label}</dt>
+        <dd className="text-sm font-semibold text-neutral-900">
+          {filled ? (
+            value
+          ) : onAdd ? (
+            <button
+              type="button"
+              onClick={onAdd}
+              className="rounded font-medium text-[#0F3D91] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+            >
+              {addLabel}
+            </button>
+          ) : (
+            <span className="font-normal text-neutral-600">—</span>
+          )}
+        </dd>
+      </div>
     </div>
   );
 }
@@ -100,8 +161,11 @@ export function PersonalInfoSection({
   ) => setDraft((d) => ({ ...d, [key]: value }));
 
   const viewContent = (
-    <dl className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
+    <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <InfoRow
+        icon={Phone}
+        onAdd={openEdit}
+        addLabel={t('addValue')}
         label={t('phoneLabel')}
         value={
           profile.phone ? (
@@ -119,17 +183,59 @@ export function PersonalInfoSection({
           ) : null
         }
       />
-      <InfoRow label={t('dobLabel')} value={profile.dob ?? null} />
-      <InfoRow label={t('fatherNameLabel')} value={profile.fatherName ?? null} />
       <InfoRow
+        icon={CalendarDays}
+        onAdd={openEdit}
+        addLabel={t('addValue')}
+        label={t('dobLabel')}
+        value={profile.dob ?? null}
+      />
+      <InfoRow
+        icon={User}
+        onAdd={openEdit}
+        addLabel={t('addValue')}
+        label={t('fatherNameLabel')}
+        value={profile.fatherName ?? null}
+      />
+      <InfoRow
+        icon={HeartHandshake}
+        onAdd={openEdit}
+        addLabel={t('addValue')}
         label={t('maritalStatusLabel')}
         value={profile.maritalStatus ? MARITAL_STATUS_LABELS[profile.maritalStatus] : null}
       />
-      <InfoRow label={t('religionLabel')} value={profile.religion ?? null} />
-      <InfoRow label={t('languagesLabel')} value={(profile.languages ?? []).join(', ') || null} />
-      <InfoRow label={t('nationalityLabel')} value={profile.nationality ?? null} />
-      <InfoRow label={t('locationLabel')} value={profile.currentLocation ?? null} />
       <InfoRow
+        icon={Landmark}
+        onAdd={openEdit}
+        addLabel={t('addValue')}
+        label={t('religionLabel')}
+        value={profile.religion ?? null}
+      />
+      <InfoRow
+        icon={Languages}
+        onAdd={openEdit}
+        addLabel={t('addValue')}
+        label={t('languagesLabel')}
+        value={(profile.languages ?? []).join(', ') || null}
+      />
+      <InfoRow
+        icon={Flag}
+        onAdd={openEdit}
+        addLabel={t('addValue')}
+        label={t('nationalityLabel')}
+        value={profile.nationality ?? null}
+      />
+      <InfoRow
+        icon={MapPin}
+        onAdd={openEdit}
+        addLabel={t('addValue')}
+        label={t('locationLabel')}
+        value={profile.currentLocation ?? null}
+      />
+      <InfoRow
+        icon={Clock}
+        onAdd={openEdit}
+        addLabel={t('addValue')}
         label={t('noticePeriodLabel')}
         value={profile.noticePeriod ? t('noticePeriodUnit', { days: profile.noticePeriod }) : null}
       />

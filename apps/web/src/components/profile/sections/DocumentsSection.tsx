@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { FileText, Video } from 'lucide-react';
+import { FileText, Upload, Video } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Badge } from '@/components/ui/badge';
 import { Field } from '@/components/ui/field';
@@ -117,10 +117,32 @@ export function DocumentsSection({
             {doc ? (
               <DocRow doc={doc} label={label} />
             ) : (
-              <div className="flex flex-col gap-0.5 rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/40 p-4">
-                <p className="text-sm font-semibold text-neutral-700">{label}</p>
-                <p className="text-xs text-neutral-600">{t('notUploaded')}</p>
-              </div>
+              /*
+                A missing document is the one row a candidate needs to ACT on, and
+                it used to be an inert div — the only way to upload was to spot the
+                small "Edit" link in the section header, so the page read as
+                "documents don't work". The row is now the button that opens the
+                upload form.
+              */
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="group flex w-full items-center gap-3 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50/40 p-4 text-start transition-colors hover:border-[#0F3D91]/50 hover:bg-[#E8F0FE]/40 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+              >
+                <span
+                  className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600 transition-colors group-hover:bg-[#E8F0FE] group-hover:text-[#0F3D91]"
+                  aria-hidden="true"
+                >
+                  <Upload className="size-4" />
+                </span>
+                <span className="flex min-w-0 flex-col gap-0.5">
+                  <span className="text-sm font-semibold text-neutral-700">{label}</span>
+                  <span className="text-xs text-neutral-600">{t('notUploaded')}</span>
+                </span>
+                <span className="ms-auto shrink-0 text-sm font-semibold text-[#0F3D91]">
+                  {t('uploadNow')}
+                </span>
+              </button>
             )}
           </div>
         );
@@ -173,7 +195,18 @@ export function DocumentsSection({
               </div>
             )}
             {isPassport && (
-              <Field id="profile-passport-expiry" label={tUpload('passportExpiryLabel')} required>
+              <Field
+                id="profile-passport-expiry"
+                label={tUpload('passportExpiryLabel')}
+                required
+                /*
+                  The passport dropzone is disabled until this is filled. Without
+                  saying so ON the field, clicking the dropzone just did nothing
+                  and the upload looked broken — so the reason lives here, where
+                  the blocking input is, not only in the dropzone's hint.
+                */
+                hint={needsExpiry ? tUpload('passportExpiryRequired') : undefined}
+              >
                 <Input
                   className="h-12 rounded-xl"
                   type="date"
