@@ -166,7 +166,8 @@
     "settingsSaved": "تم حفظ الإعدادات بنجاح",
     "exportStarted": "تم تنزيل التصدير بنجاح",
     "actionFailed": "لم تنجح العملية. يرجى المحاولة مرة أخرى.",
-    "jobArchived": "تمت أرشفة الوظيفة"
+    "jobArchived": "تمت أرشفة الوظيفة",
+    "otpSent": "تم إرسال رمز التحقق بنجاح"
   },
   "field": {
     "requiredError": "[ar] This field is required",

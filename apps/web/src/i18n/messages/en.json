@@ -166,7 +166,8 @@
     "settingsSaved": "Settings saved successfully",
     "exportStarted": "Export downloaded successfully",
     "actionFailed": "That didn't work. Please try again.",
-    "jobArchived": "Job archived"
+    "jobArchived": "Job archived",
+    "otpSent": "OTP sent successfully"
   },
   "field": {
     "requiredError": "This field is required",

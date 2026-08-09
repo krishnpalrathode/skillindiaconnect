@@ -166,7 +166,8 @@
     "settingsSaved": "सेटिंग्स सफलतापूर्वक सहेजी गईं",
     "exportStarted": "एक्सपोर्ट सफलतापूर्वक डाउनलोड हुआ",
     "actionFailed": "यह काम नहीं कर सका। कृपया फिर से प्रयास करें।",
-    "jobArchived": "नौकरी संग्रहीत की गई"
+    "jobArchived": "नौकरी संग्रहीत की गई",
+    "otpSent": "OTP सफलतापूर्वक भेजा गया"
   },
   "field": {
     "requiredError": "[hi] This field is required",

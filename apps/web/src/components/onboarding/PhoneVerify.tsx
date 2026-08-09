@@ -6,6 +6,7 @@ import { CheckCircle2, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
+import { useToast } from '@/components/ui/toast';
 import { OtpEntry } from '@/components/auth/OtpEntry';
 import { postOtpSend, postOtpVerify } from '@/lib/api/candidate';
 import { ApiRequestError } from '@/lib/api/client';
@@ -40,6 +41,8 @@ export function PhoneVerify({
   onVerified,
 }: PhoneVerifyProps) {
   const t = useTranslations('onboarding.personalInfo');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
 
   const [stage, setStage] = useState<Stage>(alreadyVerified ? 'verified' : 'input');
   const [phone, setPhone] = useState(initialPhone);
@@ -71,6 +74,18 @@ export function PhoneVerify({
       setStage('otp');
       setOtpKey((k) => k + 1);
       startCooldown();
+      /*
+        Fires only AFTER the 200 — every failure path below throws before
+        reaching here, so this can never claim a code was dispatched when it
+        was not (the W1.5/W1.6 lesson two layers down).
+
+        It complements rather than repeats the inline copy: the toast confirms
+        the SEND happened, the text under the field tells you what to do next.
+        It also covers Resend, where the stage does not change and the inline
+        text was already on screen — so without this, a resend gave no signal
+        at all that anything had happened.
+      */
+      showToast({ message: tToast('otpSent') });
     } catch (err) {
       /**
        * CR-WA W1.6 — the UI half of W1.5.
@@ -118,7 +133,7 @@ export function PhoneVerify({
     } finally {
       setLoading(false);
     }
-  }, [phone, startCooldown, t]);
+  }, [phone, startCooldown, t, showToast, tToast]);
 
   const handleOtpComplete = useCallback(
     async (code: string) => {
