@@ -10,6 +10,7 @@ import { PermissionGate } from '@/components/admin/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
+import { useToast } from '@/components/ui/toast';
 
 const MAX_NOTE_LENGTH = 2000;
 
@@ -25,6 +26,8 @@ const MAX_NOTE_LENGTH = 2000;
  */
 export function NotesPanel({ applicationId }: { applicationId: string }) {
   const t = useTranslations('admin.applications.notes');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
   const [notes, setNotes] = useState<NoteEntry[] | null>(null);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
@@ -50,6 +53,7 @@ export function NotesPanel({ applicationId }: { applicationId: string }) {
       await addNote(applicationId, draft.trim());
       setDraft('');
       void load();
+      showToast({ message: tToast('notesSaved') });
     } catch {
       setNote(t('addFailed'));
     } finally {
@@ -62,6 +66,7 @@ export function NotesPanel({ applicationId }: { applicationId: string }) {
     try {
       await deleteNote(applicationId, noteId);
       void load();
+      showToast({ message: tToast('documentDeleted') });
     } catch (err) {
       if (err instanceof ApiRequestError && err.error.code === 'NOT_NOTE_AUTHOR') {
         // The server's authorship rule, rendered calmly.

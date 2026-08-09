@@ -127,34 +127,54 @@ function offsetPaginate<T>(
   };
 }
 
-function cursorPaginate<T extends { createdAt: string; id?: string }>(
-  items: T[],
-  cursor: string | null,
-  limit: number,
-  options?: {
-    /** Defaults to createdAt descending (original behavior). */
-    compare?: (a: T, b: T) => number;
-    /** Defaults to createdAt. Must be unique per sorted position to dedupe correctly across pages. */
-    cursorKey?: (item: T) => string;
-  },
-): { data: T[]; nextCursor: string | null } {
-  const compare =
-    options?.compare ??
-    ((a: T, b: T) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  const cursorKey = options?.cursorKey ?? ((item: T) => item.createdAt);
+/**
+ * `sort=field:dir` support for the mock handlers.
+ *
+ * Mirrors the API's whitelist behaviour so a test that sorts sees the same thing
+ * a browser would: an unknown field CLAMPS to the endpoint default rather than
+ * erroring, and the applied sort is echoed back in `meta.sort`.
+ */
+type SortAccessor<T> = (row: T) => string | number | null | undefined;
 
-  const sorted = [...items].sort(compare);
-  let startIdx = 0;
-  if (cursor) {
-    const decoded = atob(cursor);
-    const idx = sorted.findIndex((item) => cursorKey(item) === decoded);
-    startIdx = idx === -1 ? 0 : idx + 1;
-  }
-  const page = sorted.slice(startIdx, startIdx + limit);
-  const nextCursor =
-    startIdx + limit < sorted.length ? btoa(cursorKey(page[page.length - 1]!)) : null;
-  return { data: page, nextCursor };
+function applySort<T>(
+  rows: T[],
+  raw: string | null,
+  accessors: Record<string, SortAccessor<T>>,
+  fallback: string,
+): { rows: T[]; applied: string } {
+  const [rawField, rawDir] = (raw ?? fallback).split(':');
+  const [fbField, fbDir] = fallback.split(':');
+
+  const field = rawField && rawField in accessors ? rawField : (fbField as string);
+  const dir = rawDir === 'asc' || rawDir === 'desc' ? rawDir : fbDir === 'asc' ? 'asc' : 'desc';
+  const get = accessors[field];
+
+  const sorted = [...rows].sort((a, b) => {
+    const av = get ? get(a) : null;
+    const bv = get ? get(b) : null;
+    // Nulls last regardless of direction — an absent value is not "smallest".
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    const cmp =
+      typeof av === 'number' && typeof bv === 'number'
+        ? av - bv
+        : String(av).localeCompare(String(bv));
+    return dir === 'asc' ? cmp : -cmp;
+  });
+
+  return { rows: sorted, applied: `${field}:${dir}` };
 }
+
+/** Reads `?page=&pageSize=`, clamped exactly as the API clamps them. */
+function readPaging(url: URL, defaultSize = 20, maxSize = 100): { page: number; pageSize: number } {
+  const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1', 10) || 1);
+  const raw = parseInt(url.searchParams.get('pageSize') ?? String(defaultSize), 10) || defaultSize;
+  return { page, pageSize: Math.min(maxSize, Math.max(1, raw)) };
+}
+
+const byCreatedAtDesc = (a: { createdAt: string }, b: { createdAt: string }) =>
+  new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 
 // ─── Auth handlers ────────────────────────────────────────────────────────────
 
@@ -810,8 +830,7 @@ const candidateMeNotifications = http.get(`${BASE}/candidates/me/notifications`,
   const url = new URL(request.url);
   const filter = url.searchParams.get('filter');
   const unreadOnly = url.searchParams.get('unread') === 'true';
-  const cursor = url.searchParams.get('cursor');
-  const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
+  const { page, pageSize } = readPaging(url);
 
   // Mirror the backend FILTER_BUCKETS (apps/api/.../list-notifications.dto.ts).
   const filterMap: Record<string, string[]> = {
@@ -837,8 +856,7 @@ const candidateMeNotifications = http.get(`${BASE}/candidates/me/notifications`,
     notifs = notifs.filter((n) => !n.read);
   }
 
-  const { data, nextCursor } = cursorPaginate(notifs, cursor, limit);
-  return HttpResponse.json({ data, nextCursor });
+  return HttpResponse.json(offsetPaginate([...notifs].sort(byCreatedAtDesc), page, pageSize));
 });
 
 const candidateMeNotificationsRead = http.post(
@@ -885,14 +903,12 @@ const employerMeNotifications = http.get(`${BASE}/employers/me/notifications`, (
 
   const url = new URL(request.url);
   const unreadOnly = url.searchParams.get('unread') === 'true';
-  const cursor = url.searchParams.get('cursor');
-  const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
+  const { page, pageSize } = readPaging(url);
 
   let notifs = db.notifications.get(user.id) ?? [];
   if (unreadOnly) notifs = notifs.filter((n) => !n.read);
 
-  const { data, nextCursor } = cursorPaginate(notifs, cursor, limit);
-  return HttpResponse.json({ data, nextCursor });
+  return HttpResponse.json(offsetPaginate([...notifs].sort(byCreatedAtDesc), page, pageSize));
 });
 
 const employerMeNotificationsRead = http.post(
@@ -1411,8 +1427,7 @@ const getJobs = http.get(`${BASE}/jobs`, ({ request }) => {
   const badge = url.searchParams.get('badge');
   const q = url.searchParams.get('q')?.toLowerCase();
   const sort = url.searchParams.get('sort') ?? 'recent';
-  const cursor = url.searchParams.get('cursor');
-  const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
+  const { page, pageSize } = readPaging(url);
 
   const authUser = getAuthUser(request);
   const savedJobIds = authUser ? (db.savedJobs.get(authUser.id) ?? new Set<string>()) : null;
@@ -1441,19 +1456,10 @@ const getJobs = http.get(`${BASE}/jobs`, ({ request }) => {
     sort === 'salary'
       ? (a: (typeof cards)[number], b: (typeof cards)[number]) =>
           (b.salaryMax ?? b.salaryMin ?? 0) - (a.salaryMax ?? a.salaryMin ?? 0)
-      : undefined;
-  const cursorKey =
-    sort === 'salary'
-      ? (item: (typeof cards)[number]) => `${item.salaryMax ?? item.salaryMin ?? 0}|${item.id}`
-      : undefined;
+      : byCreatedAtDesc;
 
-  const { data, nextCursor } = cursorPaginate(
-    cards as ((typeof cards)[0] & { createdAt: string })[],
-    cursor,
-    limit,
-    { compare, cursorKey },
-  );
-  return HttpResponse.json({ data, nextCursor });
+  const sorted = [...(cards as ((typeof cards)[0] & { createdAt: string })[])].sort(compare);
+  return HttpResponse.json(offsetPaginate(sorted, page, pageSize));
 });
 
 const getJobById = http.get(`${BASE}/jobs/:id`, ({ request, params }) => {
@@ -1485,6 +1491,10 @@ const MOCK_JOB_CATEGORIES = [
   { id: 'cat-mason', slug: 'mason', nameEn: 'Mason', nameHi: null, nameAr: null },
   { id: 'cat-plumber', slug: 'plumber', nameEn: 'Plumber', nameHi: null, nameAr: null },
   { id: 'cat-welder', slug: 'welder', nameEn: 'Welder', nameHi: null, nameAr: null },
+  // Kept LAST, matching the real endpoint's pinned ordering — the job form
+  // finds this row by slug, so a mock that omitted it would silently never
+  // render the free-text field the real API expects.
+  { id: 'cat-other', slug: 'other', nameEn: 'Other', nameHi: null, nameAr: null },
 ];
 
 const getJobCategories = http.get(`${BASE}/job-categories`, () =>
@@ -1533,6 +1543,7 @@ const postJobs = http.post(`${BASE}/employers/me/jobs`, async ({ request }) => {
     location: body.location,
     description: body.description,
     categoryId: body.categoryId ?? null,
+    categoryOther: body.categoryOther ?? null,
     salaryMin: body.salaryMin ?? null,
     salaryMax: body.salaryMax ?? null,
     // Store both keys so public (salaryCurrency) and employer (currency) reads agree.
@@ -1823,8 +1834,21 @@ const adminGetEmployers = http.get(`${BASE}/admin/employers`, ({ request }) => {
   if (statusFilter) companies = companies.filter((c) => c.status === statusFilter);
   if (typeFilter) companies = companies.filter((c) => c.type === typeFilter);
 
-  const result = offsetPaginate(companies, page, pageSize);
-  return HttpResponse.json(result);
+  // Same whitelist as EMPLOYER_QUEUE_SORT on the server, so a test that sorts
+  // exercises the real contract rather than a mock-only ordering.
+  const { rows, applied } = applySort(
+    companies,
+    url.searchParams.get('sort'),
+    {
+      name: (c) => c.name,
+      status: (c) => c.status,
+      created: (c) => c.createdAt,
+    },
+    'created:desc',
+  );
+
+  const result = offsetPaginate(rows, page, pageSize);
+  return HttpResponse.json({ ...result, meta: { ...result.meta, sort: applied } });
 });
 
 // ADDED IN S6a-F2 with its contract entry: the review detail fetches ONE company.
@@ -2266,8 +2290,7 @@ const employersCandidatesBrowse = http.get(`${BASE}/employers/candidates`, ({ re
   const hasForeign = url.searchParams.get('hasForeignExperience');
   const availability = url.searchParams.get('availability');
   const q = url.searchParams.get('q')?.toLowerCase();
-  const cursor = url.searchParams.get('cursor');
-  const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '20', 10), 100);
+  const { page, pageSize } = readPaging(url);
 
   let results = [...db.candidates.values()].filter((mc) => mc.profile.profileVisible !== false);
 
@@ -2299,9 +2322,112 @@ const employersCandidatesBrowse = http.get(`${BASE}/employers/candidates`, ({ re
     });
   }
 
-  const cards = results.map((mc) => toCandidateBrowseCard(mc));
-  return HttpResponse.json(cursorPaginate(cards, cursor, limit));
+  // Sort the SOURCE rows, not the cards: a browse card carries no timestamp
+  // (the real mapper emits none), so sorting cards by date compared undefineds.
+  // `id` is stable, which is all a fixture needs for deterministic paging.
+  const cards = [...results]
+    .sort((a, b) => a.profile.id.localeCompare(b.profile.id))
+    .map((mc) => toCandidateBrowseCard(mc));
+  return HttpResponse.json(offsetPaginate(cards, page, pageSize));
 });
+
+// ─── Employer → candidate interest (shortlist + outreach) ────────────────────
+
+/**
+ * In-memory interest store for the mock, keyed `companyId::candidateId`.
+ * Mirrors the real unique constraint on (companyId, candidateId).
+ */
+const mockInterests = new Map<string, { createdAt: string; notifiedAt: string | null }>();
+
+const employersMarkInterest = http.post(
+  `${BASE}/employers/candidates/:id/interest`,
+  ({ request, params }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+    const company = db.employers.get(user.id);
+    if (!company) return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Employer only.');
+
+    const key = `${company.id}::${params.id as string}`;
+    // Idempotent: re-marking must not reset notifiedAt.
+    if (!mockInterests.has(key)) {
+      mockInterests.set(key, { createdAt: new Date().toISOString(), notifiedAt: null });
+    }
+    return HttpResponse.json({ data: { interestedAt: mockInterests.get(key)!.createdAt } });
+  },
+);
+
+const employersRemoveInterest = http.delete(
+  `${BASE}/employers/candidates/:id/interest`,
+  ({ request, params }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+    const company = db.employers.get(user.id);
+    if (company) mockInterests.delete(`${company.id}::${params.id as string}`);
+    return new HttpResponse(null, { status: 204 });
+  },
+);
+
+const employersInterestedList = http.get(
+  `${BASE}/employers/interested-candidates`,
+  ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+    const company = db.employers.get(user.id);
+    if (!company) return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Employer only.');
+
+    const url = new URL(request.url);
+    const { page, pageSize } = readPaging(url);
+    const prefix = `${company.id}::`;
+
+    const rows = [...mockInterests.entries()]
+      .filter(([k]) => k.startsWith(prefix))
+      .map(([k, v]) => {
+        const candidateId = k.slice(prefix.length);
+        const mc = [...db.candidates.values()].find((c) => c.profile.id === candidateId);
+        if (!mc) return null;
+        return {
+          ...toCandidateBrowseCard(mc),
+          interestedAt: v.createdAt,
+          notifiedAt: v.notifiedAt,
+        };
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null);
+
+    return HttpResponse.json(offsetPaginate(rows, page, pageSize));
+  },
+);
+
+const employersNotifyInterest = http.post(
+  `${BASE}/employers/interested-candidates/notify`,
+  async ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+    const company = db.employers.get(user.id);
+    if (!company) return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'Employer only.');
+
+    const body = (await request.json()) as { candidateIds?: string[] };
+    const ids = body?.candidateIds ?? [];
+
+    let queued = 0;
+    let skipped = 0;
+    for (const id of ids) {
+      const row = mockInterests.get(`${company.id}::${id}`);
+      // Not marked, or already contacted → skipped. The server never messages
+      // the same candidate twice for one company.
+      if (!row || row.notifiedAt) {
+        skipped++;
+        continue;
+      }
+      row.notifiedAt = new Date().toISOString();
+      queued++;
+    }
+    return HttpResponse.json({ data: { queued, skipped } }, { status: 202 });
+  },
+);
 
 const employersCandidateView = http.get(
   `${BASE}/employers/candidates/:id`,
@@ -2404,26 +2530,6 @@ function pushNotification(
     ...n,
   } as import('./data').MockNotification);
   db.notifications.set(userId, list);
-}
-
-// Local cursor slice for lists whose items lack a `createdAt` key (applications
-// key on `appliedAt`/`id`). Mirrors cursorPaginate's opaque-base64 contract.
-function cursorSlice<T>(
-  sorted: T[],
-  cursor: string | null,
-  limit: number,
-  keyOf: (t: T) => string,
-): { data: T[]; nextCursor: string | null } {
-  let start = 0;
-  if (cursor) {
-    const decoded = atob(cursor);
-    const idx = sorted.findIndex((x) => keyOf(x) === decoded);
-    start = idx === -1 ? 0 : idx + 1;
-  }
-  const data = sorted.slice(start, start + limit);
-  const nextCursor =
-    start + limit < sorted.length && data.length > 0 ? btoa(keyOf(data[data.length - 1]!)) : null;
-  return { data, nextCursor };
 }
 
 // POST /jobs/:id/apply — the apply-gate ladder + match snapshot.
@@ -2545,8 +2651,7 @@ const getJobApplicants = http.get(`${BASE}/jobs/:id/applicants`, ({ request, par
     return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'You do not own this job.');
 
   const url = new URL(request.url);
-  const cursor = url.searchParams.get('cursor');
-  const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
+  const { page, pageSize } = readPaging(url);
   const statusFilter = url.searchParams.get('status');
   const sort = url.searchParams.get('sort') ?? 'match';
 
@@ -2558,10 +2663,10 @@ const getJobApplicants = http.get(`${BASE}/jobs/:id/applicants`, ({ request, par
       : b.matchScore - a.matchScore || a.id.localeCompare(b.id),
   );
 
-  const { data, nextCursor } = cursorSlice(apps, cursor, limit, (a) => a.id);
+  const paged = offsetPaginate(apps, page, pageSize);
   return HttpResponse.json({
-    data: data.map((a) => toApplicantCard(a)),
-    nextCursor,
+    data: paged.data.map((a) => toApplicantCard(a)),
+    meta: paged.meta,
     counts: computeApplicantCounts(job.id),
   });
 });
@@ -2678,16 +2783,18 @@ const candidateMeApplications = http.get(`${BASE}/candidates/me/applications`, (
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
 
   const url = new URL(request.url);
-  const cursor = url.searchParams.get('cursor');
-  const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
+  const { page, pageSize } = readPaging(url);
   const statusFilter = url.searchParams.get('status');
 
   let mine = [...db.applications.values()].filter((a) => a.candidateId === user.id);
   if (statusFilter) mine = mine.filter((a) => a.status === statusFilter);
   mine.sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime());
 
-  const { data, nextCursor } = cursorSlice(mine, cursor, limit, (a) => a.id);
-  return HttpResponse.json({ data: data.map((a) => toApplicationCard(a)), nextCursor });
+  const paged = offsetPaginate(mine, page, pageSize);
+  return HttpResponse.json({
+    data: paged.data.map((a) => toApplicationCard(a)),
+    meta: paged.meta,
+  });
 });
 
 // GET /candidates/me/applications/:id — candidate detail (timeline, no overrideReason).
@@ -4347,6 +4454,10 @@ export const handlers = [
   // S3: Candidate browse + view
   employersCandidatesBrowse,
   employersCandidateView,
+  employersMarkInterest,
+  employersRemoveInterest,
+  employersInterestedList,
+  employersNotifyInterest,
   // S3: Candidate profile views
   candidateMeProfileViews,
   // S4: Applications

@@ -34,7 +34,10 @@ export function CandidateViewHeader({ candidate, locale }: CandidateViewHeaderPr
 
   const labelKey = jobCategoryLabelKey(candidate.jobCategoryId);
   const categoryLabel = labelKey ? tc(labelKey) : null;
-  const memberSince = formatMonthYear(candidate.createdAt, locale);
+  // `memberSince`, NOT `createdAt` — the API has always emitted the former. The
+  // contract briefly claimed `createdAt`, so this compiled fine and then threw
+  // "Invalid time value" on every candidate open.
+  const memberSince = formatMonthYear(candidate.memberSince, locale);
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center">

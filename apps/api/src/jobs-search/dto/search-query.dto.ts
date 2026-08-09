@@ -77,15 +77,16 @@ export class SearchQueryDto {
   @IsIn(['relevance', 'recent', 'salary'])
   sort?: 'relevance' | 'recent' | 'salary';
 
-  /** Opaque base64url cursor from a previous response's nextCursor */
   @IsOptional()
-  @IsString()
-  cursor?: string;
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(50)
-  limit?: number;
+  pageSize?: number;
 }

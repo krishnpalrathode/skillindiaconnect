@@ -75,6 +75,9 @@ describe('JobLifecycleService — state machine', () => {
     const legal: Array<[JobStatus, JobStatus]> = [
       [JobStatus.DRAFT, JobStatus.PENDING_REVIEW],
       [JobStatus.DRAFT, JobStatus.ACTIVE],
+      // An employer must be able to retire a draft they will never publish —
+      // the Archive button on a draft row was dead until this was allowed.
+      [JobStatus.DRAFT, JobStatus.ARCHIVED],
       [JobStatus.PENDING_REVIEW, JobStatus.ACTIVE],
       [JobStatus.PENDING_REVIEW, JobStatus.ARCHIVED],
       [JobStatus.ACTIVE, JobStatus.PAUSED],
@@ -92,7 +95,6 @@ describe('JobLifecycleService — state machine', () => {
       [JobStatus.ARCHIVED, JobStatus.DRAFT],
       [JobStatus.ACTIVE, JobStatus.DRAFT],
       [JobStatus.PAUSED, JobStatus.DRAFT],
-      [JobStatus.DRAFT, JobStatus.ARCHIVED],
       [JobStatus.DRAFT, JobStatus.PAUSED],
     ];
 

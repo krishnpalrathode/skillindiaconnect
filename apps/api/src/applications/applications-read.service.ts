@@ -1,6 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Application, ApplicationStatus, Prisma } from '@prisma/client';
+import { ApplicationStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
+import { pageMeta, resolvePaging, type Paginated } from '../core/pagination';
+import { buildOrderBy, resolveSort } from '../core/sorting';
+import {
+  ADMIN_APPLICATION_SORT,
+  ADMIN_APPLICATION_SORT_DEFAULT,
+} from './dto/list-admin-applications.dto';
 import { JobsService } from '../jobs/jobs.service';
 import { CandidateReadService } from '../candidate/candidate-read.service';
 import { StorageService } from '../core/storage/storage.service';
@@ -49,23 +55,6 @@ export interface ApplicantCounts {
   rejected: number;
 }
 
-export interface CursorPage<T> {
-  data: T[];
-  nextCursor: string | null;
-}
-
-function encodeCursor(obj: Record<string, unknown>): string {
-  return Buffer.from(JSON.stringify(obj)).toString('base64url');
-}
-function decodeCursor<T>(cursor: string | undefined): T | null {
-  if (!cursor) return null;
-  try {
-    return JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as T;
-  } catch {
-    return null;
-  }
-}
-
 @Injectable()
 export class ApplicationsReadService {
   constructor(
@@ -77,36 +66,33 @@ export class ApplicationsReadService {
 
   // ── Candidate: GET /candidates/me/applications ──────────────────────────────
 
-  /** Cursor feed, newest first (createdAt DESC, id DESC — stable keyset). */
+  /** Offset page, newest first (createdAt DESC, id DESC — stable total ordering). */
   async listCandidateApplications(
     candidateId: string,
-    opts: { cursor?: string; limit?: number; status?: ApplicationStatus },
-  ): Promise<CursorPage<ApplicationCardDto>> {
-    const limit = Math.min(opts.limit ?? 20, 100);
-    const cur = decodeCursor<{ createdAt: string; id: string }>(opts.cursor);
+    opts: { page?: number; pageSize?: number; status?: ApplicationStatus },
+  ): Promise<Paginated<ApplicationCardDto>> {
+    const { page, pageSize, skip, take } = resolvePaging(opts.page, opts.pageSize);
 
-    const rows = await this.prisma.application.findMany({
-      where: {
-        candidateId,
-        ...(opts.status && { status: opts.status }),
-        ...(cur && {
-          OR: [
-            { createdAt: { lt: new Date(cur.createdAt) } },
-            { createdAt: new Date(cur.createdAt), id: { lt: cur.id } },
-          ],
-        }),
-      },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      take: limit + 1,
-    });
+    const where: Prisma.ApplicationWhereInput = {
+      candidateId,
+      ...(opts.status && { status: opts.status }),
+    };
 
-    const { page, nextCursor } = this.paginate(rows, limit, (a) => ({
-      createdAt: a.createdAt.toISOString(),
-      id: a.id,
-    }));
+    const [rows, total] = await Promise.all([
+      this.prisma.application.findMany({
+        where,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        skip,
+        take,
+      }),
+      this.prisma.application.count({ where }),
+    ]);
 
-    const jobs = await this.jobsService.getJobSubsets([...new Set(page.map((a) => a.jobId))]);
-    return { data: page.map((a) => toApplicationCard(a, jobs.get(a.jobId))), nextCursor };
+    const jobs = await this.jobsService.getJobSubsets([...new Set(rows.map((a) => a.jobId))]);
+    return {
+      data: rows.map((a) => toApplicationCard(a, jobs.get(a.jobId))),
+      meta: pageMeta(page, pageSize, total),
+    };
   }
 
   /** Candidate detail + shaped timeline. Own-application scoping → 404 otherwise. */
@@ -134,43 +120,40 @@ export class ApplicationsReadService {
 
   /**
    * Applicants for a job the caller's company owns (ownership checked by the
-   * caller with the resolved companyId). Cursor + match|recent sort + per-status
-   * counts. Each card COMPOSES the S3 employer-context subset (privacy inherited).
+   * caller with the resolved companyId). Offset page + match|recent sort +
+   * per-status counts. Each card COMPOSES the S3 employer-context subset
+   * (privacy inherited).
    */
   async listJobApplicants(
     jobId: string,
     callerCompanyId: string,
-    opts: { cursor?: string; limit?: number; status?: ApplicationStatus; sort?: ApplicantSort },
-  ): Promise<CursorPage<ApplicantCardDto> & { counts: ApplicantCounts }> {
+    opts: { page?: number; pageSize?: number; status?: ApplicationStatus; sort?: ApplicantSort },
+  ): Promise<Paginated<ApplicantCardDto> & { counts: ApplicantCounts }> {
     // Ownership: the job must belong to the caller's company → else 404.
     const job = await this.jobsService.getJobForApplication(jobId);
     if (job.companyId !== callerCompanyId) {
       throw new NotFoundException({ code: 'JOB_NOT_FOUND' });
     }
 
-    const limit = Math.min(opts.limit ?? 20, 100);
+    const { page: pageNum, pageSize, skip, take } = resolvePaging(opts.page, opts.pageSize);
     const sort: ApplicantSort = opts.sort === 'recent' ? 'recent' : 'match';
 
     const where: Prisma.ApplicationWhereInput = {
       jobId,
       ...(opts.status && { status: opts.status }),
-      ...this.applicantCursorWhere(sort, opts.cursor),
     };
     const orderBy: Prisma.ApplicationOrderByWithRelationInput[] =
       sort === 'recent'
         ? [{ createdAt: 'desc' }, { id: 'desc' }]
         : [{ matchScore: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }];
 
-    const [rows, grouped] = await Promise.all([
-      this.prisma.application.findMany({ where, orderBy, take: limit + 1 }),
+    const [rows, total, grouped] = await Promise.all([
+      this.prisma.application.findMany({ where, orderBy, skip, take }),
+      this.prisma.application.count({ where }),
       this.prisma.application.groupBy({ by: ['status'], where: { jobId }, _count: { _all: true } }),
     ]);
 
-    const { page, nextCursor } = this.paginate(rows, limit, (a) =>
-      sort === 'recent'
-        ? { createdAt: a.createdAt.toISOString(), id: a.id }
-        : { matchScore: a.matchScore, createdAt: a.createdAt.toISOString(), id: a.id },
-    );
+    const page = rows;
 
     // Batch-resolve candidate subjects (one query) + presign photos in parallel.
     const candidateIds = [...new Set(page.map((a) => a.candidateId).filter((x): x is string => !!x))];
@@ -188,7 +171,7 @@ export class ApplicationsReadService {
       return toApplicantCard(a, view);
     });
 
-    return { data, nextCursor, counts: this.foldCounts(grouped) };
+    return { data, meta: pageMeta(pageNum, pageSize, total), counts: this.foldCounts(grouped) };
   }
 
   // ── Admin: GET /admin/applications ──────────────────────────────────────────
@@ -200,9 +183,14 @@ export class ApplicationsReadService {
     status?: ApplicationStatus;
     jobId?: string;
     search?: string;
-  }): Promise<{ data: AdminApplicationCardDto[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }> {
+    sort?: string;
+  }): Promise<{
+    data: AdminApplicationCardDto[];
+    meta: { page: number; pageSize: number; total: number; totalPages: number; sort: string };
+  }> {
     const page = Math.max(1, opts.page ?? 1);
     const pageSize = Math.min(100, opts.pageSize ?? 20);
+    const sort = resolveSort(opts.sort, ADMIN_APPLICATION_SORT, ADMIN_APPLICATION_SORT_DEFAULT);
 
     let searchIds: string[] | undefined;
     if (opts.search) {
@@ -223,7 +211,7 @@ export class ApplicationsReadService {
     const [rows, total] = await Promise.all([
       this.prisma.application.findMany({
         where,
-        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        orderBy: buildOrderBy(sort, ADMIN_APPLICATION_SORT),
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),
@@ -245,7 +233,16 @@ export class ApplicationsReadService {
       overrideReason: overrideReasons.get(a.id) ?? null,
     }));
 
-    return { data, meta: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) } };
+    return {
+      data,
+      meta: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+        sort: sort.applied,
+      },
+    };
   }
 
   // ── Admin: GET /admin/applications/{id} (0.8.1) ─────────────────────────────
@@ -307,40 +304,6 @@ export class ApplicationsReadService {
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
-
-  private paginate<T extends Application>(
-    rows: T[],
-    limit: number,
-    keyOf: (a: T) => Record<string, unknown>,
-  ): { page: T[]; nextCursor: string | null } {
-    const hasMore = rows.length > limit;
-    const pageRows = hasMore ? rows.slice(0, limit) : rows;
-    const nextCursor =
-      hasMore && pageRows.length > 0 ? encodeCursor(keyOf(pageRows[pageRows.length - 1]!)) : null;
-    return { page: pageRows, nextCursor };
-  }
-
-  private applicantCursorWhere(sort: ApplicantSort, cursor: string | undefined): Prisma.ApplicationWhereInput {
-    if (sort === 'recent') {
-      const c = decodeCursor<{ createdAt: string; id: string }>(cursor);
-      if (!c) return {};
-      return {
-        OR: [
-          { createdAt: { lt: new Date(c.createdAt) } },
-          { createdAt: new Date(c.createdAt), id: { lt: c.id } },
-        ],
-      };
-    }
-    const c = decodeCursor<{ matchScore: number; createdAt: string; id: string }>(cursor);
-    if (!c) return {};
-    return {
-      OR: [
-        { matchScore: { lt: c.matchScore } },
-        { matchScore: c.matchScore, createdAt: { lt: new Date(c.createdAt) } },
-        { matchScore: c.matchScore, createdAt: new Date(c.createdAt), id: { lt: c.id } },
-      ],
-    };
-  }
 
   private foldCounts(
     grouped: { status: ApplicationStatus; _count: { _all: number } }[],

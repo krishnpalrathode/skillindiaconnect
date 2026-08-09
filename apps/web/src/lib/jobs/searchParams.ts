@@ -74,7 +74,7 @@ export function parseJobSearchParams(params: RawSearchParams): JobSearchFilters 
  */
 export function buildJobSearchQuery(
   filters: JobSearchFilters,
-  extra?: { cursor?: string | null; limit?: number },
+  extra?: { page?: number | null; pageSize?: number },
 ): string {
   const params = new URLSearchParams();
   if (filters.market) params.set('market', filters.market);
@@ -85,9 +85,16 @@ export function buildJobSearchQuery(
   if (filters.currency) params.set('currency', filters.currency);
   if (filters.q) params.set('q', filters.q);
   if (filters.sort !== DEFAULT_SORT) params.set('sort', filters.sort);
-  if (extra?.cursor) params.set('cursor', extra.cursor);
-  if (extra?.limit) params.set('limit', String(extra.limit));
+  // page=1 is the default — omitted so shared URLs stay clean.
+  if (extra?.page != null && extra.page > 1) params.set('page', String(extra.page));
+  if (extra?.pageSize) params.set('pageSize', String(extra.pageSize));
   return params.toString();
+}
+
+/** Reads the 1-based page number out of Next.js `searchParams`. */
+export function parsePageParam(params: RawSearchParams): number {
+  const n = parseNumber(first(params['page']));
+  return n != null && n >= 1 ? Math.floor(n) : 1;
 }
 
 /**

@@ -33,7 +33,7 @@ function applicant(overrides: Partial<ApplicantCardT> = {}): ApplicantCardT {
       { type: 'EXPERIENCE_CERT', uploaded: true },
       { type: 'EDUCATIONAL_CERT', uploaded: false },
     ],
-    createdAt: new Date().toISOString(),
+    memberSince: new Date().toISOString(),
     experiences: [
       {
         id: 'e1',
@@ -222,7 +222,7 @@ describe('MatchBreakdownPopover', () => {
       />,
     );
     await user.click(screen.getByRole('button', { name: /match breakdown/i }));
-    expect(screen.getByText(/not scored for local jobs/i)).toBeInTheDocument();
+    expect(screen.getByText(/not scored for jobs in india/i)).toBeInTheDocument();
   });
 });
 

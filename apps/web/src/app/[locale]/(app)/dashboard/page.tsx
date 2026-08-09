@@ -12,7 +12,7 @@ import { listNotifications } from '@/lib/api/notifications';
 import { searchJobsClient } from '@/lib/api/jobs';
 import { ApiRequestError } from '@/lib/api/client';
 import { EMPTY_FILTERS } from '@/lib/jobs/searchParams';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { KpiCards } from '@/components/dashboard/KpiCards';
 import { RecentViewersCard } from '@/components/dashboard/RecentViewersCard';
@@ -85,8 +85,8 @@ export default function DashboardPage() {
         const [statsResult, unreadResult, jobsResult, profileViewsResult] =
           await Promise.allSettled([
             getCandidateStats(),
-            listNotifications({ unread: true, limit: 50 }),
-            searchJobsClient(EMPTY_FILTERS, { limit: 4 }),
+            listNotifications({ unread: true, pageSize: 50 }),
+            searchJobsClient(EMPTY_FILTERS, { pageSize: 4 }),
             getProfileViews(),
           ]);
 
@@ -118,7 +118,7 @@ export default function DashboardPage() {
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Spinner size={32} label={t('pageTitle')} />
+        <BrandLoader size="lg" label={t('pageTitle')} />
       </div>
     );
   }

@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/format/date';
 import { CandidateStatusBadge, accountState } from './CandidateStatusBadge';
 import { daysUntil } from './DeletionStateBanner';
+import { SortableHeader } from '@/components/ui/sortable-header';
 
 /**
  * Screen 25's list. DELIBERATELY SEPARATE from the S3-F2 employer-context
@@ -50,6 +51,7 @@ export function CandidateTable() {
   const visibility = searchParams.get('visibility') ?? '';
   const search = searchParams.get('search') ?? '';
   const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1);
+  const sort = searchParams.get('sort') ?? undefined;
 
   const [rows, setRows] = useState<AdminCandidateCard[] | null>(null);
   const [meta, setMeta] = useState<CandidateListMeta | null>(null);
@@ -71,6 +73,10 @@ export function CandidateTable() {
     [pathname, searchParams],
   );
 
+  // Sorting re-orders the whole result set, so it resets to page 1 like any
+  // other filter change (setParam already drops `page`).
+  const onSort = useCallback((next: string) => setParam('sort', next), [setParam]);
+
   const load = useCallback(async () => {
     setRows(null);
     setError(null);
@@ -80,13 +86,14 @@ export function CandidateTable() {
         visibility: visibility === '' ? undefined : visibility === 'true',
         search: search || undefined,
         page,
+        sort,
       });
       setRows(result.data);
       setMeta(result.meta);
     } catch (err) {
       setError(err as Error);
     }
-  }, [activeTab, visibility, search, page]);
+  }, [activeTab, visibility, search, page, sort]);
 
   useEffect(() => {
     void load();
@@ -199,24 +206,24 @@ export function CandidateTable() {
             <caption className="sr-only">{t('tableCaption')}</caption>
             <thead>
               <tr className="border-b border-neutral-200">
-                <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
+                <SortableHeader field="name" current={sort} onSort={onSort}>
                   {t('col.candidate')}
-                </th>
+                </SortableHeader>
                 <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
                   {t('col.phone')}
                 </th>
-                <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
+                <SortableHeader field="completion" current={sort} onSort={onSort}>
                   {t('col.completion')}
-                </th>
+                </SortableHeader>
                 <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
                   {t('col.visibility')}
                 </th>
                 <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
                   {t('col.status')}
                 </th>
-                <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
+                <SortableHeader field="created" current={sort} onSort={onSort}>
                   {t('col.memberSince')}
-                </th>
+                </SortableHeader>
                 <th scope="col" className="p-3">
                   <span className="sr-only">{t('col.actions')}</span>
                 </th>

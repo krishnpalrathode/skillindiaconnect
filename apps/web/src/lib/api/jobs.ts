@@ -2,21 +2,19 @@ import type { components } from '@skillindiaconnect/shared-types';
 import { apiFetch, apiFetchRaw } from './client';
 import { serverFetch } from './server-fetch';
 import { buildJobSearchQuery, type JobSearchFilters } from '@/lib/jobs/searchParams';
+import type { PaginatedResult } from './pagination';
 
 export type JobCard = components['schemas']['JobCard'];
 export type JobDetail = components['schemas']['JobDetail'];
 
-export interface JobSearchResult {
-  data: JobCard[];
-  nextCursor: string | null;
-}
+export type JobSearchResult = PaginatedResult<JobCard>;
 
 /** SSR-only: first page of search results, fetched during Server Component render. */
 export async function searchJobsServer(
   filters: JobSearchFilters,
-  opts?: { limit?: number },
+  opts?: { page?: number; pageSize?: number },
 ): Promise<JobSearchResult> {
-  const qs = buildJobSearchQuery(filters, { limit: opts?.limit });
+  const qs = buildJobSearchQuery(filters, { page: opts?.page, pageSize: opts?.pageSize });
   return serverFetch<JobSearchResult>(`/jobs${qs ? `?${qs}` : ''}`);
 }
 
@@ -51,10 +49,10 @@ export async function getJobClient(id: string): Promise<JobDetail> {
   return apiFetch<JobDetail>(`/jobs/${encodeURIComponent(id)}`);
 }
 
-/** Client-side: subsequent pages for JobList's "Load more". */
+/** Client-side: a page of search results for JobList's pager. */
 export async function searchJobsClient(
   filters: JobSearchFilters,
-  opts: { cursor?: string | null; limit?: number },
+  opts: { page?: number; pageSize?: number },
 ): Promise<JobSearchResult> {
   const qs = buildJobSearchQuery(filters, opts);
   return apiFetchRaw<JobSearchResult>(`/jobs${qs ? `?${qs}` : ''}`);

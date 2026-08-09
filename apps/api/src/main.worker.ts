@@ -26,7 +26,7 @@ async function bootstrap(): Promise<void> {
   // event loop alive so the worker process stays running without an HTTP server.
   const redisClient = app.get<Redis>(REDIS_CLIENT);
 
-  console.log('SkillIndiaConnect Worker process started');
+  console.log('Skill India Connect Worker process started');
 
   // Graceful shutdown: drain in-flight work before the process exits.
   // Required for zero-downtime rolling deploys on Railway.

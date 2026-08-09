@@ -39,7 +39,7 @@ test.describe('My Applications', () => {
     // Receipt (field-driven) + the neutral admin-override line — and NO reason text.
     await expect(page.getByText(/notified on whatsapp/i)).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText(/application submitted/i)).toBeVisible();
-    await expect(page.getByText(/status updated by skillindiaconnect/i)).toBeVisible();
+    await expect(page.getByText(/status updated by skill india connect/i)).toBeVisible();
     await expect(page.getByText(/reinstated/i)).toHaveCount(0);
   });
 

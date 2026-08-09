@@ -68,9 +68,20 @@ export const NOTIFICATION_MATRIX: Record<NotificationType, MatrixEntry> = {
     email: true,
   },
   // ── Job discovery ─────────────────────────────────────────────────────────────
+  /**
+   * Profile-completion job-match alert (top 3 matches + a link to all of them).
+   *
+   * `whatsapp` is FALSE only because `job_match_alert` is not yet approved in
+   * WhatsApp Manager — `assertTemplateMappingComplete` would crash the worker at
+   * boot otherwise, which is the intended behaviour, not a bug to route around.
+   * The template key below is already wired and the producer
+   * (candidate/match-alert.processor.ts) already supplies templateVars, so
+   * enabling WhatsApp is exactly this one `false` → `true`.
+   */
   NEW_JOB_MATCH: {
     inApp: true,
     whatsapp: false,
+    whatsappTemplate: 'wa.job_match',
     email: true,
   },
   JOB_CLOSING_SOON: {
@@ -124,6 +135,21 @@ export const NOTIFICATION_MATRIX: Record<NotificationType, MatrixEntry> = {
   SUBSCRIPTION_EXPIRED: {
     inApp: true,
     whatsapp: false,
+    email: true,
+  },
+  /**
+   * Employer outreach: "<Company> is interested in your profile."
+   *
+   * WhatsApp-tier by intent — this is the message the employer is choosing to
+   * pay to send — but `whatsapp` stays FALSE until `employer_interest_notice` is
+   * approved in WhatsApp Manager, for the same reason as NEW_JOB_MATCH above:
+   * assertTemplateMappingComplete would otherwise crash the worker at boot.
+   * The producer already supplies templateVars, so enabling it is this one line.
+   */
+  EMPLOYER_INTERESTED: {
+    inApp: true,
+    whatsapp: false,
+    whatsappTemplate: 'wa.employer_interest',
     email: true,
   },
   // ── Candidate/employer matching ───────────────────────────────────────────────

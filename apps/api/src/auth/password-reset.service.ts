@@ -68,9 +68,9 @@ export class PasswordResetService {
         title: 'Sign in with Google',
         body: 'This account uses Google sign-in, so it has no password to reset.',
         data: {
-          subject: 'SkillIndiaConnect — sign in with Google',
+          subject: 'Skill India Connect — sign in with Google',
           text:
-            'You asked to reset the password for your SkillIndiaConnect account, ' +
+            'You asked to reset the password for your Skill India Connect account, ' +
             'but this account signs in with Google and has no password.\n\n' +
             'Use "Continue with Google" on the sign-in page.\n\n' +
             'If you did not request this, you can ignore this email.',
@@ -99,13 +99,13 @@ export class PasswordResetService {
       title: 'Reset your password',
       body: 'Use the link in this email to choose a new password.',
       data: {
-        subject: 'SkillIndiaConnect — reset your password',
+        subject: 'Skill India Connect — reset your password',
         text:
-          'Someone asked to reset the password for your SkillIndiaConnect account.\n\n' +
+          'Someone asked to reset the password for your Skill India Connect account.\n\n' +
           `Open this link to choose a new one (valid for 1 hour):\n${url}\n\n` +
           'If you did not request this, ignore this email — your password will not change.',
         html:
-          '<p>Someone asked to reset the password for your SkillIndiaConnect account.</p>' +
+          '<p>Someone asked to reset the password for your Skill India Connect account.</p>' +
           `<p><a href="${url}">Choose a new password</a> — this link is valid for 1 hour.</p>` +
           '<p>If you did not request this, ignore this email — your password will not change.</p>',
       },

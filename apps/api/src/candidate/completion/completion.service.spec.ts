@@ -374,6 +374,7 @@ import { execSync } from 'child_process';
 import * as path from 'path';
 import { CompletionService } from './completion.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import type { Queue } from 'bullmq';
 
 const CS_API_DIR = path.resolve(__dirname, '../../..');
 
@@ -405,7 +406,7 @@ describe('CompletionService â€” integration (real DB)', () => {
 
       csPrisma = new PrismaClient({ datasources: { db: { url } } });
       await csPrisma.$connect();
-      csService = new CompletionService(csPrisma as unknown as PrismaService);
+      csService = new CompletionService(csPrisma as unknown as PrismaService, { add: jest.fn() } as unknown as Queue);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (

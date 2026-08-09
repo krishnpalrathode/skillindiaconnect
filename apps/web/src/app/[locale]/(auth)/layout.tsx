@@ -42,7 +42,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       {/* Hero panel (hidden on mobile) */}
       <div className="hidden lg:flex flex-col justify-between w-1/2 bg-gradient-to-br from-primary-700 via-primary-600 to-secondary-500 p-10 text-white">
         <div>
-          <span className="text-2xl font-bold tracking-tight">SkillIndiaConnect</span>
+          <span className="text-2xl font-bold tracking-tight">Skill India Connect</span>
         </div>
 
         <blockquote className="space-y-2 max-w-sm">
@@ -50,7 +50,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             &ldquo;Connecting skilled workers with trusted employers across India and the
             Gulf.&rdquo;
           </p>
-          <footer className="text-sm text-white/70">SkillIndiaConnect platform</footer>
+          <footer className="text-sm text-white/70">Skill India Connect platform</footer>
         </blockquote>
 
         <LanguageSwitcher />
@@ -60,7 +60,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <div className="flex flex-1 flex-col">
         {/* Mobile header — logo + switcher */}
         <div className="lg:hidden flex items-center justify-between px-6 pt-6 pb-4 bg-primary-600 text-white">
-          <span className="font-bold text-lg">SkillIndiaConnect</span>
+          <span className="font-bold text-lg">Skill India Connect</span>
           <LanguageSwitcher />
         </div>
 

@@ -11,6 +11,7 @@ import {
 } from '@/lib/api/employer-candidates';
 import type { CandidateBrowseFilters } from '@/lib/employer/candidateFilters';
 import { CandidateBrowseCard } from './CandidateBrowseCard';
+import { Pagination } from '@/components/ui/pagination';
 
 interface CandidateBrowseListProps {
   filters: CandidateBrowseFilters;
@@ -44,62 +45,50 @@ function CardSkeletons() {
 }
 
 /**
- * Candidate browse grid with cursor "load more".
+ * Candidate browse grid with a numbered pager.
  *
- * Refetches the first page whenever `filters` change (a stale-response guard
- * drops results from a superseded filter set). Load-more appends; its own
- * error surfaces inline with a retry that does not discard already-loaded cards.
+ * Refetches whenever `filters` or the page change (a stale-response guard drops
+ * results from a superseded request). Changing a filter resets to page 1 —
+ * otherwise a narrower filter can strand the user on a page that no longer
+ * exists.
  */
 export function CandidateBrowseList({ filters }: CandidateBrowseListProps) {
   const t = useTranslations('employer.candidates');
 
   const [items, setItems] = useState<CandidateBrowseCardModel[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [phase, setPhase] = useState<Phase>('loading');
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [moreError, setMoreError] = useState(false);
 
-  // Monotonic token so a slow first-page response for old filters can't
-  // overwrite a newer one.
+  // Monotonic token so a slow response for old filters can't overwrite a newer one.
   const requestSeq = useRef(0);
 
-  const loadFirstPage = useCallback(() => {
+  // Filters are an object rebuilt each render, so depend on a stable signature
+  // rather than the reference — otherwise this resets the page on every render.
+  const filterKey = JSON.stringify(filters);
+  useEffect(() => {
+    setPage(1);
+  }, [filterKey]);
+
+  const loadPage = useCallback(() => {
     const seq = ++requestSeq.current;
     setPhase('loading');
-    setMoreError(false);
-    browseCandidates(filters, { limit: PAGE_SIZE })
+    browseCandidates(filters, { page, pageSize: PAGE_SIZE })
       .then((res) => {
         if (seq !== requestSeq.current) return;
         setItems(res.data);
-        setNextCursor(res.nextCursor);
+        setTotalPages(Math.max(1, res.meta.totalPages));
         setPhase('ready');
       })
       .catch(() => {
         if (seq !== requestSeq.current) return;
         setPhase('error');
       });
-  }, [filters]);
+  }, [filters, page]);
 
   useEffect(() => {
-    loadFirstPage();
-  }, [loadFirstPage]);
-
-  const loadMore = async () => {
-    if (!nextCursor || loadingMore) return;
-    const seq = requestSeq.current;
-    setLoadingMore(true);
-    setMoreError(false);
-    try {
-      const res = await browseCandidates(filters, { cursor: nextCursor, limit: PAGE_SIZE });
-      if (seq !== requestSeq.current) return; // filters changed mid-flight
-      setItems((prev) => [...prev, ...res.data]);
-      setNextCursor(res.nextCursor);
-    } catch {
-      if (seq === requestSeq.current) setMoreError(true);
-    } finally {
-      if (seq === requestSeq.current) setLoadingMore(false);
-    }
-  };
+    loadPage();
+  }, [loadPage]);
 
   if (phase === 'loading') return <CardSkeletons />;
 
@@ -107,7 +96,7 @@ export function CandidateBrowseList({ filters }: CandidateBrowseListProps) {
     return (
       <div className="flex flex-col items-center gap-4 rounded-xl border border-neutral-200 bg-white py-16 text-center">
         <p className="text-sm text-neutral-600">{t('loadError')}</p>
-        <Button variant="outline" size="sm" onClick={loadFirstPage}>
+        <Button variant="outline" size="sm" onClick={loadPage}>
           {t('retry')}
         </Button>
       </div>
@@ -138,18 +127,7 @@ export function CandidateBrowseList({ filters }: CandidateBrowseListProps) {
         ))}
       </ul>
 
-      {nextCursor && (
-        <div className="flex flex-col items-center gap-2">
-          {moreError && (
-            <p className="text-xs text-error-fg" role="alert">
-              {t('loadMoreError')}
-            </p>
-          )}
-          <Button variant="outline" onClick={loadMore} loading={loadingMore}>
-            {t('loadMore')}
-          </Button>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );
 }

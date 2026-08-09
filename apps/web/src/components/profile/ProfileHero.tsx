@@ -17,6 +17,7 @@ import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
+import { useToast } from '@/components/ui/toast';
 import { CompletionRing } from '@/components/common/CompletionRing';
 import { getResume, generateResume, getResumeStatus, getResumeDownloadUrl } from '@/lib/api/resume';
 import { presignPhoto, confirmPhoto, uploadToPresignedUrl } from '@/lib/api/candidate';
@@ -34,6 +35,8 @@ interface ProfileHeroProps {
 
 export function ProfileHero({ profile, completion }: ProfileHeroProps) {
   const t = useTranslations('profile.hero');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
 
   const [resumeBusy, setResumeBusy] = useState(false);
   // Separate from resumeBusy so sharing doesn't put the Download button into a
@@ -165,6 +168,7 @@ export function ProfileHero({ profile, completion }: ProfileHeroProps) {
       await uploadToPresignedUrl(presign.uploadUrl, file);
       const updated = await confirmPhoto(presign.key);
       setPhotoUrl(updated.photoUrl ?? null);
+      showToast({ message: tToast('photoUpdated') });
     } catch {
       setPhotoError(t('photoUploadError'));
     } finally {

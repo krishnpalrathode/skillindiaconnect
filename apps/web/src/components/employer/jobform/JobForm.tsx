@@ -7,6 +7,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useToast } from '@/components/ui/toast';
 import { BenefitsSection } from './BenefitsSection';
 import { CompensationSection } from './CompensationSection';
 import { WorkConditionsSection } from './WorkConditionsSection';
@@ -41,6 +42,8 @@ interface JobFormProps {
 
 export function JobForm({ job, onValuesChange }: JobFormProps) {
   const t = useTranslations('jobform');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
   const router = useRouter();
   const params = useParams<{ locale: string }>();
   const locale = params?.locale ?? 'en';
@@ -58,6 +61,16 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
   );
   const [savedJobId, setSavedJobId] = useState<string | null>(job?.id ?? null);
   const [categories, setCategories] = useState<JobCategory[]>([]);
+  /**
+   * Whether anything has changed since the last successful save.
+   *
+   * Starts false — an untouched form (a blank create, or an edit the user has
+   * only looked at) has nothing to save, and leaving Save enabled invites a
+   * pointless round-trip and a duplicate-looking "saved" toast. Any `patch`
+   * sets it; a successful save clears it. That is the whole re-enable rule:
+   * change something and the button comes back.
+   */
+  const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
     getJobCategories()
@@ -65,8 +78,14 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
       .catch(() => setCategories([]));
   }, []);
 
+  // The "Other" row is identified by its SLUG, never by its label or position —
+  // the label is translated and the list is server-ordered.
+  const otherCategoryId = categories.find((c) => c.slug === 'other')?.id;
+  const isOtherCategory = !!otherCategoryId && values.categoryId === otherCategoryId;
+
   const patch = useCallback(
     (partial: Partial<JobFormValues>) => {
+      setDirty(true);
       setValues((prev) => {
         const next = { ...prev, ...partial } as JobFormValues;
         // When market changes, reset currency to first valid option and the
@@ -85,7 +104,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
   );
 
   const handleSaveDraft = async () => {
-    const errs = validateJobForm(values);
+    const errs = validateJobForm(values, otherCategoryId);
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
@@ -94,7 +113,8 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
     setDraftStatus('saving');
     setPublishError(null);
     try {
-      const payload = formToPayload(values);
+      const payload = formToPayload(values, otherCategoryId);
+      const isUpdate = Boolean(savedJobId);
       let saved: Job;
       if (savedJobId) {
         saved = await updateJob(savedJobId, payload);
@@ -103,7 +123,11 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
         setSavedJobId(saved.id);
       }
       setDraftStatus('saved');
+      setDirty(false);
       setTimeout(() => setDraftStatus('idle'), 3000);
+      // 'created' vs 'updated' comes from whether the draft already had an id
+      // BEFORE this save — savedJobId is set above for the create path.
+      showToast({ message: tToast(isUpdate ? 'jobUpdated' : 'jobCreated') });
       return saved;
     } catch {
       setDraftStatus('error');
@@ -111,7 +135,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
   };
 
   const handlePublish = async () => {
-    const errs = validateJobForm(values);
+    const errs = validateJobForm(values, otherCategoryId);
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
@@ -120,7 +144,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
     setPublishStatus('saving');
     setPublishError(null);
     try {
-      const payload = formToPayload(values);
+      const payload = formToPayload(values, otherCategoryId);
       let jobId = savedJobId;
       if (jobId) {
         await updateJob(jobId, payload);
@@ -259,6 +283,31 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
           </select>
         </Field>
 
+        {/* Only rendered for "Other" — an always-present box that is usually
+            irrelevant is what makes a form feel long. Not unmounted-and-
+            forgotten either: the draft value survives in form state, so
+            switching to a trade and back does not erase what they typed. */}
+        {isOtherCategory && (
+          <Field
+            id="job-category-other"
+            label={t('basic.categoryOtherLabel')}
+            required
+            error={errors.categoryOther}
+            hint={t('basic.categoryOtherHint')}
+          >
+            <Input
+              id="job-category-other"
+              type="text"
+              value={values.categoryOther}
+              onChange={(e) => patch({ categoryOther: e.target.value })}
+              placeholder={t('basic.categoryOtherPlaceholder')}
+              maxLength={80}
+              hasError={!!errors.categoryOther}
+              aria-required
+            />
+          </Field>
+        )}
+
         <Field id="job-employment-type" label="Employment type" required>
           <select
             id="job-employment-type"
@@ -363,7 +412,10 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
           type="button"
           variant="outline"
           onClick={handleSaveDraft}
-          disabled={draftStatus === 'saving' || publishStatus === 'saving'}
+          // Nothing to save until something changes again. Publish is NOT
+          // gated this way — publishing an already-saved, unchanged draft is a
+          // legitimate next step, not a re-save.
+          disabled={draftStatus === 'saving' || publishStatus === 'saving' || !dirty}
           className="min-h-[44px] rounded-xl"
         >
           {draftStatus === 'saving' ? (

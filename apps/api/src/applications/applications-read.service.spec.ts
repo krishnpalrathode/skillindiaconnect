@@ -211,18 +211,20 @@ describe('candidate applications list + detail', () => {
     expect(short.data[0]!.status).toBe(ApplicationStatus.SHORTLISTED);
   });
 
-  gatedIt('paginates stably with a cursor (no dup/skip across pages)', async () => {
+  gatedIt('paginates stably by page number (no dup/skip across pages)', async () => {
     // The (jobId, candidateId) unique caps this candidate at one app per job, so
-    // seed across the two jobs and assert the cursor mechanics on the 2-row feed.
+    // seed across the two jobs and assert the paging mechanics on the 2-row feed.
     await mkApp(jobId, ApplicationStatus.PENDING);
     await mkApp(otherJobId, ApplicationStatus.PENDING);
 
-    const p1 = await service.listCandidateApplications(candidateId, { limit: 1 });
+    const p1 = await service.listCandidateApplications(candidateId, { page: 1, pageSize: 1 });
     expect(p1.data).toHaveLength(1);
-    expect(p1.nextCursor).not.toBeNull();
-    const p2 = await service.listCandidateApplications(candidateId, { limit: 1, cursor: p1.nextCursor! });
+    expect(p1.meta).toMatchObject({ page: 1, pageSize: 1, total: 2, totalPages: 2 });
+
+    const p2 = await service.listCandidateApplications(candidateId, { page: 2, pageSize: 1 });
     expect(p2.data).toHaveLength(1);
     expect(p2.data[0]!.id).not.toBe(p1.data[0]!.id);
+    expect(p2.meta).toMatchObject({ page: 2, total: 2, totalPages: 2 });
   });
 
   gatedIt('detail: another candidate\'s application → 404', async () => {

@@ -2810,7 +2810,7 @@ export function toCandidateEmployerView(
     fullName: p.fullName ?? '',
     isAvailable: p.isAvailable ?? true,
     documentsStatus,
-    createdAt: p.createdAt ?? new Date().toISOString(),
+    memberSince: p.createdAt ?? new Date().toISOString(),
   };
 
   const age = getAgeFromDob(p.dob);
@@ -2846,7 +2846,6 @@ export function toCandidateBrowseCard(
     skills,
     hasForeignExperience,
     isAvailable: p.isAvailable ?? true,
-    createdAt: p.createdAt ?? new Date().toISOString(),
   };
 }
 
@@ -3085,7 +3084,7 @@ export function toApplicantCard(app: MockApplication): ApplicantCard {
         fullName: '',
         isAvailable: true,
         documentsStatus: [],
-        createdAt: app.appliedAt,
+        memberSince: app.appliedAt,
       } as components['schemas']['CandidateEmployerView']);
   return {
     ...base,

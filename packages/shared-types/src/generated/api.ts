@@ -3147,6 +3147,8 @@ export interface components {
             description?: string;
             /** Format: uuid */
             categoryId?: string | null;
+            /** @description Free-text trade name. Set ONLY when `categoryId` is the `other` category; null/absent for every fixed trade. Required when that category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`). */
+            categoryOther?: string | null;
             salaryMin?: number | null;
             salaryMax?: number | null;
             /** @example AED */
@@ -3199,6 +3201,8 @@ export interface components {
             location: string;
             /** Format: uuid */
             categoryId?: string | null;
+            /** @description Free-text trade name. Set ONLY when `categoryId` is the `other` category; null/absent for every fixed trade. Required when that category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`). */
+            categoryOther?: string | null;
             salaryMin?: number | null;
             salaryMax?: number | null;
             /** @example AED */
@@ -3381,6 +3385,10 @@ export interface components {
             phone?: string;
             /** @description ABSENT when showReligion = false (default); present when showReligion = true */
             religion?: string;
+            /** @description Whether the VIEWING company has shortlisted this candidate. Viewer-relative, like isSaved on JobCard — it says nothing about other employers. */
+            isInterested?: boolean;
+            /** @description Whether the viewing company has already sent this candidate the "we are interested" message. The server allows that only once. */
+            interestNotified?: boolean;
             nationality?: string;
             currentLocation?: string;
             /** Format: uuid */
@@ -3392,8 +3400,11 @@ export interface components {
             experiences?: components["schemas"]["WorkExperience"][];
             skills?: components["schemas"]["CandidateSkill"][];
             documentsStatus: components["schemas"]["CandidateDocumentStatus"][];
-            /** Format: date-time */
-            createdAt: string;
+            /**
+             * Format: date-time
+             * @description When the candidate joined, rendered as "member since". Named memberSince — NOT createdAt — because that is what the API emits; the contract said createdAt for a while and the UI dutifully read a field that was always undefined, crashing the page on Invalid Date.
+             */
+            memberSince: string;
         };
         /**
          * @description Card-level candidate summary for employer browse (GET /employers/candidates).
@@ -3416,8 +3427,8 @@ export interface components {
             /** @description true if any work experience has type = FOREIGN */
             hasForeignExperience: boolean;
             isAvailable: boolean;
-            /** Format: date-time */
-            createdAt: string;
+            /** @description Stored profile-completion percentage (0-100). */
+            completionPct?: number;
         };
         /** @description Profile view analytics returned to the authenticated candidate */
         ProfileViewsSummary: {
@@ -3764,6 +3775,8 @@ export interface components {
             description?: string;
             /** Format: uuid */
             categoryId?: string;
+            /** @description Free-text trade name. Set ONLY when `categoryId` is the `other` category; null/absent for every fixed trade. Required when that category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`). */
+            categoryOther?: string;
             salaryMin?: number;
             salaryMax?: number;
             /** @example AED */
@@ -6690,6 +6703,8 @@ export interface operations {
                     description?: string;
                     /** Format: uuid */
                     categoryId?: string;
+                    /** @description Free-text trade name. Set ONLY when `categoryId` is the `other` category; null/absent for every fixed trade. Required when that category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`). */
+                    categoryOther?: string;
                     salaryMin?: number;
                     salaryMax?: number;
                     salaryCurrency?: string;

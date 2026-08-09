@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/toast';
 import { ApiRequestError } from '@/lib/api/client';
 import { emailResume } from '@/lib/api/resume';
 
@@ -16,6 +17,8 @@ type Outcome = 'emailed' | 'notReady' | 'error';
  */
 export function EmailResumeButton() {
   const t = useTranslations('resume.delivery');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
   const [sending, setSending] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
 
@@ -25,6 +28,7 @@ export function EmailResumeButton() {
     try {
       await emailResume();
       setOutcome('emailed');
+      showToast({ message: tToast('resumeEmailed') });
     } catch (err) {
       if (err instanceof ApiRequestError && err.error.code === 'RESUME_NOT_READY') {
         setOutcome('notReady');

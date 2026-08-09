@@ -18,6 +18,7 @@ interface JobLivePreviewProps {
 
 export function JobLivePreview({ values, companyName, locale }: JobLivePreviewProps) {
   const t = useTranslations('jobform.preview');
+  const tCard = useTranslations('jobs.card');
   // Defer preview derivation so slow devices don't jank on every keystroke
   const deferredValues = useDeferredValue(values);
   const preview = formToPreview(deferredValues, companyName);
@@ -48,7 +49,9 @@ export function JobLivePreview({ values, companyName, locale }: JobLivePreviewPr
         {/* Card header */}
         <div className="p-4 flex flex-wrap items-center gap-1.5 border-b border-neutral-100">
           <Badge variant={preview.market === 'GULF' ? 'primary' : 'accent'}>
-            {preview.market === 'GULF' ? 'Gulf' : 'India'}
+            {/* Reads from the shared jobs.card keys rather than hardcoding, so
+                the preview cannot drift from the real card it is previewing. */}
+            {preview.market === 'GULF' ? tCard('marketGulf') : tCard('marketLocal')}
           </Badge>
           <Badge variant="info">New</Badge>
         </div>

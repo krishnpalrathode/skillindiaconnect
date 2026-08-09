@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { CheckCircle2, XCircle, Clock } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { getOrder } from '@/lib/api/billing';
 
 type OrderStatus = components['schemas']['OrderStatus'];
@@ -138,7 +138,11 @@ export function PaymentConfirming({
     >
       {phase === 'confirming' && (
         <>
-          <Spinner size={32} label={t('confirmingTitle')} />
+          {/* Decorative: the <h2> below states the same sentence, so the
+              loader's own sr-only label would announce it twice. */}
+          <span aria-hidden="true">
+            <BrandLoader size="lg" />
+          </span>
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">{t('confirmingTitle')}</h2>
             <p className="text-sm text-neutral-600 mt-1 max-w-sm">{t('confirmingBody')}</p>

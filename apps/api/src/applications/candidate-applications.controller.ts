@@ -8,7 +8,7 @@ import { ListCandidateApplicationsDto } from './dto/list-candidate-applications.
 /**
  * GET /api/v1/candidates/me/applications  (+ /:id)
  *
- * Candidate-only. The list is a cursor feed (newest first); the detail includes
+ * Candidate-only. The list is an offset page (newest first); the detail includes
  * the SHAPED timeline (overrideReason + actor identity excluded by the mapper).
  * Own-application scoping: another candidate's id → 404.
  */

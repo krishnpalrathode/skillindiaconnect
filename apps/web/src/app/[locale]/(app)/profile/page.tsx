@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useParams } from 'next/navigation';
 import type { components } from '@skillindiaconnect/shared-types';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { ProfileHero } from '@/components/profile/ProfileHero';
 import { ProfileStats } from '@/components/profile/ProfileStats';
 import { PersonalInfoSection } from '@/components/profile/sections/PersonalInfoSection';
@@ -75,7 +75,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Spinner size={32} label={t('loading') || 'Loading…'} />
+        <BrandLoader size="lg" label={t('loading') || 'Loading…'} />
       </div>
     );
   }

@@ -9,6 +9,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useToast } from '@/components/ui/toast';
 import { BenefitsSection } from '@/components/employer/jobform/BenefitsSection';
 import { CompensationSection } from '@/components/employer/jobform/CompensationSection';
 import { WorkConditionsSection } from '@/components/employer/jobform/WorkConditionsSection';
@@ -48,6 +49,8 @@ import { GateFailureExplainer } from './GateFailureExplainer';
  */
 export function OnBehalfJobForm() {
   const t = useTranslations('admin.jobs.onBehalf');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
   const params = useParams<{ locale: string }>();
   const locale = params?.locale ?? 'en';
 
@@ -127,6 +130,7 @@ export function OnBehalfJobForm() {
         publish,
       );
       setCreated({ job, published: publish });
+      showToast({ message: tToast(publish ? 'jobPublished' : 'jobCreated') });
     } catch (err) {
       if (err instanceof ApiRequestError) {
         // The gate ladder spoke. The job was still created as a DRAFT (the

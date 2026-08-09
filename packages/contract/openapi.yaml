@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: SkillIndiaConnect API
+  title: Skill India Connect API
   version: 0.9.0
   description: |
     Production blue-collar recruitment platform connecting skilled workers in India
@@ -962,6 +962,14 @@ components:
         categoryId:
           type: [string, 'null']
           format: uuid
+        categoryOther:
+          type: [string, 'null']
+          maxLength: 80
+          description: >
+            Free-text trade name. Set ONLY when `categoryId` is the `other`
+            category; null/absent for every fixed trade. Required when that
+            category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected
+            otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`).
         salaryMin:
           type: [integer, 'null']
           minimum: 0
@@ -1059,6 +1067,14 @@ components:
         categoryId:
           type: [string, 'null']
           format: uuid
+        categoryOther:
+          type: [string, 'null']
+          maxLength: 80
+          description: >
+            Free-text trade name. Set ONLY when `categoryId` is the `other`
+            category; null/absent for every fixed trade. Required when that
+            category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected
+            otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`).
         salaryMin:
           type: [integer, 'null']
           minimum: 0
@@ -1326,7 +1342,7 @@ components:
 
     CandidateEmployerView:
       type: object
-      required: [id, fullName, isAvailable, documentsStatus, createdAt]
+      required: [id, fullName, isAvailable, documentsStatus, memberSince]
       description: |
         Employer-context view of a candidate profile. Privacy invariants:
         - `phone` is **ABSENT** (not null) when `showPhone = false`
@@ -1352,6 +1368,16 @@ components:
         religion:
           type: string
           description: ABSENT when showReligion = false (default); present when showReligion = true
+        isInterested:
+          type: boolean
+          description: >-
+            Whether the VIEWING company has shortlisted this candidate. Viewer-relative,
+            like isSaved on JobCard — it says nothing about other employers.
+        interestNotified:
+          type: boolean
+          description: >-
+            Whether the viewing company has already sent this candidate the
+            "we are interested" message. The server allows that only once.
         nationality:
           type: string
         currentLocation:
@@ -1380,13 +1406,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CandidateDocumentStatus'
-        createdAt:
+        memberSince:
           type: string
           format: date-time
+          description: >-
+            When the candidate joined, rendered as "member since". Named
+            memberSince — NOT createdAt — because that is what the API emits;
+            the contract said createdAt for a while and the UI dutifully read a
+            field that was always undefined, crashing the page on Invalid Date.
 
     CandidateBrowseCard:
       type: object
-      required: [id, fullName, isAvailable, hasForeignExperience, createdAt]
+      required: [id, fullName, isAvailable, hasForeignExperience]
       description: |
         Card-level candidate summary for employer browse (GET /employers/candidates).
         Deliberately minimal — no phone, religion, salary, or documents.
@@ -1420,9 +1451,9 @@ components:
           description: true if any work experience has type = FOREIGN
         isAvailable:
           type: boolean
-        createdAt:
-          type: string
-          format: date-time
+        completionPct:
+          type: integer
+          description: Stored profile-completion percentage (0-100).
 
     # ── Profile view analytics schema (S3) ─────────────────────────────────────
     ProfileViewsSummary:
@@ -2084,6 +2115,14 @@ components:
         categoryId:
           type: string
           format: uuid
+        categoryOther:
+          type: string
+          maxLength: 80
+          description: >
+            Free-text trade name. Set ONLY when `categoryId` is the `other`
+            category; null/absent for every fixed trade. Required when that
+            category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected
+            otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`).
         salaryMin:
           type: integer
           minimum: 0
@@ -5400,6 +5439,14 @@ paths:
                 categoryId:
                   type: string
                   format: uuid
+                categoryOther:
+                  type: string
+                  maxLength: 80
+                  description: >
+                    Free-text trade name. Set ONLY when `categoryId` is the `other`
+                    category; null/absent for every fixed trade. Required when that
+                    category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected
+                    otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`).
                 salaryMin:
                   type: integer
                   minimum: 0

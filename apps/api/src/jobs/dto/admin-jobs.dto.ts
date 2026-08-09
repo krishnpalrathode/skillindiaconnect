@@ -17,6 +17,23 @@ import { CreateJobDto } from './create-job.dto';
 const toBool = ({ value }: { value: unknown }) =>
   value === 'true' || value === true ? true : value === 'false' || value === false ? false : value;
 
+/**
+ * Sortable columns for the admin jobs table. Whitelisted per api-conventions.md
+ * — a raw client string must never reach Prisma's orderBy.
+ */
+export const ADMIN_JOB_SORT = {
+  title: 'title',
+  company: 'company.name',
+  status: 'status',
+  created: 'createdAt',
+  published: 'publishedAt',
+} as const;
+// NOT sortable: `applicants`. The count is aggregated AFTER the page query
+// (countsPerJob, to avoid N+1), so an orderBy cannot reach it — offering the
+// column would sort by something other than what the header claims.
+
+export const ADMIN_JOB_SORT_DEFAULT = 'created:desc';
+
 export class ListAdminJobsDto {
   @IsOptional()
   @IsEnum(JobStatus)
@@ -53,6 +70,11 @@ export class ListAdminJobsDto {
   @Min(1)
   @Max(100)
   pageSize?: number = 20;
+
+  /** `field:dir`; unknown fields fall back to the default rather than 400ing. */
+  @IsOptional()
+  @IsString()
+  sort?: string;
 }
 
 export const REVIEW_DECISIONS = ['APPROVE', 'REJECT'] as const;

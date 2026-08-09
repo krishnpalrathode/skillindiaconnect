@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Currency, DocumentType, ExperienceType, Prisma, UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
+import { resolvePaging } from '../core/pagination';
 
 /**
  * Narrow read-only API for other modules that need candidate data without
@@ -268,6 +269,8 @@ export class CandidateReadService {
     search?: string;
     status?: UserStatus;
     visibility?: boolean;
+    /** Already resolved against the endpoint whitelist by the caller. */
+    orderBy?: Record<string, unknown>[];
   }): Promise<{ rows: AdminCandidateSource[]; total: number }> {
     const where: Prisma.CandidateProfileWhereInput = {
       user: {
@@ -287,7 +290,7 @@ export class CandidateReadService {
     const [rows, total] = await Promise.all([
       this.prisma.candidateProfile.findMany({
         where,
-        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        orderBy: query.orderBy ?? [{ createdAt: 'desc' }, { id: 'desc' }],
         skip: (query.page - 1) * query.pageSize,
         take: query.pageSize,
         select: ADMIN_CANDIDATE_SELECT,
@@ -477,37 +480,68 @@ export class CandidateReadService {
   }
 
   /**
+   * Browse-card sources for a known set of ids, keyed by id.
+   *
+   * Applies the SAME visibility rule as the browse feed (profileVisible + ACTIVE
+   * user) rather than trusting the caller's list: an employer's saved interest
+   * row must not keep rendering a candidate who has since hidden their profile
+   * or been suspended. Missing ids are simply absent from the map.
+   */
+  async getBrowseCardsByIds(ids: string[]): Promise<Map<string, CandidateBrowseSource>> {
+    if (ids.length === 0) return new Map();
+
+    const rows = await this.prisma.candidateProfile.findMany({
+      where: {
+        id: { in: ids },
+        profileVisible: true,
+        user: { status: UserStatus.ACTIVE },
+      },
+      select: {
+        id: true,
+        fullName: true,
+        photoKey: true,
+        jobCategoryId: true,
+        currentLocation: true,
+        isAvailable: true,
+        completionPct: true,
+        updatedAt: true,
+        experiences: { select: { type: true, years: true, months: true } },
+        skills: { select: { name: true }, orderBy: { name: 'asc' }, take: 3 },
+      },
+    });
+
+    return new Map(
+      rows.map((row) => [
+        row.id,
+        {
+          ...row,
+          totalExperienceYears: row.experiences.reduce(
+            (sum, e) => sum + e.years + e.months / 12,
+            0,
+          ),
+          hasForeignExperience: row.experiences.some((e) => e.type === ExperienceType.FOREIGN),
+        },
+      ]),
+    );
+  }
+
+  /**
    * Browse visible candidates for the employer feed.
    *
    * - Only profileVisible=true candidates of ACTIVE users appear (S6b-B1:
    *   tightened from `not: PENDING_DELETION` — suspension now hides too).
    * - Filters: category (jobCategoryId), hasForeignExperience, availability, text q.
    * - minExperienceYears is applied in-memory (Prisma cannot SUM related years in WHERE).
-   *   We fetch limit*5 records from DB before in-memory filtering; this works well
-   *   in practice but is a known MVP simplification — pagination may return fewer than
-   *   limit items when this filter is active.
-   * - Stable keyset: updatedAt DESC, id DESC.
-   * - Cursor encodes {updatedAt: ISO, id} as base64-JSON.
+   *   Offset pagination needs an honest `total`, so when that filter is active we
+   *   materialize the DB-matching set, filter it, then slice. That replaces the
+   *   old `limit * 5` over-fetch heuristic, which could both under-fill a page and
+   *   end pagination early. The unfiltered path stays a plain skip/take + COUNT.
+   * - Stable total ordering: updatedAt DESC, id DESC.
    */
   async browseVisibleCandidates(
     filters: BrowseFilter,
-  ): Promise<{ data: CandidateBrowseSource[]; nextCursor: string | null }> {
-    const limit = Math.min(filters.limit ?? 20, 50);
-
-    // Decode cursor
-    let cursorUpdatedAt: Date | undefined;
-    let cursorId: string | undefined;
-    if (filters.cursor) {
-      try {
-        const decoded = JSON.parse(
-          Buffer.from(filters.cursor, 'base64url').toString('utf8'),
-        ) as { updatedAt: string; id: string };
-        cursorUpdatedAt = new Date(decoded.updatedAt);
-        cursorId = decoded.id;
-      } catch {
-        // Invalid cursor — start from beginning
-      }
-    }
+  ): Promise<{ data: CandidateBrowseSource[]; total: number }> {
+    const { skip, take } = resolvePaging(filters.page, filters.pageSize, 50);
 
     const where: Prisma.CandidateProfileWhereInput = {
       profileVisible: true,
@@ -526,69 +560,58 @@ export class CandidateReadService {
           { skills: { some: { name: { contains: filters.q, mode: 'insensitive' } } } },
         ],
       }),
-      // Keyset pagination: rows before the cursor position in DESC order
-      ...(cursorUpdatedAt &&
-        cursorId && {
-          OR: [
-            { updatedAt: { lt: cursorUpdatedAt } },
-            { updatedAt: cursorUpdatedAt, id: { lt: cursorId } },
-          ],
-        }),
     };
 
-    // When minExperienceYears is active, fetch extra rows for in-memory filter
-    const fetchLimit = filters.minExperienceYears != null ? limit * 5 : limit + 1;
-
-    const rows = await this.prisma.candidateProfile.findMany({
-      where,
-      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
-      take: fetchLimit,
-      select: {
-        id: true,
-        fullName: true,
-        photoKey: true,
-        jobCategoryId: true,
-        currentLocation: true,
-        isAvailable: true,
-        completionPct: true,
-        updatedAt: true,
-        experiences: {
-          select: { type: true, years: true, months: true },
-        },
-        skills: {
-          select: { name: true },
-          orderBy: { name: 'asc' },
-          take: 3,
-        },
+    const orderBy: Prisma.CandidateProfileOrderByWithRelationInput[] = [
+      { updatedAt: 'desc' },
+      { id: 'desc' },
+    ];
+    const select = {
+      id: true,
+      fullName: true,
+      photoKey: true,
+      jobCategoryId: true,
+      currentLocation: true,
+      isAvailable: true,
+      completionPct: true,
+      updatedAt: true,
+      experiences: {
+        select: { type: true, years: true, months: true },
       },
+      skills: {
+        select: { name: true },
+        orderBy: { name: 'asc' as const },
+        take: 3,
+      },
+    };
+
+    const enrich = <
+      T extends { experiences: { type: ExperienceType; years: number; months: number }[] },
+    >(
+      row: T,
+    ) => ({
+      ...row,
+      totalExperienceYears: row.experiences.reduce((sum, e) => sum + e.years + e.months / 12, 0),
+      hasForeignExperience: row.experiences.some((e) => e.type === ExperienceType.FOREIGN),
     });
 
-    // Enrich with derived fields
-    let results: CandidateBrowseSource[] = rows.map((row) => ({
-      ...row,
-      totalExperienceYears:
-        row.experiences.reduce((sum, e) => sum + e.years + e.months / 12, 0),
-      hasForeignExperience: row.experiences.some((e) => e.type === ExperienceType.FOREIGN),
-    }));
-
-    // In-memory minExperienceYears filter
-    if (filters.minExperienceYears != null) {
-      const min = filters.minExperienceYears;
-      results = results.filter((r) => r.totalExperienceYears >= min);
+    // Fast path — every filter is expressible in SQL, so the DB does the paging.
+    if (filters.minExperienceYears == null) {
+      const [rows, total] = await Promise.all([
+        this.prisma.candidateProfile.findMany({ where, orderBy, skip, take, select }),
+        this.prisma.candidateProfile.count({ where }),
+      ]);
+      return { data: rows.map(enrich), total };
     }
 
-    const hasMore = results.length > limit;
-    const data = hasMore ? results.slice(0, limit) : results;
+    // Slow path — minExperienceYears sums a relation, which Prisma cannot express
+    // in WHERE. Paging must happen after the filter, so the filtered length IS the
+    // total; anything cheaper would report a page count the user can't navigate to.
+    const min = filters.minExperienceYears;
+    const all = await this.prisma.candidateProfile.findMany({ where, orderBy, select });
+    const filtered = all.map(enrich).filter((r) => r.totalExperienceYears >= min);
 
-    let nextCursor: string | null = null;
-    if (hasMore && data.length > 0) {
-      const last = data[data.length - 1]!;
-      nextCursor = Buffer.from(
-        JSON.stringify({ updatedAt: last.updatedAt.toISOString(), id: last.id }),
-      ).toString('base64url');
-    }
-
-    return { data, nextCursor };
+    return { data: filtered.slice(skip, skip + take), total: filtered.length };
   }
 }
 
@@ -742,6 +765,6 @@ export interface BrowseFilter {
   hasForeignExperience?: boolean;
   availability?: boolean;
   q?: string;
-  cursor?: string;
-  limit?: number;
+  page?: number;
+  pageSize?: number;
 }

@@ -24,6 +24,22 @@ import {
   RAZORPAY_GATEWAY,
   STRIPE_GATEWAY,
 } from './gateways/payment-gateway.interface';
+import { buildOrderBy, resolveSort } from '../core/sorting';
+
+/**
+ * Sortable columns for the employer invoice table (whitelisted).
+ *
+ * `amount` sorts through the RELATION: the money lives on `orders`, not
+ * `invoices` — the invoice row carries only number/issuedAt/pdfKey. Naming the
+ * column `totalSubunits` directly threw "Unknown argument" at Prisma.
+ */
+export const INVOICE_SORT = {
+  number: 'number',
+  issued: 'issuedAt',
+  amount: 'order.totalSubunits',
+} as const;
+
+export const INVOICE_SORT_DEFAULT = 'issued:desc';
 
 /**
  * Same-plan renewal opens this many days before expiry (and stays open through
@@ -312,17 +328,19 @@ export class CheckoutService {
     userId: string,
     page: number,
     pageSize: number,
+    rawSort?: string,
   ): Promise<{
     data: InvoiceDto[];
-    meta: { page: number; pageSize: number; total: number; totalPages: number };
+    meta: { page: number; pageSize: number; total: number; totalPages: number; sort: string };
   }> {
     const company = await this.employerService.getCompanyForEmployerUser(userId);
+    const sort = resolveSort(rawSort, INVOICE_SORT, INVOICE_SORT_DEFAULT);
     const where = { order: { companyId: company.id } };
     const [rows, total] = await Promise.all([
       this.prisma.invoice.findMany({
         where,
         include: { order: { include: { plan: true } } },
-        orderBy: { issuedAt: 'desc' },
+        orderBy: buildOrderBy(sort, INVOICE_SORT),
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),
@@ -345,7 +363,13 @@ export class CheckoutService {
 
     return {
       data,
-      meta: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) },
+      meta: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+        sort: sort.applied,
+      },
     };
   }
 

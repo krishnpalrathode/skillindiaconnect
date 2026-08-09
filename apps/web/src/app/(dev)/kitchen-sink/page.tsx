@@ -13,6 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { Field } from '@/components/ui/field';
 
 /* Guard: dev-only. Not linked from production nav. */
@@ -230,10 +231,32 @@ export default function KitchenSinkPage() {
         {/* ── Loading States ── */}
         <section className="space-y-4">
           <h2 className="text-xl font-semibold text-neutral-800">Loading States</h2>
+          <div className="flex flex-wrap gap-8 items-end">
+            <div className="flex flex-col items-center gap-2">
+              <BrandLoader size="lg" />
+              <span className="text-xs text-neutral-600">BrandLoader lg (page/route)</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <BrandLoader size="md" />
+              <span className="text-xs text-neutral-600">BrandLoader md (section)</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <BrandLoader size="sm" />
+              <span className="text-xs text-neutral-600">BrandLoader sm</span>
+            </div>
+          </div>
+          <div className="flex gap-6 items-center">
+            <Button loading variant="primary" size="sm">
+              Saving
+            </Button>
+            <span className="text-xs text-neutral-600">
+              Button loading — disabled + aria-busy, blocks double submits
+            </span>
+          </div>
           <div className="flex gap-6 items-center">
             <div className="flex flex-col items-center gap-2">
               <Spinner size={24} />
-              <span className="text-xs text-neutral-600">Spinner (action)</span>
+              <span className="text-xs text-neutral-600">Spinner (small inline only)</span>
             </div>
             <div className="flex flex-col items-center gap-2">
               <Spinner size={20} className="text-accent-500" />

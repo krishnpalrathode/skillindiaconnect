@@ -90,7 +90,7 @@ Do these in order. Steps 1–4 are prerequisites for the webhook in step 5.
 
 ---
 
-## The three templates
+## The three approved templates (+ one awaiting approval)
 
 Names are mapped in
 [meta-templates.ts](../apps/api/src/notifications/channels/meta-templates.ts) and
@@ -102,6 +102,71 @@ crashes the process at boot rather than failing sends silently for months.
 | `login_otp` | *(none — `sendOtp`)* | 1 | — | `POST /auth/otp/send` (signup verify) and `POST /auth/login/phone/start` (login) |
 | `job_selected` | `wa.selected` | 3 | — | `APPLICATION_SELECTED` |
 | `resume_document` | `wa.resume_doc` | 1 | **document** | `RESUME_SENT` |
+| `job_match_alert` ⚠️ **NOT SUBMITTED** | `wa.job_match` | 3 | — | `NEW_JOB_MATCH` (profile hits the completion threshold) |
+| `employer_interest_notice` ⚠️ **NOT SUBMITTED** | `wa.employer_interest` | 2 | — | `EMPLOYER_INTERESTED` (employer reaches out to a shortlisted candidate) |
+
+### `job_match_alert` — submit this before enabling the profile-completion alert
+
+The profile-completion job-match alert ships **live on in-app + email**; WhatsApp is
+wired but switched OFF, because this template does not exist in WhatsApp Manager yet.
+Sending to an unapproved template fails with 132001 — the same error a wrong locale
+gives — so the switch stays off until approval is confirmed.
+
+**Submit this template** (category **Utility**, locale must match the one the adapter
+requests — see the locale warning below):
+
+```
+Name: job_match_alert
+Body: Hi {{1}}, your profile is ready and we found jobs that match you: {{2}}.
+      See all your matches here: {{3}}
+```
+
+```
+{{1}} candidate first name   {{2}} top-3 job summary ("Title — Location, …")   {{3}} link
+```
+
+**To turn it on, once `pnpm whatsapp:templates` shows it APPROVED**, flip exactly one
+line in [notification.matrix.ts](../apps/api/src/notifications/notification.matrix.ts):
+
+```diff
+  NEW_JOB_MATCH: {
+    inApp: true,
+-   whatsapp: false,
++   whatsapp: true,
+    whatsappTemplate: 'wa.job_match',
+```
+
+Nothing else is needed: the template is already mapped in `meta-templates.ts`, and the
+producer ([match-alert.processor.ts](../apps/api/src/candidate/match-alert.processor.ts))
+already supplies `templateVars` in that exact order. Note that flipping this makes the
+alert cost money per send — it is a Utility-category conversation.
+
+### `employer_interest_notice` — submit before enabling employer outreach
+
+Employer → candidate outreach ships **live on in-app + email**; WhatsApp is wired but
+OFF for the same reason as `job_match_alert`.
+
+**Submit this template** (category **Utility**):
+
+```
+Name: employer_interest_notice
+Body: Hi {{1}}, {{2}} is interested in your profile on Skill India Connect.
+      Open the app to see their jobs and respond.
+```
+
+```
+{{1}} candidate first name   {{2}} company name
+```
+
+Enable it by flipping `whatsapp: false` → `true` on `EMPLOYER_INTERESTED` in
+[notification.matrix.ts](../apps/api/src/notifications/notification.matrix.ts).
+
+⚠️ **This one is employer-triggered, so the volume is not self-limiting the way an
+automated alert is.** Three things bound it, and all three should stay: the server
+messages each candidate **once per company** (`candidate_interests.notifiedAt`), the
+batch is capped at 50 per request, and the route is rate-limited to
+`RATE_LIMIT_INTEREST_NOTIFY_PER_MIN` (default 5/min). Loosen those only with a cost
+estimate in hand.
 
 ### `job_selected` — the positional order IS the contract
 

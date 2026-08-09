@@ -54,7 +54,7 @@ function baseView(overrides?: Partial<CandidateEmployerView>): CandidateEmployer
     fullName: 'Rajan Patel',
     isAvailable: true,
     documentsStatus: [],
-    createdAt: '2025-01-15T00:00:00.000Z',
+    memberSince: '2025-01-15T00:00:00.000Z',
     nationality: 'Indian',
     currentLocation: 'Surat',
     jobCategoryId: 'cat-construction',
@@ -193,7 +193,6 @@ describe('CandidateBrowseCard', () => {
       fullName: 'Amir Khan',
       isAvailable: true,
       hasForeignExperience: true,
-      createdAt: '2025-01-01T00:00:00.000Z',
       nationality: 'Indian',
       currentLocation: 'Mumbai',
       jobCategoryId: 'cat-construction',
@@ -211,7 +210,7 @@ describe('CandidateBrowseCard', () => {
     );
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', '/en/employer/candidates/cand-1');
-    expect(screen.getByText('Gulf experience')).toBeInTheDocument();
+    expect(screen.getByText('International experience')).toBeInTheDocument();
     expect(screen.getByText('Masonry')).toBeInTheDocument();
   });
 
@@ -221,7 +220,7 @@ describe('CandidateBrowseCard', () => {
         <CandidateBrowseCard candidate={card({ hasForeignExperience: false })} />
       </I18n>,
     );
-    expect(screen.queryByText('Gulf experience')).not.toBeInTheDocument();
+    expect(screen.queryByText('International experience')).not.toBeInTheDocument();
   });
 });
 
@@ -255,7 +254,7 @@ describe('buildCandidateQuery', () => {
 describe('browse + view (MSW)', () => {
   it('never returns a profileVisible=false candidate', async () => {
     loginAsApprovedEmployer();
-    const res = await browseCandidates(EMPTY_CANDIDATE_FILTERS, { limit: 50 });
+    const res = await browseCandidates(EMPTY_CANDIDATE_FILTERS, { pageSize: 50 });
     const names = res.data.map((c) => c.fullName);
     expect(names).toContain('Rajan Patel');
     expect(names).not.toContain('Hidden User');

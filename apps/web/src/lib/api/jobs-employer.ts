@@ -21,6 +21,8 @@ export interface Job {
   location: string;
   description: string;
   categoryId: string;
+  /** Free-text trade; non-null only when `categoryId` is the "Other" category. */
+  categoryOther: string | null;
   requirements: string[];
   experienceRequiredYears: number | null;
   salaryMin: number;
@@ -71,6 +73,8 @@ export interface CreateJobBody {
   location: string;
   description: string;
   categoryId: string;
+  /** Free-text trade; send ONLY with the "Other" category (422 otherwise). */
+  categoryOther?: string;
   requirements: string[];
   experienceRequiredYears?: number;
   salaryMin: number;
@@ -97,7 +101,7 @@ export function getJobCategories(): Promise<{ data: JobCategory[] }> {
 
 export interface MyJobsResult {
   data: Job[];
-  meta: { page: number; pageSize: number; total: number; totalPages: number };
+  meta: { page: number; pageSize: number; total: number; totalPages: number; sort?: string };
 }
 
 export function listMyJobs(params?: {
@@ -105,12 +109,14 @@ export function listMyJobs(params?: {
   search?: string;
   page?: number;
   pageSize?: number;
+  sort?: string;
 }): Promise<MyJobsResult> {
   const qs = new URLSearchParams();
   if (params?.status) qs.set('status', params.status);
   if (params?.search) qs.set('search', params.search);
   if (params?.page) qs.set('page', String(params.page));
   if (params?.pageSize) qs.set('pageSize', String(params.pageSize));
+  if (params?.sort) qs.set('sort', params.sort);
   const query = qs.toString();
   return apiFetchRaw<MyJobsResult>(`/employers/me/jobs${query ? `?${query}` : ''}`);
 }

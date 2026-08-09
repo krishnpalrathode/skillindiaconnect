@@ -1,4 +1,4 @@
-# Render Blueprint — SkillIndiaConnect
+# Render Blueprint — Skill India Connect
 #
 # Declares the three services this platform needs. The API and the WORKER are
 # built from the SAME image (apps/api/Dockerfile) and differ only by their

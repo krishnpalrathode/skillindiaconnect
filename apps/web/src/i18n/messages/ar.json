@@ -1,4 +1,12 @@
 {
+  "pagination": {
+    "label": "تنقل الصفحات",
+    "pageInfo": "صفحة {page} من {totalPages}",
+    "prev": "السابق",
+    "next": "التالي",
+    "previousPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية"
+  },
   "resume": {
     "pageTitle": "[ar] Resume Builder",
     "pageSubtitle": "[ar] Create a professional resume from your profile, then download it or send it to yourself.",
@@ -86,7 +94,7 @@
         "MINIMAL": "[ar] Minimal"
       },
       "descriptions": {
-        "CLASSIC": "[ar] Traditional and formal. A safe choice for Gulf employers.",
+        "CLASSIC": "تقليدية ورسمية. خيار آمن لأصحاب العمل الدوليين.",
         "MODERN": "[ar] Clean and spacious. Works well for most candidates.",
         "COMPACT": "[ar] Two columns. Fits more experience on one page.",
         "MINIMAL": "[ar] Plain and simple. Easiest for hiring software to read."
@@ -127,6 +135,39 @@
     "brand": "سكيل إنديا كونكت",
     "logoutSuccess": "تم تسجيل الخروج بنجاح"
   },
+  "toast": {
+    "saved": "تم حفظ التغييرات بنجاح",
+    "saveFailed": "تعذّر حفظ التغييرات. يرجى المحاولة مرة أخرى.",
+    "photoUpdated": "تم تحديث صورة الملف الشخصي",
+    "availabilityOn": "أنت الآن متاح للعمل",
+    "availabilityOff": "أنت الآن غير متاح للعمل",
+    "salarySaved": "تم حفظ تفضيلات الراتب",
+    "privacySaved": "تم حفظ إعدادات الخصوصية",
+    "notificationsSaved": "تم حفظ تفضيلات الإشعارات",
+    "documentUploaded": "تم رفع المستند بنجاح",
+    "documentDeleted": "تم الحذف بنجاح",
+    "applicationSubmitted": "تم إرسال الطلب بنجاح",
+    "resumeReady": "تم إنشاء السيرة الذاتية بنجاح",
+    "resumeEmailed": "تم إرسال السيرة الذاتية إلى بريدك الإلكتروني",
+    "jobSaved": "تم حفظ الوظيفة",
+    "jobUnsaved": "تمت إزالة الوظيفة من المحفوظات",
+    "jobCreated": "تم إنشاء الوظيفة بنجاح",
+    "jobUpdated": "تم تحديث الوظيفة بنجاح",
+    "jobPublished": "تم نشر الوظيفة بنجاح",
+    "jobPaused": "تم إيقاف الوظيفة مؤقتًا",
+    "jobResumed": "تم استئناف الوظيفة",
+    "jobDeleted": "تم حذف الوظيفة بنجاح",
+    "jobDuplicated": "تم نسخ الوظيفة بنجاح",
+    "applicantStatusUpdated": "تم تحديث حالة الطلب",
+    "notesSaved": "تمت إضافة الملاحظة بنجاح",
+    "allNotificationsRead": "تم وضع علامة مقروء على جميع الإشعارات",
+    "contactSaved": "تم حفظ جهة الاتصال",
+    "contactDeleted": "تم حذف جهة الاتصال",
+    "settingsSaved": "تم حفظ الإعدادات بنجاح",
+    "exportStarted": "تم تنزيل التصدير بنجاح",
+    "actionFailed": "لم تنجح العملية. يرجى المحاولة مرة أخرى.",
+    "jobArchived": "تمت أرشفة الوظيفة"
+  },
   "field": {
     "requiredError": "[ar] This field is required",
     "invalidFormat": "[ar] Invalid format",
@@ -159,7 +200,7 @@
     "expired": "[ar] Expired"
   },
   "auth": {
-    "loginTitle": "تسجيل الدخول إلى SkillIndiaConnect",
+    "loginTitle": "تسجيل الدخول إلى Skill India Connect",
     "loginSubtitle": "مرحباً بعودتك — واصل رحلتك",
     "signupTitle": "إنشاء حسابك",
     "signupSubtitle": "انضم إلى آلاف العمال الذين يجدون فرصاً",
@@ -519,7 +560,8 @@
       "candidates": "المرشحون",
       "notifications": "الإشعارات",
       "subscription": "الاشتراك",
-      "profile": "ملف الشركة"
+      "profile": "ملف الشركة",
+      "interested": "المهتم بهم"
     },
     "header": {
       "notifications": "الإشعارات",
@@ -558,7 +600,7 @@
       "pageSubtitle": "تواصل مع عمال مهرة موثّقين في الهند ودول الخليج.",
       "trustBadge1": "ملفات شخصية موثّقة",
       "trustBadge2": "عملية توظيف آمنة",
-      "trustBadge3": "أسواق الخليج والمحلية",
+      "trustBadge3": "أسواق الهند والأسواق الدولية",
       "formTitle": "تسجيل الدخول إلى حساب صاحب العمل",
       "emailLabel": "البريد الإلكتروني للعمل",
       "emailPlaceholder": "you@company.com",
@@ -567,7 +609,7 @@
       "rememberMe": "تذكرني",
       "forgotPassword": "نسيت كلمة المرور؟",
       "loginButton": "تسجيل الدخول",
-      "noAccount": "جديد على SkillIndiaConnect؟",
+      "noAccount": "جديد على Skill India Connect؟",
       "registerLink": "سجّل شركتك",
       "candidateLink": "تبحث عن وظيفة بدلاً من ذلك؟",
       "candidateLoginLink": "دخول المرشحين",
@@ -583,10 +625,10 @@
       "resubmitPageSubtitle": "حدّث بياناتك وأعد التقديم للمراجعة.",
       "companyTypeLabel": "نوع الشركة",
       "companyTypeRequired": "يرجى اختيار نوع الشركة",
-      "localTitle": "شركة محلية",
+      "localTitle": "شركة في الهند",
       "localDescription": "مسجلة في الهند وتوظف محلياً",
-      "foreignTitle": "شركة خليجية / أجنبية",
-      "foreignDescription": "مسجلة خارج الهند وتوظف دولياً",
+      "foreignTitle": "شركة دولية",
+      "foreignDescription": "مسجلة خارج الهند وتوظف دوليًا",
       "nameLabel": "اسم الشركة",
       "namePlaceholder": "الاسم القانوني لشركتك",
       "nameRequired": "اسم الشركة مطلوب",
@@ -702,7 +744,7 @@
         "changeLogoLabel": "تغيير شعار الشركة",
         "uploadLogoLabel": "رفع شعار الشركة",
         "logoAlt": "شعار الشركة",
-        "approvedBadge": "معتمدة من SkillIndiaConnect",
+        "approvedBadge": "معتمدة من Skill India Connect",
         "verifiedBadge": "موثّق",
         "uploading": "جارٍ الرفع…",
         "uploadDone": "تم تحديث الشعار",
@@ -717,8 +759,8 @@
         "sectionTitle": "معلومات الشركة",
         "nameLabel": "اسم الشركة",
         "typeLabel": "نوع الشركة",
-        "typeLocal": "محلية (الهند)",
-        "typeForeign": "أجنبية / الخليج",
+        "typeLocal": "الهند",
+        "typeForeign": "دولي",
         "typeReadOnlyHint": "نوع الشركة محدد عند التسجيل ولا يمكن تغييره هنا. تواصل مع الدعم.",
         "registrationNumberLabel": "رقم التسجيل",
         "registrationNumberReadOnlyHint": "هوية تسجيلك الموثّقة. تواصل مع الدعم للتحديث.",
@@ -731,7 +773,8 @@
         "descriptionLabel": "وصف الشركة",
         "descriptionPlaceholder": "أخبر المرشحين عن شركتك…",
         "notSet": "غير محدد",
-        "saveError": "فشل الحفظ. يرجى المحاولة مجدداً."
+        "saveError": "فشل الحفظ. يرجى المحاولة مجدداً.",
+        "addValue": "أضف {field}"
       },
       "hiringPrefs": {
         "sectionTitle": "تفضيلات التوظيف",
@@ -777,7 +820,7 @@
         "reuploadHint": "PDF أو JPG أو PNG — بحد أقصى 10 ميغابايت",
         "noDocument": "لا توجد شهادة مرفوعة.",
         "uploadedOn": "تم الرفع",
-        "verifiedNote": "اكتمل التحقق. تمت مراجعة شهادتك من قِبَل SkillIndiaConnect.",
+        "verifiedNote": "اكتمل التحقق. تمت مراجعة شهادتك من قِبَل Skill India Connect.",
         "pendingReviewNote": "قيد المراجعة. سيتحقق فريقنا من شهادتك قريباً."
       },
       "accountSettings": {
@@ -812,7 +855,7 @@
       "card": {
         "srLabel": "{name}، {category}",
         "experienceYears": "{years, plural, =0 {لا خبرة} one {سنة خبرة} two {سنتان خبرة} few {# سنوات خبرة} many {# سنة خبرة} other {# سنوات خبرة}}",
-        "gulfExperience": "خبرة خليجية",
+        "gulfExperience": "خبرة دولية",
         "skillsLabel": "أبرز المهارات"
       },
       "filters": {
@@ -824,7 +867,7 @@
         "minExperience": "الحد الأدنى للخبرة",
         "anyExperience": "أي خبرة",
         "yearsPlus": "{years}+ سنوات",
-        "foreignExperience": "لديه خبرة خليجية",
+        "foreignExperience": "لديه خبرة دولية",
         "availableNow": "متاح الآن",
         "clear": "مسح عوامل التصفية"
       },
@@ -850,7 +893,7 @@
         "timeline": {
           "title": "الخبرة العملية",
           "india": "الهند",
-          "foreign": "الخليج / الخارج",
+          "foreign": "دولي",
           "years": "{count, plural, zero {# سنة} one {سنة} two {سنتان} few {# سنوات} many {# سنة} other {# سنوات}}",
           "months": "{count, plural, zero {# شهر} one {شهر} two {شهران} few {# أشهر} many {# شهراً} other {# شهر}}"
         },
@@ -868,6 +911,29 @@
           "proHint": "الوصول إلى المستندات متاح في خطة Pro."
         }
       }
+    },
+    "interest": {
+      "pageTitle": "المرشحون المهتم بهم",
+      "pageSubtitle": "العمال الذين اخترتهم. الاختيار خاص — لا يُبلَّغون إلا عند إرسال رسالة.",
+      "mark": "تحديد كمهتم به",
+      "marked": "مهتم به",
+      "markHint": "قائمة خاصة. لن يُبلَّغ المرشح.",
+      "markedHint": "تمت الإضافة. أرسل رسالة عندما تكون جاهزًا.",
+      "alreadyNotified": "لقد راسلت هذا المرشح من قبل.",
+      "toggleError": "تعذّر التحديث. حاول مرة أخرى.",
+      "selectAll": "تحديد كل من لم تتم مراسلتهم",
+      "selectCandidate": "تحديد {name}",
+      "notifySelected": "إشعار ({count})",
+      "notifyResult": "تم إرسال {queued}، وتخطّي {skipped} تمت مراسلتهم سابقًا.",
+      "notifyCostHint": "تُرسل كل رسالة إلى المرشح عبر واتساب والبريد الإلكتروني. يمكنك مراسلة كل مرشح مرة واحدة.",
+      "contacted": "تمت المراسلة",
+      "locationUnknown": "الموقع غير محدد",
+      "emptyTitle": "لا يوجد مرشحون مهتم بهم بعد",
+      "emptyBody": "تصفّح المرشحين وحدّد من تريد التواصل معهم.",
+      "browseCandidates": "تصفّح المرشحين",
+      "loadError": "تعذّر تحميل القائمة.",
+      "retry": "حاول مرة أخرى",
+      "sectionTitle": "الاهتمام"
     }
   },
   "jobs": {
@@ -883,7 +949,7 @@
     "tabs": {
       "all": "الكل",
       "local": "الهند",
-      "foreign": "الخليج"
+      "foreign": "دولي"
     },
     "filters": {
       "sort": "ترتيب:",
@@ -925,8 +991,8 @@
       "save": "حفظ الوظيفة",
       "unsave": "محفوظة",
       "newBadge": "جديدة",
-      "marketGulf": "خليج",
-      "marketLocal": "هند"
+      "marketGulf": "دولي",
+      "marketLocal": "الهند"
     },
     "benefits": {
       "pf": "PF",
@@ -1082,12 +1148,15 @@
       "titleLabel": "المسمى الوظيفي",
       "titlePlaceholder": "مثل: بنّاء متمرس، كهربائي أول",
       "marketLabel": "السوق",
-      "marketGulf": "الخليج (دولي)",
-      "marketLocal": "محلي (الهند)",
+      "marketGulf": "دولي",
+      "marketLocal": "الهند",
       "countryLabel": "الدولة",
       "countryPlaceholder": "اختر دولة",
       "locationLabel": "الموقع",
-      "locationPlaceholder": "مثل: دبي، الإمارات أو مومباي، الهند"
+      "locationPlaceholder": "مثل: دبي، الإمارات أو مومباي، الهند",
+      "categoryOtherLabel": "فئة الوظيفة الخاصة بك",
+      "categoryOtherHint": "تُعرض للمرشحين بدلاً من اسم المهنة.",
+      "categoryOtherPlaceholder": "مثال: Agentic AI Engineer"
     },
     "description": {
       "heading": "وصف الوظيفة",
@@ -1109,7 +1178,7 @@
       "heading": "المزايا",
       "subtitle": "المزايا الإلزامية مطلوبة بموجب سياسة المنصة.",
       "policyTitle": "سياسة حماية العمال",
-      "policyBody": "يجب أن تتضمن جميع الوظائف على SkillIndiaConnect السكن والتأمين الصحي والمواصلات.",
+      "policyBody": "يجب أن تتضمن جميع الوظائف على Skill India Connect السكن والتأمين الصحي والمواصلات.",
       "mandatoryLabel": "إلزامي (مطلوب بموجب سياسة المنصة)",
       "optionalLabel": "مزايا اختيارية",
       "accommodation": "السكن",
@@ -1168,8 +1237,8 @@
       "violationAccommodation": "السكن",
       "violationHealthInsurance": "التأمين الصحي",
       "violationTransportation": "المواصلات",
-      "quotaTitle": "تم الوصول إلى حد الوظائف النشطة ({limit} وظيفة)",
-      "quotaBody": "تتيح خطتك المجانية وظيفة نشطة واحدة في كل مرة.",
+      "quotaTitle": "تم بلوغ حد الوظائف النشطة ({limit, plural, one {# وظيفة} other {# وظائف}})",
+      "quotaBody": "تتيح خطتك المجانية {limit, plural, one {# وظيفة نشطة} other {# وظائف نشطة}} في كل مرة. أوقف وظيفة نشطة أو أرشِفها لنشر أخرى، أو قم بالترقية إلى Pro لعدد غير محدود.",
       "quotaUpgradeLink": "الترقية إلى Pro",
       "genericTitle": "فشل النشر",
       "dismiss": "رفض"
@@ -1199,7 +1268,7 @@
     "emptyTitle": "لا وظائف بعد",
     "emptyBody": "انشر وظيفتك الأولى لبدء استقبال الطلبات.",
     "draftNotPosted": "مسودة",
-    "marketGulf": "الخليج",
+    "marketGulf": "دولي",
     "marketLocal": "الهند",
     "applicationsPlaceholder": "0 طلبات",
     "pageInfo": "صفحة {page} من {totalPages}",
@@ -1314,8 +1383,8 @@
       "category": "فئة الوظيفة",
       "experience": "الخبرة",
       "experienceBasis": "بناءً على {clamped} من {raw} سنوات",
-      "foreign": "الخبرة الأجنبية",
-      "foreignLocalNote": "لا تُحتسب للوظائف المحلية.",
+      "foreign": "خبرة دولية",
+      "foreignLocalNote": "لا يُحتسب للوظائف داخل الهند.",
       "documents": "المستندات",
       "componentScore": "{score}/{max}",
       "track": "تتبّع في طلباتي"
@@ -1354,7 +1423,7 @@
       "SELECTED": "تم اختياره من قبل صاحب العمل",
       "REJECTED": "لم يتم اختياره من قبل صاحب العمل",
       "PENDING": "أُعيد فتحه",
-      "adminOverride": "تم تحديث الحالة بواسطة SkillIndiaConnect"
+      "adminOverride": "تم تحديث الحالة بواسطة Skill India Connect"
     },
     "rejection": {
       "feedbackLabel": "ملاحظات من صاحب العمل",
@@ -1393,7 +1462,7 @@
       "recent": "الأحدث"
     },
     "matchShort": "تطابق {score}%",
-    "gulfBadge": "خبرة خليجية",
+    "gulfBadge": "خبرة دولية",
     "ageYears": "{age} سنة",
     "expYears": "خبرة {years} سنة",
     "appliedAgo": "تم التقديم {ago}",
@@ -1415,8 +1484,8 @@
       "category": "فئة الوظيفة",
       "experience": "الخبرة",
       "experienceBasis": "بناءً على {clamped} من {raw} سنوات",
-      "foreign": "الخبرة الأجنبية",
-      "foreignLocalNote": "لا تُحتسب للوظائف المحلية.",
+      "foreign": "خبرة دولية",
+      "foreignLocalNote": "لا يُحتسب للوظائف داخل الهند.",
       "documents": "المستندات",
       "componentScore": "{score}/{max}"
     },
@@ -1520,6 +1589,12 @@
       "downloadPdf": "تحميل PDF",
       "downloadPdfLabel": "تحميل PDF للفاتورة {number}",
       "pdfPending": "جارٍ الإنشاء…",
+      "invoicePageInfo": "صفحة {page} من {totalPages}",
+      "invoicePrev": "السابق",
+      "invoiceNext": "التالي",
+      "invoicePreviousPage": "الصفحة السابقة من الفواتير",
+      "invoiceNextPage": "الصفحة التالية من الفواتير",
+      "invoicesPaginationLabel": "تنقل صفحات الفواتير",
       "viewDoc": "عرض",
       "viewDocLoading": "جارٍ الفتح…",
       "viewDocLabel": "عرض وثيقة {doc}",
@@ -1840,5 +1915,9 @@
         }
       ]
     }
+  },
+  "sorting": {
+    "sortAscending": "ترتيب حسب {column}، تصاعدي",
+    "sortDescending": "ترتيب حسب {column}، تنازلي"
   }
 }

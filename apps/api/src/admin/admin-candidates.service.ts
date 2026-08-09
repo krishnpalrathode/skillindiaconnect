@@ -16,7 +16,13 @@ import {
   type AdminCandidateCardDto,
   type AdminCandidateDetailDto,
 } from './mappers/admin-candidate.mapper';
-import type { ListAdminCandidatesDto, PurgeCandidateDto } from './dto/admin-candidates.dto';
+import {
+  ADMIN_CANDIDATE_SORT,
+  ADMIN_CANDIDATE_SORT_DEFAULT,
+  type ListAdminCandidatesDto,
+  type PurgeCandidateDto,
+} from './dto/admin-candidates.dto';
+import { buildOrderBy, resolveSort } from '../core/sorting';
 
 export interface AdminActor {
   userId: string;
@@ -51,20 +57,27 @@ export class AdminCandidatesService {
 
   async list(query: ListAdminCandidatesDto): Promise<{
     data: AdminCandidateCardDto[];
-    meta: { page: number; pageSize: number; total: number; totalPages: number };
+    meta: { page: number; pageSize: number; total: number; totalPages: number; sort: string };
   }> {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
+    // Resolved HERE, against this endpoint's whitelist — the read service is
+    // handed a built orderBy and never sees the raw client string.
+    const sort = resolveSort(query.sort, ADMIN_CANDIDATE_SORT, ADMIN_CANDIDATE_SORT_DEFAULT);
+
     const { rows, total } = await this.candidateRead.adminListCandidates({
       page,
       pageSize,
       search: query.search,
       status: query.status,
       visibility: query.visibility,
+      orderBy: buildOrderBy(sort, ADMIN_CANDIDATE_SORT),
     });
     return {
       data: rows.map(toAdminCandidateCard),
-      meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
+      // `sort` is echoed so the table can render its own indicator from the
+      // server's answer rather than assuming its request was honoured.
+      meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize), sort: sort.applied },
     };
   }
 

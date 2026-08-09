@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
 import { Toggle } from '@/components/common/Toggle';
+import { useToast } from '@/components/ui/toast';
 import { patchCandidateSettings } from '@/lib/api/candidate';
 import { CURRENCIES } from '@/lib/currencies';
 
@@ -68,6 +69,8 @@ function ToggleRow({ label, hint, checked, onChange, saving }: ToggleRowProps) {
 export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSettingsSectionProps) {
   const t = useTranslations('profile.settings');
   const tSec = useTranslations('profile.sections');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
 
   const [settings, setSettings] = useState<Settings>(() => readSettings(profile));
   const [toggleSaving, setToggleSaving] = useState(false);
@@ -93,13 +96,35 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
     Number.isFinite(maxNum) &&
     minNum > maxNum;
 
-  async function applyToggle(patch: Partial<Settings>) {
+  /*
+    Nothing to save until one of the three inputs differs from what the server
+    last returned. Compared against `profile` rather than tracked with a dirty
+    flag because `profile` IS the saved state here — it is replaced by the PATCH
+    response — so typing a value and typing it back correctly re-disables the
+    button, and the re-enable rule needs no bookkeeping of its own.
+  */
+  const salaryDirty =
+    salaryMin !== String(profile.salaryExpectationMin ?? '') ||
+    salaryMax !== String(profile.salaryExpectationMax ?? '') ||
+    currency !== (profile.salaryExpectationCurrency ?? 'INR');
+
+  /**
+   * `toastKey` names the group the switch belongs to rather than the switch
+   * itself. Flipping three privacy switches in a row then reads as one
+   * "Privacy settings saved" (the provider collapses repeats) instead of three
+   * near-identical cards stacking up.
+   */
+  async function applyToggle(
+    patch: Partial<Settings>,
+    toastKey: 'privacySaved' | 'notificationsSaved',
+  ) {
     const next = { ...settings, ...patch };
     setSettings(next);
     setToggleSaving(true);
     try {
       const updated = await patchCandidateSettings(next);
       onProfileUpdate(updated);
+      showToast({ message: tToast(toastKey) });
     } finally {
       setToggleSaving(false);
     }
@@ -119,6 +144,7 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
         salaryExpectationCurrency: currency,
       });
       onProfileUpdate(updated);
+      showToast({ message: tToast('salarySaved') });
     } finally {
       setSalarySaving(false);
     }
@@ -146,26 +172,26 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
               label={t('showPhone')}
               hint={t('showPhoneHint')}
               checked={settings.showPhone}
-              onChange={(v) => applyToggle({ showPhone: v })}
+              onChange={(v) => applyToggle({ showPhone: v }, 'privacySaved')}
               saving={toggleSaving}
             />
             <ToggleRow
               label={t('showReligion')}
               hint={t('showReligionHint')}
               checked={settings.showReligion}
-              onChange={(v) => applyToggle({ showReligion: v })}
+              onChange={(v) => applyToggle({ showReligion: v }, 'privacySaved')}
               saving={toggleSaving}
             />
             <ToggleRow
               label={t('profileVisible')}
               checked={settings.profileVisible}
-              onChange={(v) => applyToggle({ profileVisible: v })}
+              onChange={(v) => applyToggle({ profileVisible: v }, 'privacySaved')}
               saving={toggleSaving}
             />
             <ToggleRow
               label={t('isAvailable')}
               checked={settings.isAvailable}
-              onChange={(v) => applyToggle({ isAvailable: v })}
+              onChange={(v) => applyToggle({ isAvailable: v }, 'privacySaved')}
               saving={toggleSaving}
             />
           </div>
@@ -180,13 +206,13 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
             <ToggleRow
               label={t('waNotifications')}
               checked={settings.waNotifications}
-              onChange={(v) => applyToggle({ waNotifications: v })}
+              onChange={(v) => applyToggle({ waNotifications: v }, 'notificationsSaved')}
               saving={toggleSaving}
             />
             <ToggleRow
               label={t('emailNotifications')}
               checked={settings.emailNotifs}
-              onChange={(v) => applyToggle({ emailNotifs: v })}
+              onChange={(v) => applyToggle({ emailNotifs: v }, 'notificationsSaved')}
               saving={toggleSaving}
             />
           </div>
@@ -247,7 +273,7 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
               variant="secondary"
               size="sm"
               loading={salarySaving}
-              disabled={salaryRangeInvalid}
+              disabled={salaryRangeInvalid || !salaryDirty}
               onClick={saveSalary}
               className="min-h-10 self-start rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] px-5 text-white shadow-sm transition-all hover:shadow-md"
             >

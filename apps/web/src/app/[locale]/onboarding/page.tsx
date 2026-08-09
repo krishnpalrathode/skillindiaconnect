@@ -11,7 +11,7 @@ import { PersonalInfoStep } from '@/components/onboarding/steps/PersonalInfoStep
 import { ExperienceStep } from '@/components/onboarding/steps/ExperienceStep';
 import { DocumentsSkillsStep } from '@/components/onboarding/steps/DocumentsSkillsStep';
 import { PreviewExportStep } from '@/components/onboarding/steps/PreviewExportStep';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { getCandidateProfile } from '@/lib/api/candidate';
 import { useAuth } from '@/lib/auth/auth-context';
 
@@ -87,7 +87,7 @@ export default function OnboardingPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Spinner size={32} label={t('loading')} />
+        <BrandLoader size="lg" label={t('loading')} />
       </div>
     );
   }

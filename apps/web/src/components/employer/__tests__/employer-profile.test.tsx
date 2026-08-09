@@ -1,8 +1,9 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '../../../test-utils';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
+import { ToastProvider } from '../../../components/ui/toast';
 import enMessages from '../../../i18n/messages/en.json';
 import { db, makeAccessToken, EMPLOYER_APPROVED_USER_ID } from '../../../mocks/data';
 import { setAccessToken, resetClient } from '../../../lib/api/client';
@@ -26,7 +27,7 @@ vi.mock('next/navigation', () => ({
 function I18n({ children }: { children: React.ReactNode }) {
   return (
     <NextIntlClientProvider locale="en" messages={enMessages}>
-      {children}
+      <ToastProvider>{children}</ToastProvider>
     </NextIntlClientProvider>
   );
 }
@@ -336,12 +337,17 @@ describe('ChecklistNudge', () => {
   });
 
   it('renders nothing when hint is null', () => {
-    const { container } = render(
+    render(
       <I18n>
         <ChecklistNudge hint={null} />
       </I18n>,
     );
 
-    expect(container.firstChild).toBeNull();
+    // Assert the COMPONENT rendered nothing, not that the container is empty:
+    // the shared test render wraps everything in ToastProvider, whose aria-live
+    // region is always present (it must exist before a toast arrives, or screen
+    // readers miss the announcement). `container.firstChild` is therefore that
+    // region, never null.
+    expect(screen.queryByRole('note')).toBeNull();
   });
 });

@@ -1,4 +1,4 @@
-# Redocly lint configuration for the SkillIndiaConnect OpenAPI contract.
+# Redocly lint configuration for the Skill India Connect OpenAPI contract.
 #
 # Suppressed warnings explained:
 #   info-license              — no open-source license; internal platform.

@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/auth-context';
 import { roleHome } from '@/lib/auth/role-home';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 
 interface EmployerRouteGuardProps {
   children: React.ReactNode;
@@ -32,7 +32,7 @@ export function EmployerRouteGuard({ children }: EmployerRouteGuardProps) {
   if (isLoading || !user || user.role !== 'EMPLOYER') {
     return (
       <div className="flex min-h-svh items-center justify-center bg-neutral-50">
-        <Spinner size={32} label="Loading…" />
+        <BrandLoader size="lg" label="Loading…" />
       </div>
     );
   }

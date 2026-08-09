@@ -2,6 +2,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestj
 import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user.decorator';
 import { NotificationService } from './notification.service';
 import { NotificationDto } from './notification.mapper';
+import type { Paginated } from '../core/pagination';
 import { ListNotificationsDto } from './dto/list-notifications.dto';
 import { MarkReadDto } from './dto/mark-read.dto';
 
@@ -20,13 +21,13 @@ export class EmployerNotificationsController {
 
   /**
    * GET /api/v1/employers/me/notifications
-   * Cursor-based feed; optional filter bucket + unread-only flag.
+   * Offset-paginated feed; optional filter bucket + unread-only flag.
    */
   @Get()
   async list(
     @CurrentUser() user: CurrentUserPayload,
     @Query() dto: ListNotificationsDto,
-  ): Promise<{ data: NotificationDto[]; nextCursor: string | null }> {
+  ): Promise<Paginated<NotificationDto>> {
     this.notificationService.assertEmployerRole(user.role);
     return this.notificationService.listNotifications(user.userId, dto);
   }

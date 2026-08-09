@@ -29,7 +29,30 @@ export class ListAdminCandidatesDto {
   @Min(1)
   @Max(100)
   pageSize?: number = 20;
+
+  /**
+   * `field:dir`. Validated against ADMIN_CANDIDATE_SORT (the whitelist), not
+   * here — an unknown field falls back to the default rather than 400ing, so a
+   * stale bookmark still renders.
+   */
+  @IsOptional()
+  @IsString()
+  sort?: string;
 }
+
+/**
+ * Sortable columns for the admin candidate table.
+ *
+ * Deliberately NOT every column: `phone` is absent because ordering by it is a
+ * read of data the table shows masked, and a sort is enough to reconstruct it.
+ */
+export const ADMIN_CANDIDATE_SORT = {
+  name: 'fullName',
+  completion: 'completionPct',
+  created: 'createdAt',
+} as const;
+
+export const ADMIN_CANDIDATE_SORT_DEFAULT = 'created:desc';
 
 export class SuspendCandidateDto {
   /** Mandatory — written to the audit row. */

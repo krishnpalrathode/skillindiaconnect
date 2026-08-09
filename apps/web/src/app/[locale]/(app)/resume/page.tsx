@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useParams } from 'next/navigation';
 import type { components } from '@skillindiaconnect/shared-types';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { ResumeExportHub } from '@/components/resume/ResumeExportHub';
 import { getCandidateProfile } from '@/lib/api/candidate';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -71,7 +71,7 @@ export default function ResumeBuilderPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Spinner size={32} label={t('loading')} />
+        <BrandLoader size="lg" label={t('loading')} />
       </div>
     );
   }

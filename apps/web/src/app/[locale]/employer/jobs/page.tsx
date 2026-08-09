@@ -4,19 +4,26 @@ import React, { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { MyJobsTable } from '@/components/employer/myjobs/MyJobsTable';
+import { useToast } from '@/components/ui/toast';
 import { EMPLOYER_PAGE_SHELL } from '@/lib/page-shell';
 
 export default function MyJobsPage() {
   const t = useTranslations('myjobs');
   const searchParams = useSearchParams();
-  const toastRef = useRef<HTMLDivElement>(null);
+  const { showToast } = useToast();
+  // Guards against re-announcing on a re-render or a manual refresh — the
+  // `published` param stays in the URL after the redirect that set it.
+  const announced = useRef(false);
 
   const published = searchParams?.get('published');
 
   useEffect(() => {
-    if (published && toastRef.current) {
-      toastRef.current.focus();
-    }
+    if (!published || announced.current) return;
+    announced.current = true;
+    showToast({ message: t('publishSuccess') });
+    // `t` and `showToast` are stable enough for this one-shot, and the ref
+    // above is the real re-entry guard.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [published]);
 
   return (
@@ -30,18 +37,9 @@ export default function MyJobsPage() {
         </div>
       </div>
 
-      {published && (
-        <div
-          ref={toastRef}
-          role="status"
-          tabIndex={-1}
-          aria-live="polite"
-          className="rounded-2xl border border-success-fg/25 bg-success-bg px-5 py-4 text-sm font-medium text-success-fg shadow-sm"
-        >
-          {t('publishSuccess')}
-        </div>
-      )}
-
+      {/* The publish confirmation used to be a bespoke green panel here. It is
+          now the shared toast (fired above) so every job action — publish,
+          pause, resume, close, duplicate — confirms the same way. */}
       <MyJobsTable />
     </div>
   );

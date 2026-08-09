@@ -70,7 +70,7 @@ test.describe('Onboarding page — structure', () => {
   });
 
   test('branded header is visible', async ({ page }) => {
-    await expect(page.getByText('SkillIndiaConnect')).toBeVisible();
+    await expect(page.getByText('Skill India Connect')).toBeVisible();
   });
 });
 

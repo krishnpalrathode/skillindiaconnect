@@ -25,7 +25,10 @@ import {
   ListAdminJobsDto,
   OnBehalfCreateJobDto,
   ReviewJobDto,
+  ADMIN_JOB_SORT,
+  ADMIN_JOB_SORT_DEFAULT,
 } from './dto/admin-jobs.dto';
+import { buildOrderBy, resolveSort } from '../core/sorting';
 
 export interface AdminActor {
   userId: string;
@@ -127,10 +130,11 @@ export class AdminJobsService {
   /** ALL statuses — the moderation queue deep-links here with ?status=PENDING_REVIEW. */
   async list(query: ListAdminJobsDto): Promise<{
     data: AdminJobRowDto[];
-    meta: { page: number; pageSize: number; total: number; totalPages: number };
+    meta: { page: number; pageSize: number; total: number; totalPages: number; sort: string };
   }> {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
+    const sort = resolveSort(query.sort, ADMIN_JOB_SORT, ADMIN_JOB_SORT_DEFAULT);
 
     const where = {
       ...(query.status !== undefined && { status: query.status }),
@@ -149,7 +153,7 @@ export class AdminJobsService {
     const [rows, total] = await Promise.all([
       this.prisma.job.findMany({
         where,
-        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        orderBy: buildOrderBy(sort, ADMIN_JOB_SORT),
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: { company: { select: { name: true } } },
@@ -163,7 +167,10 @@ export class AdminJobsService {
       this.toRow(job, counts.get(job.id)?.applications ?? 0),
     );
 
-    return { data, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } };
+    return {
+      data,
+      meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize), sort: sort.applied },
+    };
   }
 
   // ── GET /admin/jobs/{id} — the moderation detail (0.8.1) ───────────────────

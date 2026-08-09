@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -79,6 +79,27 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
     .map((w) => w[0]?.toUpperCase() ?? '')
     .join('');
 
+  // Same dismissal contract as the candidate chip: Escape, or a click anywhere
+  // outside. The previous onBlur-only version left the menu stuck open whenever
+  // focus never entered it — a mouse user clicking the page background.
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onPointerDown(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMenuOpen(false);
+    }
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-4 sm:px-6 bg-white/90 backdrop-blur-md border-b border-neutral-200/70 shadow-sm">
       {/* Left: hamburger trigger (mobile) + company name */}
@@ -139,7 +160,9 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
           <Bell className="size-5" aria-hidden="true" />
         </Link>
 
-        {/* Account menu */}
+        {/* Account menu — deliberately the same shape as the candidate chip in
+            DashboardHeader: an identity chip that opens a compact actions menu,
+            closing on Escape or an outside click. */}
         <div className="relative" ref={menuRef}>
           <button
             type="button"
@@ -147,17 +170,26 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
             aria-expanded={menuOpen}
             aria-label={t('header.accountMenu')}
             onClick={() => setMenuOpen((o) => !o)}
-            onBlur={(e) => {
-              if (!menuRef.current?.contains(e.relatedTarget as Node)) {
-                setMenuOpen(false);
-              }
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-medium text-neutral-700 ring-1 ring-neutral-200/70 transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 min-h-[40px]"
+            className="flex items-center gap-2.5 rounded-full bg-white/80 py-1.5 pe-2 ps-1.5 shadow-sm ring-1 ring-neutral-200/70 transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
-            <User className="size-4" aria-hidden="true" />
-            <span className="hidden sm:block max-w-[7rem] truncate">{user?.email}</span>
+            <span
+              aria-hidden="true"
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0F3D91] to-[#2E67B1] text-xs font-bold text-white"
+            >
+              {companyInitials || <Building2 className="size-4" />}
+            </span>
+            {/* The COMPANY, not the mailbox — "hr@gulfstar.ex…" said nothing
+                about which account you were operating. Shown here and ONLY
+                here: the menu below is actions only, so the name never appears
+                twice. */}
+            <span className="hidden max-w-[140px] truncate text-start text-sm font-semibold text-neutral-900 sm:block">
+              {displayName}
+            </span>
             <ChevronDown
-              className={cn('size-4 shrink-0 transition-transform', menuOpen && 'rotate-180')}
+              className={cn(
+                'size-4 shrink-0 text-neutral-600 transition-transform',
+                menuOpen && 'rotate-180',
+              )}
               aria-hidden="true"
             />
           </button>
@@ -166,21 +198,32 @@ export function EmployerHeader({ onMenuClick }: { onMenuClick?: () => void }) {
             <div
               role="menu"
               aria-label={t('header.accountMenu')}
-              className="absolute end-0 mt-2 w-52 overflow-hidden rounded-2xl bg-white border border-neutral-200 shadow-xl p-1.5 z-30"
+              // Compact menu, right-aligned under the chip — the company name
+              // already lives on the chip, so the dropdown is just the actions.
+              // Same geometry as the candidate menu in DashboardHeader, one step
+              // wider: that one is sized for the single word "Profile", and
+              // "Company Profile" wraps to two lines at w-44.
+              className="absolute end-0 top-[calc(100%+0.5rem)] z-30 w-52 overflow-hidden rounded-xl border border-neutral-200 bg-white p-1.5 shadow-xl"
             >
-              {user?.email && (
-                <>
-                  <p className="truncate px-3 py-2 text-xs text-neutral-600">{user.email}</p>
-                  <div className="my-1 border-t border-neutral-100" />
-                </>
-              )}
+              <Link
+                href={`/${locale}/employer/profile`}
+                role="menuitem"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+              >
+                <User className="size-4 shrink-0" aria-hidden="true" />
+                {t('nav.profile')}
+              </Link>
               <button
                 role="menuitem"
                 type="button"
-                onClick={requestLogout}
-                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-error-fg transition-colors hover:bg-error-bg focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-[2px] focus-visible:ring-ring/70 min-h-[40px]"
+                onClick={() => {
+                  setMenuOpen(false);
+                  requestLogout();
+                }}
+                className="flex w-full items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium text-error-fg transition-colors hover:bg-error-bg focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
               >
-                <LogOut className="size-4" aria-hidden="true" />
+                <LogOut className="size-4 shrink-0" aria-hidden="true" />
                 {t('header.logout')}
               </button>
             </div>

@@ -47,7 +47,9 @@ const EXPLICIT_WABA = process.env.WHATSAPP_WABA_ID;
  * matrix). Every template Meta returns is printed regardless, so drift between
  * the two is visible rather than hidden.
  */
-const EXPECTED = ['login_otp', 'job_selected', 'resume_document'];
+// job_match_alert is EXPECTED-but-not-yet-submitted: listing it here is how you
+// check whether it has been approved (see docs/whatsapp-integration.md).
+const EXPECTED = ['login_otp', 'job_selected', 'resume_document', 'job_match_alert', 'employer_interest_notice'];
 const PRIMARY = 'login_otp';
 
 interface Template {

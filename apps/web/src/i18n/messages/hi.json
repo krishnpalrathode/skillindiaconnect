@@ -1,4 +1,12 @@
 {
+  "pagination": {
+    "label": "पृष्ठ नेविगेशन",
+    "pageInfo": "पृष्ठ {page} / {totalPages}",
+    "prev": "पिछला",
+    "next": "अगला",
+    "previousPage": "पिछला पृष्ठ",
+    "nextPage": "अगला पृष्ठ"
+  },
   "resume": {
     "pageTitle": "[hi] Resume Builder",
     "pageSubtitle": "[hi] Create a professional resume from your profile, then download it or send it to yourself.",
@@ -86,7 +94,7 @@
         "MINIMAL": "[hi] Minimal"
       },
       "descriptions": {
-        "CLASSIC": "[hi] Traditional and formal. A safe choice for Gulf employers.",
+        "CLASSIC": "पारंपरिक और औपचारिक। अंतर्राष्ट्रीय नियोक्ताओं के लिए एक सुरक्षित विकल्प।",
         "MODERN": "[hi] Clean and spacious. Works well for most candidates.",
         "COMPACT": "[hi] Two columns. Fits more experience on one page.",
         "MINIMAL": "[hi] Plain and simple. Easiest for hiring software to read."
@@ -124,8 +132,41 @@
     "no": "[hi] No",
     "or": "[hi] or",
     "and": "[hi] and",
-    "brand": "स्किलइंडियाकनेक्ट",
+    "brand": "स्किल इंडिया कनेक्ट",
     "logoutSuccess": "सफलतापूर्वक लॉग आउट हो गए"
+  },
+  "toast": {
+    "saved": "बदलाव सफलतापूर्वक सहेजे गए",
+    "saveFailed": "हम आपके बदलाव सहेज नहीं सके। कृपया फिर से प्रयास करें।",
+    "photoUpdated": "प्रोफ़ाइल फ़ोटो अपडेट हो गई",
+    "availabilityOn": "अब आप काम के लिए उपलब्ध दिख रहे हैं",
+    "availabilityOff": "अब आप काम के लिए अनुपलब्ध दिख रहे हैं",
+    "salarySaved": "वेतन प्राथमिकताएँ सहेजी गईं",
+    "privacySaved": "गोपनीयता सेटिंग्स सहेजी गईं",
+    "notificationsSaved": "सूचना प्राथमिकताएँ सहेजी गईं",
+    "documentUploaded": "दस्तावेज़ सफलतापूर्वक अपलोड हुआ",
+    "documentDeleted": "सफलतापूर्वक हटाया गया",
+    "applicationSubmitted": "आवेदन सफलतापूर्वक भेजा गया",
+    "resumeReady": "रिज़्यूमे सफलतापूर्वक तैयार हो गया",
+    "resumeEmailed": "रिज़्यूमे आपके ईमेल पर भेज दिया गया",
+    "jobSaved": "नौकरी सहेजी गई",
+    "jobUnsaved": "नौकरी सहेजी गई सूची से हटाई गई",
+    "jobCreated": "नौकरी सफलतापूर्वक बनाई गई",
+    "jobUpdated": "नौकरी सफलतापूर्वक अपडेट हुई",
+    "jobPublished": "नौकरी सफलतापूर्वक प्रकाशित हुई",
+    "jobPaused": "नौकरी रोकी गई",
+    "jobResumed": "नौकरी फिर से शुरू की गई",
+    "jobDeleted": "नौकरी सफलतापूर्वक हटाई गई",
+    "jobDuplicated": "नौकरी की प्रति सफलतापूर्वक बनाई गई",
+    "applicantStatusUpdated": "आवेदन की स्थिति अपडेट हुई",
+    "notesSaved": "टिप्पणी सफलतापूर्वक जोड़ी गई",
+    "allNotificationsRead": "सभी सूचनाएँ पढ़ी हुई चिह्नित की गईं",
+    "contactSaved": "संपर्क व्यक्ति सहेजा गया",
+    "contactDeleted": "संपर्क व्यक्ति हटाया गया",
+    "settingsSaved": "सेटिंग्स सफलतापूर्वक सहेजी गईं",
+    "exportStarted": "एक्सपोर्ट सफलतापूर्वक डाउनलोड हुआ",
+    "actionFailed": "यह काम नहीं कर सका। कृपया फिर से प्रयास करें।",
+    "jobArchived": "नौकरी संग्रहीत की गई"
   },
   "field": {
     "requiredError": "[hi] This field is required",
@@ -159,7 +200,7 @@
     "expired": "[hi] Expired"
   },
   "auth": {
-    "loginTitle": "SkillIndiaConnect में लॉग इन करें",
+    "loginTitle": "Skill India Connect में लॉग इन करें",
     "loginSubtitle": "वापस स्वागत है — अपना सफ़र जारी रखें",
     "signupTitle": "अपना खाता बनाएं",
     "signupSubtitle": "हज़ारों कामगारों के साथ जुड़ें जो नौकरियाँ ढूंढ रहे हैं",
@@ -519,7 +560,8 @@
       "candidates": "उम्मीदवार",
       "notifications": "सूचनाएं",
       "subscription": "सदस्यता",
-      "profile": "कंपनी प्रोफ़ाइल"
+      "profile": "कंपनी प्रोफ़ाइल",
+      "interested": "रुचि"
     },
     "header": {
       "notifications": "सूचनाएं",
@@ -558,7 +600,7 @@
       "pageSubtitle": "भारत और खाड़ी देशों में कुशल, सत्यापित कर्मचारियों से जुड़ें।",
       "trustBadge1": "सत्यापित कर्मचारी प्रोफ़ाइल",
       "trustBadge2": "सुरक्षित भर्ती प्रक्रिया",
-      "trustBadge3": "खाड़ी और स्थानीय बाज़ार",
+      "trustBadge3": "भारत और अंतर्राष्ट्रीय बाज़ार",
       "formTitle": "अपने नियोक्ता खाते में साइन इन करें",
       "emailLabel": "कार्य ईमेल",
       "emailPlaceholder": "you@company.com",
@@ -567,7 +609,7 @@
       "rememberMe": "मुझे याद रखें",
       "forgotPassword": "पासवर्ड भूल गए?",
       "loginButton": "साइन इन करें",
-      "noAccount": "SkillIndiaConnect पर नए हैं?",
+      "noAccount": "Skill India Connect पर नए हैं?",
       "registerLink": "अपनी कंपनी रजिस्टर करें",
       "candidateLink": "बजाय नौकरी खोज रहे हैं?",
       "candidateLoginLink": "उम्मीदवार लॉगिन",
@@ -583,10 +625,10 @@
       "resubmitPageSubtitle": "अपनी जानकारी अपडेट करें और समीक्षा के लिए पुनः सबमिट करें।",
       "companyTypeLabel": "कंपनी प्रकार",
       "companyTypeRequired": "कृपया कंपनी प्रकार चुनें",
-      "localTitle": "स्थानीय कंपनी",
+      "localTitle": "भारतीय कंपनी",
       "localDescription": "भारत में पंजीकृत और घरेलू स्तर पर नियुक्ति",
-      "foreignTitle": "विदेशी / खाड़ी कंपनी",
-      "foreignDescription": "भारत के बाहर पंजीकृत और अंतरराष्ट्रीय स्तर पर नियुक्ति",
+      "foreignTitle": "अंतर्राष्ट्रीय कंपनी",
+      "foreignDescription": "भारत के बाहर पंजीकृत और अंतर्राष्ट्रीय स्तर पर भर्ती",
       "nameLabel": "कंपनी का नाम",
       "namePlaceholder": "आपकी कंपनी का कानूनी नाम",
       "nameRequired": "कंपनी का नाम आवश्यक है",
@@ -702,7 +744,7 @@
         "changeLogoLabel": "[hi] Change company logo",
         "uploadLogoLabel": "[hi] Upload company logo",
         "logoAlt": "[hi] Company logo",
-        "approvedBadge": "[hi] Approved by SkillIndiaConnect",
+        "approvedBadge": "[hi] Approved by Skill India Connect",
         "verifiedBadge": "सत्यापित",
         "uploading": "[hi] Uploading…",
         "uploadDone": "[hi] Logo updated",
@@ -717,8 +759,8 @@
         "sectionTitle": "कंपनी जानकारी",
         "nameLabel": "[hi] Company name",
         "typeLabel": "[hi] Company type",
-        "typeLocal": "[hi] Local (India)",
-        "typeForeign": "[hi] Foreign / Gulf",
+        "typeLocal": "भारत",
+        "typeForeign": "अंतर्राष्ट्रीय",
         "typeReadOnlyHint": "[hi] Company type is set at registration and cannot be changed here. Contact support if you need to update it.",
         "registrationNumberLabel": "[hi] Registration number",
         "registrationNumberReadOnlyHint": "[hi] Your verified registration identity. Contact support to update.",
@@ -731,7 +773,8 @@
         "descriptionLabel": "[hi] Company description",
         "descriptionPlaceholder": "[hi] Tell candidates about your company…",
         "notSet": "[hi] Not set",
-        "saveError": "[hi] Failed to save. Please try again."
+        "saveError": "[hi] Failed to save. Please try again.",
+        "addValue": "{field} जोड़ें"
       },
       "hiringPrefs": {
         "sectionTitle": "[hi] Hiring Preferences",
@@ -812,7 +855,7 @@
       "card": {
         "srLabel": "{name}, {category}",
         "experienceYears": "{years, plural, =0 {कोई अनुभव नहीं} one {# वर्ष अनुभव} other {# वर्ष अनुभव}}",
-        "gulfExperience": "गल्फ अनुभव",
+        "gulfExperience": "अंतर्राष्ट्रीय अनुभव",
         "skillsLabel": "प्रमुख कौशल"
       },
       "filters": {
@@ -824,7 +867,7 @@
         "minExperience": "न्यूनतम अनुभव",
         "anyExperience": "कोई भी अनुभव",
         "yearsPlus": "{years}+ वर्ष",
-        "foreignExperience": "गल्फ अनुभव है",
+        "foreignExperience": "अंतर्राष्ट्रीय अनुभव है",
         "availableNow": "अभी उपलब्ध",
         "clear": "फ़िल्टर साफ़ करें"
       },
@@ -850,7 +893,7 @@
         "timeline": {
           "title": "कार्य अनुभव",
           "india": "भारत",
-          "foreign": "गल्फ / विदेश",
+          "foreign": "अंतर्राष्ट्रीय",
           "years": "{count, plural, one {# वर्ष} other {# वर्ष}}",
           "months": "{count, plural, one {# माह} other {# माह}}"
         },
@@ -868,6 +911,29 @@
           "proHint": "दस्तावेज़ पहुँच Pro पर उपलब्ध है।"
         }
       }
+    },
+    "interest": {
+      "pageTitle": "रुचि वाले उम्मीदवार",
+      "pageSubtitle": "आपने जिन मज़दूरों को चुना है। चुनना निजी है — संदेश भेजने पर ही उन्हें पता चलेगा।",
+      "mark": "रुचि दिखाएँ",
+      "marked": "रुचि है",
+      "markHint": "निजी सूची। उम्मीदवार को पता नहीं चलेगा।",
+      "markedHint": "सूची में जोड़ा गया। तैयार होने पर संदेश भेजें।",
+      "alreadyNotified": "आप इस उम्मीदवार को पहले ही संदेश भेज चुके हैं।",
+      "toggleError": "अपडेट नहीं हो सका। फिर कोशिश करें।",
+      "selectAll": "जिन्हें संदेश नहीं भेजा, सभी चुनें",
+      "selectCandidate": "{name} को चुनें",
+      "notifySelected": "सूचित करें ({count})",
+      "notifyResult": "{queued} भेजे गए, {skipped} पहले से संपर्क में थे।",
+      "notifyCostHint": "हर संदेश उम्मीदवार को WhatsApp और ईमेल पर जाता है। हर उम्मीदवार को एक बार ही संदेश भेज सकते हैं।",
+      "contacted": "संपर्क किया",
+      "locationUnknown": "जगह नहीं दी गई",
+      "emptyTitle": "अभी कोई रुचि वाला उम्मीदवार नहीं",
+      "emptyBody": "उम्मीदवार देखें और जिनसे बात करनी है उन्हें चुनें।",
+      "browseCandidates": "उम्मीदवार देखें",
+      "loadError": "सूची लोड नहीं हो सकी।",
+      "retry": "फिर कोशिश करें",
+      "sectionTitle": "रुचि"
     }
   },
   "jobs": {
@@ -883,7 +949,7 @@
     "tabs": {
       "all": "सभी",
       "local": "भारत",
-      "foreign": "गल्फ"
+      "foreign": "अंतर्राष्ट्रीय"
     },
     "filters": {
       "sort": "क्रम:",
@@ -925,7 +991,7 @@
       "save": "नौकरी सहेजें",
       "unsave": "सहेजी गई",
       "newBadge": "नई",
-      "marketGulf": "गल्फ",
+      "marketGulf": "अंतर्राष्ट्रीय",
       "marketLocal": "भारत"
     },
     "benefits": {
@@ -1082,12 +1148,15 @@
       "titleLabel": "नौकरी का शीर्षक",
       "titlePlaceholder": "जैसे अनुभवी राजमिस्त्री, वरिष्ठ इलेक्ट्रीशियन",
       "marketLabel": "बाज़ार",
-      "marketGulf": "खाड़ी (अंतर्राष्ट्रीय)",
-      "marketLocal": "स्थानीय (भारत)",
+      "marketGulf": "अंतर्राष्ट्रीय",
+      "marketLocal": "भारत",
       "countryLabel": "देश",
       "countryPlaceholder": "देश चुनें",
       "locationLabel": "स्थान",
-      "locationPlaceholder": "जैसे दुबई, UAE या मुंबई, भारत"
+      "locationPlaceholder": "जैसे दुबई, UAE या मुंबई, भारत",
+      "categoryOtherLabel": "आपकी नौकरी की श्रेणी",
+      "categoryOtherHint": "ट्रेड नाम के स्थान पर उम्मीदवारों को दिखाया जाएगा।",
+      "categoryOtherPlaceholder": "जैसे Agentic AI Engineer"
     },
     "description": {
       "heading": "नौकरी विवरण",
@@ -1109,7 +1178,7 @@
       "heading": "लाभ",
       "subtitle": "अनिवार्य लाभ प्लेटफ़ॉर्म नीति द्वारा आवश्यक हैं।",
       "policyTitle": "श्रमिक संरक्षण नीति",
-      "policyBody": "SkillIndiaConnect पर सभी नौकरियों में आवास, स्वास्थ्य बीमा और परिवहन शामिल होना चाहिए।",
+      "policyBody": "Skill India Connect पर सभी नौकरियों में आवास, स्वास्थ्य बीमा और परिवहन शामिल होना चाहिए।",
       "mandatoryLabel": "अनिवार्य (प्लेटफ़ॉर्म नीति द्वारा आवश्यक)",
       "optionalLabel": "वैकल्पिक लाभ",
       "accommodation": "आवास",
@@ -1168,8 +1237,8 @@
       "violationAccommodation": "आवास",
       "violationHealthInsurance": "स्वास्थ्य बीमा",
       "violationTransportation": "परिवहन",
-      "quotaTitle": "सक्रिय नौकरी सीमा पहुंच गई ({limit} नौकरी)",
-      "quotaBody": "आपकी Free plan एक समय में 1 सक्रिय नौकरी की अनुमति देती है।",
+      "quotaTitle": "सक्रिय नौकरी की सीमा पूरी ({limit, plural, one {# नौकरी} other {# नौकरियाँ}})",
+      "quotaBody": "आपकी Free plan एक समय में {limit, plural, one {# सक्रिय नौकरी} other {# सक्रिय नौकरियाँ}} की अनुमति देती है। दूसरी नौकरी प्रकाशित करने के लिए किसी सक्रिय नौकरी को रोकें या संग्रह करें, या अनलिमिटेड के लिए Pro लें।",
       "quotaUpgradeLink": "Pro में अपग्रेड करें",
       "genericTitle": "प्रकाशित करने में विफल",
       "dismiss": "खारिज करें"
@@ -1199,7 +1268,7 @@
     "emptyTitle": "अभी तक कोई नौकरी नहीं",
     "emptyBody": "आवेदन प्राप्त करने के लिए पहली नौकरी पोस्ट करें।",
     "draftNotPosted": "ड्राफ्ट",
-    "marketGulf": "खाड़ी",
+    "marketGulf": "अंतर्राष्ट्रीय",
     "marketLocal": "भारत",
     "applicationsPlaceholder": "0 आवेदन",
     "pageInfo": "पृष्ठ {page} का {totalPages}",
@@ -1314,8 +1383,8 @@
       "category": "नौकरी श्रेणी",
       "experience": "अनुभव",
       "experienceBasis": "{raw} में से {clamped} वर्ष के आधार पर",
-      "foreign": "विदेशी अनुभव",
-      "foreignLocalNote": "स्थानीय नौकरियों के लिए स्कोर नहीं किया जाता।",
+      "foreign": "अंतर्राष्ट्रीय अनुभव",
+      "foreignLocalNote": "भारत की नौकरियों के लिए स्कोर नहीं किया गया।",
       "documents": "दस्तावेज़",
       "componentScore": "{score}/{max}",
       "track": "मेरे आवेदनों में ट्रैक करें"
@@ -1354,7 +1423,7 @@
       "SELECTED": "नियोक्ता द्वारा चयनित",
       "REJECTED": "नियोक्ता द्वारा चयनित नहीं",
       "PENDING": "पुनः खोला गया",
-      "adminOverride": "SkillIndiaConnect द्वारा स्थिति अपडेट की गई"
+      "adminOverride": "Skill India Connect द्वारा स्थिति अपडेट की गई"
     },
     "rejection": {
       "feedbackLabel": "नियोक्ता से प्रतिक्रिया",
@@ -1393,7 +1462,7 @@
       "recent": "सबसे नया"
     },
     "matchShort": "{score}% मैच",
-    "gulfBadge": "खाड़ी अनुभव",
+    "gulfBadge": "अंतर्राष्ट्रीय अनुभव",
     "ageYears": "{age} वर्ष",
     "expYears": "{years} वर्ष अनुभव",
     "appliedAgo": "{ago} आवेदन किया",
@@ -1415,8 +1484,8 @@
       "category": "नौकरी श्रेणी",
       "experience": "अनुभव",
       "experienceBasis": "{raw} में से {clamped} वर्ष के आधार पर",
-      "foreign": "विदेशी अनुभव",
-      "foreignLocalNote": "स्थानीय नौकरियों के लिए स्कोर नहीं।",
+      "foreign": "अंतर्राष्ट्रीय अनुभव",
+      "foreignLocalNote": "भारत की नौकरियों के लिए स्कोर नहीं किया गया।",
       "documents": "दस्तावेज़",
       "componentScore": "{score}/{max}"
     },
@@ -1520,6 +1589,12 @@
       "downloadPdf": "PDF डाउनलोड करें",
       "downloadPdfLabel": "चालान {number} के लिए PDF डाउनलोड करें",
       "pdfPending": "तैयार हो रहा है…",
+      "invoicePageInfo": "पृष्ठ {page} / {totalPages}",
+      "invoicePrev": "पिछला",
+      "invoiceNext": "अगला",
+      "invoicePreviousPage": "चालानों का पिछला पृष्ठ",
+      "invoiceNextPage": "चालानों का अगला पृष्ठ",
+      "invoicesPaginationLabel": "चालान पृष्ठ नेविगेशन",
       "viewDoc": "देखें",
       "viewDocLoading": "खुल रहा है…",
       "viewDocLabel": "{doc} दस्तावेज़ देखें",
@@ -1533,18 +1608,18 @@
   },
   "landing": {
     "meta": {
-      "title": "स्किलइंडियाकनेक्ट — भारत और खाड़ी में सुरक्षित, जाँची हुई नौकरियाँ",
+      "title": "स्किल इंडिया कनेक्ट — भारत और खाड़ी में सुरक्षित, जाँची हुई नौकरियाँ",
       "description": "भारत और खाड़ी देशों में जाँची हुई नौकरियाँ पाएँ। हर नौकरी में रहने की जगह, स्वास्थ्य बीमा और आने-जाने की सुविधा। मज़दूरों के लिए मुफ़्त।"
     },
     "nav": {
       "login": "लॉग इन",
       "signUp": "मुफ़्त साइन अप करें",
       "skipToContent": "मुख्य सामग्री पर जाएँ",
-      "home": "स्किलइंडियाकनेक्ट होम"
+      "home": "स्किल इंडिया कनेक्ट होम"
     },
     "hero": {
       "headline": "भारत और खाड़ी में <hl>सुरक्षित, जाँची हुई नौकरियाँ</hl>",
-      "subline": "स्किलइंडियाकनेक्ट पर हर नौकरी में आपको रहने की जगह, स्वास्थ्य बीमा और आने-जाने की सुविधा मिलनी ज़रूरी है। नौकरी दिखने से पहले हम हर कंपनी की जाँच करते हैं।",
+      "subline": "स्किल इंडिया कनेक्ट पर हर नौकरी में आपको रहने की जगह, स्वास्थ्य बीमा और आने-जाने की सुविधा मिलनी ज़रूरी है। नौकरी दिखने से पहले हम हर कंपनी की जाँच करते हैं।",
       "ctaWorker": "नौकरी खोजें",
       "ctaEmployer": "मज़दूर भर्ती करें",
       "freeNote": "मज़दूरों के लिए हमेशा मुफ़्त।"
@@ -1634,7 +1709,7 @@
       "support": "सहायता",
       "emailLabel": "हमें ईमेल करें",
       "languageLabel": "भाषा",
-      "rights": "© {year} स्किलइंडियाकनेक्ट. सर्वाधिकार सुरक्षित।",
+      "rights": "© {year} स्किल इंडिया कनेक्ट. सर्वाधिकार सुरक्षित।",
       "getStarted": "शुरू करें",
       "findJobs": "नौकरी खोजें",
       "hireWorkers": "मज़दूर भर्ती करें",
@@ -1646,7 +1721,7 @@
       "visitUs": "हमारा कार्यालय"
     },
     "carousel": {
-      "label": "स्किलइंडियाकनेक्ट पर कुशल कारीगर",
+      "label": "स्किल इंडिया कनेक्ट पर कुशल कारीगर",
       "prev": "पिछली तस्वीर",
       "next": "अगली तस्वीर",
       "goTo": "तस्वीर {n} दिखाएँ",
@@ -1674,10 +1749,10 @@
     "about": {
       "metaTitle": "हमारे बारे में",
       "metaDescription": "हम कुशल भारतीय मज़दूरों को भारत और खाड़ी की जाँची हुई कंपनियों से जोड़ते हैं और उन्हें भर्ती के धोखे से बचाते हैं।",
-      "title": "स्किलइंडियाकनेक्ट के बारे में",
+      "title": "स्किल इंडिया कनेक्ट के बारे में",
       "lead": "हम कुशल भारतीय मज़दूरों को भारत और खाड़ी में सुरक्षित नौकरी पाने में मदद करते हैं — बिना रिश्वत दिए, बिना कागज़ात गँवाए, और बिना नौकरी के बारे में झूठ सुने।",
       "missionHeading": "हमारा मकसद",
-      "missionBody": "हर साल लाखों भारतीय मज़दूर विदेश में काम खोजते हैं। बहुत से लोग नकली एजेंटों के धोखे में आ जाते हैं जो पैसे ले लेते हैं, पासपोर्ट रख लेते हैं, या ऐसी नौकरी का वादा करते हैं जो होती ही नहीं। हमने स्किलइंडियाकनेक्ट इसलिए बनाया ताकि मज़दूर सीधे जाँची हुई कंपनी से बात कर सके, आवेदन से पहले नौकरी की असली शर्तें देख सके, और अपने कागज़ात अपने पास रखे।",
+      "missionBody": "हर साल लाखों भारतीय मज़दूर विदेश में काम खोजते हैं। बहुत से लोग नकली एजेंटों के धोखे में आ जाते हैं जो पैसे ले लेते हैं, पासपोर्ट रख लेते हैं, या ऐसी नौकरी का वादा करते हैं जो होती ही नहीं। हमने स्किल इंडिया कनेक्ट इसलिए बनाया ताकि मज़दूर सीधे जाँची हुई कंपनी से बात कर सके, आवेदन से पहले नौकरी की असली शर्तें देख सके, और अपने कागज़ात अपने पास रखे।",
       "protectionHeading": "हमारी गारंटी",
       "protectionBody": "यहाँ डाली गई हर नौकरी में रहने की जगह, स्वास्थ्य बीमा और आने-जाने की सुविधा होनी ज़रूरी है। यह सिर्फ़ कंपनियों से माँगा गया वादा नहीं है — हमारा सिस्टम ऐसी हर नौकरी रोक देता है जिसमें इनमें से एक भी न हो। पहली नौकरी दिखने से पहले हम हर कंपनी की जाँच भी करते हैं।",
       "freeHeading": "मज़दूरों के लिए मुफ़्त",
@@ -1687,7 +1762,7 @@
     },
     "contact": {
       "metaTitle": "संपर्क करें",
-      "metaDescription": "ईमेल के ज़रिए स्किलइंडियाकनेक्ट टीम से संपर्क करें।",
+      "metaDescription": "ईमेल के ज़रिए स्किल इंडिया कनेक्ट टीम से संपर्क करें।",
       "title": "संपर्क करें",
       "lead": "कोई सवाल है, खाते में दिक्कत है, या किसी नौकरी की शिकायत करनी है? हमें ईमेल करें, एक व्यक्ति उसे पढ़ेगा।",
       "emailHeading": "हमें ईमेल करें",
@@ -1702,13 +1777,13 @@
     },
     "privacy": {
       "metaTitle": "गोपनीयता नीति",
-      "metaDescription": "स्किलइंडियाकनेक्ट आपकी निजी जानकारी कैसे लेता, उपयोग करता और सुरक्षित रखता है।",
+      "metaDescription": "स्किल इंडिया कनेक्ट आपकी निजी जानकारी कैसे लेता, उपयोग करता और सुरक्षित रखता है।",
       "title": "गोपनीयता नीति",
       "lead": "यह नीति बताती है कि हम कौन-सी जानकारी लेते हैं, क्यों लेते हैं, और उस पर आपका क्या नियंत्रण है।",
       "sections": [
         {
           "heading": "हम कौन हैं",
-          "body": "SkillIndiaConnect एक नौकरी मंच है जो भारत के कुशल मज़दूरों को भारत और खाड़ी के जाँचे हुए नियोक्ताओं से जोड़ता है। इस मंच पर आपकी निजी जानकारी कैसे इस्तेमाल होगी, यह तय करना और उसे सुरक्षित रखना हमारी ज़िम्मेदारी है। [कंपनी का पंजीकृत नाम, पता और पंजीकरण संख्या शुरू होने से पहले जोड़ी जाएगी।]"
+          "body": "Skill India Connect एक नौकरी मंच है जो भारत के कुशल मज़दूरों को भारत और खाड़ी के जाँचे हुए नियोक्ताओं से जोड़ता है। इस मंच पर आपकी निजी जानकारी कैसे इस्तेमाल होगी, यह तय करना और उसे सुरक्षित रखना हमारी ज़िम्मेदारी है। [कंपनी का पंजीकृत नाम, पता और पंजीकरण संख्या शुरू होने से पहले जोड़ी जाएगी।]"
         },
         {
           "heading": "आपकी उम्र 18 साल या उससे ज़्यादा होनी चाहिए",
@@ -1786,9 +1861,9 @@
     },
     "terms": {
       "metaTitle": "उपयोग की शर्तें",
-      "metaDescription": "मज़दूर या कंपनी के रूप में स्किलइंडियाकनेक्ट के उपयोग के नियम।",
+      "metaDescription": "मज़दूर या कंपनी के रूप में स्किल इंडिया कनेक्ट के उपयोग के नियम।",
       "title": "उपयोग की शर्तें",
-      "lead": "ये शर्तें स्किलइंडियाकनेक्ट के उपयोग के नियम बताती हैं। खाता बनाकर आप इन्हें मानते हैं।",
+      "lead": "ये शर्तें स्किल इंडिया कनेक्ट के उपयोग के नियम बताती हैं। खाता बनाकर आप इन्हें मानते हैं।",
       "sections": [
         {
           "heading": "कौन उपयोग कर सकता है",
@@ -1840,5 +1915,9 @@
         }
       ]
     }
+  },
+  "sorting": {
+    "sortAscending": "{column} से क्रमबद्ध करें, आरोही",
+    "sortDescending": "{column} से क्रमबद्ध करें, अवरोही"
   }
 }

@@ -4,9 +4,11 @@ import { EmployerService } from './employer.service';
 import { ProfileViewService } from './profile-view.service';
 import { CandidateReadService } from '../candidate/candidate-read.service';
 import { StorageService } from '../core/storage/storage.service';
+import { pageMeta, resolvePaging, type Paginated } from '../core/pagination';
 import { toEmployerView, CandidateEmployerViewDto, EmployerViewSource } from './mappers/candidate-employer-view.mapper';
 import { toBrowseCard, BrowseCardSource, CandidateBrowseCardDto } from './mappers/candidate-browse-card.mapper';
 import { BrowseQueryDto } from './dto/browse-query.dto';
+import { CandidateInterestService } from './candidate-interest.service';
 
 /**
  * Orchestrates employer → candidate visibility:
@@ -26,6 +28,7 @@ export class CandidateViewService {
     private readonly candidateReadService: CandidateReadService,
     private readonly profileViewService: ProfileViewService,
     private readonly storage: StorageService,
+    private readonly interestService: CandidateInterestService,
   ) {}
 
   // ── GET /employers/candidates ─────────────────────────────────────────────
@@ -33,18 +36,20 @@ export class CandidateViewService {
   async browse(
     userId: string,
     dto: BrowseQueryDto,
-  ): Promise<{ data: CandidateBrowseCardDto[]; nextCursor: string | null }> {
+  ): Promise<Paginated<CandidateBrowseCardDto>> {
     await this.getApprovedCompany(userId);
 
-    const { data: sources, nextCursor } =
+    const { page, pageSize } = resolvePaging(dto.page, dto.pageSize, 50);
+
+    const { data: sources, total } =
       await this.candidateReadService.browseVisibleCandidates({
         category: dto.category,
         minExperienceYears: dto.minExperienceYears,
         hasForeignExperience: dto.hasForeignExperience,
         availability: dto.availability,
         q: dto.q,
-        cursor: dto.cursor,
-        limit: dto.limit,
+        page: dto.page,
+        pageSize: dto.pageSize,
       });
 
     // Presign photo URLs in parallel — photo keys are employer-accessible (not candidate-private)
@@ -58,7 +63,7 @@ export class CandidateViewService {
       toBrowseCard({ ...s, photoUrl: photoUrls[i] ?? null } satisfies BrowseCardSource),
     );
 
-    return { data, nextCursor };
+    return { data, meta: pageMeta(page, pageSize, total) };
   }
 
   // ── GET /employers/candidates/:id ─────────────────────────────────────────
@@ -82,10 +87,14 @@ export class CandidateViewService {
 
     const dto = toEmployerView({ ...candidate, photoUrl } satisfies EmployerViewSource);
 
+    // Whether THIS company has shortlisted them — applied after the mapper, like
+    // isSaved on job cards, so the shared privacy mapper stays viewer-agnostic.
+    const interest = await this.interestService.getInterestState(company.id, candidate.id);
+
     // Fire-and-forget: view recording never blocks or fails the GET response
     this.fireAndForgetView(company.id, company.name, candidate.id, candidate.userId);
 
-    return dto;
+    return { ...dto, ...interest };
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

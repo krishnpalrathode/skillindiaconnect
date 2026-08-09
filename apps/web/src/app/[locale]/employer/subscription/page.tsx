@@ -8,6 +8,7 @@ import { useEmployer } from '@/lib/employer/employer-context';
 import { getPlans, getSubscriptionStatus, createCheckout } from '@/lib/api/billing';
 import { ApiRequestError } from '@/lib/api/client';
 import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { Button } from '@/components/ui/button';
 import { PlanCards } from '@/components/billing/PlanCards';
 import { CheckoutLauncher } from '@/components/billing/CheckoutLauncher';
@@ -127,7 +128,7 @@ export default function SubscriptionPage() {
   if (companyLoading || loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Spinner size={28} label={t('loadingPlans')} />
+        <BrandLoader size="md" label={t('loadingPlans')} />
       </div>
     );
   }

@@ -9,8 +9,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import type { components } from '@skillindiaconnect/shared-types';
 import { formatDate } from '@/lib/format/date';
+import { SortableHeader } from '@/components/ui/sortable-header';
 
 type Invoice = components['schemas']['Invoice'];
+
+const PAGE_SIZE = 20;
 
 export function InvoiceList() {
   const t = useTranslations('billing.manage');
@@ -19,19 +22,27 @@ export function InvoiceList() {
   const [invoices, setInvoices] = useState<Invoice[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [page, setPage] = useState(1);
+  const [sort, setSortRaw] = useState<string | undefined>(undefined);
+  const setSort = (next: string) => {
+    setSortRaw(next);
+    setPage(1);
+  };
+  const [totalPages, setTotalPages] = useState(1);
 
   const load = React.useCallback(async () => {
     setIsLoading(true);
     setError(false);
     try {
-      const res = await getInvoices(1, 20);
-      setInvoices(res);
+      const res = await getInvoices(page, PAGE_SIZE, sort);
+      setInvoices(res.data);
+      setTotalPages(Math.max(1, res.meta.totalPages));
     } catch {
       setError(true);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [page, sort]);
 
   useEffect(() => {
     load();
@@ -78,27 +89,37 @@ export function InvoiceList() {
           <table className="w-full text-sm" aria-label={t('invoicesTitle')}>
             <thead>
               <tr className="border-b border-neutral-100 text-start">
-                <th
-                  scope="col"
+                <SortableHeader
+                  field="number"
+                  current={sort}
+                  onSort={setSort}
                   className="pb-2 text-start text-xs font-medium text-neutral-600 pe-4"
                 >
                   {t('invoiceNumber')}
-                </th>
-                <th
-                  scope="col"
+                </SortableHeader>
+                <SortableHeader
+                  field="issued"
+                  current={sort}
+                  onSort={setSort}
                   className="pb-2 text-start text-xs font-medium text-neutral-600 pe-4"
                 >
                   {t('invoiceDate')}
-                </th>
+                </SortableHeader>
                 <th
                   scope="col"
                   className="pb-2 text-start text-xs font-medium text-neutral-600 pe-4"
                 >
                   {t('invoicePlan')}
                 </th>
-                <th scope="col" className="pb-2 text-end text-xs font-medium text-neutral-600">
+                <SortableHeader
+                  field="amount"
+                  current={sort}
+                  onSort={setSort}
+                  align="end"
+                  className="pb-2 text-end text-xs font-medium text-neutral-600"
+                >
                   {t('invoiceAmount')}
-                </th>
+                </SortableHeader>
                 <th scope="col" className="pb-2 ps-4 text-end text-xs font-medium text-neutral-600">
                   <span className="sr-only">{t('invoiceActions')}</span>
                 </th>
@@ -111,6 +132,38 @@ export function InvoiceList() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Pager — offset, matching the employer My Jobs table. Rendered whenever
+          there is more than one page, including while a page is in flight, so
+          the control does not disappear under the user mid-navigation. */}
+      {!error && totalPages > 1 && (
+        <nav
+          aria-label={t('invoicesPaginationLabel')}
+          className="mt-4 flex items-center justify-between text-sm text-neutral-600"
+        >
+          <span>{t('invoicePageInfo', { page, totalPages })}</span>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page <= 1 || isLoading}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              aria-label={t('invoicePreviousPage')}
+            >
+              {t('invoicePrev')}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page >= totalPages || isLoading}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              aria-label={t('invoiceNextPage')}
+            >
+              {t('invoiceNext')}
+            </Button>
+          </div>
+        </nav>
       )}
     </section>
   );

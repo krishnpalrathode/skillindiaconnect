@@ -12,6 +12,7 @@ import { EmployerService } from './employer.service';
 import { CandidateReadService } from '../candidate/candidate-read.service';
 import { ProfileViewService } from './profile-view.service';
 import { StorageService } from '../core/storage/storage.service';
+import { CandidateInterestService } from './candidate-interest.service';
 
 // ── Fixture builders ──────────────────────────────────────────────────────────
 
@@ -99,6 +100,7 @@ describe('CandidateViewService', () => {
       mockCandidateReadService as unknown as CandidateReadService,
       mockProfileViewService as unknown as ProfileViewService,
       mockStorage as unknown as StorageService,
+      { getInterestState: jest.fn().mockResolvedValue({ isInterested: false, interestNotified: false }) } as unknown as CandidateInterestService,
     );
   });
 
@@ -203,15 +205,19 @@ describe('CandidateViewService', () => {
           skills: [{ name: 'Welding' }],
         },
       ],
-      nextCursor: 'cursor123',
+      total: 41,
     });
 
-    const result = await service.browse('user-employer', { category: 'cat-1', limit: 10 });
+    const result = await service.browse('user-employer', {
+      category: 'cat-1',
+      page: 2,
+      pageSize: 10,
+    });
     expect(result.data).toHaveLength(1);
     expect(result.data[0]!.id).toBe('c1');
-    expect(result.nextCursor).toBe('cursor123');
+    expect(result.meta).toEqual({ page: 2, pageSize: 10, total: 41, totalPages: 5 });
     expect(mockCandidateReadService.browseVisibleCandidates).toHaveBeenCalledWith(
-      expect.objectContaining({ category: 'cat-1', limit: 10 }),
+      expect.objectContaining({ category: 'cat-1', page: 2, pageSize: 10 }),
     );
   });
 });

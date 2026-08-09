@@ -7,6 +7,7 @@ import type { Setting } from '@/lib/api/admin-settings';
 import { Toggle } from '@/components/common/Toggle';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useToast } from '@/components/ui/toast';
 
 /**
  * One setting, one typed editor, one save.
@@ -47,6 +48,8 @@ export function SettingRow({
   confirmBeforeSave?: (pendingValue: unknown) => Promise<boolean>;
 }) {
   const t = useTranslations('admin.settings');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
   const [draft, setDraft] = useState<unknown>(setting.value);
   const [chipDraft, setChipDraft] = useState('');
   const [saving, setSaving] = useState(false);
@@ -69,6 +72,7 @@ export function SettingRow({
       await onSave(setting.key, draft);
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 2500);
+      showToast({ message: tToast('settingsSaved') });
     } catch (err) {
       // Revert: the row shows the server's truth, never the rejected draft.
       setDraft(setting.value);

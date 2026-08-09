@@ -13,8 +13,18 @@ import { RegisterCompanyDto } from './dto/register-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { PresignCertDto, CERT_MAX_BYTES } from './dto/presign-cert.dto';
 import { ConfirmCertDto } from './dto/confirm-cert.dto';
+import { buildOrderBy, resolveSort } from '../core/sorting';
 
 const CERT_MIMES = ['application/pdf', 'image/jpeg', 'image/png'];
+
+/** Sortable columns for the admin employer-approval queue (whitelisted). */
+export const EMPLOYER_QUEUE_SORT = {
+  name: 'name',
+  status: 'status',
+  created: 'createdAt',
+} as const;
+
+export const EMPLOYER_QUEUE_SORT_DEFAULT = 'created:desc';
 
 /**
  * The wire Company (contract `Company`): the entity plus the DERIVED
@@ -319,10 +329,14 @@ export class EmployerService {
     page: number;
     pageSize: number;
     sort: string;
-  }): Promise<{ data: Company[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }> {
-    const [field, dir] = opts.sort.split(':');
-    const safeField = ['createdAt', 'name', 'status'].includes(field ?? '') ? field! : 'createdAt';
-    const safeDir = dir === 'asc' ? 'asc' : 'desc';
+  }): Promise<{
+    data: Company[];
+    meta: { page: number; pageSize: number; total: number; totalPages: number; sort: string };
+  }> {
+    // Shared resolver, so this table gains the `id` tiebreaker the local
+    // implementation lacked: ordering by `status` or `name` alone is not a total
+    // order, and offset pages over a non-total order can repeat or skip rows.
+    const sort = resolveSort(opts.sort, EMPLOYER_QUEUE_SORT, EMPLOYER_QUEUE_SORT_DEFAULT);
 
     const where = {
       ...(opts.status && { status: opts.status }),
@@ -336,7 +350,7 @@ export class EmployerService {
       this.prisma.company.findMany({
         where,
         include: { documents: { orderBy: { uploadedAt: 'desc' }, take: 1 } },
-        orderBy: { [safeField]: safeDir },
+        orderBy: buildOrderBy(sort, EMPLOYER_QUEUE_SORT),
         skip: (opts.page - 1) * opts.pageSize,
         take: opts.pageSize,
       }),
@@ -350,6 +364,7 @@ export class EmployerService {
         pageSize: opts.pageSize,
         total,
         totalPages: Math.ceil(total / opts.pageSize),
+        sort: sort.applied,
       },
     };
   }

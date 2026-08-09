@@ -12,6 +12,12 @@ export interface JobFormValues {
   market: JobMarket;
   country: string;
   categoryId: string;
+  /**
+   * What the employer typed after choosing "Other". Held even while a fixed
+   * trade is selected so switching away and back does not lose their words;
+   * `formToPayload` is what decides whether it is actually sent.
+   */
+  categoryOther: string;
   location: string;
   description: string;
   salaryCurrency: string;
@@ -43,6 +49,7 @@ export interface JobFormErrors {
   market?: string;
   country?: string;
   categoryId?: string;
+  categoryOther?: string;
   location?: string;
   description?: string;
   salaryCurrency?: string;
@@ -67,6 +74,7 @@ export const DEFAULT_FORM_VALUES: JobFormValues = {
   market: 'GULF',
   country: '',
   categoryId: '',
+  categoryOther: '',
   location: '',
   description: '',
   salaryCurrency: 'AED',
@@ -87,7 +95,13 @@ export const DEFAULT_FORM_VALUES: JobFormValues = {
   genderPreference: 'ANY',
 };
 
-export function validateJobForm(values: JobFormValues): JobFormErrors {
+/**
+ * `otherCategoryId` is the id of the seeded "Other" category, which only the
+ * caller knows (it comes from GET /job-categories). Omit it and the free-text
+ * rule is simply not checked client-side — the server enforces it either way
+ * with CATEGORY_OTHER_REQUIRED.
+ */
+export function validateJobForm(values: JobFormValues, otherCategoryId?: string): JobFormErrors {
   const errors: JobFormErrors = {};
   if (!values.title.trim()) errors.title = 'Job title is required';
   if (!values.country) {
@@ -96,6 +110,9 @@ export function validateJobForm(values: JobFormValues): JobFormErrors {
     errors.country = 'Select a country valid for the chosen market';
   }
   if (!values.categoryId) errors.categoryId = 'Job category is required';
+  if (otherCategoryId && values.categoryId === otherCategoryId && !values.categoryOther.trim()) {
+    errors.categoryOther = 'Enter the job category';
+  }
   if (!values.location.trim()) errors.location = 'Location is required';
   if (!values.description.trim()) errors.description = 'Job description is required';
   if (!values.salaryCurrency) errors.salaryCurrency = 'Currency is required';
@@ -123,7 +140,7 @@ export function validateJobForm(values: JobFormValues): JobFormErrors {
 // Produces the exact backend CreateJobDto shape. Numeric string fields are
 // parsed; salary + hours are guaranteed present by validateJobForm before this
 // is called, so they're sent as numbers (not null).
-export function formToPayload(values: JobFormValues): CreateJobBody {
+export function formToPayload(values: JobFormValues, otherCategoryId?: string): CreateJobBody {
   const min = parseInt(values.salaryMin, 10);
   const max = parseInt(values.salaryMax, 10);
   const hpd = parseInt(values.hoursPerDay, 10);
@@ -141,6 +158,12 @@ export function formToPayload(values: JobFormValues): CreateJobBody {
     location: values.location.trim(),
     description: values.description.trim(),
     categoryId: values.categoryId,
+    // Sent ONLY alongside the "Other" category — the API rejects free text
+    // paired with a fixed trade, which is exactly what a stale draft value
+    // would be if this were sent unconditionally.
+    ...(otherCategoryId && values.categoryId === otherCategoryId && values.categoryOther.trim()
+      ? { categoryOther: values.categoryOther.trim() }
+      : {}),
     requirements: values.requirements.filter((r) => r.trim().length > 0),
     ...(exp !== undefined && !isNaN(exp) ? { experienceRequiredYears: exp } : {}),
     salaryMin: min,
@@ -169,6 +192,7 @@ export function jobToFormValues(job: Job): JobFormValues {
     market: job.market,
     country: job.country ?? '',
     categoryId: job.categoryId,
+    categoryOther: job.categoryOther ?? '',
     location: job.location,
     description: job.description ?? '',
     salaryCurrency: job.currency,

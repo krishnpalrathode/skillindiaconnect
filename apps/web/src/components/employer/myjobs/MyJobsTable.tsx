@@ -7,12 +7,13 @@ import Link from 'next/link';
 import { Search, PlusCircle, Briefcase } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { Badge } from '@/components/ui/badge';
 import { JobStatusBadge } from './JobStatusBadge';
 import { JobRowActions } from './JobRowActions';
 import { listMyJobs, type Job, type JobStatus } from '@/lib/api/jobs-employer';
 import { formatPostedAgo } from '@/lib/jobs/format';
+import { SortableHeader } from '@/components/ui/sortable-header';
 
 const STATUS_TABS: Array<{ value: JobStatus | 'ALL'; labelKey: string }> = [
   { value: 'ALL', labelKey: 'all' },
@@ -43,6 +44,12 @@ export function MyJobsTable() {
   const [statusFilter, setStatusFilter] = useState<JobStatus | 'ALL'>('ALL');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  // Local state (this table has no URL sync); changing it resets to page 1.
+  const [sort, setSortRaw] = useState<string | undefined>(undefined);
+  const setSort = (next: string) => {
+    setSortRaw(next);
+    setPage(1);
+  };
   const debouncedSearch = useDebounce(search, 300);
   const pageSize = 20;
 
@@ -59,6 +66,7 @@ export function MyJobsTable() {
         search: debouncedSearch || undefined,
         page,
         pageSize,
+        sort,
       });
       setJobs(result.data);
       setTotalCount(result.meta.total);
@@ -67,7 +75,7 @@ export function MyJobsTable() {
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter, debouncedSearch, page, t]);
+  }, [statusFilter, debouncedSearch, page, t, sort]);
 
   useEffect(() => {
     setPage(1);
@@ -78,7 +86,22 @@ export function MyJobsTable() {
   }, [load]);
 
   const handleJobUpdated = (updated: Job) => {
-    setJobs((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
+    // A lifecycle action can move a job out of the tab you are looking at —
+    // archive one from "Active" and leaving the row in place claims it is
+    // still active. Drop it from a filtered view; on "All" it stays and just
+    // shows its new badge.
+    //
+    // Both setState calls sit HERE rather than inside the setJobs updater: an
+    // updater runs during React's render phase, and queueing another
+    // component's update from inside one is the "Cannot update a component
+    // while rendering a different component" warning.
+    const stillMatches = statusFilter === 'ALL' || updated.status === statusFilter;
+    if (stillMatches) {
+      setJobs((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
+      return;
+    }
+    setJobs((prev) => prev.filter((j) => j.id !== updated.id));
+    setTotalCount((c) => Math.max(0, c - 1));
   };
 
   const handleJobCreated = (created: Job) => {
@@ -141,7 +164,7 @@ export function MyJobsTable() {
       {/* Loading */}
       {isLoading && (
         <div className="flex items-center justify-center py-16" aria-live="polite" aria-busy="true">
-          <Spinner size={28} label={t('loading')} />
+          <BrandLoader size="md" label={t('loading')} />
         </div>
       )}
 
@@ -184,36 +207,42 @@ export function MyJobsTable() {
           <table className="w-full min-w-[640px] text-sm" aria-label={t('tableLabel')}>
             <thead className="bg-neutral-50/80 border-b border-neutral-200">
               <tr>
-                <th
-                  scope="col"
+                <SortableHeader
+                  field="title"
+                  current={sort}
+                  onSort={setSort}
                   className="text-start px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
                 >
                   {t('col.title')}
-                </th>
+                </SortableHeader>
                 <th
                   scope="col"
                   className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
                 >
                   {t('col.market')}
                 </th>
-                <th
-                  scope="col"
+                <SortableHeader
+                  field="status"
+                  current={sort}
+                  onSort={setSort}
                   className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
                 >
                   {t('col.status')}
-                </th>
+                </SortableHeader>
                 <th
                   scope="col"
                   className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
                 >
                   {t('col.applications')}
                 </th>
-                <th
-                  scope="col"
+                <SortableHeader
+                  field="createdAt"
+                  current={sort}
+                  onSort={setSort}
                   className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
                 >
                   {t('col.posted')}
-                </th>
+                </SortableHeader>
                 <th
                   scope="col"
                   className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"

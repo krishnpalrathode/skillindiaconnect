@@ -1,4 +1,12 @@
 {
+  "pagination": {
+    "label": "Pagination",
+    "pageInfo": "Page {page} of {totalPages}",
+    "prev": "Previous",
+    "next": "Next",
+    "previousPage": "Previous page",
+    "nextPage": "Next page"
+  },
   "resume": {
     "pageTitle": "Resume Builder",
     "pageSubtitle": "Create a professional resume from your profile, then download it or send it to yourself.",
@@ -17,7 +25,7 @@
         "MINIMAL": "Minimal"
       },
       "descriptions": {
-        "CLASSIC": "Traditional and formal. A safe choice for Gulf employers.",
+        "CLASSIC": "Traditional and formal. A safe choice for international employers.",
         "MODERN": "Clean and spacious. Works well for most candidates.",
         "COMPACT": "Two columns. Fits more experience on one page.",
         "MINIMAL": "Plain and simple. Easiest for hiring software to read."
@@ -124,8 +132,41 @@
     "no": "No",
     "or": "or",
     "and": "and",
-    "brand": "SkillIndiaConnect",
+    "brand": "Skill India Connect",
     "logoutSuccess": "Logged out successfully"
+  },
+  "toast": {
+    "saved": "Changes saved successfully",
+    "saveFailed": "We couldn't save your changes. Please try again.",
+    "photoUpdated": "Profile photo updated",
+    "availabilityOn": "You're now marked as available for work",
+    "availabilityOff": "You're now marked as unavailable for work",
+    "salarySaved": "Salary preferences saved",
+    "privacySaved": "Privacy settings saved",
+    "notificationsSaved": "Notification preferences saved",
+    "documentUploaded": "Document uploaded successfully",
+    "documentDeleted": "Deleted successfully",
+    "applicationSubmitted": "Application submitted successfully",
+    "resumeReady": "Resume generated successfully",
+    "resumeEmailed": "Resume sent to your email",
+    "jobSaved": "Job saved",
+    "jobUnsaved": "Job removed from saved jobs",
+    "jobCreated": "Job created successfully",
+    "jobUpdated": "Job updated successfully",
+    "jobPublished": "Job published successfully",
+    "jobPaused": "Job paused",
+    "jobResumed": "Job resumed",
+    "jobDeleted": "Job deleted successfully",
+    "jobDuplicated": "Job duplicated successfully",
+    "applicantStatusUpdated": "Application status updated",
+    "notesSaved": "Note added successfully",
+    "allNotificationsRead": "All notifications marked as read",
+    "contactSaved": "Contact person saved",
+    "contactDeleted": "Contact person deleted",
+    "settingsSaved": "Settings saved successfully",
+    "exportStarted": "Export downloaded successfully",
+    "actionFailed": "That didn't work. Please try again.",
+    "jobArchived": "Job archived"
   },
   "field": {
     "requiredError": "This field is required",
@@ -159,7 +200,7 @@
     "expired": "Expired"
   },
   "auth": {
-    "loginTitle": "Log in to SkillIndiaConnect",
+    "loginTitle": "Log in to Skill India Connect",
     "loginSubtitle": "Welcome back — continue your journey",
     "signupTitle": "Create your account",
     "signupSubtitle": "Join thousands of workers finding opportunities",
@@ -519,7 +560,8 @@
       "candidates": "Candidates",
       "notifications": "Notifications",
       "subscription": "Subscription",
-      "profile": "Company Profile"
+      "profile": "Company Profile",
+      "interested": "Interested"
     },
     "header": {
       "notifications": "Notifications",
@@ -558,7 +600,7 @@
       "pageSubtitle": "Connect with skilled, verified workers across India and the Gulf.",
       "trustBadge1": "Verified Worker Profiles",
       "trustBadge2": "Secure Hiring Process",
-      "trustBadge3": "Gulf and Local Markets",
+      "trustBadge3": "India and International Markets",
       "formTitle": "Sign in to your employer account",
       "emailLabel": "Work email",
       "emailPlaceholder": "you@company.com",
@@ -567,7 +609,7 @@
       "rememberMe": "Remember me",
       "forgotPassword": "Forgot password?",
       "loginButton": "Sign in",
-      "noAccount": "New to SkillIndiaConnect?",
+      "noAccount": "New to Skill India Connect?",
       "registerLink": "Register your company",
       "candidateLink": "Looking for a job instead?",
       "candidateLoginLink": "Candidate login",
@@ -583,9 +625,9 @@
       "resubmitPageSubtitle": "Update your details and resubmit for admin review.",
       "companyTypeLabel": "Company type",
       "companyTypeRequired": "Please select a company type",
-      "localTitle": "Local Company",
+      "localTitle": "India Company",
       "localDescription": "Registered in India and hiring domestically",
-      "foreignTitle": "Foreign / Gulf Company",
+      "foreignTitle": "International Company",
       "foreignDescription": "Registered outside India and hiring internationally",
       "nameLabel": "Company name",
       "namePlaceholder": "Your company legal name",
@@ -702,7 +744,7 @@
         "changeLogoLabel": "Change company logo",
         "uploadLogoLabel": "Upload company logo",
         "logoAlt": "Company logo",
-        "approvedBadge": "Approved by SkillIndiaConnect",
+        "approvedBadge": "Approved by Skill India Connect",
         "verifiedBadge": "Verified",
         "uploading": "Uploading…",
         "uploadDone": "Logo updated",
@@ -717,8 +759,8 @@
         "sectionTitle": "Company Information",
         "nameLabel": "Company name",
         "typeLabel": "Company type",
-        "typeLocal": "Local (India)",
-        "typeForeign": "Foreign / Gulf",
+        "typeLocal": "India",
+        "typeForeign": "International",
         "typeReadOnlyHint": "Company type is set at registration and cannot be changed here. Contact support if you need to update it.",
         "registrationNumberLabel": "Registration number",
         "registrationNumberReadOnlyHint": "Your verified registration identity. Contact support to update.",
@@ -731,7 +773,8 @@
         "descriptionLabel": "Company description",
         "descriptionPlaceholder": "Tell candidates about your company and the types of roles you hire for…",
         "notSet": "Not set",
-        "saveError": "Failed to save. Please try again."
+        "saveError": "Failed to save. Please try again.",
+        "addValue": "Add {field}"
       },
       "hiringPrefs": {
         "sectionTitle": "Hiring Preferences",
@@ -777,7 +820,7 @@
         "reuploadHint": "PDF, JPG, or PNG — up to 10 MB",
         "noDocument": "No certificate uploaded.",
         "uploadedOn": "Uploaded",
-        "verifiedNote": "Verification complete. Your certificate has been reviewed by SkillIndiaConnect.",
+        "verifiedNote": "Verification complete. Your certificate has been reviewed by Skill India Connect.",
         "pendingReviewNote": "Under review. Our team will verify your certificate shortly."
       },
       "accountSettings": {
@@ -812,7 +855,7 @@
       "card": {
         "srLabel": "{name}, {category}",
         "experienceYears": "{years, plural, =0 {No experience} one {# yr experience} other {# yrs experience}}",
-        "gulfExperience": "Gulf experience",
+        "gulfExperience": "International experience",
         "skillsLabel": "Top skills"
       },
       "filters": {
@@ -824,7 +867,7 @@
         "minExperience": "Minimum experience",
         "anyExperience": "Any experience",
         "yearsPlus": "{years}+ years",
-        "foreignExperience": "Has Gulf experience",
+        "foreignExperience": "Has international experience",
         "availableNow": "Available now",
         "clear": "Clear filters"
       },
@@ -850,7 +893,7 @@
         "timeline": {
           "title": "Work experience",
           "india": "India",
-          "foreign": "Gulf / Foreign",
+          "foreign": "International",
           "years": "{count, plural, one {# yr} other {# yrs}}",
           "months": "{count, plural, one {# mo} other {# mos}}"
         },
@@ -868,6 +911,29 @@
           "proHint": "Document access is available on Pro."
         }
       }
+    },
+    "interest": {
+      "pageTitle": "Interested Candidates",
+      "pageSubtitle": "Workers you have shortlisted. Marking is private — they are only told when you send a message.",
+      "mark": "Mark as interested",
+      "marked": "Interested",
+      "markHint": "Private shortlist. The candidate is not told.",
+      "markedHint": "Shortlisted. Send a message from Interested Candidates when you are ready.",
+      "alreadyNotified": "You have already messaged this candidate.",
+      "toggleError": "Couldn't update. Please try again.",
+      "selectAll": "Select all not yet contacted",
+      "selectCandidate": "Select {name}",
+      "notifySelected": "Notify ({count})",
+      "notifyResult": "Queued {queued}, skipped {skipped} already contacted.",
+      "notifyCostHint": "Each message is sent to the candidate on WhatsApp and email. You can message each candidate once.",
+      "contacted": "Contacted",
+      "locationUnknown": "Location not set",
+      "emptyTitle": "No interested candidates yet",
+      "emptyBody": "Browse candidates and mark the ones you want to reach out to.",
+      "browseCandidates": "Browse candidates",
+      "loadError": "Couldn't load your interested candidates.",
+      "retry": "Try again",
+      "sectionTitle": "Interest"
     }
   },
   "jobs": {
@@ -883,7 +949,7 @@
     "tabs": {
       "all": "All",
       "local": "India",
-      "foreign": "Gulf"
+      "foreign": "International"
     },
     "filters": {
       "sort": "Sort:",
@@ -925,7 +991,7 @@
       "save": "Save job",
       "unsave": "Saved",
       "newBadge": "New",
-      "marketGulf": "Gulf",
+      "marketGulf": "International",
       "marketLocal": "India"
     },
     "benefits": {
@@ -1082,12 +1148,15 @@
       "titleLabel": "Job title",
       "titlePlaceholder": "e.g. Experienced Mason, Senior Electrician",
       "marketLabel": "Market",
-      "marketGulf": "Gulf (International)",
-      "marketLocal": "Local (India)",
+      "marketGulf": "International",
+      "marketLocal": "India",
       "countryLabel": "Country",
       "countryPlaceholder": "Select a country",
       "locationLabel": "Location",
-      "locationPlaceholder": "e.g. Dubai, UAE or Mumbai, India"
+      "locationPlaceholder": "e.g. Dubai, UAE or Mumbai, India",
+      "categoryOtherLabel": "Your job category",
+      "categoryOtherHint": "Shown to candidates in place of a trade name.",
+      "categoryOtherPlaceholder": "e.g. Agentic AI Engineer"
     },
     "description": {
       "heading": "Job Description",
@@ -1109,7 +1178,7 @@
       "heading": "Benefits",
       "subtitle": "Mandatory benefits are required by platform policy. Optional benefits attract more candidates.",
       "policyTitle": "Worker Protection Policy",
-      "policyBody": "All jobs on SkillIndiaConnect must include Accommodation, Health Insurance, and Transportation. These are required by platform policy and government labour law.",
+      "policyBody": "All jobs on Skill India Connect must include Accommodation, Health Insurance, and Transportation. These are required by platform policy and government labour law.",
       "mandatoryLabel": "Mandatory (required by platform policy)",
       "optionalLabel": "Optional benefits",
       "accommodation": "Accommodation",
@@ -1168,8 +1237,8 @@
       "violationAccommodation": "Accommodation",
       "violationHealthInsurance": "Health Insurance",
       "violationTransportation": "Transportation",
-      "quotaTitle": "Active job limit reached ({limit} job)",
-      "quotaBody": "Your Free plan allows 1 active job at a time. Archive or pause your existing active job to publish another, or upgrade to Pro for unlimited active jobs.",
+      "quotaTitle": "Active job limit reached ({limit, plural, one {# job} other {# jobs}})",
+      "quotaBody": "Your Free plan allows {limit, plural, one {# active job} other {# active jobs}} at a time. Archive or pause an active job to publish another, or upgrade to Pro for unlimited active jobs.",
       "quotaUpgradeLink": "Upgrade to Pro",
       "genericTitle": "Failed to publish",
       "dismiss": "Dismiss"
@@ -1199,7 +1268,7 @@
     "emptyTitle": "No jobs yet",
     "emptyBody": "Post your first job to start receiving applications.",
     "draftNotPosted": "Draft",
-    "marketGulf": "Gulf",
+    "marketGulf": "International",
     "marketLocal": "India",
     "applicationsPlaceholder": "0 applications (S4)",
     "pageInfo": "Page {page} of {totalPages}",
@@ -1314,8 +1383,8 @@
       "category": "Job category",
       "experience": "Experience",
       "experienceBasis": "Based on {clamped} of {raw} yrs",
-      "foreign": "Foreign experience",
-      "foreignLocalNote": "Not scored for local jobs.",
+      "foreign": "International experience",
+      "foreignLocalNote": "Not scored for jobs in India.",
       "documents": "Documents",
       "componentScore": "{score}/{max}",
       "track": "Track in My Applications"
@@ -1354,7 +1423,7 @@
       "SELECTED": "Selected by the employer",
       "REJECTED": "Not selected by the employer",
       "PENDING": "Reopened",
-      "adminOverride": "Status updated by SkillIndiaConnect"
+      "adminOverride": "Status updated by Skill India Connect"
     },
     "rejection": {
       "feedbackLabel": "Feedback from the employer",
@@ -1393,7 +1462,7 @@
       "recent": "Most recent"
     },
     "matchShort": "{score}% match",
-    "gulfBadge": "Gulf experience",
+    "gulfBadge": "International experience",
     "ageYears": "{age} yrs",
     "expYears": "{years} yrs exp",
     "appliedAgo": "Applied {ago}",
@@ -1415,8 +1484,8 @@
       "category": "Job category",
       "experience": "Experience",
       "experienceBasis": "Based on {clamped} of {raw} yrs",
-      "foreign": "Foreign experience",
-      "foreignLocalNote": "Not scored for local jobs.",
+      "foreign": "International experience",
+      "foreignLocalNote": "Not scored for jobs in India.",
       "documents": "Documents",
       "componentScore": "{score}/{max}"
     },
@@ -1627,13 +1696,13 @@
         "SUSPENDED": "Suspended"
       },
       "type": {
-        "LOCAL": "Local",
-        "FOREIGN": "Foreign"
+        "LOCAL": "India",
+        "FOREIGN": "International"
       },
       "typeFilterLabel": "Type",
       "typeAll": "All types",
-      "typeLocal": "Local",
-      "typeForeign": "Foreign",
+      "typeLocal": "India",
+      "typeForeign": "International",
       "searchLabel": "Search companies",
       "searchPlaceholder": "Search by company name…",
       "searchButton": "Search",
@@ -1791,11 +1860,11 @@
             "description": "Maximum simultaneous active jobs for Free plan employers."
           },
           "allow_local": {
-            "label": "Allow local (India) jobs",
+            "label": "Allow India jobs",
             "description": "Employers may post jobs located in India."
           },
           "allow_foreign": {
-            "label": "Allow foreign (Gulf) jobs",
+            "label": "Allow international jobs",
             "description": "Employers may post jobs located abroad."
           }
         },
@@ -1820,7 +1889,7 @@
         "payments": {
           "gst_rate_pct": {
             "label": "GST rate (%)",
-            "description": "GST applied to local (India) checkout totals."
+            "description": "GST applied to India checkout totals."
           },
           "stripe_enabled": {
             "label": "Stripe for foreign checkout",
@@ -2029,7 +2098,7 @@
           "link": "Open the employer's review page"
         },
         "candidateView": "As candidates would see it",
-        "marketGulf": "Gulf",
+        "marketGulf": "International",
         "marketLocal": "India",
         "vacancies": "{count, plural, one {# vacancy} other {# vacancies}}",
         "experienceYears": "{count, plural, one {# year experience} other {# years experience}}",
@@ -2146,8 +2215,8 @@
         "basicHeading": "Job basics",
         "titleLabel": "Job title",
         "marketLabel": "Market",
-        "marketGulf": "Gulf",
-        "marketLocal": "India (Local)",
+        "marketGulf": "International",
+        "marketLocal": "India",
         "countryLabel": "Country",
         "countryPlaceholder": "Select a country",
         "categoryLabel": "Job category",
@@ -2225,7 +2294,7 @@
           "snapshotNote": "Computed once when the candidate applied — never recomputed.",
           "category": "Category",
           "experienceYears": "Experience",
-          "foreignExperience": "Foreign exp.",
+          "foreignExperience": "International exp.",
           "documents": "Documents"
         },
         "facts": {
@@ -2272,7 +2341,7 @@
         },
         "noNewWhatsApp": "This candidate already received the Selected WhatsApp — moving them to Selected again will NOT send a new one (they'll get an email and in-app notification). If they genuinely never received it, use the manual WhatsApp resend after this change.",
         "reasonLabel": "Reason",
-        "reasonVisibility": "This reason is recorded in the audit log and shown to other admins. The candidate sees only a neutral entry: 'Status updated by SkillIndiaConnect'.",
+        "reasonVisibility": "This reason is recorded in the audit log and shown to other admins. The candidate sees only a neutral entry: 'Status updated by Skill India Connect'.",
         "reasonRequired": "A reason is required for a corrective status change.",
         "rejectedByServer": "The server declined this change.",
         "failed": "Couldn't change the status. Try again.",
@@ -2397,6 +2466,12 @@
       "downloadPdf": "Download PDF",
       "downloadPdfLabel": "Download PDF for invoice {number}",
       "pdfPending": "Generating…",
+      "invoicePageInfo": "Page {page} of {totalPages}",
+      "invoicePrev": "Previous",
+      "invoiceNext": "Next",
+      "invoicePreviousPage": "Previous page of invoices",
+      "invoiceNextPage": "Next page of invoices",
+      "invoicesPaginationLabel": "Invoice pagination",
       "viewDoc": "View",
       "viewDocLoading": "Opening…",
       "viewDocLabel": "View {doc} document",
@@ -2410,18 +2485,18 @@
   },
   "landing": {
     "meta": {
-      "title": "SkillIndiaConnect — Safe, verified jobs in India and the Gulf",
+      "title": "Skill India Connect — Safe, verified jobs in India and the Gulf",
       "description": "Find verified jobs in India and the Gulf. Every job includes accommodation, health insurance, and transport. Free for workers."
     },
     "nav": {
       "login": "Login",
       "signUp": "Sign Up Free",
       "skipToContent": "Skip to main content",
-      "home": "SkillIndiaConnect home"
+      "home": "Skill India Connect home"
     },
     "hero": {
       "headline": "<hl>Safe, verified jobs</hl> in India and the Gulf",
-      "subline": "Every job on SkillIndiaConnect must give you a place to stay, health insurance, and transport. We check every employer before their job goes live.",
+      "subline": "Every job on Skill India Connect must give you a place to stay, health insurance, and transport. We check every employer before their job goes live.",
       "ctaWorker": "Find Jobs",
       "ctaEmployer": "Hire Workers",
       "freeNote": "Free for workers. Always."
@@ -2511,7 +2586,7 @@
       "support": "Support",
       "emailLabel": "Email us",
       "languageLabel": "Language",
-      "rights": "© {year} SkillIndiaConnect. All rights reserved.",
+      "rights": "© {year} Skill India Connect. All rights reserved.",
       "getStarted": "Get Started",
       "findJobs": "Find Jobs",
       "hireWorkers": "Hire Workers",
@@ -2523,7 +2598,7 @@
       "visitUs": "Our office"
     },
     "carousel": {
-      "label": "Skilled workers on SkillIndiaConnect",
+      "label": "Skilled workers on Skill India Connect",
       "prev": "Previous image",
       "next": "Next image",
       "goTo": "Show image {n}",
@@ -2551,10 +2626,10 @@
     "about": {
       "metaTitle": "About us",
       "metaDescription": "We connect skilled Indian workers with verified employers in India and the Gulf, and protect workers from recruitment fraud.",
-      "title": "About SkillIndiaConnect",
+      "title": "About Skill India Connect",
       "lead": "We help skilled Indian workers find safe jobs in India and the Gulf — without paying bribes, losing their documents, or being lied to about the job.",
       "missionHeading": "Our mission",
-      "missionBody": "Millions of Indian workers look for work abroad every year. Too many are cheated by fake agents who take money, hold passports, or promise a job that does not exist. We built SkillIndiaConnect so a worker can deal directly with a checked employer, see the real terms of the job before applying, and keep their own documents.",
+      "missionBody": "Millions of Indian workers look for work abroad every year. Too many are cheated by fake agents who take money, hold passports, or promise a job that does not exist. We built Skill India Connect so a worker can deal directly with a checked employer, see the real terms of the job before applying, and keep their own documents.",
       "protectionHeading": "What we guarantee",
       "protectionBody": "Every job posted here must include a place to stay, health insurance, and transport. This is not a promise we ask employers to make — our system blocks any job that leaves one of them out. We also check each company before its first job goes live.",
       "freeHeading": "Free for workers",
@@ -2564,7 +2639,7 @@
     },
     "contact": {
       "metaTitle": "Contact us",
-      "metaDescription": "Get in touch with the SkillIndiaConnect team by email.",
+      "metaDescription": "Get in touch with the Skill India Connect team by email.",
       "title": "Contact us",
       "lead": "Have a question, a problem with your account, or a job to report? Email us and a person will read it.",
       "emailHeading": "Email us",
@@ -2579,13 +2654,13 @@
     },
     "privacy": {
       "metaTitle": "Privacy Policy",
-      "metaDescription": "How SkillIndiaConnect collects, uses, and protects your personal information.",
+      "metaDescription": "How Skill India Connect collects, uses, and protects your personal information.",
       "title": "Privacy Policy",
       "lead": "This policy explains what information we collect, why we collect it, and what control you have over it.",
       "sections": [
         {
           "heading": "Who we are",
-          "body": "SkillIndiaConnect is a job platform that connects skilled workers in India with verified employers in India and the Gulf. We decide how your personal information is used on this platform, and we are responsible for keeping it safe. [Registered company name, registered address and company registration number to be added before launch.]"
+          "body": "Skill India Connect is a job platform that connects skilled workers in India with verified employers in India and the Gulf. We decide how your personal information is used on this platform, and we are responsible for keeping it safe. [Registered company name, registered address and company registration number to be added before launch.]"
         },
         {
           "heading": "You must be 18 or older",
@@ -2663,12 +2738,12 @@
     },
     "terms": {
       "metaTitle": "Terms of Use",
-      "metaDescription": "The rules for using SkillIndiaConnect as a worker or an employer.",
+      "metaDescription": "The rules for using Skill India Connect as a worker or an employer.",
       "title": "Terms of Use",
-      "lead": "These terms explain the rules for using SkillIndiaConnect. By making an account you agree to them.",
+      "lead": "These terms explain the rules for using Skill India Connect. By making an account you agree to them.",
       "sections": [
         {
-          "heading": "Who can use SkillIndiaConnect",
+          "heading": "Who can use Skill India Connect",
           "body": "You must be at least 18 years old and give true information about yourself or your company. One email address may be used for one account and one role only."
         },
         {
@@ -2717,5 +2792,9 @@
         }
       ]
     }
+  },
+  "sorting": {
+    "sortAscending": "Sort by {column}, ascending",
+    "sortDescending": "Sort by {column}, descending"
   }
 }

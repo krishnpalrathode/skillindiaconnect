@@ -14,7 +14,7 @@ test('landing page is live and renders', async ({ page }) => {
   expect(response, 'no response from SMOKE_BASE_URL — is it set and reachable?').toBeTruthy();
   expect(response!.ok()).toBeTruthy();
 
-  await expect(page.getByRole('heading', { name: 'SkillIndiaConnect' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Skill India Connect' })).toBeVisible();
 });
 
 test('API health endpoint responds (only when SMOKE_API_URL is set)', async ({ request }) => {

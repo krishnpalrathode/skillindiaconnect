@@ -11,7 +11,14 @@ import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user
 import { Permission } from '../auth/rbac/permission.constants';
 import { RequirePermissions } from '../auth/rbac/require-permissions.decorator';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
-import { AnyKeyDef, isValidValue, SETTING_KEYS, SettingType } from './settings.keys';
+import {
+  AnyKeyDef,
+  describeBounds,
+  isValidValue,
+  isWithinBounds,
+  SETTING_KEYS,
+  SettingType,
+} from './settings.keys';
 import { SettingsService } from './settings.service';
 
 // O(1) lookup from string key → typed keyDef.
@@ -80,6 +87,16 @@ export class SettingsController {
         throw new UnprocessableEntityException({
           code: 'SETTING_INVALID_VALUE',
           detail: `Value for "${item.key}" must be of type ${keyDef.type}`,
+        });
+      }
+
+      // Range, not just type. A well-typed but nonsensical number is still a
+      // platform-wide outage: free_max_active_jobs = 0 stops every Free employer
+      // publishing, and nothing downstream would have questioned it.
+      if (!isWithinBounds(item.key, item.value)) {
+        throw new UnprocessableEntityException({
+          code: 'SETTING_OUT_OF_RANGE',
+          detail: `Value for "${item.key}" must be ${describeBounds(item.key)}`,
         });
       }
 

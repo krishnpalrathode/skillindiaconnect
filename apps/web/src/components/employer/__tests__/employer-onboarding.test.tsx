@@ -1,8 +1,9 @@
 ﻿import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '../../../test-utils';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
+import { ToastProvider } from '../../../components/ui/toast';
 import enMessages from '../../../i18n/messages/en.json';
 import { server } from '../../../mocks/server';
 import { http, HttpResponse } from 'msw';
@@ -63,7 +64,9 @@ function WithAll({ children }: { children: React.ReactNode }) {
   return (
     <NextIntlClientProvider locale="en" messages={enMessages}>
       <AuthProvider>
-        <EmployerProvider>{children}</EmployerProvider>
+        <EmployerProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </EmployerProvider>
       </AuthProvider>
     </NextIntlClientProvider>
   );
@@ -72,7 +75,7 @@ function WithAll({ children }: { children: React.ReactNode }) {
 function WithIntl({ children }: { children: React.ReactNode }) {
   return (
     <NextIntlClientProvider locale="en" messages={enMessages}>
-      {children}
+      <ToastProvider>{children}</ToastProvider>
     </NextIntlClientProvider>
   );
 }
@@ -228,8 +231,8 @@ describe('CompanyTypeRadio', () => {
         <CompanyTypeRadio value="" onChange={vi.fn()} />
       </WithIntl>,
     );
-    expect(screen.getByRole('radio', { name: /local company/i })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /foreign/i })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /india company/i })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /international company/i })).toBeInTheDocument();
   });
 
   it('calls onChange with "LOCAL" when Local option is clicked', async () => {
@@ -240,7 +243,7 @@ describe('CompanyTypeRadio', () => {
         <CompanyTypeRadio value="" onChange={onChange} />
       </WithIntl>,
     );
-    await user.click(screen.getByRole('radio', { name: /local company/i }));
+    await user.click(screen.getByRole('radio', { name: /india company/i }));
     expect(onChange).toHaveBeenCalledWith('LOCAL');
   });
 
@@ -252,7 +255,7 @@ describe('CompanyTypeRadio', () => {
         <CompanyTypeRadio value="" onChange={onChange} />
       </WithIntl>,
     );
-    await user.click(screen.getByRole('radio', { name: /foreign/i }));
+    await user.click(screen.getByRole('radio', { name: /international company/i }));
     expect(onChange).toHaveBeenCalledWith('FOREIGN');
   });
 
@@ -262,8 +265,8 @@ describe('CompanyTypeRadio', () => {
         <CompanyTypeRadio value="LOCAL" onChange={vi.fn()} />
       </WithIntl>,
     );
-    expect(screen.getByRole('radio', { name: /local company/i })).toBeChecked();
-    expect(screen.getByRole('radio', { name: /foreign/i })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: /india company/i })).toBeChecked();
+    expect(screen.getByRole('radio', { name: /international company/i })).not.toBeChecked();
   });
 
   it('shows the required error message when error prop is set', () => {
@@ -401,7 +404,7 @@ describe('CompanyOnboardingForm — initial registration', () => {
       </WithAll>,
     );
 
-    await user.click(screen.getByRole('radio', { name: /local company/i }));
+    await user.click(screen.getByRole('radio', { name: /india company/i }));
     await user.type(screen.getByPlaceholderText(/your company legal name/i), 'Test Co');
     await user.type(screen.getByPlaceholderText(/\+91 98765 43210/i), '+919876543210');
     await user.type(screen.getByPlaceholderText(/city, state or country/i), 'Mumbai');
@@ -433,7 +436,7 @@ describe('CompanyOnboardingForm — initial registration', () => {
       </WithAll>,
     );
 
-    await user.click(screen.getByRole('radio', { name: /local company/i }));
+    await user.click(screen.getByRole('radio', { name: /india company/i }));
     await user.type(screen.getByPlaceholderText(/your company legal name/i), 'Test Corp');
     await user.type(screen.getByPlaceholderText(/\+91 98765 43210/i), '+911234567890');
     await user.type(screen.getByPlaceholderText(/city, state or country/i), 'Delhi');
@@ -465,7 +468,7 @@ describe('CompanyOnboardingForm — initial registration', () => {
       </WithAll>,
     );
 
-    await user.click(screen.getByRole('radio', { name: /local company/i }));
+    await user.click(screen.getByRole('radio', { name: /india company/i }));
     await user.type(screen.getByPlaceholderText(/your company legal name/i), 'Duplicate Co');
     await user.type(screen.getByPlaceholderText(/\+91 98765 43210/i), '+911234567890');
     await user.type(screen.getByPlaceholderText(/city, state or country/i), 'Mumbai');
@@ -527,7 +530,7 @@ describe('CompanyOnboardingForm — resubmit', () => {
         <CompanyOnboardingForm company={rejectedCompany} />
       </WithAll>,
     );
-    expect(screen.getByRole('radio', { name: /local company/i })).toBeChecked();
+    expect(screen.getByRole('radio', { name: /india company/i })).toBeChecked();
   });
 
   it('calls PATCH /employers/me/company on submit and transitions REJECTED → PENDING', async () => {

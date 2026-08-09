@@ -6,8 +6,8 @@ import { JobList } from '@/components/jobs/JobList';
 import { searchJobsServer, getJobCountriesServer } from '@/lib/api/jobs';
 import { PAGE_SHELL } from '@/lib/page-shell';
 import {
-  buildJobSearchQuery,
   parseJobSearchParams,
+  parsePageParam,
   DEFAULT_PAGE_SIZE,
   type RawSearchParams,
 } from '@/lib/jobs/searchParams';
@@ -30,21 +30,18 @@ export default async function JobsPage({ params, searchParams }: JobsPageProps) 
   const { locale } = await params;
   const rawParams = await searchParams;
   const filters = parseJobSearchParams(rawParams);
+  const page = parsePageParam(rawParams);
   const t = await getTranslations('jobs');
 
-  // Fetch the first page on the server; the SSR result seeds JobList so the
-  // page is fully populated in the initial HTML response (crawlable, no CLS).
+  // Fetch the REQUESTED page on the server, so every page (not just the first)
+  // is fully populated in the initial HTML response — crawlable, no CLS, and no
+  // client-side refetch on navigation.
   // Both server-side and in parallel: the country strip must be populated in the
   // first HTML response, and a facet failure must not take the whole page down.
-  const [initialData, countries] = await Promise.all([
-    searchJobsServer(filters, { limit: DEFAULT_PAGE_SIZE }),
+  const [pageData, countries] = await Promise.all([
+    searchJobsServer(filters, { page, pageSize: DEFAULT_PAGE_SIZE }),
     getJobCountriesServer().catch(() => []),
   ]);
-
-  // A stable string that changes whenever any filter changes — used as the
-  // `key` prop on JobList to force a remount when the user applies filters,
-  // resetting the component's cursor/job-list state to the new SSR data.
-  const queryKey = buildJobSearchQuery(filters) || 'default';
 
   return (
     <main className={PAGE_SHELL}>
@@ -63,7 +60,7 @@ export default async function JobsPage({ params, searchParams }: JobsPageProps) 
         </aside>
 
         <div>
-          <JobList key={queryKey} initialData={initialData} filters={filters} locale={locale} />
+          <JobList data={pageData} filters={filters} locale={locale} />
         </div>
       </div>
     </main>

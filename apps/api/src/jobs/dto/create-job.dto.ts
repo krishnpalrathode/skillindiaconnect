@@ -14,6 +14,7 @@ import {
 } from 'class-validator';
 import { Currency, EmploymentType, JobMarket } from '@prisma/client';
 import { ALL_JOB_COUNTRIES } from '../job-countries';
+import { CATEGORY_OTHER_MAX_LENGTH } from '../../core/job-categories';
 
 export class CreateJobDto {
   @IsString()
@@ -46,6 +47,18 @@ export class CreateJobDto {
 
   @IsUUID()
   categoryId!: string;
+
+  /**
+   * Free-text trade, required when `categoryId` points at the `other` category
+   * and rejected otherwise. The pairing rule needs the category ROW (to read
+   * its slug), which class-validator cannot fetch — so it is enforced in
+   * JobsService, not here. This only bounds the string.
+   */
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(CATEGORY_OTHER_MAX_LENGTH)
+  categoryOther?: string;
 
   @IsArray()
   @IsString({ each: true })

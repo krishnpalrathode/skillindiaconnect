@@ -10,6 +10,7 @@ import {
 import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user.decorator';
 import { NotificationService } from './notification.service';
 import { NotificationDto } from './notification.mapper';
+import type { Paginated } from '../core/pagination';
 import { ListNotificationsDto } from './dto/list-notifications.dto';
 import { MarkReadDto } from './dto/mark-read.dto';
 
@@ -26,13 +27,13 @@ export class NotificationsController {
    * GET /api/v1/candidates/me/notifications
    * Cursor-based feed; optional filter by bucket (applications|jobs|profile|system)
    * and unread-only flag.
-   * Response: { data: Notification[], nextCursor: string | null }
+   * Response: { data: Notification[], meta: { page, pageSize, total, totalPages } }
    */
   @Get()
   async list(
     @CurrentUser() user: CurrentUserPayload,
     @Query() dto: ListNotificationsDto,
-  ): Promise<{ data: NotificationDto[]; nextCursor: string | null }> {
+  ): Promise<Paginated<NotificationDto>> {
     this.notificationService.assertCandidateRole(user.role);
     return this.notificationService.listNotifications(user.userId, dto);
   }

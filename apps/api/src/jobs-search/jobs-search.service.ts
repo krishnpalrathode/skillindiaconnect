@@ -1,5 +1,5 @@
 /**
- * JobsSearchService — public FTS + pg_trgm job search with keyset cursor pagination.
+ * JobsSearchService — public FTS + pg_trgm job search with offset pagination.
  *
  * CRITICAL INVARIANTS:
  * 1. searchVector is Unsupported("tsvector") — queried via $queryRaw ONLY.
@@ -14,6 +14,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { JobStatus, Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
+import { pageMeta, resolvePaging, type Paginated } from '../core/pagination';
+import { OTHER_CATEGORY_SLUG } from '../core/job-categories';
 import {
   JOB_CARD_SELECT,
   JOB_DETAIL_SELECT,
@@ -30,46 +32,6 @@ import { SearchQueryDto } from './dto/search-query.dto';
 export interface JobViewer {
   userId: string;
   role: UserRole;
-}
-
-// ─────── Cursor types ─────────────────────────────────────────────────────────
-
-interface RelevanceCursor {
-  rank: number;
-  publishedAt: string | null;
-  id: string;
-}
-
-interface RecentCursor {
-  publishedAt: string | null;
-  id: string;
-}
-
-interface SalaryCursor {
-  salaryMax: number;
-  id: string;
-}
-
-type SearchCursor = RelevanceCursor | RecentCursor | SalaryCursor;
-
-function encodeCursor(cursor: SearchCursor): string {
-  return Buffer.from(JSON.stringify(cursor)).toString('base64url');
-}
-
-function decodeCursor(raw: string): SearchCursor | null {
-  try {
-    return JSON.parse(Buffer.from(raw, 'base64url').toString('utf8')) as SearchCursor;
-  } catch {
-    return null;
-  }
-}
-
-function isRelevanceCursor(c: SearchCursor): c is RelevanceCursor {
-  return 'rank' in c;
-}
-
-function isSalaryCursor(c: SearchCursor): c is SalaryCursor {
-  return 'salaryMax' in c;
 }
 
 // ─────── Raw query row shape ──────────────────────────────────────────────────
@@ -92,18 +54,15 @@ export class JobsSearchService {
   ) {}
 
   /**
-   * Public job search with cache-through on first pages.
-   * Cursor pages (pagination) bypass cache since they are low-traffic and
-   * per-cursor caching would require more complex invalidation.
+   * Public job search with cache-through on the first page.
+   * Deeper pages bypass cache since they are low-traffic and per-page caching
+   * would multiply the key space for very little hit rate.
    *
    * `viewer` is optional (routes are @Public with @OptionalAuth): when a
    * candidate is present, isSaved is applied AFTER the cache read so the shared
    * public cache never carries per-user state.
    */
-  async search(
-    dto: SearchQueryDto,
-    viewer?: JobViewer | null,
-  ): Promise<{ data: JobCard[]; nextCursor: string | null }> {
+  async search(dto: SearchQueryDto, viewer?: JobViewer | null): Promise<Paginated<JobCard>> {
     const result = await this.searchPublic(dto);
     await this.applySavedState(result.data, viewer);
     return result;
@@ -130,12 +89,12 @@ export class JobsSearchService {
    * concurrency factor. Entries are always removed in `finally`, so a failed
    * query is never cached as a poisoned promise.
    */
-  private readonly inFlight = new Map<string, Promise<{ data: JobCard[]; nextCursor: string | null }>>();
+  private readonly inFlight = new Map<string, Promise<Paginated<JobCard>>>();
 
   private async runSearchCoalesced(
     cacheKey: string,
     dto: SearchQueryDto,
-  ): Promise<{ data: JobCard[]; nextCursor: string | null }> {
+  ): Promise<Paginated<JobCard>> {
     // ⚠️ EVERY caller gets its OWN clone — waiters included, which is why the
     // clone wraps this lookup rather than sitting only on the producer's path.
     // Coalescing resolves all waiters with the SAME object, and applySavedState
@@ -196,12 +155,12 @@ export class JobsSearchService {
     return result;
   }
 
-  private async searchPublic(
-    dto: SearchQueryDto,
-  ): Promise<{ data: JobCard[]; nextCursor: string | null }> {
-    if (!dto.cursor) {
+  private async searchPublic(dto: SearchQueryDto): Promise<Paginated<JobCard>> {
+    // Only page 1 is cached — it absorbs the overwhelming majority of traffic,
+    // while deeper pages are long-tail and would multiply the key space by the
+    // page count for very little hit rate.
+    if ((dto.page ?? 1) === 1) {
       const version = await this.cache.getSearchVersion();
-      // Exclude `cursor` from hash — first-page key must not depend on cursor value
       const paramsHash = this.cache.hashParams({
         q: dto.q,
         market: dto.market,
@@ -214,11 +173,12 @@ export class JobsSearchService {
         currency: dto.currency,
         badge: dto.badge,
         sort: dto.sort,
-        limit: dto.limit,
+        // pageSize changes the page CONTENTS, so it must be part of the key.
+        pageSize: dto.pageSize,
       });
       const cacheKey = this.cache.searchCacheKey(version, paramsHash);
 
-      const cached = await this.cache.getSearch<{ data: JobCard[]; nextCursor: string | null }>(cacheKey);
+      const cached = await this.cache.getSearch<Paginated<JobCard>>(cacheKey);
       if (cached) return cached;
 
       // Miss: coalesce with any identical search already running (S8-H1).
@@ -252,11 +212,21 @@ export class JobsSearchService {
   async listCategories(): Promise<
     { id: string; slug: string; nameEn: string; nameHi: string | null; nameAr: string | null }[]
   > {
-    return this.prisma.jobCategory.findMany({
+    const categories = await this.prisma.jobCategory.findMany({
       where: { isActive: true },
       select: { id: true, slug: true, nameEn: true, nameHi: true, nameAr: true },
       orderBy: { nameEn: 'asc' },
     });
+
+    // "Other" belongs at the BOTTOM of every picker and filter chip row, not
+    // alphabetically between Mason and Pipe Fitter. Sorting here rather than in
+    // each consumer keeps the employer form and the public search chips in the
+    // same order. Done in JS because the ordering is one pinned row over a
+    // ~dozen-row table, not something worth a raw query.
+    return [
+      ...categories.filter((c) => c.slug !== OTHER_CATEGORY_SLUG),
+      ...categories.filter((c) => c.slug === OTHER_CATEGORY_SLUG),
+    ];
   }
 
   /**
@@ -303,8 +273,8 @@ export class JobsSearchService {
 
   // ─────── Core search query ──────────────────────────────────────────────────
 
-  private async runSearch(dto: SearchQueryDto): Promise<{ data: JobCard[]; nextCursor: string | null }> {
-    const limit = Math.min(dto.limit ?? 20, 50);
+  private async runSearch(dto: SearchQueryDto): Promise<Paginated<JobCard>> {
+    const { page, pageSize, skip, take } = resolvePaging(dto.page, dto.pageSize, 50);
     const q = dto.q?.trim() || null;
     const sortBy = dto.sort ?? (q ? 'relevance' : 'recent');
 
@@ -362,34 +332,6 @@ export class JobsSearchService {
       filters.push(Prisma.sql`j."publishedAt" >= NOW() - INTERVAL '7 days'`);
     }
 
-    // Keyset cursor WHERE — must match the sort order exactly for stable pagination
-    const cursor = dto.cursor ? decodeCursor(dto.cursor) : null;
-    if (cursor) {
-      if (sortBy === 'relevance' && q && isRelevanceCursor(cursor)) {
-        // ORDER BY ts_rank DESC, publishedAt DESC, id DESC
-        // Cursor comparison: next page has smaller (rank, publishedAt, id) tuple.
-        // publishedAt is a `timestamp without time zone` column — cast the ISO
-        // cursor string to ::timestamp (naive, TZ-independent), NOT ::timestamptz,
-        // which would force a session-TZ conversion of the column and break
-        // pagination whenever the DB session TZ isn't UTC.
-        filters.push(
-          Prisma.sql`(ts_rank(j."searchVector", websearch_to_tsquery('english', ${q})), j."publishedAt", j.id) < (${cursor.rank}::float4, ${cursor.publishedAt}::timestamp, ${cursor.id}::text)`,
-        );
-      } else if (sortBy === 'salary' && isSalaryCursor(cursor)) {
-        // ORDER BY salaryMax DESC, id DESC
-        filters.push(
-          Prisma.sql`(j."salaryMax", j.id) < (${cursor.salaryMax}::int, ${cursor.id}::text)`,
-        );
-      } else if ('publishedAt' in cursor && 'id' in cursor) {
-        // ORDER BY publishedAt DESC, id DESC (recent sort). ::timestamp (not
-        // ::timestamptz) to match the naive `timestamp without time zone` column
-        // — avoids TZ-dependent comparison. See relevance branch above.
-        filters.push(
-          Prisma.sql`(j."publishedAt", j.id) < (${(cursor as RecentCursor).publishedAt}::timestamp, ${(cursor as RecentCursor).id}::text)`,
-        );
-      }
-    }
-
     // Rank expression — computed in SELECT and ORDER BY (q value bound each time)
     const rankExpr: Prisma.Sql = q
       ? Prisma.sql`ts_rank(j."searchVector", websearch_to_tsquery('english', ${q}))`
@@ -406,47 +348,37 @@ export class JobsSearchService {
 
     const whereClause = Prisma.join(filters, ' AND ');
 
-    // Execute raw query — searchVector only accessible via $queryRaw
-    const rows = await this.prisma.$queryRaw<RawSearchRow[]>(Prisma.sql`
-      SELECT
-        j.id,
-        j."publishedAt" AS "publishedAt",
-        j."salaryMax"   AS "salaryMax",
-        ${rankExpr}    AS rank
-      FROM jobs j
-      LEFT JOIN job_categories jc ON jc.id = j."categoryId"
-      WHERE ${whereClause}
-      ORDER BY ${orderByClause}
-      LIMIT ${limit + 1}
-    `);
+    // Two raw queries, same WHERE: the page and its total. COUNT runs without the
+    // ORDER BY / rank expression — the planner only needs the filter, and ranking
+    // rows it is about to discard would pay the ts_rank cost for nothing.
+    const [rows, countRows] = await Promise.all([
+      this.prisma.$queryRaw<RawSearchRow[]>(Prisma.sql`
+        SELECT
+          j.id,
+          j."publishedAt" AS "publishedAt",
+          j."salaryMax"   AS "salaryMax",
+          ${rankExpr}    AS rank
+        FROM jobs j
+        LEFT JOIN job_categories jc ON jc.id = j."categoryId"
+        WHERE ${whereClause}
+        ORDER BY ${orderByClause}
+        LIMIT ${take} OFFSET ${skip}
+      `),
+      this.prisma.$queryRaw<Array<{ count: bigint }>>(Prisma.sql`
+        SELECT COUNT(*) AS count
+        FROM jobs j
+        LEFT JOIN job_categories jc ON jc.id = j."categoryId"
+        WHERE ${whereClause}
+      `),
+    ]);
 
-    const hasMore = rows.length > limit;
-    const pageRows = hasMore ? rows.slice(0, limit) : rows;
+    // COUNT(*) arrives as bigint, which JSON.stringify throws on.
+    const total = Number(countRows[0]?.count ?? 0);
 
-    if (pageRows.length === 0) return { data: [], nextCursor: null };
-
-    // Encode cursor from the last row on this page
-    let nextCursor: string | null = null;
-    if (hasMore) {
-      const last = pageRows[pageRows.length - 1]!;
-      if (sortBy === 'relevance') {
-        nextCursor = encodeCursor({
-          rank: last.rank,
-          publishedAt: last.publishedAt?.toISOString() ?? null,
-          id: last.id,
-        } satisfies RelevanceCursor);
-      } else if (sortBy === 'salary') {
-        nextCursor = encodeCursor({ salaryMax: last.salaryMax, id: last.id } satisfies SalaryCursor);
-      } else {
-        nextCursor = encodeCursor({
-          publishedAt: last.publishedAt?.toISOString() ?? null,
-          id: last.id,
-        } satisfies RecentCursor);
-      }
-    }
+    if (rows.length === 0) return { data: [], meta: pageMeta(page, pageSize, total) };
 
     // Hydrate: fetch public-subset fields via Prisma (type-safe, no searchVector leakage)
-    const ids = pageRows.map((r) => r.id);
+    const ids = rows.map((r) => r.id);
     const jobs = await this.prisma.job.findMany({
       where: { id: { in: ids } },
       select: JOB_CARD_SELECT,
@@ -461,6 +393,6 @@ export class JobsSearchService {
       })
       .filter((j): j is JobCard => j !== null);
 
-    return { data, nextCursor };
+    return { data, meta: pageMeta(page, pageSize, total) };
   }
 }

@@ -21,6 +21,8 @@ import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { ListJobsDto } from './dto/list-jobs.dto';
 import { isCountryValidForMarket } from './job-countries';
+import { buildOrderBy, resolveSort } from '../core/sorting';
+import { OTHER_CATEGORY_SLUG } from '../core/job-categories';
 
 /**
  * Sanitizes job description HTML to strip dangerous tags/attributes (XSS defense).
@@ -38,11 +40,22 @@ function sanitizeDescription(input: string): string {
     .replace(/href\s*=\s*["']?\s*javascript:[^"'\s>]*/gi, '');
 }
 
-const SORT_FIELD_MAP: Record<string, 'createdAt' | 'publishedAt' | 'title'> = {
+/**
+ * Sortable columns for the employer My Jobs table (whitelisted).
+ *
+ * Field names deliberately match the ones ListJobsDto already accepted
+ * (`createdAt`, `publishedAt`, `title`) so existing callers and bookmarks keep
+ * working; `status` is new. This replaces the old local SORT_FIELD_MAP, which
+ * did the same job without the `id` tiebreaker.
+ */
+export const MY_JOBS_SORT = {
+  title: 'title',
+  status: 'status',
   createdAt: 'createdAt',
   publishedAt: 'publishedAt',
-  title: 'title',
-};
+} as const;
+
+export const MY_JOBS_SORT_DEFAULT = 'createdAt:desc';
 
 /** Narrow projection of a job for the S4 apply flow (see getJobForApplication). */
 export interface JobForApplication {
@@ -147,6 +160,8 @@ export class JobsService {
       });
     }
 
+    const categoryOther = await this.resolveCategoryOther(dto.categoryId, dto.categoryOther);
+
     return this.prisma.job.create({
       data: {
         companyId,
@@ -157,6 +172,7 @@ export class JobsService {
         location: dto.location,
         description: sanitizeDescription(dto.description),
         categoryId: dto.categoryId,
+        categoryOther,
         requirements: dto.requirements,
         experienceRequiredYears: dto.experienceRequiredYears,
         salaryMin: dto.salaryMin,
@@ -186,6 +202,52 @@ export class JobsService {
     });
   }
 
+  /**
+   * Pairs `categoryId` with `categoryOther` and returns what should be stored.
+   *
+   * Both directions are errors, and both are worth catching: free text with a
+   * real trade selected means the UI sent a stale draft value that would then
+   * outrank the picked category everywhere it is displayed, and the `other`
+   * category with no text means a job filed under "Other" that says nothing
+   * about what the work is. The category ROW has to be read to know which case
+   * this is, which is why it cannot be a class-validator rule.
+   */
+  private async resolveCategoryOther(
+    categoryId: string,
+    categoryOther: string | undefined,
+  ): Promise<string | null> {
+    const category = await this.prisma.jobCategory.findUnique({
+      where: { id: categoryId },
+      select: { slug: true },
+    });
+    if (!category) {
+      throw new BadRequestException({
+        code: 'JOB_CATEGORY_NOT_FOUND',
+        detail: 'The selected job category does not exist.',
+      });
+    }
+
+    const trimmed = categoryOther?.trim();
+
+    if (category.slug !== OTHER_CATEGORY_SLUG) {
+      if (trimmed) {
+        throw new BadRequestException({
+          code: 'CATEGORY_OTHER_NOT_ALLOWED',
+          detail: 'A custom category is only accepted when the category is "Other".',
+        });
+      }
+      return null;
+    }
+
+    if (!trimmed) {
+      throw new BadRequestException({
+        code: 'CATEGORY_OTHER_REQUIRED',
+        detail: 'Enter the job category when choosing "Other".',
+      });
+    }
+    return trimmed;
+  }
+
   // ── Read ───────────────────────────────────────────────────────────────────
 
   async findOne(jobId: string, userId: string): Promise<JobData> {
@@ -200,11 +262,15 @@ export class JobsService {
   async list(
     userId: string,
     dto: ListJobsDto,
-  ): Promise<{ data: JobWithApplicantCount[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }> {
+  ): Promise<{
+    data: JobWithApplicantCount[];
+    meta: { page: number; pageSize: number; total: number; totalPages: number; sort: string };
+  }> {
     const company = await this.employerService.getCompanyForEmployerUser(userId);
-    const [field, dir] = (dto.sort ?? 'createdAt:desc').split(':');
-    const safeField = SORT_FIELD_MAP[field ?? 'createdAt'] ?? 'createdAt';
-    const safeDir = dir === 'asc' ? 'asc' : 'desc';
+    // Shared resolver: same whitelist as before, but it appends the `id`
+    // tiebreaker. Sorting by `title` alone is not a total order, so two jobs
+    // sharing a title could repeat or vanish across offset pages.
+    const sort = resolveSort(dto.sort, MY_JOBS_SORT, MY_JOBS_SORT_DEFAULT);
 
     const where = {
       companyId: company.id,
@@ -220,7 +286,7 @@ export class JobsService {
     const [data, total] = await Promise.all([
       this.prisma.job.findMany({
         where,
-        orderBy: { [safeField]: safeDir },
+        orderBy: buildOrderBy(sort, MY_JOBS_SORT),
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),
@@ -235,7 +301,10 @@ export class JobsService {
       applicantCount: counts.get(j.id)?.applications ?? 0,
     }));
 
-    return { data: enriched, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } };
+    return {
+      data: enriched,
+      meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize), sort: sort.applied },
+    };
   }
 
   // ── Update ─────────────────────────────────────────────────────────────────
@@ -272,9 +341,19 @@ export class JobsService {
       });
     }
 
+    // Re-pair category and free text whenever EITHER moves. Editing only the
+    // category (Other → Electrician) has to clear the stale free text, and
+    // editing only the text has to be checked against the category already
+    // stored — so the resolve runs on the merged pair, not on the patch.
+    const categoryTouched = dto.categoryId !== undefined || dto.categoryOther !== undefined;
+    const categoryOther = categoryTouched
+      ? await this.resolveCategoryOther(dto.categoryId ?? job.categoryId, dto.categoryOther)
+      : undefined;
+
     const updated = await this.prisma.job.update({
       where: { id: jobId },
       data: {
+        ...(categoryTouched && { categoryOther }),
         ...(dto.title !== undefined && { title: dto.title }),
         ...(dto.employmentType !== undefined && { employmentType: dto.employmentType }),
         ...(dto.market !== undefined && { market: dto.market }),

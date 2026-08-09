@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/lib/auth/auth-context';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 
 /**
  * Admin-side roles only.
@@ -54,7 +54,7 @@ export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
   if (isLoading || !user) {
     return (
       <div className="flex min-h-svh items-center justify-center bg-neutral-50">
-        <Spinner size={32} label={t('checking')} />
+        <BrandLoader size="lg" label={t('checking')} />
       </div>
     );
   }

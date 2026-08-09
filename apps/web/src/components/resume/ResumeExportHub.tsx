@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { components } from '@skillindiaconnect/shared-types';
 import { CompletionRing } from '@/components/common/CompletionRing';
-import { Spinner } from '@/components/ui/spinner';
+import { Button } from '@/components/ui/button';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { getCandidateCompletion } from '@/lib/api/candidate';
 import { getResume, type ResumeInfo } from '@/lib/api/resume';
 import { ResumePreview } from './ResumePreview';
@@ -47,6 +48,17 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
   const [lastRenderedAt, setLastRenderedAt] = useState<string | null>(null);
   // A committed settings change since the last generation → the last PDF is stale.
   const [dirtySinceGenerate, setDirtySinceGenerate] = useState(false);
+  /**
+   * The regenerate action published by DownloadResumeButton, rendered below the
+   * template gallery. Held in a wrapper object because a bare function in state
+   * would be mistaken for a lazy initialiser and invoked by React.
+   */
+  const [regenerateFn, setRegenerateFn] = useState<{ run: () => void } | null>(null);
+  const regenerate = regenerateFn?.run ?? null;
+  const setRegenerate = useCallback(
+    (fn: (() => void) | null) => setRegenerateFn(fn ? { run: fn } : null),
+    [],
+  );
   const [loading, setLoading] = useState(true);
 
   const hasGenerated = !!lastRenderedAt || info?.current?.status === 'READY';
@@ -76,7 +88,7 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Spinner size={28} label={t('loading')} />
+        <BrandLoader size="md" label={t('loading')} />
       </div>
     );
   }
@@ -128,6 +140,10 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
             setLastRenderedAt(ts);
             setDirtySinceGenerate(false);
           }}
+          // Regenerate is rendered below "Choose a template" instead — see the
+          // section further down. The action itself is unchanged.
+          showRegenerate={false}
+          onRegenerateChange={setRegenerate}
         />
       </section>
 
@@ -146,6 +162,30 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
               onSettingsChange={setSettings}
               onCommitted={() => setDirtySinceGenerate(true)}
             />
+
+            {/*
+              Regenerate sits directly BELOW the template picker so the flow
+              reads: choose a template → regenerate with it. It used to sit in
+              the download card ABOVE the gallery, which asked the user to
+              regenerate before they had picked what to regenerate INTO.
+
+              Same handler as before — DownloadResumeButton still owns the
+              generate/poll logic and publishes it; only the placement moved.
+            */}
+            {regenerate && (
+              <div className="mt-4 flex flex-col gap-2 border-t border-neutral-100 pt-4">
+                <p className="text-xs text-neutral-600">{t('regenerateHint')}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  onClick={regenerate}
+                  className="self-start"
+                >
+                  {t('regenerate')}
+                </Button>
+              </div>
+            )}
           </section>
 
           <section className="flex flex-col gap-4 rounded-2xl border border-neutral-200/70 bg-white p-5 shadow-sm sm:p-6">

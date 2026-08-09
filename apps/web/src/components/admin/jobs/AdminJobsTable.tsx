@@ -20,6 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/format/date';
 import { ReviewQueueBanner } from './ReviewQueueBanner';
+import { SortableHeader } from '@/components/ui/sortable-header';
 
 /**
  * The admin jobs list — EVERY status (DRAFT and PENDING_REVIEW included, which
@@ -46,6 +47,7 @@ export function AdminJobsTable() {
   const search = searchParams.get('search') ?? '';
   const employerId = searchParams.get('employerId') ?? '';
   const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1);
+  const sort = searchParams.get('sort') ?? undefined;
 
   const [rows, setRows] = useState<AdminJobRow[] | null>(null);
   const [meta, setMeta] = useState<JobListMeta | null>(null);
@@ -66,6 +68,9 @@ export function AdminJobsTable() {
     [pathname, searchParams],
   );
 
+  // Sorting re-orders the whole result set — reset to page 1, as setParam does.
+  const onSort = useCallback((next: string) => setParam('sort', next), [setParam]);
+
   const load = useCallback(async () => {
     setRows(null);
     setError(null);
@@ -77,13 +82,14 @@ export function AdminJobsTable() {
         search: search || undefined,
         employerId: employerId || undefined,
         page,
+        sort,
       });
       setRows(result.data);
       setMeta(result.meta);
     } catch (err) {
       setError(err as Error);
     }
-  }, [activeTab, flag, search, employerId, page]);
+  }, [activeTab, flag, search, employerId, page, sort]);
 
   useEffect(() => {
     void load();
@@ -207,18 +213,18 @@ export function AdminJobsTable() {
             <caption className="sr-only">{t('tableCaption')}</caption>
             <thead>
               <tr className="border-b border-neutral-200">
-                <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
+                <SortableHeader field="title" current={sort} onSort={onSort}>
                   {t('col.job')}
-                </th>
-                <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
+                </SortableHeader>
+                <SortableHeader field="company" current={sort} onSort={onSort}>
                   {t('col.company')}
-                </th>
+                </SortableHeader>
                 <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
                   {t('col.market')}
                 </th>
-                <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
+                <SortableHeader field="status" current={sort} onSort={onSort}>
                   {t('col.status')}
-                </th>
+                </SortableHeader>
                 <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
                   {t('col.flags')}
                 </th>
@@ -228,9 +234,9 @@ export function AdminJobsTable() {
                 <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
                   {t('col.views')}
                 </th>
-                <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
+                <SortableHeader field="created" current={sort} onSort={onSort}>
                   {t('col.posted')}
-                </th>
+                </SortableHeader>
               </tr>
             </thead>
             <tbody>

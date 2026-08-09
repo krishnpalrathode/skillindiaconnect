@@ -13,9 +13,14 @@ regardless of replica count.
 @Cron('0 2 * * *')
 async scheduleAutoArchive() {
   const day = new Date().toISOString().slice(0, 10); // 2026-06-20
-  await this.queue.add('auto-archive', {}, { jobId: `auto-archive:${day}` });
+  await this.queue.add('auto-archive', {}, { jobId: `auto-archive-${day}` });
 }
 ```
+
+**The separator is a HYPHEN, never a colon.** BullMQ 5 rejects a custom jobId
+containing `:` at runtime — `Error: Custom Id cannot contain :`. A stubbed queue
+in a unit test will happily accept one, so this surfaces only on the first real
+enqueue, and any producer that swallows enqueue errors will hide it entirely.
 
 The actual archiving happens in the BullMQ processor, not the cron method.
 

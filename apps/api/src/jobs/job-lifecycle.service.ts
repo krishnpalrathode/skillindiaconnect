@@ -15,17 +15,25 @@ export type JobData = Job;
  *
  * DRAFT          → PENDING_REVIEW (when approval setting is ON at publish)
  * DRAFT          → ACTIVE         (when approval setting is OFF at publish)
+ * DRAFT          → ARCHIVED       (employer retires a draft they will never publish)
  * PENDING_REVIEW → ACTIVE         (admin approve — S6b-B2, after RE-RUNNING the publish gates)
  * PENDING_REVIEW → DRAFT          (admin reject — S6b-B2; the employer fixes and resubmits)
  * PENDING_REVIEW → ARCHIVED       (admin hard-stop on a job that will never run)
  * ACTIVE         ↔ PAUSED
  * ACTIVE/PAUSED  → ARCHIVED
  *
+ * DRAFT→ARCHIVED was missing, which made the Archive button on a draft row a
+ * dead control: the UI offered it, the server 409'd, and the employer had no
+ * way to clear an abandoned draft. It is the one shape of "delete" this
+ * product gives an employer, and a draft has no published side effects to
+ * unwind, so archiving one is strictly safer than archiving a live job — which
+ * is already allowed.
+ *
  * Reactivating a paused job (PAUSED→ACTIVE) is a manual employer action;
  * the auto-archive cron only transitions ACTIVE→ARCHIVED (never touches PAUSED).
  */
 const LEGAL_TRANSITIONS: Partial<Record<JobStatus, JobStatus[]>> = {
-  [JobStatus.DRAFT]: [JobStatus.PENDING_REVIEW, JobStatus.ACTIVE],
+  [JobStatus.DRAFT]: [JobStatus.PENDING_REVIEW, JobStatus.ACTIVE, JobStatus.ARCHIVED],
   [JobStatus.PENDING_REVIEW]: [JobStatus.ACTIVE, JobStatus.DRAFT, JobStatus.ARCHIVED],
   [JobStatus.ACTIVE]: [JobStatus.PAUSED, JobStatus.ARCHIVED],
   [JobStatus.PAUSED]: [JobStatus.ACTIVE, JobStatus.ARCHIVED],
