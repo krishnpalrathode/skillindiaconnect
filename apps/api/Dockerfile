@@ -95,6 +95,19 @@ ENV NODE_ENV=production
 #                       engine can fail to load even though generation succeeded
 RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont openssl
 ENV CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# The Prisma CLI, pinned to the SAME version as @prisma/client.
+#
+# `pnpm deploy --prod` strips it (it is a devDependency — see the deployer stage
+# above), which left the runtime image able to QUERY the database but not to
+# MIGRATE it. Nothing in the pipeline ran `prisma migrate deploy`, so a release
+# carrying a migration shipped code that referenced columns the production
+# database did not have; every full-row read of that table then 500'd
+# (`The column ... does not exist in the current database`). This is what
+# render.yaml's preDeployCommand invokes.
+#
+# Version MUST track @prisma/client: a CLI newer than the client can write a
+# migration history the client cannot read.
+RUN npm i -g prisma@5.22.0
 RUN addgroup -S nodejs -g 1001 && adduser -S nestjs -u 1001 -G nodejs
 COPY --from=deployer --chown=nestjs:nodejs /deploy ./
 COPY --from=builder  --chown=nestjs:nodejs /repo/apps/api/dist ./dist
@@ -102,6 +115,15 @@ COPY --from=builder  --chown=nestjs:nodejs /repo/apps/api/dist ./dist
 # crash loop in whichever service overrides the CMD — and only for that service.
 # Assert both at build time.
 RUN test -f ./dist/main.api.js && test -f ./dist/main.worker.js
+# render.yaml's preDeployCommand runs `prisma migrate deploy` from this image.
+# That is a no-op — silently, with a clean exit — if the migrations folder did
+# not survive `pnpm deploy`. A "successful" deploy that migrated nothing is the
+# exact failure this whole mechanism exists to prevent, so assert the files are
+# really here rather than trusting that they came along with the schema.
+RUN test -f ./prisma/schema.prisma \
+ && test -d ./prisma/migrations \
+ && test -n "$(ls -A ./prisma/migrations)" \
+ && echo "prisma migrations present: $(ls ./prisma/migrations | wc -l) entries"
 USER nestjs
 EXPOSE 3001
 # Override CMD in Railway worker service: node dist/main.worker.js

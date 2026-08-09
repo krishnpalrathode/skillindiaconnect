@@ -33,6 +33,20 @@ services:
     # outage must not cause Render to restart an otherwise-healthy process.
     # /health and /health/ready remain for dashboards and human use.
     healthCheckPath: /health/live
+    # Applies pending migrations BEFORE the new containers take traffic.
+    #
+    # migrations.md already requires every migration to be backward-compatible
+    # for exactly this reason ("what makes `prisma migrate deploy` run safely
+    # BEFORE new containers take traffic") — but nothing actually ran it, so the
+    # guarantee was theoretical. A release carrying a migration deployed code
+    # that queried columns production did not have, and the candidate dashboard,
+    # profile and onboarding all 500'd until someone migrated by hand.
+    #
+    # `migrate deploy` (never `migrate dev`): it only applies committed
+    # migrations, never generates or resets. If it fails, Render aborts the
+    # deploy and the OLD version keeps serving — the correct outcome, because a
+    # half-migrated database serving new code is the failure this prevents.
+    preDeployCommand: prisma migrate deploy --schema ./prisma/schema.prisma
     envVars:
       - key: NODE_ENV
         value: production
