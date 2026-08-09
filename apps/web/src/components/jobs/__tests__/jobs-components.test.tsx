@@ -10,8 +10,6 @@ import { JobDetail } from '../JobDetail';
 import { EMPTY_FILTERS } from '@/lib/jobs/searchParams';
 import { db, makeAccessToken, toJobDetail } from '../../../mocks/data';
 import { setAccessToken, resetClient } from '../../../lib/api/client';
-import { server } from '../../../mocks/server';
-import { http, HttpResponse } from 'msw';
 import type { components } from '@skillindiaconnect/shared-types';
 
 type AuthUser = components['schemas']['UserSummary'] | null;

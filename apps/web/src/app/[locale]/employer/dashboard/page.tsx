@@ -3,9 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useParams } from 'next/navigation';
-import { useAuth } from '@/lib/auth/auth-context';
 import { useEmployer } from '@/lib/employer/employer-context';
 import { getDashboard } from '@/lib/api/employer';
+import { getEmployerProfile } from '@/lib/api/employer-profile';
 import { ApiRequestError } from '@/lib/api/client';
 import { BrandLoader } from '@/components/ui/brand-loader';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { RecentJobsTable } from '@/components/employer/dashboard/RecentJobsTable
 import { RecentApplicants } from '@/components/employer/dashboard/RecentApplicants';
 import { PostFirstJobCta } from '@/components/employer/dashboard/PostFirstJobCta';
 import { ChecklistCard } from '@/components/employer/dashboard/ChecklistCard';
+import { EmployerDashboardHeader } from '@/components/employer/dashboard/EmployerDashboardHeader';
 import type { components } from '@skillindiaconnect/shared-types';
 import { EMPLOYER_PAGE_SHELL } from '@/lib/page-shell';
 
@@ -27,19 +28,23 @@ type EmployerDashboard = components['schemas']['EmployerDashboard'];
  *   - totalApplications, shortlisted, selected: 0 (applications are S4)
  *
  * The shell (layout.tsx) provides: company-state banner, sidebar/header/plan widget.
- * This page adds: greeting, KPIs, PostFirstJobCta (gated by approval), recent jobs/applicants.
+ * This page adds: the company header, KPIs, PostFirstJobCta (gated by approval),
+ * recent jobs/applicants.
  *
  * When company is null (employer has no company yet), redirect to onboarding.
  */
 export default function EmployerDashboardPage() {
   const t = useTranslations('employer.dashboard');
-  const { user } = useAuth();
   const { company, isLoading: companyLoading } = useEmployer();
   const router = useRouter();
   const params = useParams<{ locale: string }>();
   const locale = params?.locale ?? 'en';
 
   const [dashboard, setDashboard] = useState<EmployerDashboard | null>(null);
+  // Logo lives on the PROFILE payload, not the dashboard one. Fetched on its
+  // own so a failure costs the header its logo (it falls back to initials) and
+  // never the dashboard.
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +54,21 @@ export default function EmployerDashboardPage() {
       router.replace(`/${locale}/employer/onboarding`);
     }
   }, [companyLoading, company, router, locale]);
+
+  useEffect(() => {
+    if (companyLoading || company === null) return;
+    let cancelled = false;
+    getEmployerProfile()
+      .then((p) => {
+        if (!cancelled) setLogoUrl(p.logoUrl ?? null);
+      })
+      .catch(() => {
+        /* header falls back to the company initials */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [companyLoading, company]);
 
   useEffect(() => {
     if (companyLoading || company === null) return;
@@ -108,9 +128,6 @@ export default function EmployerDashboardPage() {
       .finally(() => setLoading(false));
   }, [companyLoading, company, t]);
 
-  const firstName = user?.email?.split('@')[0] ?? undefined;
-  const greeting = firstName ? t('greeting', { name: firstName }) : t('greetingFallback');
-
   if (companyLoading || loading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -136,12 +153,7 @@ export default function EmployerDashboardPage() {
 
   return (
     <div className={EMPLOYER_PAGE_SHELL}>
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
-          {greeting}
-        </h1>
-        <p className="mt-1 text-sm text-neutral-600">{company.name}</p>
-      </div>
+      <EmployerDashboardHeader company={company} logoUrl={logoUrl} />
 
       <EmployerKpis kpis={dashboard.kpis} />
 

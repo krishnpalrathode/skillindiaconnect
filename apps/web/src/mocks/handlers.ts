@@ -1452,6 +1452,10 @@ const MOCK_JOB_CATEGORIES = [
   { id: 'cat-mason', slug: 'mason', nameEn: 'Mason', nameHi: null, nameAr: null },
   { id: 'cat-plumber', slug: 'plumber', nameEn: 'Plumber', nameHi: null, nameAr: null },
   { id: 'cat-welder', slug: 'welder', nameEn: 'Welder', nameHi: null, nameAr: null },
+  // Kept LAST, matching the real endpoint's pinned ordering — the job form
+  // finds this row by slug, so a mock that omitted it would silently never
+  // render the free-text field the real API expects.
+  { id: 'cat-other', slug: 'other', nameEn: 'Other', nameHi: null, nameAr: null },
 ];
 
 const getJobCategories = http.get(`${BASE}/job-categories`, () =>
@@ -1500,6 +1504,7 @@ const postJobs = http.post(`${BASE}/employers/me/jobs`, async ({ request }) => {
     location: body.location,
     description: body.description,
     categoryId: body.categoryId ?? null,
+    categoryOther: body.categoryOther ?? null,
     salaryMin: body.salaryMin ?? null,
     salaryMax: body.salaryMax ?? null,
     // Store both keys so public (salaryCurrency) and employer (currency) reads agree.

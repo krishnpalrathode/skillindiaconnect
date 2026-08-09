@@ -1,0 +1,11 @@
+-- Free-text trade name for jobs filed under the `other` category.
+--
+-- Additive and nullable, so this is backward-compatible with the currently
+-- running code: old containers never read or write the column, and every
+-- existing row is a fixed trade whose correct value is NULL. No backfill, no
+-- contract phase needed.
+--
+-- The pairing rule (required with `other`, forbidden otherwise) is enforced in
+-- JobsService rather than as a CHECK constraint: it depends on the SLUG of the
+-- joined job_categories row, which a row-level CHECK cannot reach.
+ALTER TABLE "jobs" ADD COLUMN "categoryOther" VARCHAR(80);

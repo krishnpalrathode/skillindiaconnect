@@ -25,7 +25,7 @@
         "MINIMAL": "Minimal"
       },
       "descriptions": {
-        "CLASSIC": "Traditional and formal. A safe choice for Gulf employers.",
+        "CLASSIC": "Traditional and formal. A safe choice for international employers.",
         "MODERN": "Clean and spacious. Works well for most candidates.",
         "COMPACT": "Two columns. Fits more experience on one page.",
         "MINIMAL": "Plain and simple. Easiest for hiring software to read."
@@ -156,7 +156,6 @@
     "jobPublished": "Job published successfully",
     "jobPaused": "Job paused",
     "jobResumed": "Job resumed",
-    "jobClosed": "Job closed",
     "jobDeleted": "Job deleted successfully",
     "jobDuplicated": "Job duplicated successfully",
     "applicantStatusUpdated": "Application status updated",
@@ -165,7 +164,9 @@
     "contactSaved": "Contact person saved",
     "contactDeleted": "Contact person deleted",
     "settingsSaved": "Settings saved successfully",
-    "exportStarted": "Export downloaded successfully"
+    "exportStarted": "Export downloaded successfully",
+    "actionFailed": "That didn't work. Please try again.",
+    "jobArchived": "Job archived"
   },
   "field": {
     "requiredError": "This field is required",
@@ -598,7 +599,7 @@
       "pageSubtitle": "Connect with skilled, verified workers across India and the Gulf.",
       "trustBadge1": "Verified Worker Profiles",
       "trustBadge2": "Secure Hiring Process",
-      "trustBadge3": "Gulf and Local Markets",
+      "trustBadge3": "India and International Markets",
       "formTitle": "Sign in to your employer account",
       "emailLabel": "Work email",
       "emailPlaceholder": "you@company.com",
@@ -623,9 +624,9 @@
       "resubmitPageSubtitle": "Update your details and resubmit for admin review.",
       "companyTypeLabel": "Company type",
       "companyTypeRequired": "Please select a company type",
-      "localTitle": "Local Company",
+      "localTitle": "India Company",
       "localDescription": "Registered in India and hiring domestically",
-      "foreignTitle": "Foreign / Gulf Company",
+      "foreignTitle": "International Company",
       "foreignDescription": "Registered outside India and hiring internationally",
       "nameLabel": "Company name",
       "namePlaceholder": "Your company legal name",
@@ -757,8 +758,8 @@
         "sectionTitle": "Company Information",
         "nameLabel": "Company name",
         "typeLabel": "Company type",
-        "typeLocal": "Local (India)",
-        "typeForeign": "Foreign / Gulf",
+        "typeLocal": "India",
+        "typeForeign": "International",
         "typeReadOnlyHint": "Company type is set at registration and cannot be changed here. Contact support if you need to update it.",
         "registrationNumberLabel": "Registration number",
         "registrationNumberReadOnlyHint": "Your verified registration identity. Contact support to update.",
@@ -852,7 +853,7 @@
       "card": {
         "srLabel": "{name}, {category}",
         "experienceYears": "{years, plural, =0 {No experience} one {# yr experience} other {# yrs experience}}",
-        "gulfExperience": "Gulf experience",
+        "gulfExperience": "International experience",
         "skillsLabel": "Top skills"
       },
       "filters": {
@@ -864,7 +865,7 @@
         "minExperience": "Minimum experience",
         "anyExperience": "Any experience",
         "yearsPlus": "{years}+ years",
-        "foreignExperience": "Has Gulf experience",
+        "foreignExperience": "Has international experience",
         "availableNow": "Available now",
         "clear": "Clear filters"
       },
@@ -890,7 +891,7 @@
         "timeline": {
           "title": "Work experience",
           "india": "India",
-          "foreign": "Gulf / Foreign",
+          "foreign": "International",
           "years": "{count, plural, one {# yr} other {# yrs}}",
           "months": "{count, plural, one {# mo} other {# mos}}"
         },
@@ -923,7 +924,7 @@
     "tabs": {
       "all": "All",
       "local": "India",
-      "foreign": "Gulf"
+      "foreign": "International"
     },
     "filters": {
       "sort": "Sort:",
@@ -965,7 +966,7 @@
       "save": "Save job",
       "unsave": "Saved",
       "newBadge": "New",
-      "marketGulf": "Gulf",
+      "marketGulf": "International",
       "marketLocal": "India"
     },
     "benefits": {
@@ -1122,12 +1123,15 @@
       "titleLabel": "Job title",
       "titlePlaceholder": "e.g. Experienced Mason, Senior Electrician",
       "marketLabel": "Market",
-      "marketGulf": "Gulf (International)",
-      "marketLocal": "Local (India)",
+      "marketGulf": "International",
+      "marketLocal": "India",
       "countryLabel": "Country",
       "countryPlaceholder": "Select a country",
       "locationLabel": "Location",
-      "locationPlaceholder": "e.g. Dubai, UAE or Mumbai, India"
+      "locationPlaceholder": "e.g. Dubai, UAE or Mumbai, India",
+      "categoryOtherLabel": "Your job category",
+      "categoryOtherHint": "Shown to candidates in place of a trade name.",
+      "categoryOtherPlaceholder": "e.g. Agentic AI Engineer"
     },
     "description": {
       "heading": "Job Description",
@@ -1239,7 +1243,7 @@
     "emptyTitle": "No jobs yet",
     "emptyBody": "Post your first job to start receiving applications.",
     "draftNotPosted": "Draft",
-    "marketGulf": "Gulf",
+    "marketGulf": "International",
     "marketLocal": "India",
     "applicationsPlaceholder": "0 applications (S4)",
     "pageInfo": "Page {page} of {totalPages}",
@@ -1355,7 +1359,7 @@
       "experience": "Experience",
       "experienceBasis": "Based on {clamped} of {raw} yrs",
       "foreign": "Foreign experience",
-      "foreignLocalNote": "Not scored for local jobs.",
+      "foreignLocalNote": "Not scored for jobs in India.",
       "documents": "Documents",
       "componentScore": "{score}/{max}",
       "track": "Track in My Applications"
@@ -1433,7 +1437,7 @@
       "recent": "Most recent"
     },
     "matchShort": "{score}% match",
-    "gulfBadge": "Gulf experience",
+    "gulfBadge": "International experience",
     "ageYears": "{age} yrs",
     "expYears": "{years} yrs exp",
     "appliedAgo": "Applied {ago}",
@@ -1456,7 +1460,7 @@
       "experience": "Experience",
       "experienceBasis": "Based on {clamped} of {raw} yrs",
       "foreign": "Foreign experience",
-      "foreignLocalNote": "Not scored for local jobs.",
+      "foreignLocalNote": "Not scored for jobs in India.",
       "documents": "Documents",
       "componentScore": "{score}/{max}"
     },
@@ -1667,12 +1671,12 @@
         "SUSPENDED": "Suspended"
       },
       "type": {
-        "LOCAL": "Local",
+        "LOCAL": "India",
         "FOREIGN": "Foreign"
       },
       "typeFilterLabel": "Type",
       "typeAll": "All types",
-      "typeLocal": "Local",
+      "typeLocal": "India",
       "typeForeign": "Foreign",
       "searchLabel": "Search companies",
       "searchPlaceholder": "Search by company name…",
@@ -1831,11 +1835,11 @@
             "description": "Maximum simultaneous active jobs for Free plan employers."
           },
           "allow_local": {
-            "label": "Allow local (India) jobs",
+            "label": "Allow India jobs",
             "description": "Employers may post jobs located in India."
           },
           "allow_foreign": {
-            "label": "Allow foreign (Gulf) jobs",
+            "label": "Allow international jobs",
             "description": "Employers may post jobs located abroad."
           }
         },
@@ -1860,7 +1864,7 @@
         "payments": {
           "gst_rate_pct": {
             "label": "GST rate (%)",
-            "description": "GST applied to local (India) checkout totals."
+            "description": "GST applied to India checkout totals."
           },
           "stripe_enabled": {
             "label": "Stripe for foreign checkout",
@@ -2069,7 +2073,7 @@
           "link": "Open the employer's review page"
         },
         "candidateView": "As candidates would see it",
-        "marketGulf": "Gulf",
+        "marketGulf": "International",
         "marketLocal": "India",
         "vacancies": "{count, plural, one {# vacancy} other {# vacancies}}",
         "experienceYears": "{count, plural, one {# year experience} other {# years experience}}",
@@ -2186,8 +2190,8 @@
         "basicHeading": "Job basics",
         "titleLabel": "Job title",
         "marketLabel": "Market",
-        "marketGulf": "Gulf",
-        "marketLocal": "India (Local)",
+        "marketGulf": "International",
+        "marketLocal": "India",
         "countryLabel": "Country",
         "countryPlaceholder": "Select a country",
         "categoryLabel": "Job category",

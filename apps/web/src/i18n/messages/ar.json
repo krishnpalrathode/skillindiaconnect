@@ -94,7 +94,7 @@
         "MINIMAL": "[ar] Minimal"
       },
       "descriptions": {
-        "CLASSIC": "[ar] Traditional and formal. A safe choice for Gulf employers.",
+        "CLASSIC": "تقليدية ورسمية. خيار آمن لأصحاب العمل الدوليين.",
         "MODERN": "[ar] Clean and spacious. Works well for most candidates.",
         "COMPACT": "[ar] Two columns. Fits more experience on one page.",
         "MINIMAL": "[ar] Plain and simple. Easiest for hiring software to read."
@@ -156,7 +156,6 @@
     "jobPublished": "تم نشر الوظيفة بنجاح",
     "jobPaused": "تم إيقاف الوظيفة مؤقتًا",
     "jobResumed": "تم استئناف الوظيفة",
-    "jobClosed": "تم إغلاق الوظيفة",
     "jobDeleted": "تم حذف الوظيفة بنجاح",
     "jobDuplicated": "تم نسخ الوظيفة بنجاح",
     "applicantStatusUpdated": "تم تحديث حالة الطلب",
@@ -165,7 +164,9 @@
     "contactSaved": "تم حفظ جهة الاتصال",
     "contactDeleted": "تم حذف جهة الاتصال",
     "settingsSaved": "تم حفظ الإعدادات بنجاح",
-    "exportStarted": "تم تنزيل التصدير بنجاح"
+    "exportStarted": "تم تنزيل التصدير بنجاح",
+    "actionFailed": "لم تنجح العملية. يرجى المحاولة مرة أخرى.",
+    "jobArchived": "تمت أرشفة الوظيفة"
   },
   "field": {
     "requiredError": "[ar] This field is required",
@@ -598,7 +599,7 @@
       "pageSubtitle": "تواصل مع عمال مهرة موثّقين في الهند ودول الخليج.",
       "trustBadge1": "ملفات شخصية موثّقة",
       "trustBadge2": "عملية توظيف آمنة",
-      "trustBadge3": "أسواق الخليج والمحلية",
+      "trustBadge3": "أسواق الهند والأسواق الدولية",
       "formTitle": "تسجيل الدخول إلى حساب صاحب العمل",
       "emailLabel": "البريد الإلكتروني للعمل",
       "emailPlaceholder": "you@company.com",
@@ -623,10 +624,10 @@
       "resubmitPageSubtitle": "حدّث بياناتك وأعد التقديم للمراجعة.",
       "companyTypeLabel": "نوع الشركة",
       "companyTypeRequired": "يرجى اختيار نوع الشركة",
-      "localTitle": "شركة محلية",
+      "localTitle": "شركة في الهند",
       "localDescription": "مسجلة في الهند وتوظف محلياً",
-      "foreignTitle": "شركة خليجية / أجنبية",
-      "foreignDescription": "مسجلة خارج الهند وتوظف دولياً",
+      "foreignTitle": "شركة دولية",
+      "foreignDescription": "مسجلة خارج الهند وتوظف دوليًا",
       "nameLabel": "اسم الشركة",
       "namePlaceholder": "الاسم القانوني لشركتك",
       "nameRequired": "اسم الشركة مطلوب",
@@ -757,8 +758,8 @@
         "sectionTitle": "معلومات الشركة",
         "nameLabel": "اسم الشركة",
         "typeLabel": "نوع الشركة",
-        "typeLocal": "محلية (الهند)",
-        "typeForeign": "أجنبية / الخليج",
+        "typeLocal": "الهند",
+        "typeForeign": "دولي",
         "typeReadOnlyHint": "نوع الشركة محدد عند التسجيل ولا يمكن تغييره هنا. تواصل مع الدعم.",
         "registrationNumberLabel": "رقم التسجيل",
         "registrationNumberReadOnlyHint": "هوية تسجيلك الموثّقة. تواصل مع الدعم للتحديث.",
@@ -852,7 +853,7 @@
       "card": {
         "srLabel": "{name}، {category}",
         "experienceYears": "{years, plural, =0 {لا خبرة} one {سنة خبرة} two {سنتان خبرة} few {# سنوات خبرة} many {# سنة خبرة} other {# سنوات خبرة}}",
-        "gulfExperience": "خبرة خليجية",
+        "gulfExperience": "خبرة دولية",
         "skillsLabel": "أبرز المهارات"
       },
       "filters": {
@@ -864,7 +865,7 @@
         "minExperience": "الحد الأدنى للخبرة",
         "anyExperience": "أي خبرة",
         "yearsPlus": "{years}+ سنوات",
-        "foreignExperience": "لديه خبرة خليجية",
+        "foreignExperience": "لديه خبرة دولية",
         "availableNow": "متاح الآن",
         "clear": "مسح عوامل التصفية"
       },
@@ -890,7 +891,7 @@
         "timeline": {
           "title": "الخبرة العملية",
           "india": "الهند",
-          "foreign": "الخليج / الخارج",
+          "foreign": "دولي",
           "years": "{count, plural, zero {# سنة} one {سنة} two {سنتان} few {# سنوات} many {# سنة} other {# سنوات}}",
           "months": "{count, plural, zero {# شهر} one {شهر} two {شهران} few {# أشهر} many {# شهراً} other {# شهر}}"
         },
@@ -923,7 +924,7 @@
     "tabs": {
       "all": "الكل",
       "local": "الهند",
-      "foreign": "الخليج"
+      "foreign": "دولي"
     },
     "filters": {
       "sort": "ترتيب:",
@@ -965,8 +966,8 @@
       "save": "حفظ الوظيفة",
       "unsave": "محفوظة",
       "newBadge": "جديدة",
-      "marketGulf": "خليج",
-      "marketLocal": "هند"
+      "marketGulf": "دولي",
+      "marketLocal": "الهند"
     },
     "benefits": {
       "pf": "PF",
@@ -1122,12 +1123,15 @@
       "titleLabel": "المسمى الوظيفي",
       "titlePlaceholder": "مثل: بنّاء متمرس، كهربائي أول",
       "marketLabel": "السوق",
-      "marketGulf": "الخليج (دولي)",
-      "marketLocal": "محلي (الهند)",
+      "marketGulf": "دولي",
+      "marketLocal": "الهند",
       "countryLabel": "الدولة",
       "countryPlaceholder": "اختر دولة",
       "locationLabel": "الموقع",
-      "locationPlaceholder": "مثل: دبي، الإمارات أو مومباي، الهند"
+      "locationPlaceholder": "مثل: دبي، الإمارات أو مومباي، الهند",
+      "categoryOtherLabel": "فئة الوظيفة الخاصة بك",
+      "categoryOtherHint": "تُعرض للمرشحين بدلاً من اسم المهنة.",
+      "categoryOtherPlaceholder": "مثال: Agentic AI Engineer"
     },
     "description": {
       "heading": "وصف الوظيفة",
@@ -1239,7 +1243,7 @@
     "emptyTitle": "لا وظائف بعد",
     "emptyBody": "انشر وظيفتك الأولى لبدء استقبال الطلبات.",
     "draftNotPosted": "مسودة",
-    "marketGulf": "الخليج",
+    "marketGulf": "دولي",
     "marketLocal": "الهند",
     "applicationsPlaceholder": "0 طلبات",
     "pageInfo": "صفحة {page} من {totalPages}",
@@ -1355,7 +1359,7 @@
       "experience": "الخبرة",
       "experienceBasis": "بناءً على {clamped} من {raw} سنوات",
       "foreign": "الخبرة الأجنبية",
-      "foreignLocalNote": "لا تُحتسب للوظائف المحلية.",
+      "foreignLocalNote": "لا يُحتسب للوظائف داخل الهند.",
       "documents": "المستندات",
       "componentScore": "{score}/{max}",
       "track": "تتبّع في طلباتي"
@@ -1433,7 +1437,7 @@
       "recent": "الأحدث"
     },
     "matchShort": "تطابق {score}%",
-    "gulfBadge": "خبرة خليجية",
+    "gulfBadge": "خبرة دولية",
     "ageYears": "{age} سنة",
     "expYears": "خبرة {years} سنة",
     "appliedAgo": "تم التقديم {ago}",
@@ -1456,7 +1460,7 @@
       "experience": "الخبرة",
       "experienceBasis": "بناءً على {clamped} من {raw} سنوات",
       "foreign": "الخبرة الأجنبية",
-      "foreignLocalNote": "لا تُحتسب للوظائف المحلية.",
+      "foreignLocalNote": "لا يُحتسب للوظائف داخل الهند.",
       "documents": "المستندات",
       "componentScore": "{score}/{max}"
     },

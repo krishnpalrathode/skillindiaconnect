@@ -13,6 +13,7 @@ import {
 } from 'class-validator';
 import { Currency, EmploymentType, JobMarket } from '@prisma/client';
 import { ALL_JOB_COUNTRIES } from '../job-countries';
+import { CATEGORY_OTHER_MAX_LENGTH } from '../../core/job-categories';
 
 export class UpdateJobDto {
   @IsOptional()
@@ -46,6 +47,12 @@ export class UpdateJobDto {
   @IsOptional()
   @IsUUID()
   categoryId?: string;
+
+  /** See CreateJobDto — the category-pairing rule lives in JobsService. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(CATEGORY_OTHER_MAX_LENGTH)
+  categoryOther?: string;
 
   @IsOptional()
   @IsArray()

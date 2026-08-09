@@ -570,6 +570,11 @@ describe('POST /admin/jobs (on-behalf)', () => {
     title: 'On-behalf Mason',
     employmentType: 'FULL_TIME',
     market: 'GULF',
+    // `country` became a required, market-validated field when job-country
+    // filtering shipped; this body was never updated, so every on-behalf case
+    // here had been failing DTO validation with a 400 instead of exercising the
+    // gates it exists to test. Qatar matches both GULF and the Doha location.
+    country: 'Qatar',
     location: 'Doha',
     description: 'x',
     categoryId,

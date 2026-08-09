@@ -21,6 +21,7 @@ import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { ListJobsDto } from './dto/list-jobs.dto';
 import { isCountryValidForMarket } from './job-countries';
+import { OTHER_CATEGORY_SLUG } from '../core/job-categories';
 
 /**
  * Sanitizes job description HTML to strip dangerous tags/attributes (XSS defense).
@@ -147,6 +148,8 @@ export class JobsService {
       });
     }
 
+    const categoryOther = await this.resolveCategoryOther(dto.categoryId, dto.categoryOther);
+
     return this.prisma.job.create({
       data: {
         companyId,
@@ -157,6 +160,7 @@ export class JobsService {
         location: dto.location,
         description: sanitizeDescription(dto.description),
         categoryId: dto.categoryId,
+        categoryOther,
         requirements: dto.requirements,
         experienceRequiredYears: dto.experienceRequiredYears,
         salaryMin: dto.salaryMin,
@@ -184,6 +188,52 @@ export class JobsService {
         // searchVector: DB-generated tsvector — NEVER set here
       },
     });
+  }
+
+  /**
+   * Pairs `categoryId` with `categoryOther` and returns what should be stored.
+   *
+   * Both directions are errors, and both are worth catching: free text with a
+   * real trade selected means the UI sent a stale draft value that would then
+   * outrank the picked category everywhere it is displayed, and the `other`
+   * category with no text means a job filed under "Other" that says nothing
+   * about what the work is. The category ROW has to be read to know which case
+   * this is, which is why it cannot be a class-validator rule.
+   */
+  private async resolveCategoryOther(
+    categoryId: string,
+    categoryOther: string | undefined,
+  ): Promise<string | null> {
+    const category = await this.prisma.jobCategory.findUnique({
+      where: { id: categoryId },
+      select: { slug: true },
+    });
+    if (!category) {
+      throw new BadRequestException({
+        code: 'JOB_CATEGORY_NOT_FOUND',
+        detail: 'The selected job category does not exist.',
+      });
+    }
+
+    const trimmed = categoryOther?.trim();
+
+    if (category.slug !== OTHER_CATEGORY_SLUG) {
+      if (trimmed) {
+        throw new BadRequestException({
+          code: 'CATEGORY_OTHER_NOT_ALLOWED',
+          detail: 'A custom category is only accepted when the category is "Other".',
+        });
+      }
+      return null;
+    }
+
+    if (!trimmed) {
+      throw new BadRequestException({
+        code: 'CATEGORY_OTHER_REQUIRED',
+        detail: 'Enter the job category when choosing "Other".',
+      });
+    }
+    return trimmed;
   }
 
   // ── Read ───────────────────────────────────────────────────────────────────
@@ -272,9 +322,19 @@ export class JobsService {
       });
     }
 
+    // Re-pair category and free text whenever EITHER moves. Editing only the
+    // category (Other → Electrician) has to clear the stale free text, and
+    // editing only the text has to be checked against the category already
+    // stored — so the resolve runs on the merged pair, not on the patch.
+    const categoryTouched = dto.categoryId !== undefined || dto.categoryOther !== undefined;
+    const categoryOther = categoryTouched
+      ? await this.resolveCategoryOther(dto.categoryId ?? job.categoryId, dto.categoryOther)
+      : undefined;
+
     const updated = await this.prisma.job.update({
       where: { id: jobId },
       data: {
+        ...(categoryTouched && { categoryOther }),
         ...(dto.title !== undefined && { title: dto.title }),
         ...(dto.employmentType !== undefined && { employmentType: dto.employmentType }),
         ...(dto.market !== undefined && { market: dto.market }),

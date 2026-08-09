@@ -15,6 +15,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { JobStatus, Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { pageMeta, resolvePaging, type Paginated } from '../core/pagination';
+import { OTHER_CATEGORY_SLUG } from '../core/job-categories';
 import {
   JOB_CARD_SELECT,
   JOB_DETAIL_SELECT,
@@ -211,11 +212,21 @@ export class JobsSearchService {
   async listCategories(): Promise<
     { id: string; slug: string; nameEn: string; nameHi: string | null; nameAr: string | null }[]
   > {
-    return this.prisma.jobCategory.findMany({
+    const categories = await this.prisma.jobCategory.findMany({
       where: { isActive: true },
       select: { id: true, slug: true, nameEn: true, nameHi: true, nameAr: true },
       orderBy: { nameEn: 'asc' },
     });
+
+    // "Other" belongs at the BOTTOM of every picker and filter chip row, not
+    // alphabetically between Mason and Pipe Fitter. Sorting here rather than in
+    // each consumer keeps the employer form and the public search chips in the
+    // same order. Done in JS because the ordering is one pinned row over a
+    // ~dozen-row table, not something worth a raw query.
+    return [
+      ...categories.filter((c) => c.slug !== OTHER_CATEGORY_SLUG),
+      ...categories.filter((c) => c.slug === OTHER_CATEGORY_SLUG),
+    ];
   }
 
   /**

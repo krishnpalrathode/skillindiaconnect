@@ -21,6 +21,8 @@ export interface Job {
   location: string;
   description: string;
   categoryId: string;
+  /** Free-text trade; non-null only when `categoryId` is the "Other" category. */
+  categoryOther: string | null;
   requirements: string[];
   experienceRequiredYears: number | null;
   salaryMin: number;
@@ -71,6 +73,8 @@ export interface CreateJobBody {
   location: string;
   description: string;
   categoryId: string;
+  /** Free-text trade; send ONLY with the "Other" category (422 otherwise). */
+  categoryOther?: string;
   requirements: string[];
   experienceRequiredYears?: number;
   salaryMin: number;

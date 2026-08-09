@@ -573,6 +573,13 @@ model Job {
   location        String
   description     String
   categoryId      String
+  // Free-text trade name, set ONLY when the chosen category is the `other`
+  // slug. The FK stays required so every job is still countable and filterable
+  // under a real category row; this carries the words the employer typed
+  // ("Agentic AI Engineer") that no fixed trade list will ever have. Null for
+  // every non-`other` category — the service clears it rather than trusting the
+  // client to omit it.
+  categoryOther   String?  @db.VarChar(80)
   requirements            String[] @default([])
   experienceRequiredYears Int?
   salaryMin       Int

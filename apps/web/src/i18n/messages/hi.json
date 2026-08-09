@@ -94,7 +94,7 @@
         "MINIMAL": "[hi] Minimal"
       },
       "descriptions": {
-        "CLASSIC": "[hi] Traditional and formal. A safe choice for Gulf employers.",
+        "CLASSIC": "पारंपरिक और औपचारिक। अंतर्राष्ट्रीय नियोक्ताओं के लिए एक सुरक्षित विकल्प।",
         "MODERN": "[hi] Clean and spacious. Works well for most candidates.",
         "COMPACT": "[hi] Two columns. Fits more experience on one page.",
         "MINIMAL": "[hi] Plain and simple. Easiest for hiring software to read."
@@ -156,7 +156,6 @@
     "jobPublished": "नौकरी सफलतापूर्वक प्रकाशित हुई",
     "jobPaused": "नौकरी रोकी गई",
     "jobResumed": "नौकरी फिर से शुरू की गई",
-    "jobClosed": "नौकरी बंद की गई",
     "jobDeleted": "नौकरी सफलतापूर्वक हटाई गई",
     "jobDuplicated": "नौकरी की प्रति सफलतापूर्वक बनाई गई",
     "applicantStatusUpdated": "आवेदन की स्थिति अपडेट हुई",
@@ -165,7 +164,9 @@
     "contactSaved": "संपर्क व्यक्ति सहेजा गया",
     "contactDeleted": "संपर्क व्यक्ति हटाया गया",
     "settingsSaved": "सेटिंग्स सफलतापूर्वक सहेजी गईं",
-    "exportStarted": "एक्सपोर्ट सफलतापूर्वक डाउनलोड हुआ"
+    "exportStarted": "एक्सपोर्ट सफलतापूर्वक डाउनलोड हुआ",
+    "actionFailed": "यह काम नहीं कर सका। कृपया फिर से प्रयास करें।",
+    "jobArchived": "नौकरी संग्रहीत की गई"
   },
   "field": {
     "requiredError": "[hi] This field is required",
@@ -598,7 +599,7 @@
       "pageSubtitle": "भारत और खाड़ी देशों में कुशल, सत्यापित कर्मचारियों से जुड़ें।",
       "trustBadge1": "सत्यापित कर्मचारी प्रोफ़ाइल",
       "trustBadge2": "सुरक्षित भर्ती प्रक्रिया",
-      "trustBadge3": "खाड़ी और स्थानीय बाज़ार",
+      "trustBadge3": "भारत और अंतर्राष्ट्रीय बाज़ार",
       "formTitle": "अपने नियोक्ता खाते में साइन इन करें",
       "emailLabel": "कार्य ईमेल",
       "emailPlaceholder": "you@company.com",
@@ -623,10 +624,10 @@
       "resubmitPageSubtitle": "अपनी जानकारी अपडेट करें और समीक्षा के लिए पुनः सबमिट करें।",
       "companyTypeLabel": "कंपनी प्रकार",
       "companyTypeRequired": "कृपया कंपनी प्रकार चुनें",
-      "localTitle": "स्थानीय कंपनी",
+      "localTitle": "भारतीय कंपनी",
       "localDescription": "भारत में पंजीकृत और घरेलू स्तर पर नियुक्ति",
-      "foreignTitle": "विदेशी / खाड़ी कंपनी",
-      "foreignDescription": "भारत के बाहर पंजीकृत और अंतरराष्ट्रीय स्तर पर नियुक्ति",
+      "foreignTitle": "अंतर्राष्ट्रीय कंपनी",
+      "foreignDescription": "भारत के बाहर पंजीकृत और अंतर्राष्ट्रीय स्तर पर भर्ती",
       "nameLabel": "कंपनी का नाम",
       "namePlaceholder": "आपकी कंपनी का कानूनी नाम",
       "nameRequired": "कंपनी का नाम आवश्यक है",
@@ -757,8 +758,8 @@
         "sectionTitle": "कंपनी जानकारी",
         "nameLabel": "[hi] Company name",
         "typeLabel": "[hi] Company type",
-        "typeLocal": "[hi] Local (India)",
-        "typeForeign": "[hi] Foreign / Gulf",
+        "typeLocal": "भारत",
+        "typeForeign": "अंतर्राष्ट्रीय",
         "typeReadOnlyHint": "[hi] Company type is set at registration and cannot be changed here. Contact support if you need to update it.",
         "registrationNumberLabel": "[hi] Registration number",
         "registrationNumberReadOnlyHint": "[hi] Your verified registration identity. Contact support to update.",
@@ -852,7 +853,7 @@
       "card": {
         "srLabel": "{name}, {category}",
         "experienceYears": "{years, plural, =0 {कोई अनुभव नहीं} one {# वर्ष अनुभव} other {# वर्ष अनुभव}}",
-        "gulfExperience": "गल्फ अनुभव",
+        "gulfExperience": "अंतर्राष्ट्रीय अनुभव",
         "skillsLabel": "प्रमुख कौशल"
       },
       "filters": {
@@ -864,7 +865,7 @@
         "minExperience": "न्यूनतम अनुभव",
         "anyExperience": "कोई भी अनुभव",
         "yearsPlus": "{years}+ वर्ष",
-        "foreignExperience": "गल्फ अनुभव है",
+        "foreignExperience": "अंतर्राष्ट्रीय अनुभव है",
         "availableNow": "अभी उपलब्ध",
         "clear": "फ़िल्टर साफ़ करें"
       },
@@ -890,7 +891,7 @@
         "timeline": {
           "title": "कार्य अनुभव",
           "india": "भारत",
-          "foreign": "गल्फ / विदेश",
+          "foreign": "अंतर्राष्ट्रीय",
           "years": "{count, plural, one {# वर्ष} other {# वर्ष}}",
           "months": "{count, plural, one {# माह} other {# माह}}"
         },
@@ -923,7 +924,7 @@
     "tabs": {
       "all": "सभी",
       "local": "भारत",
-      "foreign": "गल्फ"
+      "foreign": "अंतर्राष्ट्रीय"
     },
     "filters": {
       "sort": "क्रम:",
@@ -965,7 +966,7 @@
       "save": "नौकरी सहेजें",
       "unsave": "सहेजी गई",
       "newBadge": "नई",
-      "marketGulf": "गल्फ",
+      "marketGulf": "अंतर्राष्ट्रीय",
       "marketLocal": "भारत"
     },
     "benefits": {
@@ -1122,12 +1123,15 @@
       "titleLabel": "नौकरी का शीर्षक",
       "titlePlaceholder": "जैसे अनुभवी राजमिस्त्री, वरिष्ठ इलेक्ट्रीशियन",
       "marketLabel": "बाज़ार",
-      "marketGulf": "खाड़ी (अंतर्राष्ट्रीय)",
-      "marketLocal": "स्थानीय (भारत)",
+      "marketGulf": "अंतर्राष्ट्रीय",
+      "marketLocal": "भारत",
       "countryLabel": "देश",
       "countryPlaceholder": "देश चुनें",
       "locationLabel": "स्थान",
-      "locationPlaceholder": "जैसे दुबई, UAE या मुंबई, भारत"
+      "locationPlaceholder": "जैसे दुबई, UAE या मुंबई, भारत",
+      "categoryOtherLabel": "आपकी नौकरी की श्रेणी",
+      "categoryOtherHint": "ट्रेड नाम के स्थान पर उम्मीदवारों को दिखाया जाएगा।",
+      "categoryOtherPlaceholder": "जैसे Agentic AI Engineer"
     },
     "description": {
       "heading": "नौकरी विवरण",
@@ -1239,7 +1243,7 @@
     "emptyTitle": "अभी तक कोई नौकरी नहीं",
     "emptyBody": "आवेदन प्राप्त करने के लिए पहली नौकरी पोस्ट करें।",
     "draftNotPosted": "ड्राफ्ट",
-    "marketGulf": "खाड़ी",
+    "marketGulf": "अंतर्राष्ट्रीय",
     "marketLocal": "भारत",
     "applicationsPlaceholder": "0 आवेदन",
     "pageInfo": "पृष्ठ {page} का {totalPages}",
@@ -1355,7 +1359,7 @@
       "experience": "अनुभव",
       "experienceBasis": "{raw} में से {clamped} वर्ष के आधार पर",
       "foreign": "विदेशी अनुभव",
-      "foreignLocalNote": "स्थानीय नौकरियों के लिए स्कोर नहीं किया जाता।",
+      "foreignLocalNote": "भारत की नौकरियों के लिए स्कोर नहीं किया गया।",
       "documents": "दस्तावेज़",
       "componentScore": "{score}/{max}",
       "track": "मेरे आवेदनों में ट्रैक करें"
@@ -1433,7 +1437,7 @@
       "recent": "सबसे नया"
     },
     "matchShort": "{score}% मैच",
-    "gulfBadge": "खाड़ी अनुभव",
+    "gulfBadge": "अंतर्राष्ट्रीय अनुभव",
     "ageYears": "{age} वर्ष",
     "expYears": "{years} वर्ष अनुभव",
     "appliedAgo": "{ago} आवेदन किया",
@@ -1456,7 +1460,7 @@
       "experience": "अनुभव",
       "experienceBasis": "{raw} में से {clamped} वर्ष के आधार पर",
       "foreign": "विदेशी अनुभव",
-      "foreignLocalNote": "स्थानीय नौकरियों के लिए स्कोर नहीं।",
+      "foreignLocalNote": "भारत की नौकरियों के लिए स्कोर नहीं किया गया।",
       "documents": "दस्तावेज़",
       "componentScore": "{score}/{max}"
     },

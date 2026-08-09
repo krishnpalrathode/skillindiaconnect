@@ -3147,6 +3147,8 @@ export interface components {
             description?: string;
             /** Format: uuid */
             categoryId?: string | null;
+            /** @description Free-text trade name. Set ONLY when `categoryId` is the `other` category; null/absent for every fixed trade. Required when that category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`). */
+            categoryOther?: string | null;
             salaryMin?: number | null;
             salaryMax?: number | null;
             /** @example AED */
@@ -3199,6 +3201,8 @@ export interface components {
             location: string;
             /** Format: uuid */
             categoryId?: string | null;
+            /** @description Free-text trade name. Set ONLY when `categoryId` is the `other` category; null/absent for every fixed trade. Required when that category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`). */
+            categoryOther?: string | null;
             salaryMin?: number | null;
             salaryMax?: number | null;
             /** @example AED */
@@ -3764,6 +3768,8 @@ export interface components {
             description?: string;
             /** Format: uuid */
             categoryId?: string;
+            /** @description Free-text trade name. Set ONLY when `categoryId` is the `other` category; null/absent for every fixed trade. Required when that category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`). */
+            categoryOther?: string;
             salaryMin?: number;
             salaryMax?: number;
             /** @example AED */
@@ -6690,6 +6696,8 @@ export interface operations {
                     description?: string;
                     /** Format: uuid */
                     categoryId?: string;
+                    /** @description Free-text trade name. Set ONLY when `categoryId` is the `other` category; null/absent for every fixed trade. Required when that category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`). */
+                    categoryOther?: string;
                     salaryMin?: number;
                     salaryMax?: number;
                     salaryCurrency?: string;

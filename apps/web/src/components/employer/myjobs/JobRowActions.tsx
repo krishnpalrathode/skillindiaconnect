@@ -42,7 +42,7 @@ const RESULT_TOAST = {
   publish: 'jobPublished',
   pause: 'jobPaused',
   resume: 'jobResumed',
-  archive: 'jobClosed',
+  archive: 'jobArchived',
 } as const;
 
 type ActionLabel = keyof typeof RESULT_TOAST;
@@ -70,6 +70,12 @@ export function JobRowActions({ job, onJobUpdated, onJobCreated }: JobRowActions
     } catch (err) {
       if (label === 'publish' && err instanceof ApiRequestError) {
         setPublishError(err.error);
+      } else {
+        // Everything that is NOT publish used to fail in total silence — an
+        // Archive that the server rejected looked exactly like an Archive that
+        // worked. Publish keeps its richer inline gate explainer; the rest get
+        // an honest toast rather than nothing.
+        showToast({ message: tToast('actionFailed'), variant: 'error' });
       }
     } finally {
       setLoading(null);
@@ -83,6 +89,8 @@ export function JobRowActions({ job, onJobUpdated, onJobCreated }: JobRowActions
       const copy = await duplicateJob(job.id);
       onJobCreated?.(copy);
       showToast({ message: tToast('jobDuplicated') });
+    } catch {
+      showToast({ message: tToast('actionFailed'), variant: 'error' });
     } finally {
       setLoading(null);
     }

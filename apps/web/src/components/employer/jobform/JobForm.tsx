@@ -68,6 +68,11 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
       .catch(() => setCategories([]));
   }, []);
 
+  // The "Other" row is identified by its SLUG, never by its label or position —
+  // the label is translated and the list is server-ordered.
+  const otherCategoryId = categories.find((c) => c.slug === 'other')?.id;
+  const isOtherCategory = !!otherCategoryId && values.categoryId === otherCategoryId;
+
   const patch = useCallback(
     (partial: Partial<JobFormValues>) => {
       setValues((prev) => {
@@ -88,7 +93,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
   );
 
   const handleSaveDraft = async () => {
-    const errs = validateJobForm(values);
+    const errs = validateJobForm(values, otherCategoryId);
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
@@ -97,7 +102,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
     setDraftStatus('saving');
     setPublishError(null);
     try {
-      const payload = formToPayload(values);
+      const payload = formToPayload(values, otherCategoryId);
       const isUpdate = Boolean(savedJobId);
       let saved: Job;
       if (savedJobId) {
@@ -118,7 +123,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
   };
 
   const handlePublish = async () => {
-    const errs = validateJobForm(values);
+    const errs = validateJobForm(values, otherCategoryId);
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
@@ -127,7 +132,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
     setPublishStatus('saving');
     setPublishError(null);
     try {
-      const payload = formToPayload(values);
+      const payload = formToPayload(values, otherCategoryId);
       let jobId = savedJobId;
       if (jobId) {
         await updateJob(jobId, payload);
@@ -265,6 +270,31 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
             ))}
           </select>
         </Field>
+
+        {/* Only rendered for "Other" — an always-present box that is usually
+            irrelevant is what makes a form feel long. Not unmounted-and-
+            forgotten either: the draft value survives in form state, so
+            switching to a trade and back does not erase what they typed. */}
+        {isOtherCategory && (
+          <Field
+            id="job-category-other"
+            label={t('basic.categoryOtherLabel')}
+            required
+            error={errors.categoryOther}
+            hint={t('basic.categoryOtherHint')}
+          >
+            <Input
+              id="job-category-other"
+              type="text"
+              value={values.categoryOther}
+              onChange={(e) => patch({ categoryOther: e.target.value })}
+              placeholder={t('basic.categoryOtherPlaceholder')}
+              maxLength={80}
+              hasError={!!errors.categoryOther}
+              aria-required
+            />
+          </Field>
+        )}
 
         <Field id="job-employment-type" label="Employment type" required>
           <select

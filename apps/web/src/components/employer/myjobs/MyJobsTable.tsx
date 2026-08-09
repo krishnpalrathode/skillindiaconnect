@@ -78,7 +78,22 @@ export function MyJobsTable() {
   }, [load]);
 
   const handleJobUpdated = (updated: Job) => {
-    setJobs((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
+    // A lifecycle action can move a job out of the tab you are looking at —
+    // archive one from "Active" and leaving the row in place claims it is
+    // still active. Drop it from a filtered view; on "All" it stays and just
+    // shows its new badge.
+    //
+    // Both setState calls sit HERE rather than inside the setJobs updater: an
+    // updater runs during React's render phase, and queueing another
+    // component's update from inside one is the "Cannot update a component
+    // while rendering a different component" warning.
+    const stillMatches = statusFilter === 'ALL' || updated.status === statusFilter;
+    if (stillMatches) {
+      setJobs((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
+      return;
+    }
+    setJobs((prev) => prev.filter((j) => j.id !== updated.id));
+    setTotalCount((c) => Math.max(0, c - 1));
   };
 
   const handleJobCreated = (created: Job) => {

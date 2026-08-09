@@ -145,6 +145,10 @@ async function main(): Promise<void> {
     ['hvac-technician', 'HVAC Technician'],
     ['driver', 'Driver'],
     ['helper', 'Helper'],
+    // The escape hatch. `categoryId` is a required FK, so a job outside the ten
+    // trades still needs a real row to point at; the words the employer typed
+    // live in Job.categoryOther. Kept last in the picker by slug, not by name.
+    ['other', 'Other'],
   ];
   for (const [slug, nameEn] of cats) {
     await prisma.jobCategory.upsert({
