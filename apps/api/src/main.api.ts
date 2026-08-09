@@ -107,7 +107,7 @@ async function bootstrap(): Promise<void> {
 
   const port = process.env['PORT'] ?? 3001;
   await app.listen(port);
-  console.log(`SkillIndiaConnect API process started on :${port}`);
+  console.log(`Skill India Connect API process started on :${port}`);
 }
 
 bootstrap().catch((err: unknown) => {

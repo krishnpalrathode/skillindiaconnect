@@ -255,7 +255,7 @@ describe('buildCandidateQuery', () => {
 describe('browse + view (MSW)', () => {
   it('never returns a profileVisible=false candidate', async () => {
     loginAsApprovedEmployer();
-    const res = await browseCandidates(EMPTY_CANDIDATE_FILTERS, { limit: 50 });
+    const res = await browseCandidates(EMPTY_CANDIDATE_FILTERS, { pageSize: 50 });
     const names = res.data.map((c) => c.fullName);
     expect(names).toContain('Rajan Patel');
     expect(names).not.toContain('Hidden User');

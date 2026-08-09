@@ -2,7 +2,7 @@
   "name": "@skillindiaconnect/contract",
   "version": "0.1.0",
   "private": true,
-  "description": "OpenAPI 3.1 contract — source of truth for the SkillIndiaConnect API",
+  "description": "OpenAPI 3.1 contract — source of truth for the Skill India Connect API",
   "scripts": {
     "validate": "redocly lint openapi.yaml --format=stylish"
   },

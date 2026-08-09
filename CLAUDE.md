@@ -1,6 +1,6 @@
-# SkillIndiaConnect — Engineering Guide for Claude Code
+# Skill India Connect — Engineering Guide for Claude Code
 
-SkillIndiaConnect is a production blue-collar recruitment platform connecting
+Skill India Connect is a production blue-collar recruitment platform connecting
 skilled workers in India with employers in the Gulf and locally. Read this fully
 before writing code. The enforced rules live in `.claude/rules/` — consult the
 relevant file before touching that area.

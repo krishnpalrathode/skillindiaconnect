@@ -7,7 +7,7 @@ import { routing } from '@/i18n/routing';
 
 /**
  * Sets the browser-tab title for EVERY route as `Brand | Section | Page`
- * (e.g. "SkillIndiaConnect | Admin | Dashboard").
+ * (e.g. "Skill India Connect | Admin | Dashboard").
  *
  * Why a client component and not per-page `metadata`: almost every page here is
  * a Client Component, and Client Components cannot export `metadata`. One

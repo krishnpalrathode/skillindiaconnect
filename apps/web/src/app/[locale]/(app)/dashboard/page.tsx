@@ -85,8 +85,8 @@ export default function DashboardPage() {
         const [statsResult, unreadResult, jobsResult, profileViewsResult] =
           await Promise.allSettled([
             getCandidateStats(),
-            listNotifications({ unread: true, limit: 50 }),
-            searchJobsClient(EMPTY_FILTERS, { limit: 4 }),
+            listNotifications({ unread: true, pageSize: 50 }),
+            searchJobsClient(EMPTY_FILTERS, { pageSize: 4 }),
             getProfileViews(),
           ]);
 

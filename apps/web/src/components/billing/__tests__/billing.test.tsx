@@ -586,6 +586,87 @@ describe('InvoiceList', () => {
     });
     expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
   });
+
+  it('single page of invoices renders no pager', async () => {
+    loginAs(EMPLOYER_PRO_USER_ID);
+    render(<InvoiceList />);
+    await waitFor(() => expect(screen.getAllByText(/SIC-/).length).toBeGreaterThan(0), {
+      timeout: 3000,
+    });
+    expect(screen.queryByRole('navigation', { name: /invoice pagination/i })).toBeNull();
+  });
+
+  it('pages past the first 20 invoices — Next requests page 2 and swaps the rows', async () => {
+    const requestedPages: string[] = [];
+    server.use(
+      http.get(`${BASE}/billing/invoices`, ({ request }) => {
+        const page = new URL(request.url).searchParams.get('page') ?? '1';
+        requestedPages.push(page);
+        return HttpResponse.json({
+          data: [
+            {
+              id: `inv-p${page}`,
+              number: `SIC-PAGE${page}`,
+              issuedAt: '2026-07-01T00:00:00Z',
+              planName: 'Pro Monthly',
+              totalSubunits: 100000,
+              currency: 'INR',
+              pdfUrl: null,
+            },
+          ],
+          meta: { page: Number(page), pageSize: 20, total: 41, totalPages: 3 },
+        });
+      }),
+    );
+
+    loginAs(EMPLOYER_PRO_USER_ID);
+    render(<InvoiceList />);
+
+    await waitFor(() => expect(screen.getByText('SIC-PAGE1')).toBeInTheDocument(), {
+      timeout: 3000,
+    });
+    expect(screen.getByText(/page 1 of 3/i)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /next page of invoices/i }));
+
+    // The second page must actually be fetched and rendered — the bug being
+    // guarded is the client pinning page=1 and dropping meta.
+    await waitFor(() => expect(screen.getByText('SIC-PAGE2')).toBeInTheDocument(), {
+      timeout: 3000,
+    });
+    expect(requestedPages).toContain('2');
+    expect(screen.getByText(/page 2 of 3/i)).toBeInTheDocument();
+    expect(screen.queryByText('SIC-PAGE1')).toBeNull();
+  });
+
+  it('Previous is disabled on the first page', async () => {
+    server.use(
+      http.get(`${BASE}/billing/invoices`, () =>
+        HttpResponse.json({
+          data: [
+            {
+              id: 'inv-a',
+              number: 'SIC-0001',
+              issuedAt: '2026-07-01T00:00:00Z',
+              planName: 'Pro Monthly',
+              totalSubunits: 100000,
+              currency: 'INR',
+              pdfUrl: null,
+            },
+          ],
+          meta: { page: 1, pageSize: 20, total: 41, totalPages: 3 },
+        }),
+      ),
+    );
+
+    loginAs(EMPLOYER_PRO_USER_ID);
+    render(<InvoiceList />);
+
+    await waitFor(() => expect(screen.getByText('SIC-0001')).toBeInTheDocument(), {
+      timeout: 3000,
+    });
+    expect(screen.getByRole('button', { name: /previous page of invoices/i })).toBeDisabled();
+  });
 });
 
 // ── S5-F2: PlanStatusWidget — live subscription states ───────────────────────

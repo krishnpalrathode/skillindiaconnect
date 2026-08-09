@@ -155,10 +155,10 @@ describe('JobFilters', () => {
   });
 });
 
-// ─── JobList load-more ────────────────────────────────────────────────────────
+// ─── JobList pagination ───────────────────────────────────────────────────────
 
 describe('JobList', () => {
-  // Build a tiny cursor-paginated fixture: 2 jobs in page 1, 1 more on page 2.
+  // Build a tiny offset-paginated fixture: 2 jobs on page 1 of 2.
   const job1 = db.jobs.get('job-1')!;
   const job2 = db.jobs.get('job-2')!;
   const job3 = db.jobs.get('job-5')!;
@@ -180,76 +180,72 @@ describe('JobList', () => {
     isSaved: null,
   });
 
-  const page1 = { data: [mkCard(job1), mkCard(job2)], nextCursor: btoa('cursor-1') };
-  const page2 = { data: [mkCard(job3)], nextCursor: null };
+  const meta = (page: number, totalPages: number, total: number) => ({
+    page,
+    pageSize: 2,
+    total,
+    totalPages,
+  });
+  const page1 = { data: [mkCard(job1), mkCard(job2)], meta: meta(1, 2, 3) };
+  const page2 = { data: [mkCard(job3)], meta: meta(2, 2, 3) };
 
   beforeEach(() => {
-    // Override getJobs for the load-more (second page) fetch only.
-    server.use(
-      http.get('/api/v1/jobs', ({ request }) => {
-        const url = new URL(request.url);
-        if (url.searchParams.get('cursor')) {
-          return HttpResponse.json(page2);
-        }
-        // First page is provided via SSR (initialData); client should only call with cursor.
-        return HttpResponse.json(page1);
-      }),
-    );
+    mockPush.mockReset();
   });
 
-  it('shows initial jobs and result count', () => {
-    render(<JobList initialData={page1} filters={EMPTY_FILTERS} locale="en" />);
-    expect(screen.getByTestId('job-result-count')).toBeInTheDocument();
+  it('shows jobs and the total result count', () => {
+    render(<JobList data={page1} filters={EMPTY_FILTERS} locale="en" />);
+    // The count reflects the whole result set (3), not just this page's 2 cards.
+    expect(screen.getByTestId('job-result-count')).toHaveTextContent('3');
     expect(screen.getByText(/Experienced Mason/i)).toBeInTheDocument();
   });
 
-  it('loads next page on "Load more" click and appends results', async () => {
+  it('renders the pager and navigates to page 2 via the URL', async () => {
     const user = userEvent.setup();
-    render(<JobList initialData={page1} filters={EMPTY_FILTERS} locale="en" />);
+    render(<JobList data={page1} filters={EMPTY_FILTERS} locale="en" />);
 
     // Count "View details" links — one per card. BenefitChips renders <li> items
     // that would contaminate an getAllByRole('listitem') count, but each card has
     // exactly one "View details" link so that's a reliable card-count proxy.
     expect(screen.getAllByRole('link', { name: /view details/i })).toHaveLength(2);
+    expect(screen.getByText(/page 1 of 2/i)).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /load more/i }));
+    await user.click(screen.getByRole('button', { name: /next page/i }));
 
-    await waitFor(() => {
-      // Page 1 (2) + page 2 (1) = 3 cards total.
-      expect(screen.getAllByRole('link', { name: /view details/i })).toHaveLength(3);
-    });
+    // Paging is URL-driven, so the assertion is on the navigation, not a refetch.
+    expect(mockPush).toHaveBeenCalledWith('/en/jobs?page=2');
+  });
+
+  it('disables Previous on page 1 and Next on the last page', async () => {
+    const { unmount } = render(<JobList data={page1} filters={EMPTY_FILTERS} locale="en" />);
+    expect(screen.getByRole('button', { name: /previous page/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /next page/i })).toBeEnabled();
+    unmount();
+
+    render(<JobList data={page2} filters={EMPTY_FILTERS} locale="en" />);
+    expect(screen.getByRole('button', { name: /next page/i })).toBeDisabled();
+  });
+
+  it('hides the pager entirely when there is only one page', () => {
+    render(
+      <JobList
+        data={{ data: [mkCard(job1)], meta: meta(1, 1, 1) }}
+        filters={EMPTY_FILTERS}
+        locale="en"
+      />,
+    );
+    expect(screen.queryByRole('button', { name: /next page/i })).toBeNull();
   });
 
   it('shows empty state when no jobs returned', () => {
     render(
-      <JobList initialData={{ data: [], nextCursor: null }} filters={EMPTY_FILTERS} locale="en" />,
+      <JobList
+        data={{ data: [], meta: { page: 1, pageSize: 12, total: 0, totalPages: 1 } }}
+        filters={EMPTY_FILTERS}
+        locale="en"
+      />,
     );
     expect(screen.getByText(/no jobs found/i)).toBeInTheDocument();
-  });
-
-  it('shows retry button on load-more error', async () => {
-    server.use(
-      http.get('/api/v1/jobs', ({ request }) => {
-        const url = new URL(request.url);
-        if (url.searchParams.get('cursor')) {
-          return HttpResponse.json(
-            { code: 'SERVER_ERROR', status: 500, title: 'Error', detail: 'err' },
-            { status: 500 },
-          );
-        }
-        return HttpResponse.json(page1);
-      }),
-    );
-
-    const user = userEvent.setup();
-    render(<JobList initialData={page1} filters={EMPTY_FILTERS} locale="en" />);
-
-    await user.click(screen.getByRole('button', { name: /load more/i }));
-
-    await waitFor(() => {
-      expect(screen.getByRole('alert')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
-    });
   });
 });
 

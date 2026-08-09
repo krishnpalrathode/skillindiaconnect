@@ -347,9 +347,9 @@ describe('JobsSearchService (integration)', () => {
     expect(result.data.every((j) => j.isUrgent === true)).toBe(true);
   });
 
-  // ── 9. Cursor pagination stability ─────────────────────────────────────────
+  // ── 9. Offset pagination stability ─────────────────────────────────────────
 
-  it('cursor pagination: no rows skipped or duplicated across pages (recent sort)', async () => {
+  it('offset pagination: no rows skipped or duplicated across pages (recent sort)', async () => {
     if (dockerUnavailable) return;
 
     const now = Date.now();
@@ -357,22 +357,32 @@ describe('JobsSearchService (integration)', () => {
     await createJob({ title: 'Job B', publishedAt: new Date(now - 2000) });
     await createJob({ title: 'Job C', publishedAt: new Date(now - 1000) });
 
-    const page1 = await searchService.search({ sort: 'recent', limit: 1 });
+    const page1 = await searchService.search({ sort: 'recent', page: 1, pageSize: 1 });
     expect(page1.data).toHaveLength(1);
-    expect(page1.nextCursor).not.toBeNull();
+    expect(page1.meta).toMatchObject({ page: 1, pageSize: 1, total: 3, totalPages: 3 });
 
-    const page2 = await searchService.search({ sort: 'recent', limit: 1, cursor: page1.nextCursor! });
+    const page2 = await searchService.search({ sort: 'recent', page: 2, pageSize: 1 });
     expect(page2.data).toHaveLength(1);
-    expect(page2.nextCursor).not.toBeNull();
 
-    const page3 = await searchService.search({ sort: 'recent', limit: 1, cursor: page2.nextCursor! });
+    const page3 = await searchService.search({ sort: 'recent', page: 3, pageSize: 1 });
     expect(page3.data).toHaveLength(1);
-    expect(page3.nextCursor).toBeNull();
+    expect(page3.meta).toMatchObject({ page: 3, total: 3, totalPages: 3 });
 
     const allIds = [page1.data[0]!.id, page2.data[0]!.id, page3.data[0]!.id];
     const uniqueIds = new Set(allIds);
     expect(uniqueIds.size).toBe(3); // no duplicates
     expect(allIds).toHaveLength(3); // no skips (we seeded exactly 3)
+  });
+
+  it('offset pagination: a page past the end is empty but keeps an honest total', async () => {
+    if (dockerUnavailable) return;
+
+    await createJob({ title: 'Only Job', publishedAt: new Date() });
+
+    const beyond = await searchService.search({ sort: 'recent', page: 5, pageSize: 20 });
+    expect(beyond.data).toHaveLength(0);
+    expect(beyond.meta.total).toBe(1);
+    expect(beyond.meta.totalPages).toBe(1);
   });
 
   // ── 10. GET /jobs/:id (detail) ─────────────────────────────────────────────

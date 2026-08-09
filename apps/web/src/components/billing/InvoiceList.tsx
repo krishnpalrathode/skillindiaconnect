@@ -12,6 +12,8 @@ import { formatDate } from '@/lib/format/date';
 
 type Invoice = components['schemas']['Invoice'];
 
+const PAGE_SIZE = 20;
+
 export function InvoiceList() {
   const t = useTranslations('billing.manage');
   const locale = useLocale();
@@ -19,19 +21,22 @@ export function InvoiceList() {
   const [invoices, setInvoices] = useState<Invoice[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const load = React.useCallback(async () => {
     setIsLoading(true);
     setError(false);
     try {
-      const res = await getInvoices(1, 20);
-      setInvoices(res);
+      const res = await getInvoices(page, PAGE_SIZE);
+      setInvoices(res.data);
+      setTotalPages(Math.max(1, res.meta.totalPages));
     } catch {
       setError(true);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     load();
@@ -111,6 +116,38 @@ export function InvoiceList() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Pager — offset, matching the employer My Jobs table. Rendered whenever
+          there is more than one page, including while a page is in flight, so
+          the control does not disappear under the user mid-navigation. */}
+      {!error && totalPages > 1 && (
+        <nav
+          aria-label={t('invoicesPaginationLabel')}
+          className="mt-4 flex items-center justify-between text-sm text-neutral-600"
+        >
+          <span>{t('invoicePageInfo', { page, totalPages })}</span>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page <= 1 || isLoading}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              aria-label={t('invoicePreviousPage')}
+            >
+              {t('invoicePrev')}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page >= totalPages || isLoading}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              aria-label={t('invoiceNextPage')}
+            >
+              {t('invoiceNext')}
+            </Button>
+          </div>
+        </nav>
       )}
     </section>
   );

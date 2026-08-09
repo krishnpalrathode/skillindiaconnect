@@ -151,7 +151,7 @@ describe('OverrideDialog', () => {
       within(dialog).getByText(/recorded in the audit log and shown to other admins/i),
     ).toBeInTheDocument();
     expect(within(dialog).getByText(/candidate sees only a neutral entry/i)).toBeInTheDocument();
-    expect(within(dialog).getByText(/'Status updated by SkillIndiaConnect'/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/'Status updated by Skill India Connect'/)).toBeInTheDocument();
 
     // Blocked without target + reason.
     const confirm = within(dialog).getByRole('button', { name: 'Change status' });

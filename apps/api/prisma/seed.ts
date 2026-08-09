@@ -516,7 +516,7 @@ async function main(): Promise<void> {
     },
     // The admin-override fixture's candidate — a VALID applicant whose SELECTED was
     // reversed to REJECTED by an admin (so the candidate timeline shows the neutral
-    // "Status updated by SkillIndiaConnect" step). Was ineligible `deepak` before,
+    // "Status updated by Skill India Connect" step). Was ineligible `deepak` before,
     // which was inconsistent (he could never have applied).
     {
       key: 'naveen',

@@ -7,7 +7,6 @@ import { useParams } from 'next/navigation';
 import { ArrowLeft, AlertCircle, Users } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEmployer } from '@/lib/employer/employer-context';
 import { ApiRequestError } from '@/lib/api/client';
@@ -19,6 +18,7 @@ import {
 } from '@/components/employer/applicants/ApplicantFilters';
 import { ApplicantCard } from '@/components/employer/applicants/ApplicantCard';
 import { ApplicantDetail } from '@/components/employer/applicants/ApplicantDetail';
+import { Pagination } from '@/components/ui/pagination';
 import { EMPLOYER_PAGE_SHELL } from '@/lib/page-shell';
 
 type ApplicantCardT = components['schemas']['ApplicantCard'];
@@ -46,11 +46,11 @@ export default function ApplicantsPage() {
   const [jobMarket, setJobMarket] = useState<JobMarket>('GULF');
   const [items, setItems] = useState<ApplicantCardT[]>([]);
   const [counts, setCounts] = useState<ApplicantCounts>(EMPTY_COUNTS);
-  const [cursor, setCursor] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [status, setStatus] = useState<ApplicantStatusFilter>('ALL');
   const [sort, setSort] = useState<ApplicantSort>('match');
   const [phase, setPhase] = useState<'loading' | 'ready' | 'notFound' | 'error'>('loading');
-  const [loadingMore, setLoadingMore] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ApplicantCardT | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -60,14 +60,15 @@ export default function ApplicantsPage() {
   const load = useCallback(async () => {
     setPhase('loading');
     try {
-      const page = await listApplicants(jobId, {
+      const result = await listApplicants(jobId, {
         status: status === 'ALL' ? undefined : status,
         sort,
-        limit: PAGE_SIZE,
+        page,
+        pageSize: PAGE_SIZE,
       });
-      setItems(page.data);
-      setCounts(page.counts);
-      setCursor(page.nextCursor);
+      setItems(result.data);
+      setCounts(result.counts);
+      setTotalPages(Math.max(1, result.meta.totalPages));
       setPhase('ready');
     } catch (err) {
       setPhase(
@@ -76,7 +77,7 @@ export default function ApplicantsPage() {
           : 'error',
       );
     }
-  }, [jobId, status, sort]);
+  }, [jobId, status, sort, page]);
 
   // Job title + market (for the header + the popover's LOCAL note). Best-effort:
   // a paused/archived job may 404 on the public endpoint — the pipeline still works.
@@ -103,25 +104,11 @@ export default function ApplicantsPage() {
     return () => clearTimeout(h);
   }, [toast]);
 
-  const loadMore = useCallback(async () => {
-    if (!cursor) return;
-    setLoadingMore(true);
-    try {
-      const page = await listApplicants(jobId, {
-        status: status === 'ALL' ? undefined : status,
-        sort,
-        cursor,
-        limit: PAGE_SIZE,
-      });
-      setItems((prev) => [...prev, ...page.data]);
-      setCursor(page.nextCursor);
-      setCounts(page.counts);
-    } catch {
-      /* keep current; button remains for retry */
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [cursor, jobId, status, sort]);
+  // Narrowing the status tab or re-sorting reorders the whole result set, so the
+  // current page number no longer refers to anything the user chose — restart at 1.
+  useEffect(() => {
+    setPage(1);
+  }, [status, sort]);
 
   const adjustCounts = (
     c: ApplicantCounts,
@@ -263,17 +250,7 @@ export default function ApplicantsPage() {
             )}
           </ul>
 
-          {cursor && (
-            <Button
-              variant="outline"
-              onClick={loadMore}
-              disabled={loadingMore}
-              className="mx-auto min-h-11"
-            >
-              {loadingMore ? <Spinner className="size-4" /> : null}
-              {t('loadMore')}
-            </Button>
-          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
 

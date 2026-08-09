@@ -7,8 +7,8 @@ import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigat
 import { FileText } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Pagination } from '@/components/ui/pagination';
 import { listMyApplications } from '@/lib/api/applications';
 import { ApplicationCard } from '@/components/applications/ApplicationCard';
 import { StatusFilterTabs, type StatusFilter } from '@/components/applications/StatusFilterTabs';
@@ -32,23 +32,27 @@ export default function ApplicationsPage() {
   const status: StatusFilter =
     raw && (VALID as string[]).includes(raw) ? (raw as StatusFilter) : 'ALL';
 
+  const rawPage = Number(searchParams.get('page'));
+  const page = Number.isFinite(rawPage) && rawPage >= 1 ? Math.floor(rawPage) : 1;
+
   const [items, setItems] = useState<ApplicationCardT[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
     setError(false);
-    setItems([]);
-    setCursor(null);
-    listMyApplications({ status: status === 'ALL' ? undefined : status, limit: PAGE_SIZE })
+    listMyApplications({
+      status: status === 'ALL' ? undefined : status,
+      page,
+      pageSize: PAGE_SIZE,
+    })
       .then((res) => {
         if (!active) return;
         setItems(res.data);
-        setCursor(res.nextCursor);
+        setTotalPages(Math.max(1, res.meta.totalPages));
       })
       .catch(() => {
         if (active) setError(true);
@@ -59,32 +63,34 @@ export default function ApplicationsPage() {
     return () => {
       active = false;
     };
-  }, [status]);
+  }, [status, page]);
 
-  const loadMore = useCallback(async () => {
-    if (!cursor) return;
-    setLoadingMore(true);
-    try {
-      const res = await listMyApplications({
-        status: status === 'ALL' ? undefined : status,
-        cursor,
-        limit: PAGE_SIZE,
-      });
-      setItems((prev) => [...prev, ...res.data]);
-      setCursor(res.nextCursor);
-    } catch {
-      // Keep what we have; the load-more button stays for a retry.
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [cursor, status]);
+  /** Writes a query param and always drops `page` — any filter change restarts
+   *  at page 1, otherwise a narrower filter can strand the user on a page that
+   *  no longer exists. */
+  const setParams = useCallback(
+    (mutate: (q: URLSearchParams) => void) => {
+      const q = new URLSearchParams(searchParams.toString());
+      mutate(q);
+      const qs = q.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname);
+    },
+    [searchParams, router, pathname],
+  );
 
   const onTab = (value: StatusFilter) => {
-    const q = new URLSearchParams(searchParams.toString());
-    if (value === 'ALL') q.delete('status');
-    else q.set('status', value);
-    const qs = q.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname);
+    setParams((q) => {
+      q.delete('page');
+      if (value === 'ALL') q.delete('status');
+      else q.set('status', value);
+    });
+  };
+
+  const goToPage = (next: number) => {
+    setParams((q) => {
+      if (next <= 1) q.delete('page');
+      else q.set('page', String(next));
+    });
   };
 
   return (
@@ -113,17 +119,7 @@ export default function ApplicationsPage() {
             {items.map((a) => (
               <ApplicationCard key={a.id} application={a} locale={locale} />
             ))}
-            {cursor && (
-              <Button
-                variant="outline"
-                onClick={loadMore}
-                disabled={loadingMore}
-                className="mx-auto mt-2 min-h-11"
-              >
-                {loadingMore ? <Spinner className="size-4" /> : null}
-                {t('loadMore')}
-              </Button>
-            )}
+            <Pagination page={page} totalPages={totalPages} onPageChange={goToPage} />
           </>
         )}
       </div>

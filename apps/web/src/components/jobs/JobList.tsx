@@ -1,50 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { JobCard } from './JobCard';
-import { Button } from '@/components/ui/button';
-import {
-  searchJobsClient,
-  type JobCard as JobCardType,
-  type JobSearchResult,
-} from '@/lib/api/jobs';
-import { DEFAULT_PAGE_SIZE, type JobSearchFilters } from '@/lib/jobs/searchParams';
+import { Pagination } from '@/components/ui/pagination';
+import { type JobCard as JobCardType, type JobSearchResult } from '@/lib/api/jobs';
+import { buildJobSearchQuery, type JobSearchFilters } from '@/lib/jobs/searchParams';
 
 interface JobListProps {
-  initialData: JobSearchResult;
+  data: JobSearchResult;
   filters: JobSearchFilters;
   locale: string;
 }
 
 /**
- * Renders the SSR-fetched first page, then fetches subsequent pages
- * client-side on "Load more". The parent (page.tsx) must remount this
- * component (via a `key` keyed on the filter query string) whenever filters
- * change — otherwise this component's local `jobs`/`cursor` state would keep
- * the stale previous-filter results instead of picking up the new SSR page.
+ * Renders one SSR-fetched page of results.
+ *
+ * Paging is URL-driven rather than local state: the page number lives in the
+ * query string, so the server renders the requested page directly (crawlable,
+ * no CLS, no client refetch) and Back/Forward and link-sharing land on the same
+ * results the user was looking at.
  */
-export function JobList({ initialData, filters, locale }: JobListProps) {
+export function JobList({ data, filters, locale }: JobListProps) {
   const t = useTranslations('jobs');
-  const [jobs, setJobs] = useState<JobCardType[]>(initialData.data);
-  const [cursor, setCursor] = useState(initialData.nextCursor);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
-  async function loadMore() {
-    if (!cursor) return;
-    setLoading(true);
-    setError(false);
-    try {
-      const result = await searchJobsClient(filters, { cursor, limit: DEFAULT_PAGE_SIZE });
-      setJobs((prev) => [...prev, ...result.data]);
-      setCursor(result.nextCursor);
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const jobs: JobCardType[] = data.data;
+  const { page, totalPages, total } = data.meta;
+
+  const goToPage = (next: number) => {
+    const qs = buildJobSearchQuery(filters, { page: next });
+    router.push(qs ? `${pathname}?${qs}` : pathname);
+  };
 
   if (jobs.length === 0) {
     return (
@@ -57,8 +45,10 @@ export function JobList({ initialData, filters, locale }: JobListProps) {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Counts the whole result set, not just this page — `total` is what the
+          user is actually filtering down. */}
       <p className="text-sm text-neutral-600" data-testid="job-result-count">
-        {t('resultCount', { count: jobs.length })}
+        {t('resultCount', { count: total })}
       </p>
 
       <ul
@@ -72,25 +62,7 @@ export function JobList({ initialData, filters, locale }: JobListProps) {
         ))}
       </ul>
 
-      {cursor && (
-        <div className="flex flex-col items-center gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={loadMore} loading={loading}>
-            {t('loadMore')}
-          </Button>
-          {error && (
-            <p role="alert" className="text-sm text-error-fg">
-              {t('loadMoreError')}{' '}
-              <button
-                type="button"
-                onClick={loadMore}
-                className="underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
-              >
-                {t('retry')}
-              </button>
-            </p>
-          )}
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={goToPage} />
     </div>
   );
 }

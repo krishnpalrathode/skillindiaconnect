@@ -1,4 +1,4 @@
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsBoolean, IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { NotificationType } from '@prisma/client';
 
@@ -50,13 +50,15 @@ export class ListNotificationsDto {
   unread?: boolean;
 
   @IsOptional()
-  @IsString()
-  cursor?: string;
+  @Transform(({ value }) => (value !== undefined ? parseInt(value as string, 10) : undefined))
+  @IsInt()
+  @Min(1)
+  page?: number;
 
   @IsOptional()
   @Transform(({ value }) => (value !== undefined ? parseInt(value as string, 10) : undefined))
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number;
+  pageSize?: number;
 }

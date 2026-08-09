@@ -1,5 +1,5 @@
 import type { components } from '@skillindiaconnect/shared-types';
-import { apiFetch } from '@/lib/api/client';
+import { apiFetch, apiFetchRaw } from '@/lib/api/client';
 
 type Plan = components['schemas']['Plan'];
 type CheckoutSession = components['schemas']['CheckoutSession'];
@@ -55,9 +55,21 @@ export function getOrder(orderId: string): Promise<Order> {
 type Invoice = components['schemas']['Invoice'];
 type DocumentType = components['schemas']['DocumentType'];
 
-/** GET /billing/invoices — offset-paginated invoice history for the authenticated employer. */
-export function getInvoices(page = 1, pageSize = 20): Promise<Invoice[]> {
-  return apiFetch<Invoice[]>(`/billing/invoices?page=${page}&pageSize=${pageSize}`);
+export interface InvoicesResult {
+  data: Invoice[];
+  meta: { page: number; pageSize: number; total: number; totalPages: number };
+}
+
+/**
+ * GET /billing/invoices — offset-paginated invoice history for the authenticated
+ * employer.
+ *
+ * Uses `apiFetchRaw` because the caller needs `meta.totalPages` to render the
+ * pager; `apiFetch` would unwrap `{ data }` and discard it, which is what
+ * previously stranded every employer on page 1.
+ */
+export function getInvoices(page = 1, pageSize = 20): Promise<InvoicesResult> {
+  return apiFetchRaw<InvoicesResult>(`/billing/invoices?page=${page}&pageSize=${pageSize}`);
 }
 
 /**

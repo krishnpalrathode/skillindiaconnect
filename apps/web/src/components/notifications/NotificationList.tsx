@@ -15,6 +15,9 @@ import { NotificationFilters } from './NotificationFilters';
 import { NotificationItem } from './NotificationItem';
 import { NotificationEmptyState } from './NotificationEmptyState';
 import { NotificationSkeleton } from './NotificationSkeleton';
+import { Pagination } from '@/components/ui/pagination';
+
+const PAGE_SIZE = 20;
 
 type Notification = components['schemas']['Notification'];
 type FilterValue = NonNullable<NotificationListParams['filter']>;
@@ -56,43 +59,33 @@ export function NotificationList({ api = candidateNotificationsApi }: Notificati
   const now = React.useMemo(() => new Date(), []);
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [activeFilter, setActiveFilter] = useState<FilterValue | undefined>(undefined);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPage = useCallback(
-    async (cursor?: string, replace = false) => {
-      try {
-        const result = await api.listNotifications({
-          filter: activeFilter,
-          unread: unreadOnly || undefined,
-          cursor,
-          limit: 20,
-        });
-        setNotifications((prev) => (replace ? result.data : [...prev, ...result.data]));
-        setNextCursor(result.nextCursor);
-        setError(null);
-      } catch {
-        setError(t('errorLoad'));
-      }
-    },
-    [api, activeFilter, unreadOnly, t],
-  );
+  const fetchPage = useCallback(async () => {
+    try {
+      const result = await api.listNotifications({
+        filter: activeFilter,
+        unread: unreadOnly || undefined,
+        page,
+        pageSize: PAGE_SIZE,
+      });
+      setNotifications(result.data);
+      setTotalPages(Math.max(1, result.meta.totalPages));
+      setError(null);
+    } catch {
+      setError(t('errorLoad'));
+    }
+  }, [api, activeFilter, unreadOnly, page, t]);
 
   useEffect(() => {
     setLoading(true);
-    fetchPage(undefined, true).finally(() => setLoading(false));
+    fetchPage().finally(() => setLoading(false));
   }, [fetchPage]);
-
-  const handleLoadMore = async () => {
-    if (!nextCursor || loadingMore) return;
-    setLoadingMore(true);
-    await fetchPage(nextCursor, false);
-    setLoadingMore(false);
-  };
 
   const handleMarkRead = useCallback(
     (id: string) => {
@@ -133,6 +126,7 @@ export function NotificationList({ api = candidateNotificationsApi }: Notificati
   const resetFilters = () => {
     setActiveFilter(undefined);
     setUnreadOnly(false);
+    setPage(1);
   };
 
   return (
@@ -140,8 +134,14 @@ export function NotificationList({ api = candidateNotificationsApi }: Notificati
       <NotificationFilters
         activeFilter={activeFilter}
         unreadOnly={unreadOnly}
-        onFilterChange={(f) => setActiveFilter(f)}
-        onUnreadToggle={(u) => setUnreadOnly(u)}
+        onFilterChange={(f) => {
+          setActiveFilter(f);
+          setPage(1);
+        }}
+        onUnreadToggle={(u) => {
+          setUnreadOnly(u);
+          setPage(1);
+        }}
       />
 
       {/*
@@ -184,7 +184,7 @@ export function NotificationList({ api = candidateNotificationsApi }: Notificati
           <p className="text-sm font-medium text-error-fg">{error}</p>
           <button
             type="button"
-            onClick={() => fetchPage(undefined, true)}
+            onClick={() => void fetchPage()}
             className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-error-fg/30 bg-white px-5 text-sm font-semibold text-error-fg transition-colors hover:bg-white/70 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
             {t('retry')}
@@ -227,18 +227,7 @@ export function NotificationList({ api = candidateNotificationsApi }: Notificati
         </div>
       )}
 
-      {nextCursor && !loading && (
-        <div className="flex justify-center pt-2">
-          <button
-            type="button"
-            onClick={handleLoadMore}
-            disabled={loadingMore}
-            className="text-sm font-medium text-primary-600 hover:text-primary-700 disabled:opacity-50 focus-visible:outline-none focus-visible:underline"
-          >
-            {loadingMore ? t('loading') : t('loadMore')}
-          </button>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} busy={loading} />
     </div>
   );
 }

@@ -153,7 +153,7 @@ describe('ApplicationTimeline', () => {
         locale="en"
       />,
     );
-    expect(screen.getByText(/status updated by skillindiaconnect/i)).toBeInTheDocument();
+    expect(screen.getByText(/status updated by skill india connect/i)).toBeInTheDocument();
     // No reason, no actor identity, no "Reason:" slot.
     const html = document.body.innerHTML;
     expect(html).not.toMatch(/reason/i);
@@ -174,7 +174,7 @@ describe('candidate detail timeline (mock) — override reason dropped', () => {
     render(
       <ApplicationTimeline timeline={detail.timeline} appliedAt={detail.appliedAt} locale="en" />,
     );
-    expect(screen.getByText(/status updated by skillindiaconnect/i)).toBeInTheDocument();
+    expect(screen.getByText(/status updated by skill india connect/i)).toBeInTheDocument();
     expect(document.body.innerHTML).not.toMatch(/reinstated/i);
   });
 });

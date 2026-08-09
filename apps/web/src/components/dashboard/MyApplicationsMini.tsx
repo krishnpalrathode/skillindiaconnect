@@ -32,7 +32,7 @@ export function MyApplicationsMini() {
 
   useEffect(() => {
     let active = true;
-    listMyApplications({ limit: TOP_N })
+    listMyApplications({ pageSize: TOP_N })
       .then((res) => {
         if (active) setItems(res.data);
       })

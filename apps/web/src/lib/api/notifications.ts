@@ -1,19 +1,17 @@
 import type { components } from '@skillindiaconnect/shared-types';
 import { apiFetch, apiFetchRaw } from './client';
+import type { PaginatedResult } from './pagination';
 
 type Notification = components['schemas']['Notification'];
 
 export interface NotificationListParams {
   filter?: 'applications' | 'jobs' | 'profile' | 'system';
   unread?: boolean;
-  cursor?: string;
-  limit?: number;
+  page?: number;
+  pageSize?: number;
 }
 
-export interface NotificationListResponse {
-  data: Notification[];
-  nextCursor: string | null;
-}
+export type NotificationListResponse = PaginatedResult<Notification>;
 
 /**
  * Notifications are per-user and the API is the same shape for every audience —
@@ -26,8 +24,8 @@ export function buildNotificationsApi(base: string) {
       const q = new URLSearchParams();
       if (params.filter) q.set('filter', params.filter);
       if (params.unread) q.set('unread', 'true');
-      if (params.cursor) q.set('cursor', params.cursor);
-      if (params.limit) q.set('limit', String(params.limit));
+      if (params.page && params.page > 1) q.set('page', String(params.page));
+      if (params.pageSize) q.set('pageSize', String(params.pageSize));
       const qs = q.toString();
       return apiFetchRaw<NotificationListResponse>(`${base}${qs ? `?${qs}` : ''}`);
     },

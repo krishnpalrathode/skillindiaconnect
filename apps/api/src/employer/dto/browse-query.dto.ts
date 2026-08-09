@@ -28,13 +28,15 @@ export class BrowseQueryDto {
   q?: string;
 
   @IsOptional()
-  @IsString()
-  cursor?: string;
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(50)
-  limit?: number;
+  pageSize?: number;
 }

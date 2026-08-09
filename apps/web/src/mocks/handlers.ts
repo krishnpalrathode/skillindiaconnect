@@ -127,34 +127,15 @@ function offsetPaginate<T>(
   };
 }
 
-function cursorPaginate<T extends { createdAt: string; id?: string }>(
-  items: T[],
-  cursor: string | null,
-  limit: number,
-  options?: {
-    /** Defaults to createdAt descending (original behavior). */
-    compare?: (a: T, b: T) => number;
-    /** Defaults to createdAt. Must be unique per sorted position to dedupe correctly across pages. */
-    cursorKey?: (item: T) => string;
-  },
-): { data: T[]; nextCursor: string | null } {
-  const compare =
-    options?.compare ??
-    ((a: T, b: T) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  const cursorKey = options?.cursorKey ?? ((item: T) => item.createdAt);
-
-  const sorted = [...items].sort(compare);
-  let startIdx = 0;
-  if (cursor) {
-    const decoded = atob(cursor);
-    const idx = sorted.findIndex((item) => cursorKey(item) === decoded);
-    startIdx = idx === -1 ? 0 : idx + 1;
-  }
-  const page = sorted.slice(startIdx, startIdx + limit);
-  const nextCursor =
-    startIdx + limit < sorted.length ? btoa(cursorKey(page[page.length - 1]!)) : null;
-  return { data: page, nextCursor };
+/** Reads `?page=&pageSize=`, clamped exactly as the API clamps them. */
+function readPaging(url: URL, defaultSize = 20, maxSize = 100): { page: number; pageSize: number } {
+  const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1', 10) || 1);
+  const raw = parseInt(url.searchParams.get('pageSize') ?? String(defaultSize), 10) || defaultSize;
+  return { page, pageSize: Math.min(maxSize, Math.max(1, raw)) };
 }
+
+const byCreatedAtDesc = (a: { createdAt: string }, b: { createdAt: string }) =>
+  new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 
 // ─── Auth handlers ────────────────────────────────────────────────────────────
 
@@ -810,8 +791,7 @@ const candidateMeNotifications = http.get(`${BASE}/candidates/me/notifications`,
   const url = new URL(request.url);
   const filter = url.searchParams.get('filter');
   const unreadOnly = url.searchParams.get('unread') === 'true';
-  const cursor = url.searchParams.get('cursor');
-  const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
+  const { page, pageSize } = readPaging(url);
 
   // Mirror the backend FILTER_BUCKETS (apps/api/.../list-notifications.dto.ts).
   const filterMap: Record<string, string[]> = {
@@ -837,8 +817,7 @@ const candidateMeNotifications = http.get(`${BASE}/candidates/me/notifications`,
     notifs = notifs.filter((n) => !n.read);
   }
 
-  const { data, nextCursor } = cursorPaginate(notifs, cursor, limit);
-  return HttpResponse.json({ data, nextCursor });
+  return HttpResponse.json(offsetPaginate([...notifs].sort(byCreatedAtDesc), page, pageSize));
 });
 
 const candidateMeNotificationsRead = http.post(
@@ -885,14 +864,12 @@ const employerMeNotifications = http.get(`${BASE}/employers/me/notifications`, (
 
   const url = new URL(request.url);
   const unreadOnly = url.searchParams.get('unread') === 'true';
-  const cursor = url.searchParams.get('cursor');
-  const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
+  const { page, pageSize } = readPaging(url);
 
   let notifs = db.notifications.get(user.id) ?? [];
   if (unreadOnly) notifs = notifs.filter((n) => !n.read);
 
-  const { data, nextCursor } = cursorPaginate(notifs, cursor, limit);
-  return HttpResponse.json({ data, nextCursor });
+  return HttpResponse.json(offsetPaginate([...notifs].sort(byCreatedAtDesc), page, pageSize));
 });
 
 const employerMeNotificationsRead = http.post(
@@ -1411,8 +1388,7 @@ const getJobs = http.get(`${BASE}/jobs`, ({ request }) => {
   const badge = url.searchParams.get('badge');
   const q = url.searchParams.get('q')?.toLowerCase();
   const sort = url.searchParams.get('sort') ?? 'recent';
-  const cursor = url.searchParams.get('cursor');
-  const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
+  const { page, pageSize } = readPaging(url);
 
   const authUser = getAuthUser(request);
   const savedJobIds = authUser ? (db.savedJobs.get(authUser.id) ?? new Set<string>()) : null;
@@ -1441,19 +1417,10 @@ const getJobs = http.get(`${BASE}/jobs`, ({ request }) => {
     sort === 'salary'
       ? (a: (typeof cards)[number], b: (typeof cards)[number]) =>
           (b.salaryMax ?? b.salaryMin ?? 0) - (a.salaryMax ?? a.salaryMin ?? 0)
-      : undefined;
-  const cursorKey =
-    sort === 'salary'
-      ? (item: (typeof cards)[number]) => `${item.salaryMax ?? item.salaryMin ?? 0}|${item.id}`
-      : undefined;
+      : byCreatedAtDesc;
 
-  const { data, nextCursor } = cursorPaginate(
-    cards as ((typeof cards)[0] & { createdAt: string })[],
-    cursor,
-    limit,
-    { compare, cursorKey },
-  );
-  return HttpResponse.json({ data, nextCursor });
+  const sorted = [...(cards as ((typeof cards)[0] & { createdAt: string })[])].sort(compare);
+  return HttpResponse.json(offsetPaginate(sorted, page, pageSize));
 });
 
 const getJobById = http.get(`${BASE}/jobs/:id`, ({ request, params }) => {
@@ -2266,8 +2233,7 @@ const employersCandidatesBrowse = http.get(`${BASE}/employers/candidates`, ({ re
   const hasForeign = url.searchParams.get('hasForeignExperience');
   const availability = url.searchParams.get('availability');
   const q = url.searchParams.get('q')?.toLowerCase();
-  const cursor = url.searchParams.get('cursor');
-  const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '20', 10), 100);
+  const { page, pageSize } = readPaging(url);
 
   let results = [...db.candidates.values()].filter((mc) => mc.profile.profileVisible !== false);
 
@@ -2300,7 +2266,7 @@ const employersCandidatesBrowse = http.get(`${BASE}/employers/candidates`, ({ re
   }
 
   const cards = results.map((mc) => toCandidateBrowseCard(mc));
-  return HttpResponse.json(cursorPaginate(cards, cursor, limit));
+  return HttpResponse.json(offsetPaginate([...cards].sort(byCreatedAtDesc), page, pageSize));
 });
 
 const employersCandidateView = http.get(
@@ -2404,26 +2370,6 @@ function pushNotification(
     ...n,
   } as import('./data').MockNotification);
   db.notifications.set(userId, list);
-}
-
-// Local cursor slice for lists whose items lack a `createdAt` key (applications
-// key on `appliedAt`/`id`). Mirrors cursorPaginate's opaque-base64 contract.
-function cursorSlice<T>(
-  sorted: T[],
-  cursor: string | null,
-  limit: number,
-  keyOf: (t: T) => string,
-): { data: T[]; nextCursor: string | null } {
-  let start = 0;
-  if (cursor) {
-    const decoded = atob(cursor);
-    const idx = sorted.findIndex((x) => keyOf(x) === decoded);
-    start = idx === -1 ? 0 : idx + 1;
-  }
-  const data = sorted.slice(start, start + limit);
-  const nextCursor =
-    start + limit < sorted.length && data.length > 0 ? btoa(keyOf(data[data.length - 1]!)) : null;
-  return { data, nextCursor };
 }
 
 // POST /jobs/:id/apply — the apply-gate ladder + match snapshot.
@@ -2545,8 +2491,7 @@ const getJobApplicants = http.get(`${BASE}/jobs/:id/applicants`, ({ request, par
     return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'You do not own this job.');
 
   const url = new URL(request.url);
-  const cursor = url.searchParams.get('cursor');
-  const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
+  const { page, pageSize } = readPaging(url);
   const statusFilter = url.searchParams.get('status');
   const sort = url.searchParams.get('sort') ?? 'match';
 
@@ -2558,10 +2503,10 @@ const getJobApplicants = http.get(`${BASE}/jobs/:id/applicants`, ({ request, par
       : b.matchScore - a.matchScore || a.id.localeCompare(b.id),
   );
 
-  const { data, nextCursor } = cursorSlice(apps, cursor, limit, (a) => a.id);
+  const paged = offsetPaginate(apps, page, pageSize);
   return HttpResponse.json({
-    data: data.map((a) => toApplicantCard(a)),
-    nextCursor,
+    data: paged.data.map((a) => toApplicantCard(a)),
+    meta: paged.meta,
     counts: computeApplicantCounts(job.id),
   });
 });
@@ -2678,16 +2623,18 @@ const candidateMeApplications = http.get(`${BASE}/candidates/me/applications`, (
     return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
 
   const url = new URL(request.url);
-  const cursor = url.searchParams.get('cursor');
-  const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
+  const { page, pageSize } = readPaging(url);
   const statusFilter = url.searchParams.get('status');
 
   let mine = [...db.applications.values()].filter((a) => a.candidateId === user.id);
   if (statusFilter) mine = mine.filter((a) => a.status === statusFilter);
   mine.sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime());
 
-  const { data, nextCursor } = cursorSlice(mine, cursor, limit, (a) => a.id);
-  return HttpResponse.json({ data: data.map((a) => toApplicationCard(a)), nextCursor });
+  const paged = offsetPaginate(mine, page, pageSize);
+  return HttpResponse.json({
+    data: paged.data.map((a) => toApplicationCard(a)),
+    meta: paged.meta,
+  });
 });
 
 // GET /candidates/me/applications/:id — candidate detail (timeline, no overrideReason).

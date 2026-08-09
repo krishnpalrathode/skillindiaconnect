@@ -1,4 +1,12 @@
 {
+  "pagination": {
+    "label": "Pagination",
+    "pageInfo": "Page {page} of {totalPages}",
+    "prev": "Previous",
+    "next": "Next",
+    "previousPage": "Previous page",
+    "nextPage": "Next page"
+  },
   "resume": {
     "pageTitle": "Resume Builder",
     "pageSubtitle": "Create a professional resume from your profile, then download it or send it to yourself.",
@@ -124,7 +132,7 @@
     "no": "No",
     "or": "or",
     "and": "and",
-    "brand": "SkillIndiaConnect",
+    "brand": "Skill India Connect",
     "logoutSuccess": "Logged out successfully"
   },
   "field": {
@@ -159,7 +167,7 @@
     "expired": "Expired"
   },
   "auth": {
-    "loginTitle": "Log in to SkillIndiaConnect",
+    "loginTitle": "Log in to Skill India Connect",
     "loginSubtitle": "Welcome back — continue your journey",
     "signupTitle": "Create your account",
     "signupSubtitle": "Join thousands of workers finding opportunities",
@@ -567,7 +575,7 @@
       "rememberMe": "Remember me",
       "forgotPassword": "Forgot password?",
       "loginButton": "Sign in",
-      "noAccount": "New to SkillIndiaConnect?",
+      "noAccount": "New to Skill India Connect?",
       "registerLink": "Register your company",
       "candidateLink": "Looking for a job instead?",
       "candidateLoginLink": "Candidate login",
@@ -702,7 +710,7 @@
         "changeLogoLabel": "Change company logo",
         "uploadLogoLabel": "Upload company logo",
         "logoAlt": "Company logo",
-        "approvedBadge": "Approved by SkillIndiaConnect",
+        "approvedBadge": "Approved by Skill India Connect",
         "verifiedBadge": "Verified",
         "uploading": "Uploading…",
         "uploadDone": "Logo updated",
@@ -777,7 +785,7 @@
         "reuploadHint": "PDF, JPG, or PNG — up to 10 MB",
         "noDocument": "No certificate uploaded.",
         "uploadedOn": "Uploaded",
-        "verifiedNote": "Verification complete. Your certificate has been reviewed by SkillIndiaConnect.",
+        "verifiedNote": "Verification complete. Your certificate has been reviewed by Skill India Connect.",
         "pendingReviewNote": "Under review. Our team will verify your certificate shortly."
       },
       "accountSettings": {
@@ -1109,7 +1117,7 @@
       "heading": "Benefits",
       "subtitle": "Mandatory benefits are required by platform policy. Optional benefits attract more candidates.",
       "policyTitle": "Worker Protection Policy",
-      "policyBody": "All jobs on SkillIndiaConnect must include Accommodation, Health Insurance, and Transportation. These are required by platform policy and government labour law.",
+      "policyBody": "All jobs on Skill India Connect must include Accommodation, Health Insurance, and Transportation. These are required by platform policy and government labour law.",
       "mandatoryLabel": "Mandatory (required by platform policy)",
       "optionalLabel": "Optional benefits",
       "accommodation": "Accommodation",
@@ -1354,7 +1362,7 @@
       "SELECTED": "Selected by the employer",
       "REJECTED": "Not selected by the employer",
       "PENDING": "Reopened",
-      "adminOverride": "Status updated by SkillIndiaConnect"
+      "adminOverride": "Status updated by Skill India Connect"
     },
     "rejection": {
       "feedbackLabel": "Feedback from the employer",
@@ -2272,7 +2280,7 @@
         },
         "noNewWhatsApp": "This candidate already received the Selected WhatsApp — moving them to Selected again will NOT send a new one (they'll get an email and in-app notification). If they genuinely never received it, use the manual WhatsApp resend after this change.",
         "reasonLabel": "Reason",
-        "reasonVisibility": "This reason is recorded in the audit log and shown to other admins. The candidate sees only a neutral entry: 'Status updated by SkillIndiaConnect'.",
+        "reasonVisibility": "This reason is recorded in the audit log and shown to other admins. The candidate sees only a neutral entry: 'Status updated by Skill India Connect'.",
         "reasonRequired": "A reason is required for a corrective status change.",
         "rejectedByServer": "The server declined this change.",
         "failed": "Couldn't change the status. Try again.",
@@ -2397,6 +2405,12 @@
       "downloadPdf": "Download PDF",
       "downloadPdfLabel": "Download PDF for invoice {number}",
       "pdfPending": "Generating…",
+      "invoicePageInfo": "Page {page} of {totalPages}",
+      "invoicePrev": "Previous",
+      "invoiceNext": "Next",
+      "invoicePreviousPage": "Previous page of invoices",
+      "invoiceNextPage": "Next page of invoices",
+      "invoicesPaginationLabel": "Invoice pagination",
       "viewDoc": "View",
       "viewDocLoading": "Opening…",
       "viewDocLabel": "View {doc} document",
@@ -2410,18 +2424,18 @@
   },
   "landing": {
     "meta": {
-      "title": "SkillIndiaConnect — Safe, verified jobs in India and the Gulf",
+      "title": "Skill India Connect — Safe, verified jobs in India and the Gulf",
       "description": "Find verified jobs in India and the Gulf. Every job includes accommodation, health insurance, and transport. Free for workers."
     },
     "nav": {
       "login": "Login",
       "signUp": "Sign Up Free",
       "skipToContent": "Skip to main content",
-      "home": "SkillIndiaConnect home"
+      "home": "Skill India Connect home"
     },
     "hero": {
       "headline": "<hl>Safe, verified jobs</hl> in India and the Gulf",
-      "subline": "Every job on SkillIndiaConnect must give you a place to stay, health insurance, and transport. We check every employer before their job goes live.",
+      "subline": "Every job on Skill India Connect must give you a place to stay, health insurance, and transport. We check every employer before their job goes live.",
       "ctaWorker": "Find Jobs",
       "ctaEmployer": "Hire Workers",
       "freeNote": "Free for workers. Always."
@@ -2511,7 +2525,7 @@
       "support": "Support",
       "emailLabel": "Email us",
       "languageLabel": "Language",
-      "rights": "© {year} SkillIndiaConnect. All rights reserved.",
+      "rights": "© {year} Skill India Connect. All rights reserved.",
       "getStarted": "Get Started",
       "findJobs": "Find Jobs",
       "hireWorkers": "Hire Workers",
@@ -2523,7 +2537,7 @@
       "visitUs": "Our office"
     },
     "carousel": {
-      "label": "Skilled workers on SkillIndiaConnect",
+      "label": "Skilled workers on Skill India Connect",
       "prev": "Previous image",
       "next": "Next image",
       "goTo": "Show image {n}",
@@ -2551,10 +2565,10 @@
     "about": {
       "metaTitle": "About us",
       "metaDescription": "We connect skilled Indian workers with verified employers in India and the Gulf, and protect workers from recruitment fraud.",
-      "title": "About SkillIndiaConnect",
+      "title": "About Skill India Connect",
       "lead": "We help skilled Indian workers find safe jobs in India and the Gulf — without paying bribes, losing their documents, or being lied to about the job.",
       "missionHeading": "Our mission",
-      "missionBody": "Millions of Indian workers look for work abroad every year. Too many are cheated by fake agents who take money, hold passports, or promise a job that does not exist. We built SkillIndiaConnect so a worker can deal directly with a checked employer, see the real terms of the job before applying, and keep their own documents.",
+      "missionBody": "Millions of Indian workers look for work abroad every year. Too many are cheated by fake agents who take money, hold passports, or promise a job that does not exist. We built Skill India Connect so a worker can deal directly with a checked employer, see the real terms of the job before applying, and keep their own documents.",
       "protectionHeading": "What we guarantee",
       "protectionBody": "Every job posted here must include a place to stay, health insurance, and transport. This is not a promise we ask employers to make — our system blocks any job that leaves one of them out. We also check each company before its first job goes live.",
       "freeHeading": "Free for workers",
@@ -2564,7 +2578,7 @@
     },
     "contact": {
       "metaTitle": "Contact us",
-      "metaDescription": "Get in touch with the SkillIndiaConnect team by email.",
+      "metaDescription": "Get in touch with the Skill India Connect team by email.",
       "title": "Contact us",
       "lead": "Have a question, a problem with your account, or a job to report? Email us and a person will read it.",
       "emailHeading": "Email us",
@@ -2579,13 +2593,13 @@
     },
     "privacy": {
       "metaTitle": "Privacy Policy",
-      "metaDescription": "How SkillIndiaConnect collects, uses, and protects your personal information.",
+      "metaDescription": "How Skill India Connect collects, uses, and protects your personal information.",
       "title": "Privacy Policy",
       "lead": "This policy explains what information we collect, why we collect it, and what control you have over it.",
       "sections": [
         {
           "heading": "Who we are",
-          "body": "SkillIndiaConnect is a job platform that connects skilled workers in India with verified employers in India and the Gulf. We decide how your personal information is used on this platform, and we are responsible for keeping it safe. [Registered company name, registered address and company registration number to be added before launch.]"
+          "body": "Skill India Connect is a job platform that connects skilled workers in India with verified employers in India and the Gulf. We decide how your personal information is used on this platform, and we are responsible for keeping it safe. [Registered company name, registered address and company registration number to be added before launch.]"
         },
         {
           "heading": "You must be 18 or older",
@@ -2663,12 +2677,12 @@
     },
     "terms": {
       "metaTitle": "Terms of Use",
-      "metaDescription": "The rules for using SkillIndiaConnect as a worker or an employer.",
+      "metaDescription": "The rules for using Skill India Connect as a worker or an employer.",
       "title": "Terms of Use",
-      "lead": "These terms explain the rules for using SkillIndiaConnect. By making an account you agree to them.",
+      "lead": "These terms explain the rules for using Skill India Connect. By making an account you agree to them.",
       "sections": [
         {
-          "heading": "Who can use SkillIndiaConnect",
+          "heading": "Who can use Skill India Connect",
           "body": "You must be at least 18 years old and give true information about yourself or your company. One email address may be used for one account and one role only."
         },
         {

@@ -1,29 +1,27 @@
 import type { components } from '@skillindiaconnect/shared-types';
 import { apiFetch, apiFetchRaw } from '@/lib/api/client';
+import type { PaginatedResult } from '@/lib/api/pagination';
 
 type ApplicationCard = components['schemas']['ApplicationCard'];
 type ApplicationDetail = components['schemas']['ApplicationDetail'];
 type ApplicationStatus = components['schemas']['ApplicationStatus'];
 
-export interface ApplicationsPage {
-  data: ApplicationCard[];
-  nextCursor: string | null;
-}
+export type ApplicationsPage = PaginatedResult<ApplicationCard>;
 
 /**
- * Candidate's applications feed (cursor-paginated, newest first). Uses
- * `apiFetchRaw` because we need the envelope's `nextCursor` alongside `data`
+ * Candidate's applications feed (offset-paginated, newest first). Uses
+ * `apiFetchRaw` because we need the envelope's `meta` alongside `data`
  * (apiFetch unwraps to `data` only).
  */
 export function listMyApplications(params?: {
   status?: ApplicationStatus;
-  cursor?: string;
-  limit?: number;
+  page?: number;
+  pageSize?: number;
 }): Promise<ApplicationsPage> {
   const q = new URLSearchParams();
   if (params?.status) q.set('status', params.status);
-  if (params?.cursor) q.set('cursor', params.cursor);
-  if (params?.limit) q.set('limit', String(params.limit));
+  if (params?.page && params.page > 1) q.set('page', String(params.page));
+  if (params?.pageSize) q.set('pageSize', String(params.pageSize));
   const qs = q.toString();
   return apiFetchRaw<ApplicationsPage>(`/candidates/me/applications${qs ? `?${qs}` : ''}`);
 }
