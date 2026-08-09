@@ -1,6 +1,6 @@
 # @skillindiaconnect/contract
 
-OpenAPI 3.1 specification for the SkillIndiaConnect API.
+OpenAPI 3.1 specification for the Skill India Connect API.
 This is the **source of truth** for the API contract. Backend and frontend build
 in parallel against it.
 

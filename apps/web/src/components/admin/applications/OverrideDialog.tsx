@@ -18,7 +18,7 @@ const ALL_STATUSES: ApplicationStatus[] = ['PENDING', 'SHORTLISTED', 'SELECTED',
  *
  * Two truths the dialog must state BEFORE the admin types:
  *  1. Where the reason goes: the audit log and other admins — the CANDIDATE
- *     SEES ONLY A NEUTRAL ENTRY ("Status updated by SkillIndiaConnect"). An
+ *     SEES ONLY A NEUTRAL ENTRY ("Status updated by Skill India Connect"). An
  *     admin writing a reason they believe the candidate will read is a real
  *     and unkind failure mode.
  *  2. The WhatsApp guard, made legible: re-selecting an already-notified

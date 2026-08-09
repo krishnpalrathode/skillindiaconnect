@@ -194,7 +194,7 @@ describe('Profile filter bucket (MSW)', () => {
     setAccessToken(token);
     db.sessions.set(token, { userId: 'mock-user-candidate-1', accessToken: token });
 
-    const res = await listNotifications({ filter: 'profile', limit: 50 });
+    const res = await listNotifications({ filter: 'profile', pageSize: 50 });
     const types = res.data.map((n) => n.type);
     expect(types).toContain('PROFILE_VIEWED');
     expect(types).toContain('PASSPORT_EXPIRY');

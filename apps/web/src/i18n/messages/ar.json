@@ -1,4 +1,12 @@
 {
+  "pagination": {
+    "label": "تنقل الصفحات",
+    "pageInfo": "صفحة {page} من {totalPages}",
+    "prev": "السابق",
+    "next": "التالي",
+    "previousPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية"
+  },
   "resume": {
     "pageTitle": "[ar] Resume Builder",
     "pageSubtitle": "[ar] Create a professional resume from your profile, then download it or send it to yourself.",
@@ -191,7 +199,7 @@
     "expired": "[ar] Expired"
   },
   "auth": {
-    "loginTitle": "تسجيل الدخول إلى SkillIndiaConnect",
+    "loginTitle": "تسجيل الدخول إلى Skill India Connect",
     "loginSubtitle": "مرحباً بعودتك — واصل رحلتك",
     "signupTitle": "إنشاء حسابك",
     "signupSubtitle": "انضم إلى آلاف العمال الذين يجدون فرصاً",
@@ -599,7 +607,7 @@
       "rememberMe": "تذكرني",
       "forgotPassword": "نسيت كلمة المرور؟",
       "loginButton": "تسجيل الدخول",
-      "noAccount": "جديد على SkillIndiaConnect؟",
+      "noAccount": "جديد على Skill India Connect؟",
       "registerLink": "سجّل شركتك",
       "candidateLink": "تبحث عن وظيفة بدلاً من ذلك؟",
       "candidateLoginLink": "دخول المرشحين",
@@ -734,7 +742,7 @@
         "changeLogoLabel": "تغيير شعار الشركة",
         "uploadLogoLabel": "رفع شعار الشركة",
         "logoAlt": "شعار الشركة",
-        "approvedBadge": "معتمدة من SkillIndiaConnect",
+        "approvedBadge": "معتمدة من Skill India Connect",
         "verifiedBadge": "موثّق",
         "uploading": "جارٍ الرفع…",
         "uploadDone": "تم تحديث الشعار",
@@ -809,7 +817,7 @@
         "reuploadHint": "PDF أو JPG أو PNG — بحد أقصى 10 ميغابايت",
         "noDocument": "لا توجد شهادة مرفوعة.",
         "uploadedOn": "تم الرفع",
-        "verifiedNote": "اكتمل التحقق. تمت مراجعة شهادتك من قِبَل SkillIndiaConnect.",
+        "verifiedNote": "اكتمل التحقق. تمت مراجعة شهادتك من قِبَل Skill India Connect.",
         "pendingReviewNote": "قيد المراجعة. سيتحقق فريقنا من شهادتك قريباً."
       },
       "accountSettings": {
@@ -1141,7 +1149,7 @@
       "heading": "المزايا",
       "subtitle": "المزايا الإلزامية مطلوبة بموجب سياسة المنصة.",
       "policyTitle": "سياسة حماية العمال",
-      "policyBody": "يجب أن تتضمن جميع الوظائف على SkillIndiaConnect السكن والتأمين الصحي والمواصلات.",
+      "policyBody": "يجب أن تتضمن جميع الوظائف على Skill India Connect السكن والتأمين الصحي والمواصلات.",
       "mandatoryLabel": "إلزامي (مطلوب بموجب سياسة المنصة)",
       "optionalLabel": "مزايا اختيارية",
       "accommodation": "السكن",
@@ -1386,7 +1394,7 @@
       "SELECTED": "تم اختياره من قبل صاحب العمل",
       "REJECTED": "لم يتم اختياره من قبل صاحب العمل",
       "PENDING": "أُعيد فتحه",
-      "adminOverride": "تم تحديث الحالة بواسطة SkillIndiaConnect"
+      "adminOverride": "تم تحديث الحالة بواسطة Skill India Connect"
     },
     "rejection": {
       "feedbackLabel": "ملاحظات من صاحب العمل",
@@ -1552,6 +1560,12 @@
       "downloadPdf": "تحميل PDF",
       "downloadPdfLabel": "تحميل PDF للفاتورة {number}",
       "pdfPending": "جارٍ الإنشاء…",
+      "invoicePageInfo": "صفحة {page} من {totalPages}",
+      "invoicePrev": "السابق",
+      "invoiceNext": "التالي",
+      "invoicePreviousPage": "الصفحة السابقة من الفواتير",
+      "invoiceNextPage": "الصفحة التالية من الفواتير",
+      "invoicesPaginationLabel": "تنقل صفحات الفواتير",
       "viewDoc": "عرض",
       "viewDocLoading": "جارٍ الفتح…",
       "viewDocLabel": "عرض وثيقة {doc}",

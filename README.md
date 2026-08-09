@@ -1,4 +1,4 @@
-# SkillIndiaConnect
+# Skill India Connect
 
 Blue-collar recruitment platform — monorepo scaffold.
 
@@ -21,8 +21,8 @@ pnpm db:up
 pnpm dev
 ```
 
-The API will log `SkillIndiaConnect API process started on :3001`.  
-The worker will log `SkillIndiaConnect Worker process started`.  
+The API will log `Skill India Connect API process started on :3001`.  
+The worker will log `Skill India Connect Worker process started`.  
 The web app will be available at http://localhost:3000.
 
 ## Health check

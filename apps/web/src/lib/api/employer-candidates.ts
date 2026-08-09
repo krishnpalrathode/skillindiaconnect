@@ -1,23 +1,21 @@
 import type { components } from '@skillindiaconnect/shared-types';
 import { apiFetch, apiFetchRaw } from '@/lib/api/client';
 import { buildCandidateQuery, type CandidateBrowseFilters } from '@/lib/employer/candidateFilters';
+import type { PaginatedResult } from '@/lib/api/pagination';
 
 export type CandidateBrowseCard = components['schemas']['CandidateBrowseCard'];
 export type CandidateEmployerView = components['schemas']['CandidateEmployerView'];
 
-export interface CandidateBrowseResult {
-  data: CandidateBrowseCard[];
-  nextCursor: string | null;
-}
+export type CandidateBrowseResult = PaginatedResult<CandidateBrowseCard>;
 
 /**
- * Cursor-paginated candidate browse (GET /employers/candidates).
+ * Offset-paginated candidate browse (GET /employers/candidates).
  * `profileVisible = false` candidates are excluded server-side and never appear.
- * Uses apiFetchRaw so the `{ data, nextCursor }` envelope is preserved.
+ * Uses apiFetchRaw so the `{ data, meta }` envelope is preserved.
  */
 export function browseCandidates(
   filters: CandidateBrowseFilters,
-  opts?: { cursor?: string | null; limit?: number },
+  opts?: { page?: number; pageSize?: number },
 ): Promise<CandidateBrowseResult> {
   const qs = buildCandidateQuery(filters, opts);
   return apiFetchRaw<CandidateBrowseResult>(`/employers/candidates${qs ? `?${qs}` : ''}`);

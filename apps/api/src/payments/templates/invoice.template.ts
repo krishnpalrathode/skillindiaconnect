@@ -66,7 +66,7 @@ export function renderInvoiceHtml(data: InvoiceRenderData): string {
 </head>
 <body>
   <header>
-    <div class="brand">SkillIndiaConnect</div>
+    <div class="brand">Skill India Connect</div>
     <div class="doc">
       <h1>TAX INVOICE</h1>
       <p>Invoice no. <strong>${esc(data.number)}</strong></p>
@@ -100,7 +100,7 @@ export function renderInvoiceHtml(data: InvoiceRenderData): string {
 
   <footer>
     This is a system-generated invoice. Amounts are recorded in ${esc(data.currency)} at the
-    time of payment. Invoice ${esc(data.number)} &middot; SkillIndiaConnect.
+    time of payment. Invoice ${esc(data.number)} &middot; Skill India Connect.
   </footer>
 </body>
 </html>`;

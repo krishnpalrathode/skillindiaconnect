@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   // The localized default + `%s — brand` template live in `[locale]/layout.tsx`;
   // a template here would also be applied to that layout's own default, doubling
   // the brand on every untitled page.
-  title: 'SkillIndiaConnect',
+  title: 'Skill India Connect',
   description:
     'Blue-collar recruitment platform connecting skilled workers in India with Gulf and local employers.',
 };

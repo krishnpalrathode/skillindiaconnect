@@ -3,6 +3,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { DeliveryStatus, NotificationType, Prisma, UserRole } from '@prisma/client';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../core/prisma/prisma.service';
+import { pageMeta, resolvePaging, type Paginated } from '../core/pagination';
 import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
 import { NOTIFICATION_MATRIX } from './notification.matrix';
 import {
@@ -179,25 +180,26 @@ export class NotificationService {
   async listNotifications(
     userId: string,
     dto: ListNotificationsDto,
-  ): Promise<{ data: NotificationDto[]; nextCursor: string | null }> {
-    const limit = Math.min(dto.limit ?? 20, 100);
+  ): Promise<Paginated<NotificationDto>> {
+    const { page, pageSize, skip, take } = resolvePaging(dto.page, dto.pageSize);
 
-    const rows = await this.prisma.notification.findMany({
-      where: {
-        userId,
-        ...(dto.unread && { readAt: null }),
-        ...(dto.filter && { type: { in: FILTER_BUCKETS[dto.filter] } }),
-      },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      ...(dto.cursor && { cursor: { id: dto.cursor }, skip: 1 }),
-      take: limit + 1,
-    });
+    const where = {
+      userId,
+      ...(dto.unread && { readAt: null }),
+      ...(dto.filter && { type: { in: FILTER_BUCKETS[dto.filter] } }),
+    };
 
-    const hasMore = rows.length > limit;
-    const pageRows = hasMore ? rows.slice(0, limit) : rows;
-    const nextCursor = hasMore ? (pageRows[pageRows.length - 1]?.id ?? null) : null;
+    const [rows, total] = await Promise.all([
+      this.prisma.notification.findMany({
+        where,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        skip,
+        take,
+      }),
+      this.prisma.notification.count({ where }),
+    ]);
 
-    return { data: pageRows.map(toNotificationDto), nextCursor };
+    return { data: rows.map(toNotificationDto), meta: pageMeta(page, pageSize, total) };
   }
 
   async markRead(userId: string, dto: MarkReadDto): Promise<void> {

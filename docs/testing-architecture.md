@@ -1,4 +1,4 @@
-# Testing Architecture — SkillIndiaConnect
+# Testing Architecture — Skill India Connect
 
 > **Status (2026-07-27)**
 > - **Phase 0 — IMPLEMENTED** (this change): the Playwright UI-regression suite moved to

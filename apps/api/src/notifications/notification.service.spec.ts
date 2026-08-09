@@ -234,16 +234,16 @@ describe('listNotifications + markRead', () => {
       body: 'Body',
     });
 
-    const { data, nextCursor } = await service.listNotifications(TEST_USER_ID, { limit: 10 });
+    const { data, meta } = await service.listNotifications(TEST_USER_ID, { pageSize: 10 });
     expect(data.length).toBe(2);
-    expect(nextCursor).toBeNull();
+    expect(meta).toMatchObject({ page: 1, total: 2, totalPages: 1 });
     // Mapped to the contract shape: derived `read` boolean, no internal `userId`/`data`.
     expect(data[0]).toMatchObject({ read: false, readAt: null });
     expect(data[0]).not.toHaveProperty('userId');
     expect(data[0]).not.toHaveProperty('data');
   });
 
-  it('listNotifications paginates with cursor', async () => {
+  it('listNotifications paginates by page number', async () => {
     if (dockerUnavailable) return;
     // Insert 3 notifications
     for (let i = 0; i < 3; i++) {
@@ -253,16 +253,17 @@ describe('listNotifications + markRead', () => {
       });
     }
 
-    const page1 = await service.listNotifications(TEST_USER_ID, { limit: 2 });
+    const page1 = await service.listNotifications(TEST_USER_ID, { page: 1, pageSize: 2 });
     expect(page1.data).toHaveLength(2);
-    expect(page1.nextCursor).not.toBeNull();
+    expect(page1.meta).toMatchObject({ page: 1, pageSize: 2, total: 3, totalPages: 2 });
 
-    const page2 = await service.listNotifications(TEST_USER_ID, {
-      limit: 2,
-      cursor: page1.nextCursor!,
-    });
+    const page2 = await service.listNotifications(TEST_USER_ID, { page: 2, pageSize: 2 });
     expect(page2.data).toHaveLength(1);
-    expect(page2.nextCursor).toBeNull();
+    expect(page2.meta).toMatchObject({ page: 2, total: 3, totalPages: 2 });
+
+    // Pages must not overlap — the ordering is a total order (createdAt, id).
+    const ids = new Set([...page1.data, ...page2.data].map((n) => n.id));
+    expect(ids.size).toBe(3);
   });
 
   it('listNotifications filters unread', async () => {

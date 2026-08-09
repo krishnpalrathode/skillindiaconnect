@@ -1,5 +1,5 @@
 /* ────────────────────────────────────────────────────────────────────────────
-   SkillIndiaConnect — Design Tokens
+   Skill India Connect — Design Tokens
    All values are defined here; consumed by globals.css and tailwind.config.ts.
    Light-only (dark = S6). RGB triplets on role tokens enable Tailwind opacity
    modifiers (e.g. bg-ring/50). Hex values on brand ramps are solid-only.

@@ -57,7 +57,7 @@ export function parseCandidateFilters(params: RawSearchParams): CandidateBrowseF
  */
 export function buildCandidateQuery(
   filters: CandidateBrowseFilters,
-  extra?: { cursor?: string | null; limit?: number },
+  extra?: { page?: number | null; pageSize?: number },
 ): string {
   const params = new URLSearchParams();
   if (filters.category) params.set('category', filters.category);
@@ -66,8 +66,9 @@ export function buildCandidateQuery(
   if (filters.foreignOnly) params.set('hasForeignExperience', 'true');
   if (filters.availableOnly) params.set('availability', 'true');
   if (filters.q) params.set('q', filters.q);
-  if (extra?.cursor) params.set('cursor', extra.cursor);
-  if (extra?.limit) params.set('limit', String(extra.limit));
+  // page=1 is the default — omitted so shared URLs stay clean.
+  if (extra?.page != null && extra.page > 1) params.set('page', String(extra.page));
+  if (extra?.pageSize) params.set('pageSize', String(extra.pageSize));
   return params.toString();
 }
 

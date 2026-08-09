@@ -5,7 +5,7 @@ roughly a day and the worker began failing with
 `ERR max requests limit exceeded. Limit: 500000`.
 
 The cause was not traffic. The platform was **idle**. This document records what
-an idle SkillIndiaConnect actually costs, because that number is not intuitive
+an idle Skill India Connect actually costs, because that number is not intuitive
 and nothing in the code made it visible.
 
 ## The budget

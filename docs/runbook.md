@@ -1,4 +1,4 @@
-# SkillIndiaConnect — Operations Runbook
+# Skill India Connect — Operations Runbook
 
 **Audience: whoever is on call, at 3am, who did not write this system.**
 

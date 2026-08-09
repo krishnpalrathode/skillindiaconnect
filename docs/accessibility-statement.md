@@ -1,4 +1,4 @@
-# Accessibility Statement — SkillIndiaConnect
+# Accessibility Statement — Skill India Connect
 
 **Last reviewed:** 2026-07-19 (Sprint 8 hardening, unit S8-H4)
 **Standard:** Web Content Accessibility Guidelines (WCAG) 2.1, Level AA
@@ -7,7 +7,7 @@
 
 ## Our commitment
 
-SkillIndiaConnect connects skilled workers in India with employers in the Gulf
+Skill India Connect connects skilled workers in India with employers in the Gulf
 and locally. Many of the people who depend on it are using inexpensive Android
 phones, roughly half navigate in Arabic, and some rely on screen readers or on
 clear visual hierarchy because they read with difficulty.

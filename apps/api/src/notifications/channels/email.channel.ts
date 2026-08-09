@@ -122,7 +122,7 @@ function humanizeType(type: string): string {
 }
 
 function defaultBody(type: string): string {
-  return `You have a new ${humanizeType(type).toLowerCase()} notification from SkillIndiaConnect.`;
+  return `You have a new ${humanizeType(type).toLowerCase()} notification from Skill India Connect.`;
 }
 
 function escapeHtml(s: string): string {

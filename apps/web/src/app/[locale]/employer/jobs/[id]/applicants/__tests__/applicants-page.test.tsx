@@ -67,7 +67,7 @@ describe('Applicants pipeline — optimistic + 422 rollback', () => {
         const status = getCount === 1 ? 'PENDING' : 'SELECTED';
         return HttpResponse.json({
           data: [applicantCard({ status })],
-          nextCursor: null,
+          meta: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
           counts: getCount === 1 ? COUNTS : { ...COUNTS, pending: 0, selected: 1 },
         });
       }),
@@ -110,7 +110,7 @@ describe('Applicants pipeline — optimistic + 422 rollback', () => {
         const status = getCount === 1 ? 'PENDING' : 'SHORTLISTED';
         return HttpResponse.json({
           data: [applicantCard({ status })],
-          nextCursor: null,
+          meta: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
           counts: getCount === 1 ? COUNTS : { ...COUNTS, pending: 0, shortlisted: 1 },
         });
       }),

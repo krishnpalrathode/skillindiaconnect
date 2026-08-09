@@ -133,7 +133,7 @@ function dumpError(err) {
     const info = await transporter.sendMail({
       from,
       to: recipient,
-      subject: 'SkillIndiaConnect — Titan SMTP test ✔',
+      subject: 'Skill India Connect — Titan SMTP test ✔',
       text: `This is a plain-text test email sent directly via Nodemailer + Titan SMTP at ${new Date().toISOString()}.`,
       html: `<p>This is a <strong>test email</strong> sent directly via Nodemailer + Titan SMTP.</p><p>Sent at ${new Date().toISOString()}.</p>`,
     });
