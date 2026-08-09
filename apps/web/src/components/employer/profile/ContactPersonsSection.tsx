@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/toast';
 import { createContact, updateContact, deleteContact } from '@/lib/api/employer-profile';
 import type { components } from '@skillindiaconnect/shared-types';
 
@@ -185,6 +186,8 @@ function ContactForm({ mode, draft, onChange, onSave, onCancel, saving, error }:
  */
 export function ContactPersonsSection({ contacts, onUpdated }: ContactPersonsSectionProps) {
   const t = useTranslations('employer.profile.contacts');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
 
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [draft, setDraft] = useState<ContactFormDraft>(emptyDraft());
@@ -235,6 +238,7 @@ export function ContactPersonsSection({ contacts, onUpdated }: ContactPersonsSec
       // Refetch contacts: parent re-fetches full profile
       onUpdated([]);
       closeForm();
+      showToast({ message: tToast('contactSaved') });
     } catch {
       setError(t('saveError'));
     } finally {
@@ -247,6 +251,7 @@ export function ContactPersonsSection({ contacts, onUpdated }: ContactPersonsSec
     try {
       await deleteContact(id);
       onUpdated([]);
+      showToast({ message: tToast('contactDeleted') });
     } catch {
       // Silently fail; user can retry
     } finally {

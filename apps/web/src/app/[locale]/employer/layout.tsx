@@ -6,7 +6,7 @@ import { EmployerProvider, useEmployer } from '@/lib/employer/employer-context';
 import { EmployerSidebar } from '@/components/employer/EmployerSidebar';
 import { EmployerHeader } from '@/components/employer/EmployerHeader';
 import { CompanyStateBanner } from '@/components/employer/CompanyStateBanner';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { Button } from '@/components/ui/button';
 
 function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -44,7 +44,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return (
       <div className="flex min-h-svh items-center justify-center bg-neutral-50">
-        <Spinner size={32} label="Loading company…" />
+        <BrandLoader size="lg" label="Loading company…" />
       </div>
     );
   }

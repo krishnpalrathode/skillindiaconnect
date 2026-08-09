@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, UserX, AlertCircle } from 'lucide-react';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { Button } from '@/components/ui/button';
 import { useEmployer } from '@/lib/employer/employer-context';
 import { getCandidate, type CandidateEmployerView } from '@/lib/api/employer-candidates';
@@ -100,7 +100,7 @@ export default function CandidateViewPage() {
   if (phase.kind === 'loading') {
     return (
       <div className="flex items-center justify-center py-24">
-        <Spinner size={28} label={t('view.loading')} />
+        <BrandLoader size="md" label={t('view.loading')} />
       </div>
     );
   }

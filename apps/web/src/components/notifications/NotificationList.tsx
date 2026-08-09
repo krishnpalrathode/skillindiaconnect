@@ -11,6 +11,7 @@ import {
   type NotificationsApi,
   type NotificationListParams,
 } from '@/lib/api/notifications';
+import { useToast } from '@/components/ui/toast';
 import { NotificationFilters } from './NotificationFilters';
 import { NotificationItem } from './NotificationItem';
 import { NotificationEmptyState } from './NotificationEmptyState';
@@ -51,6 +52,8 @@ function groupByDate(
 
 export function NotificationList({ api = candidateNotificationsApi }: NotificationListProps = {}) {
   const t = useTranslations('notifications');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
   const params = useParams<{ locale: string }>();
   const locale = params?.locale ?? 'en';
   const now = React.useMemo(() => new Date(), []);
@@ -115,6 +118,7 @@ export function NotificationList({ api = candidateNotificationsApi }: Notificati
     );
     try {
       await api.markAllNotificationsRead();
+      showToast({ message: tToast('allNotificationsRead') });
     } catch {
       setNotifications(prevState);
     }

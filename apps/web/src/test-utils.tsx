@@ -6,12 +6,20 @@ import { render, type RenderOptions, type RenderResult } from '@testing-library/
 //kp code end
 import { NextIntlClientProvider } from 'next-intl';
 import { AuthProvider } from './lib/auth/auth-context';
+import { ToastProvider } from './components/ui/toast';
 import enMessages from './i18n/messages/en.json';
 
+// ToastProvider sits here because success toasts are now fired from shared
+// pieces (EditableSection, FileUpload, ApplySheet…), so almost any component
+// under test can reach for useToast. It needs nothing but the intl messages
+// already above it — unlike LogoutConfirmProvider, which requires a mocked
+// next/navigation and therefore stays opt-in per suite.
 function AllProviders({ children }: { children: React.ReactNode }) {
   return (
     <NextIntlClientProvider locale="en" messages={enMessages}>
-      <AuthProvider>{children}</AuthProvider>
+      <AuthProvider>
+        <ToastProvider>{children}</ToastProvider>
+      </AuthProvider>
     </NextIntlClientProvider>
   );
 }

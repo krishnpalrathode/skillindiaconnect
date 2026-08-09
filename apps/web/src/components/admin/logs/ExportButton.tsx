@@ -8,6 +8,7 @@ import { ApiRequestError } from '@/lib/api/client';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useToast } from '@/components/ui/toast';
 
 /**
  * Bulk extraction of the audit trail — the riskiest button on Screen 29, so it
@@ -33,6 +34,8 @@ export function ExportButton({
   approximateCount: number;
 }) {
   const t = useTranslations('admin.logs.export');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
   const [busy, setBusy] = useState(false);
   const [tooLarge, setTooLarge] = useState<{ maxRows?: number; maxRangeDays?: number } | null>(
     null,
@@ -53,6 +56,7 @@ export function ExportButton({
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+      showToast({ message: tToast('exportStarted') });
     } catch (err) {
       if (err instanceof ApiRequestError && err.error.code === 'EXPORT_TOO_LARGE') {
         setTooLarge({

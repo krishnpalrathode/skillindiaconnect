@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Search, PlusCircle, Briefcase } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { Badge } from '@/components/ui/badge';
 import { JobStatusBadge } from './JobStatusBadge';
 import { JobRowActions } from './JobRowActions';
@@ -141,7 +141,7 @@ export function MyJobsTable() {
       {/* Loading */}
       {isLoading && (
         <div className="flex items-center justify-center py-16" aria-live="polite" aria-busy="true">
-          <Spinner size={28} label={t('loading')} />
+          <BrandLoader size="md" label={t('loading')} />
         </div>
       )}
 

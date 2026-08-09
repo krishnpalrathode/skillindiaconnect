@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { Button } from '@/components/ui/button';
 import { JobForm } from '@/components/employer/jobform/JobForm';
 import { JobLivePreview } from '@/components/employer/jobform/JobLivePreview';
@@ -40,7 +40,7 @@ export default function EditJobPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Spinner size={28} label={t('editPage.loading')} />
+        <BrandLoader size="md" label={t('editPage.loading')} />
       </div>
     );
   }

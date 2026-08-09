@@ -8,6 +8,7 @@ import { ArrowLeft, AlertCircle, Users } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useToast } from '@/components/ui/toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEmployer } from '@/lib/employer/employer-context';
 import { ApiRequestError } from '@/lib/api/client';
@@ -37,6 +38,8 @@ const COUNT_KEY: Record<ApplicationStatus, keyof ApplicantCounts> = {
 
 export default function ApplicantsPage() {
   const t = useTranslations('applicants');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
   const { company, isLoading } = useEmployer();
   const params = useParams<{ locale: string; id: string }>();
   const locale = params?.locale ?? 'en';
@@ -53,7 +56,6 @@ export default function ApplicantsPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ApplicantCardT | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
 
   const approved = !!company && company.status === 'APPROVED';
 
@@ -96,12 +98,6 @@ export default function ApplicantsPage() {
     if (!approved) return;
     void load();
   }, [approved, load]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const h = setTimeout(() => setToast(null), 4000);
-    return () => clearTimeout(h);
-  }, [toast]);
 
   const loadMore = useCallback(async () => {
     if (!cursor) return;
@@ -157,22 +153,23 @@ export default function ApplicantsPage() {
         });
         // Reconcile from server truth (filter membership, counts, selectedNotifiedAt).
         await load();
+        showToast({ message: tToast('applicantStatusUpdated') });
       } catch (err) {
         // Roll back the optimistic lie.
         setItems(snapItems);
         setCounts(snapCounts);
         setDetail((d) => (d && d.applicationId === applicationId ? { ...d, status: from } : d));
         if (err instanceof ApiRequestError && err.error.code === 'ILLEGAL_TRANSITION') {
-          setToast(t('toast.staleRefresh'));
+          showToast({ message: t('toast.staleRefresh'), variant: 'warning' });
           await load(); // a concurrent (admin) move happened — show the real state
         } else {
-          setToast(t('toast.error'));
+          showToast({ message: t('toast.error'), variant: 'error' });
         }
       } finally {
         setBusyId(null);
       }
     },
-    [items, counts, load, t],
+    [items, counts, load, t, tToast, showToast],
   );
 
   // Re-sync the open detail with the reconciled list.
@@ -287,15 +284,6 @@ export default function ApplicantsPage() {
           onClose={() => setDetail(null)}
         />
       )}
-
-      {/* Reconciliation toast (aria-live). */}
-      <div aria-live="polite" className="fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
-        {toast && (
-          <div className="rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white shadow-lg">
-            {toast}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

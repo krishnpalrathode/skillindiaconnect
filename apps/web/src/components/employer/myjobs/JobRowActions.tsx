@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useToast } from '@/components/ui/toast';
 import { PublishErrorHandler } from '@/components/employer/jobform/PublishErrorHandler';
 import {
   pauseJob,
@@ -32,8 +33,24 @@ interface JobRowActionsProps {
   onJobCreated?: (created: Job) => void;
 }
 
+/**
+ * Every lifecycle action reuses one `run()`, so the confirmation copy is keyed
+ * off the same label that drives the busy spinner — there is no way to add an
+ * action here and forget to confirm it.
+ */
+const RESULT_TOAST = {
+  publish: 'jobPublished',
+  pause: 'jobPaused',
+  resume: 'jobResumed',
+  archive: 'jobClosed',
+} as const;
+
+type ActionLabel = keyof typeof RESULT_TOAST;
+
 export function JobRowActions({ job, onJobUpdated, onJobCreated }: JobRowActionsProps) {
   const t = useTranslations('myjobs.actions');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
   const params = useParams<{ locale: string }>();
   const locale = params?.locale ?? 'en';
   const router = useRouter();
@@ -43,12 +60,13 @@ export function JobRowActions({ job, onJobUpdated, onJobCreated }: JobRowActions
     null,
   );
 
-  const run = async (label: string, fn: () => Promise<Job | void>) => {
+  const run = async (label: ActionLabel, fn: () => Promise<Job | void>) => {
     setLoading(label);
     setPublishError(null);
     try {
       const result = await fn();
       if (result) onJobUpdated(result);
+      showToast({ message: tToast(RESULT_TOAST[label]) });
     } catch (err) {
       if (label === 'publish' && err instanceof ApiRequestError) {
         setPublishError(err.error);
@@ -64,6 +82,7 @@ export function JobRowActions({ job, onJobUpdated, onJobCreated }: JobRowActions
     try {
       const copy = await duplicateJob(job.id);
       onJobCreated?.(copy);
+      showToast({ message: tToast('jobDuplicated') });
     } finally {
       setLoading(null);
     }

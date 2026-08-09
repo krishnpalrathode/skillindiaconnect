@@ -4,6 +4,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 
 interface EditableSectionProps {
@@ -11,7 +12,15 @@ interface EditableSectionProps {
   isEditing: boolean;
   onEdit: () => void;
   onCancel: () => void;
-  onSave: () => Promise<void>;
+  /**
+   * Persists the section.
+   *
+   * Resolving is what triggers the "Changes saved" toast, so a handler that
+   * CATCHES its own failure and renders an inline message must return `false`
+   * — otherwise a failed save would announce success. Handlers that let the
+   * error propagate need no return value; the throw is the failure signal.
+   */
+  onSave: () => Promise<void | boolean>;
   saving?: boolean;
   children: React.ReactNode;
   form: React.ReactNode;
@@ -37,9 +46,24 @@ export function EditableSection({
   editLabel,
 }: EditableSectionProps) {
   const t = useTranslations('common');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
 
   const handleSave = async () => {
-    await onSave();
+    let result: void | boolean;
+    try {
+      result = await onSave();
+    } catch {
+      // The save threw. Sections that own an inline error surface already
+      // returned `false` instead of throwing, so reaching here means nothing
+      // else is going to tell the user — which is exactly the silent failure
+      // this toast exists to close.
+      showToast({ message: tToast('saveFailed'), variant: 'error' });
+      return;
+    }
+    // `false` = the handler failed and is showing its own message.
+    if (result === false) return;
+    showToast({ message: tToast('saved') });
   };
 
   return (

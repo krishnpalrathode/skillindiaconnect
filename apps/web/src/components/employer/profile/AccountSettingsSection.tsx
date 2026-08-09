@@ -58,6 +58,9 @@ export function AccountSettingsSection({ company, onUpdated }: AccountSettingsSe
       setIsEditing(false);
     } catch {
       setError(t('saveError'));
+      // `false` tells EditableSection the save failed, so it stays quiet and
+      // the inline message above is the only thing the user sees.
+      return false;
     } finally {
       setSaving(false);
     }

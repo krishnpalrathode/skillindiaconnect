@@ -6,7 +6,7 @@ import { AdminRouteGuard } from '@/components/admin/AdminRouteGuard';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminProvider, useAdmin } from '@/lib/admin/admin-context';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { Button } from '@/components/ui/button';
 
 /**
@@ -31,7 +31,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return (
       <div className="flex min-h-svh items-center justify-center bg-neutral-50">
-        <Spinner size={32} label={t('loading')} />
+        <BrandLoader size="lg" label={t('loading')} />
       </div>
     );
   }

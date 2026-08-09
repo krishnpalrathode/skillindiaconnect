@@ -5,7 +5,8 @@ import { useTranslations } from 'next-intl';
 import { X } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
+import { useToast } from '@/components/ui/toast';
 import { applyToJob } from '@/lib/api/apply';
 import { getCandidateCompletion } from '@/lib/api/candidate';
 import { ApiRequestError, type ApiError } from '@/lib/api/client';
@@ -42,6 +43,8 @@ const SUBMIT_TIMEOUT_MS = 20_000;
 
 export function ApplySheet({ job, locale, completion, onClose, onApplied }: ApplySheetProps) {
   const t = useTranslations('apply');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
   const [comp, setComp] = useState<CompletionResult>(completion);
   const [phase, setPhase] = useState<Phase>(completion.canApply ? 'form' : 'preview');
   const [coverLetter, setCoverLetter] = useState('');
@@ -119,6 +122,10 @@ export function ApplySheet({ job, locale, completion, onClose, onApplied }: Appl
       setApplication(app);
       setPhase('success');
       onApplied();
+      // The reveal card below already celebrates this, but the sheet is
+      // dismissible — the toast is what survives the close and confirms the
+      // application landed.
+      showToast({ message: tToast('applicationSubmitted') });
     } catch (err) {
       if (err instanceof ApiRequestError) {
         setError(err.error);
@@ -130,7 +137,7 @@ export function ApplySheet({ job, locale, completion, onClose, onApplied }: Appl
       }
       setPhase('error');
     }
-  }, [job.id, coverLetter, onApplied]);
+  }, [job.id, coverLetter, onApplied, showToast, tToast]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
@@ -183,7 +190,10 @@ export function ApplySheet({ job, locale, completion, onClose, onApplied }: Appl
 
         {phase === 'submitting' && (
           <div className="flex flex-col items-center gap-3 py-10" aria-live="polite">
-            <Spinner />
+            {/* label="" — the visible copy below already sits inside this
+                aria-live region, so the loader's own status text would make a
+                screen reader say "submitting" twice. */}
+            <BrandLoader size="md" label="" />
             <p className="text-sm text-neutral-600">{t('submitting')}</p>
           </div>
         )}

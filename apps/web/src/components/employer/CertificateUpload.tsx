@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
+import { useToast } from '@/components/ui/toast';
 import { useEmployerCertUpload } from '@/lib/employer/useEmployerCertUpload';
 
 interface CertificateUploadProps {
@@ -37,6 +38,8 @@ export function CertificateUpload({
 }: CertificateUploadProps) {
   const t = useTranslations('employer.onboarding');
   const tUpload = useTranslations('onboarding.upload');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const { state, run, retry, reset } = useEmployerCertUpload({ confirmEnabled });
@@ -51,9 +54,16 @@ export function CertificateUpload({
     await run(file);
   };
 
+  // next-intl returns a new `t` each render, so the toast helpers go through a
+  // ref — putting them in the dependency list would re-announce the upload on
+  // every parent re-render.
+  const toastRef = useRef({ showToast, tToast });
+  toastRef.current = { showToast, tToast };
+
   React.useEffect(() => {
     if (state.status === 'done' && state.key) {
       onKey(state.key);
+      toastRef.current.showToast({ message: toastRef.current.tToast('documentUploaded') });
     }
   }, [state.status, state.key, onKey]);
 

@@ -7,6 +7,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useToast } from '@/components/ui/toast';
 import { BenefitsSection } from './BenefitsSection';
 import { CompensationSection } from './CompensationSection';
 import { WorkConditionsSection } from './WorkConditionsSection';
@@ -41,6 +42,8 @@ interface JobFormProps {
 
 export function JobForm({ job, onValuesChange }: JobFormProps) {
   const t = useTranslations('jobform');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
   const router = useRouter();
   const params = useParams<{ locale: string }>();
   const locale = params?.locale ?? 'en';
@@ -95,6 +98,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
     setPublishError(null);
     try {
       const payload = formToPayload(values);
+      const isUpdate = Boolean(savedJobId);
       let saved: Job;
       if (savedJobId) {
         saved = await updateJob(savedJobId, payload);
@@ -104,6 +108,9 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
       }
       setDraftStatus('saved');
       setTimeout(() => setDraftStatus('idle'), 3000);
+      // 'created' vs 'updated' comes from whether the draft already had an id
+      // BEFORE this save — savedJobId is set above for the create path.
+      showToast({ message: tToast(isUpdate ? 'jobUpdated' : 'jobCreated') });
       return saved;
     } catch {
       setDraftStatus('error');

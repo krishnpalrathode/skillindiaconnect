@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLogoutConfirm } from '@/lib/auth/logout-confirm';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { cn } from '@/lib/utils';
 
 interface NavItemProps {
@@ -112,7 +112,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (isLoading || !user) {
     return (
       <div className="flex min-h-svh items-center justify-center bg-neutral-50">
-        <Spinner size={32} label="Loading…" />
+        <BrandLoader size="lg" label="Loading…" />
       </div>
     );
   }

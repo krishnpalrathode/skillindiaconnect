@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter, useParams } from 'next/navigation';
 import { useEmployer } from '@/lib/employer/employer-context';
 import { getEmployerProfile } from '@/lib/api/employer-profile';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { Button } from '@/components/ui/button';
 import { EmployerProfileHero } from '@/components/employer/profile/EmployerProfileHero';
 import { CompanyInfoSection } from '@/components/employer/profile/CompanyInfoSection';
@@ -86,7 +86,7 @@ export default function EmployerProfilePage() {
   if (companyLoading || loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Spinner size={28} label={t('loadingProfile')} />
+        <BrandLoader size="md" label={t('loadingProfile')} />
       </div>
     );
   }

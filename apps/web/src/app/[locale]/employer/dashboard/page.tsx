@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { useEmployer } from '@/lib/employer/employer-context';
 import { getDashboard } from '@/lib/api/employer';
 import { ApiRequestError } from '@/lib/api/client';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { Button } from '@/components/ui/button';
 import { EmployerKpis } from '@/components/employer/dashboard/EmployerKpis';
 import { RecentJobsTable } from '@/components/employer/dashboard/RecentJobsTable';
@@ -114,7 +114,7 @@ export default function EmployerDashboardPage() {
   if (companyLoading || loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Spinner size={28} label={t('loading')} />
+        <BrandLoader size="md" label={t('loading')} />
       </div>
     );
   }

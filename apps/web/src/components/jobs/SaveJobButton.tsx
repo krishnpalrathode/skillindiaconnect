@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
 import { Bookmark, BookmarkCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/lib/auth/auth-context';
 import { saveJob, unsaveJob } from '@/lib/api/jobs';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,8 @@ export function SaveJobButton({
   className,
 }: SaveJobButtonProps) {
   const t = useTranslations('jobs.card');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
   const { user } = useAuth();
   const router = useRouter();
   const params = useParams<{ locale: string }>();
@@ -53,6 +56,9 @@ export function SaveJobButton({
       } else {
         await unsaveJob(jobId);
       }
+      // Fired after the request, not alongside the optimistic flip — the
+      // filled bookmark can be rolled back below, the confirmation cannot.
+      showToast({ message: tToast(next ? 'jobSaved' : 'jobUnsaved') });
     } catch {
       setSaved(!next);
     } finally {

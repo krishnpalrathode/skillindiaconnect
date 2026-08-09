@@ -4,7 +4,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import { CheckCircle2, XCircle, Clock, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 
 export type GenerationPhase = 'generating' | 'ready' | 'failed' | 'timeout';
 
@@ -46,7 +46,7 @@ export function GenerationStatus({
     >
       {phase === 'generating' && (
         <>
-          <Spinner size={28} label={t('generatingTitle')} />
+          <BrandLoader size="md" label={t('generatingTitle')} />
           <div>
             <p className="text-sm font-semibold text-neutral-900">{t('generatingTitle')}</p>
             <p className="mt-1 text-xs text-neutral-600">{t('generatingBody')}</p>

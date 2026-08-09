@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 import { openRazorpayCheckout } from '@/lib/billing/razorpay';
 
 type CheckoutSession = components['schemas']['CheckoutSession'];
@@ -110,7 +110,7 @@ export function CheckoutLauncher({
 
   return (
     <div className="flex flex-col items-center gap-3 rounded-lg border border-neutral-200 bg-white p-8 text-center">
-      <Spinner size={28} label={t('launchingTitle')} />
+      <BrandLoader size="md" label={t('launchingTitle')} />
       <p className="text-sm text-neutral-600">
         {session.gateway === 'STRIPE' ? t('redirectingStripe') : t('launchingRazorpay')}
       </p>

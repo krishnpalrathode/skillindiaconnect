@@ -198,6 +198,22 @@ const config: Config = {
           to: { transform: 'scale(1.04)' },
         },
 
+        /* Branded loader. Three layered motions, all slow and low-amplitude:
+           the mark breathes, a ring sweeps behind it, and the ground shadow
+           tightens as the mark rises — that shadow link is what reads as depth
+           rather than a sticker sliding around. */
+        'brand-float': {
+          '0%, 100%': { transform: 'translate3d(0, 0, 0) scale(1)' },
+          '50%': { transform: 'translate3d(0, -6px, 0) scale(1.015)' },
+        },
+        'brand-sweep': {
+          to: { transform: 'rotate(360deg)' },
+        },
+        'brand-shadow': {
+          '0%, 100%': { transform: 'scaleX(1)', opacity: '0.28' },
+          '50%': { transform: 'scaleX(0.82)', opacity: '0.16' },
+        },
+
         /* Toast: slides in from the inline-end edge. Uses a logical custom
            property so RTL enters from the opposite side (set in globals.css). */
         'toast-in': {
@@ -228,6 +244,11 @@ const config: Config = {
 
         /* Runs across the full 5s dwell + the 700ms crossfade into the next. */
         'hero-kenburns': 'hero-kenburns 5700ms ease-out both',
+
+        /* Shared 2.8s period keeps the float and its shadow in lockstep. */
+        'brand-float': 'brand-float 2800ms ease-in-out infinite',
+        'brand-shadow': 'brand-shadow 2800ms ease-in-out infinite',
+        'brand-sweep': 'brand-sweep 2400ms linear infinite',
 
         'toast-in': 'toast-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both',
         /* Duration is set inline per toast so the bar matches its real lifetime. */

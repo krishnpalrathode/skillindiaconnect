@@ -135,3 +135,15 @@
     animation-duration: var(--toast-duration) !important;
   }
 }
+
+/* Branded loader under prefers-reduced-motion.
+   The global rule further up collapses every duration to 0.01ms, which would
+   freeze the float mid-rise and leave the mark visibly off-centre. Removing the
+   animations instead returns each layer to its composed resting state — the
+   role="status" label still tells the user work is in progress. */
+@media (prefers-reduced-motion: reduce) {
+  .brand-loader-anim {
+    animation: none !important;
+    transform: none !important;
+  }
+}

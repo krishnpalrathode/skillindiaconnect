@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
+import { useToast } from '@/components/ui/toast';
 import { useUpload } from './useUpload';
 import type { PresignRequest } from '@/lib/api/candidate';
 
@@ -45,6 +46,8 @@ export function FileUpload({
   className,
 }: FileUploadProps) {
   const t = useTranslations('onboarding.upload');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const { state, run, retry, reset } = useUpload(docType, expiryDate);
@@ -52,8 +55,15 @@ export function FileUpload({
   // Read the latest onDone from a ref so the transition effect below doesn't
   // re-fire just because the parent passed a new callback identity on re-render.
   const onDoneRef = useRef(onDone);
+  // Same reason for the toast helpers: next-intl hands back a fresh `t` on
+  // every render, so reading them directly would put an unstable value in the
+  // effect's dependency list.
+  const showToastRef = useRef(showToast);
+  const tToastRef = useRef(tToast);
   React.useEffect(() => {
     onDoneRef.current = onDone;
+    showToastRef.current = showToast;
+    tToastRef.current = tToast;
   });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,10 +80,14 @@ export function FileUpload({
     await run(file);
   };
 
-  // Call onDone when status transitions to done
+  // Call onDone when status transitions to done. The confirm round-trip has
+  // already returned by this point, so the toast here only ever follows a
+  // document the server actually accepted — the inline tick alone was easy to
+  // miss on a long documents page where the widget can sit below the fold.
   React.useEffect(() => {
     if (state.status === 'done' && state.document) {
       onDoneRef.current?.(state.document.key);
+      showToastRef.current({ message: tToastRef.current('documentUploaded') });
     }
   }, [state.status, state.document]);
 

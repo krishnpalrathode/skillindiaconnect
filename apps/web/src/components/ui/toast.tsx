@@ -58,7 +58,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       // Date.now() collides when two toasts fire in the same millisecond, which
       // React then renders with duplicate keys. A counter cannot collide.
       const id = nextId++;
-      setToasts((prev) => [...prev, { id, message, variant, durationMs }]);
+      setToasts((prev) => {
+        // Collapse a repeat of a message that is still on screen. Toggling a
+        // row of settings switches, or double-tapping Save, otherwise builds a
+        // tower of identical "Changes saved" cards that buries the viewport and
+        // makes a screen reader read the same sentence four times. The newest
+        // instance replaces the old one, so its countdown restarts.
+        const withoutDuplicate = prev.filter((t) => t.message !== message);
+        return [...withoutDuplicate, { id, message, variant, durationMs }];
+      });
       window.setTimeout(() => dismiss(id), durationMs);
     },
     [dismiss],
@@ -76,6 +84,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
 let nextId = 1;
 
+/**
+ * Two live regions, both mounted for the whole session even when empty.
+ *
+ * That is deliberate on two counts. A live region has to EXIST before content
+ * lands in it — a region created in the same tick as its first message is
+ * unreliably announced — and keeping the announcement on the container rather
+ * than on each card means the cards themselves carry no landmark role. Pages
+ * here already use `role="status"` for their own inline banners, and a toast
+ * that claimed the same role turned `getByRole('status')` into a coin flip
+ * between the banner and whatever happened to be on screen.
+ *
+ * Errors go in the assertive region (they interrupt); everything else waits
+ * for a pause in speech.
+ */
 function ToastViewport({
   toasts,
   onDismiss,
@@ -83,16 +105,24 @@ function ToastViewport({
   toasts: ToastRecord[];
   onDismiss: (id: number) => void;
 }) {
-  if (toasts.length === 0) return null;
+  const assertive = toasts.filter((t) => t.variant === 'error');
+  const polite = toasts.filter((t) => t.variant !== 'error');
 
   return (
     <div
       // Fixed to the inline-end edge so it mirrors under dir="rtl".
       className="pointer-events-none fixed end-4 top-4 z-50 flex w-[calc(100%-2rem)] max-w-sm flex-col gap-3"
     >
-      {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
-      ))}
+      <div aria-live="assertive" aria-atomic="false" className="flex flex-col gap-3 empty:hidden">
+        {assertive.map((toast) => (
+          <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
+        ))}
+      </div>
+      <div aria-live="polite" aria-atomic="false" className="flex flex-col gap-3 empty:hidden">
+        {polite.map((toast) => (
+          <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -103,9 +133,8 @@ function ToastItem({ toast, onDismiss }: { toast: ToastRecord; onDismiss: (id: n
 
   return (
     <div
-      // Errors interrupt; everything else waits for a pause in speech.
-      role={toast.variant === 'error' ? 'alert' : 'status'}
-      aria-live={toast.variant === 'error' ? 'assertive' : 'polite'}
+      // No role/aria-live here — the enclosing region in ToastViewport owns the
+      // announcement. See the note there for why.
       style={{ '--toast-duration': `${toast.durationMs}ms` } as React.CSSProperties}
       className="toast-item pointer-events-auto animate-toast-in overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-lg"
     >

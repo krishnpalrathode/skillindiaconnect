@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Construction } from 'lucide-react';
 import { apiFetchRaw, ApiRequestError } from '@/lib/api/client';
 import { ForbiddenState } from './ForbiddenState';
-import { Spinner } from '@/components/ui/spinner';
+import { BrandLoader } from '@/components/ui/brand-loader';
 
 /**
  * A not-yet-built screen — but NOT an inert one.
@@ -65,7 +65,7 @@ export function AdminPlaceholder({
   if (state === 'loading') {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <Spinner size={28} label={t('loading')} />
+        <BrandLoader size="md" label={t('loading')} />
       </div>
     );
   }

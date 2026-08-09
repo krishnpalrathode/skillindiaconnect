@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Download } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/toast';
 import { ApiRequestError } from '@/lib/api/client';
 import { generateResume, getResumeStatus, getResumeDownloadUrl } from '@/lib/api/resume';
 import { GenerationStatus, type GenerationPhase } from './GenerationStatus';
@@ -31,6 +32,20 @@ interface DownloadResumeButtonProps {
    * download fired ONLY after READY — never while PENDING.
    */
   download?: (url: string) => void;
+  /**
+   * Whether the ready-state Regenerate button renders HERE. The resume hub sets
+   * this false and renders it below "Choose a template" instead, so the flow
+   * reads pick-a-template → regenerate. Defaults true so any other mount keeps
+   * its existing layout.
+   */
+  showRegenerate?: boolean;
+  /**
+   * Publishes the regenerate action (or null when not regenerable yet) so a host
+   * can place the button elsewhere. Deliberately shares the SAME handler rather
+   * than letting the host call generate itself — one generation code path, one
+   * set of poll/backoff/duplicate-click guards.
+   */
+  onRegenerateChange?: (regenerate: (() => void) | null) => void;
 }
 
 const DEFAULT_SCHEDULE = [1500, 1500, 2000, 3000, 4000, 6000];
@@ -65,8 +80,12 @@ export function DownloadResumeButton({
   pollSchedule = DEFAULT_SCHEDULE,
   timeoutMs = DEFAULT_TIMEOUT_MS,
   download = defaultDownload,
+  showRegenerate = true,
+  onRegenerateChange,
 }: DownloadResumeButtonProps) {
   const t = useTranslations('resume');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
 
   const initialPhase: Phase =
     initialGeneration?.status === 'READY'
@@ -101,6 +120,10 @@ export function DownloadResumeButton({
         setPhase('ready');
         if (gen.downloadUrl) download(gen.downloadUrl);
         if (gen.generatedAt) onGenerated?.(gen.generatedAt);
+        // Only on the POLLED transition — a resume that was already READY at
+        // mount is not something the user just did, and announcing it on every
+        // page load would be noise.
+        showToast({ message: tToast('resumeReady') });
         return true;
       }
       if (gen.status === 'FAILED') {
@@ -109,7 +132,7 @@ export function DownloadResumeButton({
       }
       return false; // PENDING — keep waiting
     },
-    [download, onGenerated],
+    [download, onGenerated, showToast, tToast],
   );
 
   const scheduleNext = useCallback(
@@ -157,6 +180,17 @@ export function DownloadResumeButton({
       setPhase('failed');
     }
   }, [clearTimer, startPolling]);
+
+  /*
+    Publish the regenerate action while a resume is READY, and withdraw it
+    otherwise, so a host rendering the button elsewhere shows it under exactly
+    the same condition this component would. Cleared on unmount so a stale
+    closure can never trigger a generation from a screen that is gone.
+  */
+  useEffect(() => {
+    onRegenerateChange?.(phase === 'ready' ? () => void startGenerate() : null);
+    return () => onRegenerateChange?.(null);
+  }, [phase, startGenerate, onRegenerateChange]);
 
   // Resume polling if we mounted onto an in-flight (PENDING) generation.
   useEffect(() => {
@@ -209,7 +243,7 @@ export function DownloadResumeButton({
         downloading={downloading}
         onRetry={startGenerate}
       />
-      {phase === 'ready' && (
+      {phase === 'ready' && showRegenerate && (
         <Button type="button" variant="outline" size="md" onClick={startGenerate}>
           {t('regenerate')}
         </Button>
