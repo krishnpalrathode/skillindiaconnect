@@ -773,7 +773,8 @@
         "descriptionLabel": "Company description",
         "descriptionPlaceholder": "Tell candidates about your company and the types of roles you hire for…",
         "notSet": "Not set",
-        "saveError": "Failed to save. Please try again."
+        "saveError": "Failed to save. Please try again.",
+        "addValue": "Add {field}"
       },
       "hiringPrefs": {
         "sectionTitle": "Hiring Preferences",

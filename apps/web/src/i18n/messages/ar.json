@@ -773,7 +773,8 @@
         "descriptionLabel": "وصف الشركة",
         "descriptionPlaceholder": "أخبر المرشحين عن شركتك…",
         "notSet": "غير محدد",
-        "saveError": "فشل الحفظ. يرجى المحاولة مجدداً."
+        "saveError": "فشل الحفظ. يرجى المحاولة مجدداً.",
+        "addValue": "أضف {field}"
       },
       "hiringPrefs": {
         "sectionTitle": "تفضيلات التوظيف",

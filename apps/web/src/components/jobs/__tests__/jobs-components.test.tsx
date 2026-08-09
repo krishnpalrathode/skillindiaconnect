@@ -111,7 +111,10 @@ describe('BenefitChips', () => {
         }}
       />,
     );
-    expect(container.firstChild).toBeNull();
+    // Scoped to the chip list rather than the whole container: the shared test
+    // wrapper mounts ToastProvider, whose live regions stay in the DOM even
+    // when empty, so `firstChild === null` would be asserting on the wrapper.
+    expect(container.querySelector('ul')).toBeNull();
   });
 });
 

@@ -210,7 +210,7 @@ describe('CandidateBrowseCard', () => {
     );
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', '/en/employer/candidates/cand-1');
-    expect(screen.getByText('Gulf experience')).toBeInTheDocument();
+    expect(screen.getByText('International experience')).toBeInTheDocument();
     expect(screen.getByText('Masonry')).toBeInTheDocument();
   });
 
@@ -220,7 +220,7 @@ describe('CandidateBrowseCard', () => {
         <CandidateBrowseCard candidate={card({ hasForeignExperience: false })} />
       </I18n>,
     );
-    expect(screen.queryByText('Gulf experience')).not.toBeInTheDocument();
+    expect(screen.queryByText('International experience')).not.toBeInTheDocument();
   });
 });
 

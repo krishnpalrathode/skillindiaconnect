@@ -312,19 +312,19 @@ describe('ApplyErrorState — meta-driven destinations', () => {
 
 // ── MatchRevealCard — foreign-0-on-LOCAL note ───────────────────────────────
 describe('MatchRevealCard', () => {
-  it('shows the "not scored for local jobs" note when foreign=0 on a LOCAL market', () => {
+  it('shows the "not scored for jobs in india" note when foreign=0 on a LOCAL market', () => {
     const localApp: Application = {
       ...APP,
       matchBreakdown: { ...APP.matchBreakdown, foreignExperience: { score: 0, max: 20 } },
     };
     render(<MatchRevealCard application={localApp} jobMarket="LOCAL" locale="en" />);
-    expect(screen.getByText(/not scored for local jobs/i)).toBeInTheDocument();
+    expect(screen.getByText(/not scored for jobs in india/i)).toBeInTheDocument();
     expect(screen.getByText('0/20')).toBeInTheDocument();
   });
 
   it('no note on a GULF job with foreign score', () => {
     render(<MatchRevealCard application={APP} jobMarket="GULF" locale="en" />);
-    expect(screen.queryByText(/not scored for local jobs/i)).toBeNull();
+    expect(screen.queryByText(/not scored for jobs in india/i)).toBeNull();
   });
 });
 

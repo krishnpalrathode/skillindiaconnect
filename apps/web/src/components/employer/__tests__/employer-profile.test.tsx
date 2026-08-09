@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
+import { ToastProvider } from '../../../components/ui/toast';
 import enMessages from '../../../i18n/messages/en.json';
 import { db, makeAccessToken, EMPLOYER_APPROVED_USER_ID } from '../../../mocks/data';
 import { setAccessToken, resetClient } from '../../../lib/api/client';
@@ -26,7 +27,7 @@ vi.mock('next/navigation', () => ({
 function I18n({ children }: { children: React.ReactNode }) {
   return (
     <NextIntlClientProvider locale="en" messages={enMessages}>
-      {children}
+      <ToastProvider>{children}</ToastProvider>
     </NextIntlClientProvider>
   );
 }
@@ -336,12 +337,16 @@ describe('ChecklistNudge', () => {
   });
 
   it('renders nothing when hint is null', () => {
-    const { container } = render(
+    render(
       <I18n>
         <ChecklistNudge hint={null} />
       </I18n>,
     );
 
-    expect(container.firstChild).toBeNull();
+    // Asserted on the nudge's own landmark rather than an empty container:
+    // ToastProvider deliberately keeps two empty live regions mounted for the
+    // whole session, so the container is never bare and `firstChild === null`
+    // would only be testing that the wrapper renders nothing.
+    expect(screen.queryByRole('note')).toBeNull();
   });
 });

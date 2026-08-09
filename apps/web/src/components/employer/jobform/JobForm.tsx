@@ -61,6 +61,16 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
   );
   const [savedJobId, setSavedJobId] = useState<string | null>(job?.id ?? null);
   const [categories, setCategories] = useState<JobCategory[]>([]);
+  /**
+   * Whether anything has changed since the last successful save.
+   *
+   * Starts false — an untouched form (a blank create, or an edit the user has
+   * only looked at) has nothing to save, and leaving Save enabled invites a
+   * pointless round-trip and a duplicate-looking "saved" toast. Any `patch`
+   * sets it; a successful save clears it. That is the whole re-enable rule:
+   * change something and the button comes back.
+   */
+  const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
     getJobCategories()
@@ -75,6 +85,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
 
   const patch = useCallback(
     (partial: Partial<JobFormValues>) => {
+      setDirty(true);
       setValues((prev) => {
         const next = { ...prev, ...partial } as JobFormValues;
         // When market changes, reset currency to first valid option and the
@@ -112,6 +123,7 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
         setSavedJobId(saved.id);
       }
       setDraftStatus('saved');
+      setDirty(false);
       setTimeout(() => setDraftStatus('idle'), 3000);
       // 'created' vs 'updated' comes from whether the draft already had an id
       // BEFORE this save — savedJobId is set above for the create path.
@@ -400,7 +412,10 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
           type="button"
           variant="outline"
           onClick={handleSaveDraft}
-          disabled={draftStatus === 'saving' || publishStatus === 'saving'}
+          // Nothing to save until something changes again. Publish is NOT
+          // gated this way — publishing an already-saved, unchanged draft is a
+          // legitimate next step, not a re-save.
+          disabled={draftStatus === 'saving' || publishStatus === 'saving' || !dirty}
           className="min-h-[44px] rounded-xl"
         >
           {draftStatus === 'saving' ? (

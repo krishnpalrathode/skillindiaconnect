@@ -96,6 +96,18 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
     Number.isFinite(maxNum) &&
     minNum > maxNum;
 
+  /*
+    Nothing to save until one of the three inputs differs from what the server
+    last returned. Compared against `profile` rather than tracked with a dirty
+    flag because `profile` IS the saved state here — it is replaced by the PATCH
+    response — so typing a value and typing it back correctly re-disables the
+    button, and the re-enable rule needs no bookkeeping of its own.
+  */
+  const salaryDirty =
+    salaryMin !== String(profile.salaryExpectationMin ?? '') ||
+    salaryMax !== String(profile.salaryExpectationMax ?? '') ||
+    currency !== (profile.salaryExpectationCurrency ?? 'INR');
+
   /**
    * `toastKey` names the group the switch belongs to rather than the switch
    * itself. Flipping three privacy switches in a row then reads as one
@@ -261,7 +273,7 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
               variant="secondary"
               size="sm"
               loading={salarySaving}
-              disabled={salaryRangeInvalid}
+              disabled={salaryRangeInvalid || !salaryDirty}
               onClick={saveSalary}
               className="min-h-10 self-start rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] px-5 text-white shadow-sm transition-all hover:shadow-md"
             >

@@ -46,7 +46,11 @@ export function GenerationStatus({
     >
       {phase === 'generating' && (
         <>
-          <BrandLoader size="md" label={t('generatingTitle')} />
+          {/* label="" — the same words are already visible below, inside this
+              aria-live region. BrandLoader renders its label as real sr-only
+              TEXT (the Spinner it replaced used an aria-label attribute), so
+              passing it here duplicates the line for everyone. */}
+          <BrandLoader size="md" label="" />
           <div>
             <p className="text-sm font-semibold text-neutral-900">{t('generatingTitle')}</p>
             <p className="mt-1 text-xs text-neutral-600">{t('generatingBody')}</p>

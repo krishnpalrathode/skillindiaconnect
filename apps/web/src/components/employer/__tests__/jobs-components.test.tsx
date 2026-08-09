@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
+import { ToastProvider } from '../../../components/ui/toast';
 import enMessages from '../../../i18n/messages/en.json';
 import { server } from '../../../mocks/server';
 import { http, HttpResponse } from 'msw';
@@ -37,7 +38,7 @@ vi.mock('next/navigation', () => ({
 function Intl({ children }: { children: React.ReactNode }) {
   return (
     <NextIntlClientProvider locale="en" messages={enMessages}>
-      {children}
+      <ToastProvider>{children}</ToastProvider>
     </NextIntlClientProvider>
   );
 }
@@ -148,7 +149,7 @@ describe('JobLivePreview — live preview updates + market-driven chips', () => 
     expect(screen.getByText('Senior Mason')).toBeInTheDocument();
     expect(screen.getByText('Dubai, UAE')).toBeInTheDocument();
     expect(screen.getByText('Gulf Builders Arabia')).toBeInTheDocument();
-    expect(screen.getByText('Gulf')).toBeInTheDocument();
+    expect(screen.getByText('International')).toBeInTheDocument();
   });
 
   it('shows Gulf benefit chips for GULF market', () => {

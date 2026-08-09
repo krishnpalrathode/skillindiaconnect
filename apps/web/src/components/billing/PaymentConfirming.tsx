@@ -138,7 +138,12 @@ export function PaymentConfirming({
     >
       {phase === 'confirming' && (
         <>
-          <BrandLoader size="lg" label={t('confirmingTitle')} />
+          {/* label="" — the same words are already the visible <h2> inside
+              this aria-live region. BrandLoader renders its label as real
+              sr-only TEXT (the Spinner it replaced used an aria-label
+              attribute), so passing it here would announce and duplicate the
+              heading. */}
+          <BrandLoader size="lg" label="" />
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">{t('confirmingTitle')}</h2>
             <p className="text-sm text-neutral-600 mt-1 max-w-sm">{t('confirmingBody')}</p>

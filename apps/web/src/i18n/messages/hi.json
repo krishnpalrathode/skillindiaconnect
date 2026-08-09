@@ -773,7 +773,8 @@
         "descriptionLabel": "[hi] Company description",
         "descriptionPlaceholder": "[hi] Tell candidates about your company…",
         "notSet": "[hi] Not set",
-        "saveError": "[hi] Failed to save. Please try again."
+        "saveError": "[hi] Failed to save. Please try again.",
+        "addValue": "{field} जोड़ें"
       },
       "hiringPrefs": {
         "sectionTitle": "[hi] Hiring Preferences",
