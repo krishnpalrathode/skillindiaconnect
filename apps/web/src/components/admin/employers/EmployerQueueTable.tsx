@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/format/date';
+import { SortableHeader } from '@/components/ui/sortable-header';
 
 const STATUS_TABS = ['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED', 'ALL'] as const;
 type StatusTab = (typeof STATUS_TABS)[number];
@@ -72,6 +73,8 @@ export function EmployerQueueTable() {
   const search = searchParams.get('search') ?? '';
   const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1);
 
+  const sort = searchParams.get('sort') ?? undefined;
+
   const [rows, setRows] = useState<Company[] | null>(null);
   const [meta, setMeta] = useState<EmployerListMeta | null>(null);
   const [error, setError] = useState<ApiRequestError | Error | null>(null);
@@ -97,6 +100,10 @@ export function EmployerQueueTable() {
     [pathname, searchParams],
   );
 
+  // Sorting is a filter change: it re-orders the WHOLE result set, so staying
+  // on page 5 would show an arbitrary slice of a different ordering.
+  const onSort = useCallback((next: string) => setParam('sort', next), [setParam]);
+
   const load = useCallback(async () => {
     setRows(null);
     setError(null);
@@ -106,13 +113,14 @@ export function EmployerQueueTable() {
         type: (typeFilter || undefined) as CompanyType | undefined,
         search: search || undefined,
         page,
+        sort,
       });
       setRows(result.data);
       setMeta(result.meta);
     } catch (err) {
       setError(err as Error);
     }
-  }, [activeTab, typeFilter, search, page]);
+  }, [activeTab, typeFilter, search, page, sort]);
 
   useEffect(() => {
     void load();
@@ -230,21 +238,24 @@ export function EmployerQueueTable() {
             <caption className="sr-only">{t('tableCaption')}</caption>
             <thead>
               <tr className="border-b border-neutral-200 text-start">
-                <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
+                <SortableHeader field="name" current={sort} onSort={onSort}>
                   {t('col.company')}
-                </th>
+                </SortableHeader>
+                {/* `type` and `registrationNumber` are NOT sortable: the API
+                    whitelist covers name/status/created only, and a header that
+                    silently does nothing is worse than a plain one. */}
                 <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
                   {t('col.type')}
                 </th>
                 <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
                   {t('col.registrationNumber')}
                 </th>
-                <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
+                <SortableHeader field="created" current={sort} onSort={onSort}>
                   {t('col.submitted')}
-                </th>
-                <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
+                </SortableHeader>
+                <SortableHeader field="status" current={sort} onSort={onSort}>
                   {t('col.status')}
-                </th>
+                </SortableHeader>
                 <th scope="col" className="p-3">
                   <span className="sr-only">{t('col.actions')}</span>
                 </th>

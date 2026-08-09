@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '../../../test-utils';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import { ToastProvider } from '../../../components/ui/toast';
@@ -343,10 +343,11 @@ describe('ChecklistNudge', () => {
       </I18n>,
     );
 
-    // Asserted on the nudge's own landmark rather than an empty container:
-    // ToastProvider deliberately keeps two empty live regions mounted for the
-    // whole session, so the container is never bare and `firstChild === null`
-    // would only be testing that the wrapper renders nothing.
+    // Assert the COMPONENT rendered nothing, not that the container is empty:
+    // the shared test render wraps everything in ToastProvider, whose aria-live
+    // region is always present (it must exist before a toast arrives, or screen
+    // readers miss the announcement). `container.firstChild` is therefore that
+    // region, never null.
     expect(screen.queryByRole('note')).toBeNull();
   });
 });

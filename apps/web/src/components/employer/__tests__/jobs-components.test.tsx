@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '../../../test-utils';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import { ToastProvider } from '../../../components/ui/toast';
@@ -149,6 +149,8 @@ describe('JobLivePreview — live preview updates + market-driven chips', () => 
     expect(screen.getByText('Senior Mason')).toBeInTheDocument();
     expect(screen.getByText('Dubai, UAE')).toBeInTheDocument();
     expect(screen.getByText('Gulf Builders Arabia')).toBeInTheDocument();
+    // The GULF market renders as "International" — the label copy was renamed
+    // (marketGulf: "International", marketLocal: "India"); the enum value did not.
     expect(screen.getByText('International')).toBeInTheDocument();
   });
 

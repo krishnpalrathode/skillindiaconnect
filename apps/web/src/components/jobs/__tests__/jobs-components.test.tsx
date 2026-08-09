@@ -101,7 +101,7 @@ describe('BenefitChips', () => {
   });
 
   it('returns nothing when all benefits are false', () => {
-    const { container } = render(
+    render(
       <BenefitChips
         job={{
           market: 'GULF',
@@ -111,10 +111,10 @@ describe('BenefitChips', () => {
         }}
       />,
     );
-    // Scoped to the chip list rather than the whole container: the shared test
-    // wrapper mounts ToastProvider, whose live regions stay in the DOM even
-    // when empty, so `firstChild === null` would be asserting on the wrapper.
-    expect(container.querySelector('ul')).toBeNull();
+    // The component's own output, not container emptiness: the shared render
+    // wraps everything in ToastProvider, whose always-present aria-live region
+    // means `container.firstChild` is never null.
+    expect(screen.queryByRole('list')).toBeNull();
   });
 });
 

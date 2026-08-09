@@ -46,11 +46,13 @@ export function GenerationStatus({
     >
       {phase === 'generating' && (
         <>
-          {/* label="" — the same words are already visible below, inside this
-              aria-live region. BrandLoader renders its label as real sr-only
-              TEXT (the Spinner it replaced used an aria-label attribute), so
-              passing it here duplicates the line for everyone. */}
-          <BrandLoader size="md" label="" />
+          {/* Decorative here: the visible heading below already says
+              "Generating your resume…", and this whole block is an aria-live
+              region — BrandLoader's own sr-only label would announce the same
+              sentence a second time. */}
+          <span aria-hidden="true">
+            <BrandLoader size="md" />
+          </span>
           <div>
             <p className="text-sm font-semibold text-neutral-900">{t('generatingTitle')}</p>
             <p className="mt-1 text-xs text-neutral-600">{t('generatingBody')}</p>

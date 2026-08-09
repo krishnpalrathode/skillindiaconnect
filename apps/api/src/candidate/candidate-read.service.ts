@@ -269,6 +269,8 @@ export class CandidateReadService {
     search?: string;
     status?: UserStatus;
     visibility?: boolean;
+    /** Already resolved against the endpoint whitelist by the caller. */
+    orderBy?: Record<string, unknown>[];
   }): Promise<{ rows: AdminCandidateSource[]; total: number }> {
     const where: Prisma.CandidateProfileWhereInput = {
       user: {
@@ -288,7 +290,7 @@ export class CandidateReadService {
     const [rows, total] = await Promise.all([
       this.prisma.candidateProfile.findMany({
         where,
-        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        orderBy: query.orderBy ?? [{ createdAt: 'desc' }, { id: 'desc' }],
         skip: (query.page - 1) * query.pageSize,
         take: query.pageSize,
         select: ADMIN_CANDIDATE_SELECT,

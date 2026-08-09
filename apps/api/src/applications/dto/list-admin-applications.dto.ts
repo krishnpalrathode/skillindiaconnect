@@ -28,4 +28,23 @@ export class ListAdminApplicationsDto {
   @IsString()
   @MaxLength(200)
   search?: string;
+  /** `field:dir`; an unknown field falls back to the default rather than 400ing. */
+  @IsOptional()
+  @IsString()
+  sort?: string;
 }
+
+/**
+ * Sortable columns for the admin applications table (whitelisted).
+ *
+ * NOT sortable: candidateName and jobTitle. Both are resolved AFTER the page
+ * query (batched name/job lookups, to avoid N+1), so an orderBy cannot reach
+ * them — a header offering them would sort by something else entirely.
+ */
+export const ADMIN_APPLICATION_SORT = {
+  status: 'status',
+  match: 'matchScore',
+  applied: 'createdAt',
+} as const;
+
+export const ADMIN_APPLICATION_SORT_DEFAULT = 'applied:desc';

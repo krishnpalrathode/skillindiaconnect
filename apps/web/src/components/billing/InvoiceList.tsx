@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import type { components } from '@skillindiaconnect/shared-types';
 import { formatDate } from '@/lib/format/date';
+import { SortableHeader } from '@/components/ui/sortable-header';
 
 type Invoice = components['schemas']['Invoice'];
 
@@ -22,13 +23,18 @@ export function InvoiceList() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   const [page, setPage] = useState(1);
+  const [sort, setSortRaw] = useState<string | undefined>(undefined);
+  const setSort = (next: string) => {
+    setSortRaw(next);
+    setPage(1);
+  };
   const [totalPages, setTotalPages] = useState(1);
 
   const load = React.useCallback(async () => {
     setIsLoading(true);
     setError(false);
     try {
-      const res = await getInvoices(page, PAGE_SIZE);
+      const res = await getInvoices(page, PAGE_SIZE, sort);
       setInvoices(res.data);
       setTotalPages(Math.max(1, res.meta.totalPages));
     } catch {
@@ -36,7 +42,7 @@ export function InvoiceList() {
     } finally {
       setIsLoading(false);
     }
-  }, [page]);
+  }, [page, sort]);
 
   useEffect(() => {
     load();
@@ -83,27 +89,37 @@ export function InvoiceList() {
           <table className="w-full text-sm" aria-label={t('invoicesTitle')}>
             <thead>
               <tr className="border-b border-neutral-100 text-start">
-                <th
-                  scope="col"
+                <SortableHeader
+                  field="number"
+                  current={sort}
+                  onSort={setSort}
                   className="pb-2 text-start text-xs font-medium text-neutral-600 pe-4"
                 >
                   {t('invoiceNumber')}
-                </th>
-                <th
-                  scope="col"
+                </SortableHeader>
+                <SortableHeader
+                  field="issued"
+                  current={sort}
+                  onSort={setSort}
                   className="pb-2 text-start text-xs font-medium text-neutral-600 pe-4"
                 >
                   {t('invoiceDate')}
-                </th>
+                </SortableHeader>
                 <th
                   scope="col"
                   className="pb-2 text-start text-xs font-medium text-neutral-600 pe-4"
                 >
                   {t('invoicePlan')}
                 </th>
-                <th scope="col" className="pb-2 text-end text-xs font-medium text-neutral-600">
+                <SortableHeader
+                  field="amount"
+                  current={sort}
+                  onSort={setSort}
+                  align="end"
+                  className="pb-2 text-end text-xs font-medium text-neutral-600"
+                >
                   {t('invoiceAmount')}
-                </th>
+                </SortableHeader>
                 <th scope="col" className="pb-2 ps-4 text-end text-xs font-medium text-neutral-600">
                   <span className="sr-only">{t('invoiceActions')}</span>
                 </th>

@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/format/date';
+import { SortableHeader } from '@/components/ui/sortable-header';
 
 /** Admin-context status colors — same palette semantics as the candidate card. */
 export const ADMIN_APP_STATUS_VARIANT: Record<
@@ -53,6 +54,7 @@ export function AdminApplicationsTable() {
   const jobId = searchParams.get('jobId') ?? '';
   const search = searchParams.get('search') ?? '';
   const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1);
+  const sort = searchParams.get('sort') ?? undefined;
 
   const [rows, setRows] = useState<AdminApplicationRow[] | null>(null);
   const [meta, setMeta] = useState<ApplicationListMeta | null>(null);
@@ -72,6 +74,9 @@ export function AdminApplicationsTable() {
     [pathname, searchParams],
   );
 
+  // Sorting re-orders the whole result set — reset to page 1, as setParam does.
+  const onSort = useCallback((next: string) => setParam('sort', next), [setParam]);
+
   const load = useCallback(async () => {
     setRows(null);
     setError(null);
@@ -81,13 +86,14 @@ export function AdminApplicationsTable() {
         jobId: jobId || undefined,
         search: search || undefined,
         page,
+        sort,
       });
       setRows(result.data);
       setMeta(result.meta);
     } catch (err) {
       setError(err as Error);
     }
-  }, [activeTab, jobId, search, page]);
+  }, [activeTab, jobId, search, page, sort]);
 
   useEffect(() => {
     void load();
@@ -202,15 +208,15 @@ export function AdminApplicationsTable() {
                 <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
                   {t('col.job')}
                 </th>
-                <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
+                <SortableHeader field="status" current={sort} onSort={onSort}>
                   {t('col.status')}
-                </th>
-                <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
+                </SortableHeader>
+                <SortableHeader field="match" current={sort} onSort={onSort}>
                   {t('col.match')}
-                </th>
-                <th scope="col" className="p-3 text-start font-semibold text-neutral-700">
+                </SortableHeader>
+                <SortableHeader field="applied" current={sort} onSort={onSort}>
                   {t('col.applied')}
-                </th>
+                </SortableHeader>
               </tr>
             </thead>
             <tbody>

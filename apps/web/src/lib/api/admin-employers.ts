@@ -11,6 +11,8 @@ export interface EmployerListMeta {
   pageSize: number;
   total: number;
   totalPages: number;
+  /** The sort the SERVER applied — may differ from what was asked if clamped. */
+  sort?: string;
 }
 
 export interface EmployerListPage {
@@ -24,6 +26,8 @@ export interface EmployerListQuery {
   search?: string;
   page?: number;
   pageSize?: number;
+  /** `field:dir`. Unknown fields are clamped server-side, never rejected. */
+  sort?: string;
 }
 
 /** Offset list (admin table shape: { data, meta }). RBAC: employers.view. */
@@ -34,6 +38,7 @@ export function listEmployers(query: EmployerListQuery = {}): Promise<EmployerLi
   if (query.search) params.set('search', query.search);
   if (query.page) params.set('page', String(query.page));
   if (query.pageSize) params.set('pageSize', String(query.pageSize));
+  if (query.sort) params.set('sort', query.sort);
   const qs = params.toString();
   // Raw fetch: the offset envelope carries `meta`, which apiFetch would discard.
   return apiFetchRaw<EmployerListPage>(`/admin/employers${qs ? `?${qs}` : ''}`);

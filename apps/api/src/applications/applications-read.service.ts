@@ -2,6 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ApplicationStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { pageMeta, resolvePaging, type Paginated } from '../core/pagination';
+import { buildOrderBy, resolveSort } from '../core/sorting';
+import {
+  ADMIN_APPLICATION_SORT,
+  ADMIN_APPLICATION_SORT_DEFAULT,
+} from './dto/list-admin-applications.dto';
 import { JobsService } from '../jobs/jobs.service';
 import { CandidateReadService } from '../candidate/candidate-read.service';
 import { StorageService } from '../core/storage/storage.service';
@@ -178,9 +183,14 @@ export class ApplicationsReadService {
     status?: ApplicationStatus;
     jobId?: string;
     search?: string;
-  }): Promise<{ data: AdminApplicationCardDto[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }> {
+    sort?: string;
+  }): Promise<{
+    data: AdminApplicationCardDto[];
+    meta: { page: number; pageSize: number; total: number; totalPages: number; sort: string };
+  }> {
     const page = Math.max(1, opts.page ?? 1);
     const pageSize = Math.min(100, opts.pageSize ?? 20);
+    const sort = resolveSort(opts.sort, ADMIN_APPLICATION_SORT, ADMIN_APPLICATION_SORT_DEFAULT);
 
     let searchIds: string[] | undefined;
     if (opts.search) {
@@ -201,7 +211,7 @@ export class ApplicationsReadService {
     const [rows, total] = await Promise.all([
       this.prisma.application.findMany({
         where,
-        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        orderBy: buildOrderBy(sort, ADMIN_APPLICATION_SORT),
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),
@@ -223,7 +233,16 @@ export class ApplicationsReadService {
       overrideReason: overrideReasons.get(a.id) ?? null,
     }));
 
-    return { data, meta: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) } };
+    return {
+      data,
+      meta: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+        sort: sort.applied,
+      },
+    };
   }
 
   // ── Admin: GET /admin/applications/{id} (0.8.1) ─────────────────────────────

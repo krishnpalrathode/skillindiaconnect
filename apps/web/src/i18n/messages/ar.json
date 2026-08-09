@@ -1915,5 +1915,9 @@
         }
       ]
     }
+  },
+  "sorting": {
+    "sortAscending": "ترتيب حسب {column}، تصاعدي",
+    "sortDescending": "ترتيب حسب {column}، تنازلي"
   }
 }

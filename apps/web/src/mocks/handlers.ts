@@ -127,6 +127,45 @@ function offsetPaginate<T>(
   };
 }
 
+/**
+ * `sort=field:dir` support for the mock handlers.
+ *
+ * Mirrors the API's whitelist behaviour so a test that sorts sees the same thing
+ * a browser would: an unknown field CLAMPS to the endpoint default rather than
+ * erroring, and the applied sort is echoed back in `meta.sort`.
+ */
+type SortAccessor<T> = (row: T) => string | number | null | undefined;
+
+function applySort<T>(
+  rows: T[],
+  raw: string | null,
+  accessors: Record<string, SortAccessor<T>>,
+  fallback: string,
+): { rows: T[]; applied: string } {
+  const [rawField, rawDir] = (raw ?? fallback).split(':');
+  const [fbField, fbDir] = fallback.split(':');
+
+  const field = rawField && rawField in accessors ? rawField : (fbField as string);
+  const dir = rawDir === 'asc' || rawDir === 'desc' ? rawDir : fbDir === 'asc' ? 'asc' : 'desc';
+  const get = accessors[field];
+
+  const sorted = [...rows].sort((a, b) => {
+    const av = get ? get(a) : null;
+    const bv = get ? get(b) : null;
+    // Nulls last regardless of direction — an absent value is not "smallest".
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    const cmp =
+      typeof av === 'number' && typeof bv === 'number'
+        ? av - bv
+        : String(av).localeCompare(String(bv));
+    return dir === 'asc' ? cmp : -cmp;
+  });
+
+  return { rows: sorted, applied: `${field}:${dir}` };
+}
+
 /** Reads `?page=&pageSize=`, clamped exactly as the API clamps them. */
 function readPaging(url: URL, defaultSize = 20, maxSize = 100): { page: number; pageSize: number } {
   const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1', 10) || 1);
@@ -1795,8 +1834,21 @@ const adminGetEmployers = http.get(`${BASE}/admin/employers`, ({ request }) => {
   if (statusFilter) companies = companies.filter((c) => c.status === statusFilter);
   if (typeFilter) companies = companies.filter((c) => c.type === typeFilter);
 
-  const result = offsetPaginate(companies, page, pageSize);
-  return HttpResponse.json(result);
+  // Same whitelist as EMPLOYER_QUEUE_SORT on the server, so a test that sorts
+  // exercises the real contract rather than a mock-only ordering.
+  const { rows, applied } = applySort(
+    companies,
+    url.searchParams.get('sort'),
+    {
+      name: (c) => c.name,
+      status: (c) => c.status,
+      created: (c) => c.createdAt,
+    },
+    'created:desc',
+  );
+
+  const result = offsetPaginate(rows, page, pageSize);
+  return HttpResponse.json({ ...result, meta: { ...result.meta, sort: applied } });
 });
 
 // ADDED IN S6a-F2 with its contract entry: the review detail fetches ONE company.

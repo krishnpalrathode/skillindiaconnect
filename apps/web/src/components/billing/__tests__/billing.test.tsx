@@ -722,10 +722,11 @@ describe('DocumentViewButton', () => {
         uploaded={false}
       />,
     );
-    // Scoped to the button rather than the whole container: the shared test
-    // wrapper mounts ToastProvider, whose live regions stay in the DOM even
-    // when empty, so `firstChild === null` would be asserting on the wrapper.
-    expect(container.querySelector('button')).toBeNull();
+    // The COMPONENT rendered nothing — not "the container is empty". The shared
+    // test render wraps everything in ToastProvider, whose aria-live region is
+    // always present, so container.firstChild is that region rather than null.
+    expect(container.querySelector('.relative')).toBeNull();
+    expect(screen.queryByRole('button')).toBeNull();
   });
 
   it('Pro employer — 200 → opens signed URL in new tab', async () => {

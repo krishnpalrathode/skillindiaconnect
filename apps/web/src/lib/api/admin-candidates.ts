@@ -12,6 +12,7 @@ export interface CandidateListMeta {
   pageSize: number;
   total: number;
   totalPages: number;
+  sort?: string;
 }
 
 export interface CandidateListPage {
@@ -27,6 +28,8 @@ export interface CandidateListQuery {
   search?: string;
   page?: number;
   pageSize?: number;
+  /** `field:dir`; clamped server-side. */
+  sort?: string;
 }
 
 /** Offset list. RBAC: candidates.view. Purged tombstones ARE included. */
@@ -37,6 +40,7 @@ export function listCandidates(query: CandidateListQuery = {}): Promise<Candidat
   if (query.search) params.set('search', query.search);
   if (query.page) params.set('page', String(query.page));
   if (query.pageSize) params.set('pageSize', String(query.pageSize));
+  if (query.sort) params.set('sort', query.sort);
   const qs = params.toString();
   // Raw fetch: the offset envelope carries `meta`, which apiFetch would discard.
   return apiFetchRaw<CandidateListPage>(`/admin/candidates${qs ? `?${qs}` : ''}`);

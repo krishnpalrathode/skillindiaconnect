@@ -12,6 +12,7 @@ export interface ApplicationListMeta {
   pageSize: number;
   total: number;
   totalPages: number;
+  sort?: string;
 }
 
 export interface ApplicationListPage {
@@ -26,6 +27,8 @@ export interface ApplicationListQuery {
   search?: string;
   page?: number;
   pageSize?: number;
+  /** `field:dir`; clamped server-side. */
+  sort?: string;
 }
 
 /** Offset list (admin context — the ONLY context carrying overrideReason). RBAC: applications.manage. */
@@ -38,6 +41,7 @@ export function listAdminApplications(
   if (query.search) params.set('search', query.search);
   if (query.page) params.set('page', String(query.page));
   if (query.pageSize) params.set('pageSize', String(query.pageSize));
+  if (query.sort) params.set('sort', query.sort);
   const qs = params.toString();
   // Raw fetch: the offset envelope carries `meta`, which apiFetch would discard.
   return apiFetchRaw<ApplicationListPage>(`/admin/applications${qs ? `?${qs}` : ''}`);

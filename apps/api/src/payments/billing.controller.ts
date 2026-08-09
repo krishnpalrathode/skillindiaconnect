@@ -103,14 +103,17 @@ export class BillingController {
     @CurrentUser() user: CurrentUserPayload,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
+    @Query('sort') sort?: string,
   ): Promise<{
     data: InvoiceDto[];
-    meta: { page: number; pageSize: number; total: number; totalPages: number };
+    meta: { page: number; pageSize: number; total: number; totalPages: number; sort: string };
   }> {
     this.assertEmployer(user.role);
     const p = Math.max(1, parseInt(page ?? '1', 10) || 1);
     const size = Math.min(100, Math.max(1, parseInt(pageSize ?? '20', 10) || 20));
-    return this.checkoutService.listInvoices(user.userId, p, size);
+    // `sort` is passed RAW — the service resolves it against INVOICE_SORT, so
+    // an arbitrary column name can never reach Prisma.
+    return this.checkoutService.listInvoices(user.userId, p, size, sort);
   }
 
   /**

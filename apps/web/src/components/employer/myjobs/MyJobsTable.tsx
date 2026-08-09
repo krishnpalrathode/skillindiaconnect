@@ -13,6 +13,7 @@ import { JobStatusBadge } from './JobStatusBadge';
 import { JobRowActions } from './JobRowActions';
 import { listMyJobs, type Job, type JobStatus } from '@/lib/api/jobs-employer';
 import { formatPostedAgo } from '@/lib/jobs/format';
+import { SortableHeader } from '@/components/ui/sortable-header';
 
 const STATUS_TABS: Array<{ value: JobStatus | 'ALL'; labelKey: string }> = [
   { value: 'ALL', labelKey: 'all' },
@@ -43,6 +44,12 @@ export function MyJobsTable() {
   const [statusFilter, setStatusFilter] = useState<JobStatus | 'ALL'>('ALL');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  // Local state (this table has no URL sync); changing it resets to page 1.
+  const [sort, setSortRaw] = useState<string | undefined>(undefined);
+  const setSort = (next: string) => {
+    setSortRaw(next);
+    setPage(1);
+  };
   const debouncedSearch = useDebounce(search, 300);
   const pageSize = 20;
 
@@ -59,6 +66,7 @@ export function MyJobsTable() {
         search: debouncedSearch || undefined,
         page,
         pageSize,
+        sort,
       });
       setJobs(result.data);
       setTotalCount(result.meta.total);
@@ -67,7 +75,7 @@ export function MyJobsTable() {
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter, debouncedSearch, page, t]);
+  }, [statusFilter, debouncedSearch, page, t, sort]);
 
   useEffect(() => {
     setPage(1);
@@ -199,36 +207,42 @@ export function MyJobsTable() {
           <table className="w-full min-w-[640px] text-sm" aria-label={t('tableLabel')}>
             <thead className="bg-neutral-50/80 border-b border-neutral-200">
               <tr>
-                <th
-                  scope="col"
+                <SortableHeader
+                  field="title"
+                  current={sort}
+                  onSort={setSort}
                   className="text-start px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
                 >
                   {t('col.title')}
-                </th>
+                </SortableHeader>
                 <th
                   scope="col"
                   className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
                 >
                   {t('col.market')}
                 </th>
-                <th
-                  scope="col"
+                <SortableHeader
+                  field="status"
+                  current={sort}
+                  onSort={setSort}
                   className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
                 >
                   {t('col.status')}
-                </th>
+                </SortableHeader>
                 <th
                   scope="col"
                   className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
                 >
                   {t('col.applications')}
                 </th>
-                <th
-                  scope="col"
+                <SortableHeader
+                  field="createdAt"
+                  current={sort}
+                  onSort={setSort}
                   className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"
                 >
                   {t('col.posted')}
-                </th>
+                </SortableHeader>
                 <th
                   scope="col"
                   className="text-start px-3 py-3.5 text-xs font-semibold uppercase tracking-wide text-neutral-600"

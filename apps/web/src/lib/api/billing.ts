@@ -57,7 +57,7 @@ type DocumentType = components['schemas']['DocumentType'];
 
 export interface InvoicesResult {
   data: Invoice[];
-  meta: { page: number; pageSize: number; total: number; totalPages: number };
+  meta: { page: number; pageSize: number; total: number; totalPages: number; sort?: string };
 }
 
 /**
@@ -68,8 +68,10 @@ export interface InvoicesResult {
  * pager; `apiFetch` would unwrap `{ data }` and discard it, which is what
  * previously stranded every employer on page 1.
  */
-export function getInvoices(page = 1, pageSize = 20): Promise<InvoicesResult> {
-  return apiFetchRaw<InvoicesResult>(`/billing/invoices?page=${page}&pageSize=${pageSize}`);
+export function getInvoices(page = 1, pageSize = 20, sort?: string): Promise<InvoicesResult> {
+  const qs = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  if (sort) qs.set('sort', sort);
+  return apiFetchRaw<InvoicesResult>(`/billing/invoices?${qs.toString()}`);
 }
 
 /**

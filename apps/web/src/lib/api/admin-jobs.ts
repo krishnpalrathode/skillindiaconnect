@@ -11,6 +11,7 @@ export interface JobListMeta {
   pageSize: number;
   total: number;
   totalPages: number;
+  sort?: string;
 }
 
 export interface JobListPage {
@@ -26,6 +27,8 @@ export interface JobListQuery {
   urgent?: boolean;
   page?: number;
   pageSize?: number;
+  /** `field:dir`; clamped server-side. */
+  sort?: string;
 }
 
 /** Offset list — EVERY status (incl. DRAFT / PENDING_REVIEW). RBAC: jobs.view. */
@@ -38,6 +41,7 @@ export function listAdminJobs(query: JobListQuery = {}): Promise<JobListPage> {
   if (query.urgent !== undefined) params.set('urgent', String(query.urgent));
   if (query.page) params.set('page', String(query.page));
   if (query.pageSize) params.set('pageSize', String(query.pageSize));
+  if (query.sort) params.set('sort', query.sort);
   const qs = params.toString();
   // Raw fetch: the offset envelope carries `meta`, which apiFetch would discard.
   return apiFetchRaw<JobListPage>(`/admin/jobs${qs ? `?${qs}` : ''}`);

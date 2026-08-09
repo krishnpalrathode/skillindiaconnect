@@ -21,6 +21,7 @@ import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { ListJobsDto } from './dto/list-jobs.dto';
 import { isCountryValidForMarket } from './job-countries';
+import { buildOrderBy, resolveSort } from '../core/sorting';
 import { OTHER_CATEGORY_SLUG } from '../core/job-categories';
 
 /**
@@ -39,11 +40,22 @@ function sanitizeDescription(input: string): string {
     .replace(/href\s*=\s*["']?\s*javascript:[^"'\s>]*/gi, '');
 }
 
-const SORT_FIELD_MAP: Record<string, 'createdAt' | 'publishedAt' | 'title'> = {
+/**
+ * Sortable columns for the employer My Jobs table (whitelisted).
+ *
+ * Field names deliberately match the ones ListJobsDto already accepted
+ * (`createdAt`, `publishedAt`, `title`) so existing callers and bookmarks keep
+ * working; `status` is new. This replaces the old local SORT_FIELD_MAP, which
+ * did the same job without the `id` tiebreaker.
+ */
+export const MY_JOBS_SORT = {
+  title: 'title',
+  status: 'status',
   createdAt: 'createdAt',
   publishedAt: 'publishedAt',
-  title: 'title',
-};
+} as const;
+
+export const MY_JOBS_SORT_DEFAULT = 'createdAt:desc';
 
 /** Narrow projection of a job for the S4 apply flow (see getJobForApplication). */
 export interface JobForApplication {
@@ -250,11 +262,15 @@ export class JobsService {
   async list(
     userId: string,
     dto: ListJobsDto,
-  ): Promise<{ data: JobWithApplicantCount[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }> {
+  ): Promise<{
+    data: JobWithApplicantCount[];
+    meta: { page: number; pageSize: number; total: number; totalPages: number; sort: string };
+  }> {
     const company = await this.employerService.getCompanyForEmployerUser(userId);
-    const [field, dir] = (dto.sort ?? 'createdAt:desc').split(':');
-    const safeField = SORT_FIELD_MAP[field ?? 'createdAt'] ?? 'createdAt';
-    const safeDir = dir === 'asc' ? 'asc' : 'desc';
+    // Shared resolver: same whitelist as before, but it appends the `id`
+    // tiebreaker. Sorting by `title` alone is not a total order, so two jobs
+    // sharing a title could repeat or vanish across offset pages.
+    const sort = resolveSort(dto.sort, MY_JOBS_SORT, MY_JOBS_SORT_DEFAULT);
 
     const where = {
       companyId: company.id,
@@ -270,7 +286,7 @@ export class JobsService {
     const [data, total] = await Promise.all([
       this.prisma.job.findMany({
         where,
-        orderBy: { [safeField]: safeDir },
+        orderBy: buildOrderBy(sort, MY_JOBS_SORT),
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),
@@ -285,7 +301,10 @@ export class JobsService {
       applicantCount: counts.get(j.id)?.applications ?? 0,
     }));
 
-    return { data: enriched, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } };
+    return {
+      data: enriched,
+      meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize), sort: sort.applied },
+    };
   }
 
   // ── Update ─────────────────────────────────────────────────────────────────

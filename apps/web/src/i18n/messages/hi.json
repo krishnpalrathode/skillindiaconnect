@@ -1915,5 +1915,9 @@
         }
       ]
     }
+  },
+  "sorting": {
+    "sortAscending": "{column} से क्रमबद्ध करें, आरोही",
+    "sortDescending": "{column} से क्रमबद्ध करें, अवरोही"
   }
 }
