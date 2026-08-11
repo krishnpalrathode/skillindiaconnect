@@ -10,8 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
 import { DatePicker } from '@/components/ui/date-picker';
 import { PhoneVerify } from '@/components/onboarding/PhoneVerify';
-import { patchCandidateProfile } from '@/lib/api/candidate';
+import { BrandLoader } from '@/components/ui/brand-loader';
+import {
+  patchCandidateProfile,
+  presignPhoto,
+  uploadToPresignedUrl,
+  confirmPhoto,
+} from '@/lib/api/candidate';
 import type { PatchCandidateBody } from '@/lib/api/candidate';
+import { useToast } from '@/components/ui/toast';
 import { compressImage } from '@/components/upload/imageCompress';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
@@ -52,13 +59,21 @@ interface PersonalInfoStepProps {
 /**
  * Step 1 — Personal Info.
  * Required to advance: fullName + dob + a VERIFIED mobile number.
- * Profile photo: local preview only (no API endpoint in S1).
+ *
+ * The profile photo UPLOADS on selection (presign → PUT → confirm), the same
+ * chain ProfileHero uses. It was previously a local `URL.createObjectURL`
+ * preview with the note "no API endpoint in S1" — but that endpoint has existed
+ * since, so the photo was never persisted at all. Stepping to Work Experience
+ * unmounts this component, and the object URL went with it: the candidate saw
+ * their photo vanish on the way back, and nothing had ever reached the server.
  */
 export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalInfoStepProps) {
   const t = useTranslations('onboarding.personalInfo');
   const tStep = useTranslations('onboarding.nav');
   const tStatus = useTranslations('onboarding.maritalStatus');
   const tCal = useTranslations('common.calendar');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
 
   const [fullName, setFullName] = useState(profile.fullName ?? '');
   const [dob, setDob] = useState(profile.dob ?? '');
@@ -69,7 +84,13 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
   const [languages, setLanguages] = useState((profile.languages ?? []).join(', '));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  /*
+    Seeded from the SAVED profile, so returning to this step shows the photo the
+    server already has instead of an empty circle.
+  */
+  const [photoPreview, setPhotoPreview] = useState<string | null>(profile.photoUrl ?? null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   // Bounds for the date picker: no future dates, no under-18s, no absurd ages.
@@ -96,10 +117,44 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const compressed = await compressImage(file);
-    const url = URL.createObjectURL(compressed);
-    setPhotoPreview(url);
+    // Clear the input so re-picking the SAME file after a failure still fires.
+    e.target.value = '';
+    if (!file || photoUploading) return;
+
+    setPhotoError(null);
+    setPhotoUploading(true);
+
+    // Show the local bytes immediately — the presign→PUT→confirm round trip is
+    // slow on a phone, and an unchanged empty circle reads as "nothing
+    // happened". Replaced by the server's signed url once confirmed.
+    let objectUrl: string | null = null;
+    try {
+      const compressed = await compressImage(file);
+      objectUrl = URL.createObjectURL(compressed);
+      setPhotoPreview(objectUrl);
+
+      const presign = await presignPhoto({
+        fileName: file.name,
+        mimeType: compressed.type || file.type,
+        sizeBytes: compressed.size,
+      });
+      await uploadToPresignedUrl(presign.uploadUrl, compressed);
+      const updated = await confirmPhoto(presign.key);
+
+      setPhotoPreview(updated.photoUrl ?? null);
+      // Lift it to the stepper's profile so steps 2-4 and a return to step 1
+      // all see the saved photo.
+      onProfileUpdate(updated);
+      showToast({ message: tToast('photoUpdated') });
+    } catch {
+      // Drop the optimistic preview — leaving it would show a photo that is not
+      // actually saved, which is the bug this whole change removes.
+      setPhotoPreview(profile.photoUrl ?? null);
+      setPhotoError(t('photoUploadError'));
+    } finally {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      setPhotoUploading(false);
+    }
   };
 
   const handleNext = async () => {
@@ -141,17 +196,20 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
         <p className="mt-1.5 text-sm text-neutral-600">{t('subtitle')}</p>
       </div>
 
-      {/* Profile photo (local preview — no API in S1) — premium dashed upload card */}
+      {/* Profile photo — uploads on selection (presign → PUT → confirm) */}
       <div
         // Width-capped and centred: at the wider shell a full-bleed dropzone
         // became a long empty band around a small avatar. Capping it keeps the
         // target compact and deliberate rather than stretched.
         className="group mx-auto flex w-full max-w-md cursor-pointer flex-col items-center gap-3 rounded-[22px] border-2 border-dashed border-neutral-200 bg-neutral-50/60 px-4 py-6 transition-all duration-200 hover:border-[#0F3D91]/40 hover:bg-[#E8F0FE]/40"
-        onClick={() => photoInputRef.current?.click()}
+        onClick={() => !photoUploading && photoInputRef.current?.click()}
+        aria-busy={photoUploading}
       >
         <div className="relative h-24 w-24">
           <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-white shadow-md transition-transform duration-200 group-hover:scale-105">
-            {photoPreview ? (
+            {photoUploading ? (
+              <BrandLoader size="sm" label={t('photoUploading')} />
+            ) : photoPreview ? (
               <Image
                 src={photoPreview}
                 alt="Profile"
@@ -181,6 +239,11 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
           {t('photoUpload')}
         </div>
         <p className="text-xs text-neutral-600">{t('photoHint')}</p>
+        {photoError && (
+          <p role="alert" className="text-xs font-medium text-error-fg">
+            {photoError}
+          </p>
+        )}
         <input
           ref={photoInputRef}
           type="file"

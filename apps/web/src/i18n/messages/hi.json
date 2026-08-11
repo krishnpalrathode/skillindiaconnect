@@ -459,7 +459,10 @@
       "otpSendError": "कुछ गड़बड़ हो गई। कृपया पुनः प्रयास करें।",
       "otpRateLimited": "बहुत अधिक प्रयास। कृपया कुछ मिनट बाद पुनः प्रयास करें।",
       "resendOtp": "OTP फिर से भेजें",
-      "resendIn": "{seconds} सेकंड में फिर से भेजें"
+      "resendIn": "{seconds} सेकंड में फिर से भेजें",
+      "photoUploadError": "हम आपकी फ़ोटो अपलोड नहीं कर सके। कृपया फिर से प्रयास करें।",
+      "photoUploading": "आपकी फ़ोटो अपलोड हो रही है…",
+      "phoneCodeLabel": "देश कोड"
     },
     "experience": {
       "title": "कार्य अनुभव",
@@ -469,7 +472,7 @@
       "editExperience": "अनुभव संपादित करें",
       "deleteExperience": "अनुभव हटाएं",
       "typeLabel": "अनुभव का प्रकार",
-      "typeDomestic": "घरेलू (भारत)",
+      "typeDomestic": "भारत",
       "typeForeign": "अंतर्राष्ट्रीय",
       "countryLabel": "देश",
       "companyLabel": "कंपनी का नाम",

@@ -15,20 +15,58 @@ export interface CountryOption {
   dialCode: string;
   /** i18n key suffix under `employer.onboarding.countries`. */
   key: string;
+  /** ISO 3166-1 alpha-2 — the input to `flagEmoji`. */
+  iso: string;
 }
 
 /** India is first and is the default selection. */
-export const DEFAULT_COUNTRY: CountryOption = { key: 'india', name: 'India', dialCode: '+91' };
+export const DEFAULT_COUNTRY: CountryOption = {
+  key: 'india',
+  name: 'India',
+  dialCode: '+91',
+  iso: 'IN',
+};
 
 export const COUNTRIES: readonly CountryOption[] = [
   DEFAULT_COUNTRY,
-  { key: 'uae', name: 'United Arab Emirates', dialCode: '+971' },
-  { key: 'saudiArabia', name: 'Saudi Arabia', dialCode: '+966' },
-  { key: 'qatar', name: 'Qatar', dialCode: '+974' },
-  { key: 'kuwait', name: 'Kuwait', dialCode: '+965' },
-  { key: 'oman', name: 'Oman', dialCode: '+968' },
-  { key: 'bahrain', name: 'Bahrain', dialCode: '+973' },
+  { key: 'uae', name: 'United Arab Emirates', dialCode: '+971', iso: 'AE' },
+  { key: 'saudiArabia', name: 'Saudi Arabia', dialCode: '+966', iso: 'SA' },
+  { key: 'qatar', name: 'Qatar', dialCode: '+974', iso: 'QA' },
+  { key: 'kuwait', name: 'Kuwait', dialCode: '+965', iso: 'KW' },
+  { key: 'oman', name: 'Oman', dialCode: '+968', iso: 'OM' },
+  { key: 'bahrain', name: 'Bahrain', dialCode: '+973', iso: 'BH' },
 ] as const;
+
+/**
+ * ISO alpha-2 → the flag emoji, built from Unicode regional indicators.
+ *
+ * Deliberately no image assets and no flag package. Candidates here are on
+ * Android and iOS, where these render as real flags; desktop Chrome on Windows
+ * has no flag glyphs and falls back to the two letters ("IN"), which still
+ * identifies the country next to its dial code. Hand-drawing these instead
+ * would mean approximating the Saudi shahada and the Ashoka Chakra, which is
+ * worse than a letter pair.
+ */
+export function flagEmoji(iso: string): string {
+  return iso
+    .toUpperCase()
+    .replace(/[^A-Z]/g, '')
+    .split('')
+    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
+    .join('');
+}
+
+/**
+ * Splits an E.164 number into its dial code and the national part, picking the
+ * LONGEST matching code so +971 is never mistaken for +97.
+ * Returns null when nothing matches, so callers can fall back to a default.
+ */
+export function splitE164(e164: string): { country: CountryOption; national: string } | null {
+  const match = [...COUNTRIES]
+    .sort((a, b) => b.dialCode.length - a.dialCode.length)
+    .find((c) => e164.startsWith(c.dialCode));
+  return match ? { country: match, national: e164.slice(match.dialCode.length) } : null;
+}
 
 /** Gulf (GCC) states — every country except India. */
 export const GULF_COUNTRIES: readonly CountryOption[] = COUNTRIES.filter((c) => c.name !== 'India');

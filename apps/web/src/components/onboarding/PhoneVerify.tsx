@@ -5,21 +5,34 @@ import { useTranslations } from 'next-intl';
 import { CheckCircle2, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Field } from '@/components/ui/field';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/toast';
 import { OtpEntry } from '@/components/auth/OtpEntry';
 import { postOtpSend, postOtpVerify } from '@/lib/api/candidate';
 import { ApiRequestError } from '@/lib/api/client';
 import { Ltr } from '@/components/common/Ltr';
+import {
+  COUNTRIES,
+  DEFAULT_COUNTRY,
+  flagEmoji,
+  splitE164,
+  type CountryOption,
+} from '@/lib/countries';
 
 const RESEND_COOLDOWN_SEC = 60;
 
-// Normalizes an Indian 10-digit number to E.164. Already-prefixed numbers pass through.
-function toE164(raw: string): string {
-  const digits = raw.replace(/\D/g, '');
-  if (digits.length === 10) return `+91${digits}`;
-  if (!raw.startsWith('+')) return `+${digits}`;
-  return raw.trim();
+/**
+ * National digits + the chosen dial code → E.164.
+ *
+ * The country now comes from an explicit select rather than being assumed to be
+ * India, so this no longer guesses from the digit count. A number the user
+ * pasted WITH its country code (a leading `+`, or the dial code typed twice) is
+ * detected and not double-prefixed.
+ */
+function toE164(nationalDigits: string, dialCode: string): string {
+  const digits = nationalDigits.replace(/\D/g, '');
+  const bare = dialCode.replace('+', '');
+  return digits.startsWith(bare) ? `+${digits}` : `${dialCode}${digits}`;
 }
 
 interface PhoneVerifyProps {
@@ -45,8 +58,18 @@ export function PhoneVerify({
   const { showToast } = useToast();
 
   const [stage, setStage] = useState<Stage>(alreadyVerified ? 'verified' : 'input');
-  const [phone, setPhone] = useState(initialPhone);
+
+  /*
+    An already-saved number arrives in E.164 (+919452100006). Split it back into
+    its country and national parts so the select shows the right flag and the
+    input shows a number the candidate recognises — not their own number with an
+    unfamiliar prefix glued to the front.
+  */
+  const parsed = initialPhone ? splitE164(initialPhone) : null;
+  const [country, setCountry] = useState<CountryOption>(parsed?.country ?? DEFAULT_COUNTRY);
+  const [phone, setPhone] = useState(parsed?.national ?? initialPhone.replace(/\D/g, ''));
   const phoneDigits = phone.replace(/\D/g, '');
+  const e164 = toE164(phone, country.dialCode);
   const [otpKey, setOtpKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +93,7 @@ export function PhoneVerify({
     setError(null);
     setLoading(true);
     try {
-      await postOtpSend(toE164(phone));
+      await postOtpSend(e164);
       setStage('otp');
       setOtpKey((k) => k + 1);
       startCooldown();
@@ -133,16 +156,16 @@ export function PhoneVerify({
     } finally {
       setLoading(false);
     }
-  }, [phone, startCooldown, t, showToast, tToast]);
+  }, [e164, phone, startCooldown, t, showToast, tToast]);
 
   const handleOtpComplete = useCallback(
     async (code: string) => {
       setError(null);
       setLoading(true);
       try {
-        await postOtpVerify(toE164(phone), code);
+        await postOtpVerify(e164, code);
         setStage('verified');
-        onVerified(toE164(phone));
+        onVerified(e164);
       } catch (err) {
         // A number claimed by another candidate is rejected here too (safety net
         // for a race with the send-time guard) — send them back to enter a new one.
@@ -157,7 +180,7 @@ export function PhoneVerify({
         setLoading(false);
       }
     },
-    [phone, onVerified, t],
+    [e164, onVerified, t],
   );
 
   if (stage === 'verified') {
@@ -169,7 +192,7 @@ export function PhoneVerify({
         <div>
           <p className="text-sm font-semibold text-success-fg">{t('phoneVerified')}</p>
           <p className="text-xs text-neutral-600">
-            <Ltr>{phone}</Ltr>
+            <Ltr>{e164}</Ltr>
           </p>
         </div>
         <button
@@ -194,22 +217,56 @@ export function PhoneVerify({
       <p className="text-xs text-neutral-600">{t('phoneVerifySubtitle')}</p>
 
       {stage === 'input' && (
-        <div className="flex gap-2">
-          <Field id="onboarding-phone" label={t('phoneLabel')} required className="flex-1">
-            <Input
-              type="tel"
-              inputMode="numeric"
-              autoComplete="tel"
-              maxLength={15}
-              placeholder={t('phonePlaceholder')}
-              value={phone}
-              // Digits only — reject letters/spaces/symbols as they're typed or pasted.
-              onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              disabled={loading}
-              className="h-12 rounded-xl bg-white"
-            />
-          </Field>
+        <div className="flex flex-wrap gap-2">
+          {/* Deliberately NOT <Field>: it cloneElement's its `id` onto its single
+              child, which here is the wrapper div — pointing the <label> at a
+              non-labellable element and silently breaking the association for
+              screen readers. The label is bound straight to the input instead. */}
+          <div className="flex min-w-[16rem] flex-1 flex-col gap-1.5">
+            <Label htmlFor="onboarding-phone" required>
+              {t('phoneLabel')}
+            </Label>
+            {/* Country code + number as ONE bordered control, so it reads as a
+                single phone field rather than two unrelated inputs. */}
+            <div className="flex h-12 items-stretch overflow-hidden rounded-xl border border-input bg-white focus-within:border-[#0F3D91] focus-within:ring-[3px] focus-within:ring-ring/70">
+              <label htmlFor="onboarding-phone-code" className="sr-only">
+                {t('phoneCodeLabel')}
+              </label>
+              <select
+                id="onboarding-phone-code"
+                value={country.iso}
+                onChange={(e) =>
+                  setCountry(COUNTRIES.find((c) => c.iso === e.target.value) ?? DEFAULT_COUNTRY)
+                }
+                disabled={loading}
+                // `dir=ltr` — a dial code is always read left-to-right, even in Arabic.
+                dir="ltr"
+                className="h-full shrink-0 border-e border-neutral-200 bg-neutral-50/70 ps-3 pe-2 text-sm font-medium text-neutral-800 outline-none focus-visible:outline-none"
+              >
+                {COUNTRIES.map((c) => (
+                  <option key={c.iso} value={c.iso}>
+                    {flagEmoji(c.iso)} {c.dialCode}
+                  </option>
+                ))}
+              </select>
+              <Input
+                id="onboarding-phone"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel-national"
+                maxLength={15}
+                placeholder={t('phonePlaceholder')}
+                value={phone}
+                // Digits only — reject letters/spaces/symbols as they're typed or pasted.
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                disabled={loading}
+                dir="ltr"
+                // The wrapper owns the border and focus ring now.
+                className="h-full flex-1 rounded-none border-0 bg-transparent focus-visible:ring-0"
+              />
+            </div>
+          </div>
           <div className="flex items-end">
             <Button
               type="button"

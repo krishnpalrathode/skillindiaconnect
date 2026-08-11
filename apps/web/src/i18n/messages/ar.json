@@ -459,7 +459,10 @@
       "otpSendError": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
       "otpRateLimited": "محاولات كثيرة جداً. يرجى الانتظار بضع دقائق قبل المحاولة مجدداً.",
       "resendOtp": "إعادة إرسال الرمز",
-      "resendIn": "إعادة الإرسال خلال {seconds} ثانية"
+      "resendIn": "إعادة الإرسال خلال {seconds} ثانية",
+      "photoUploadError": "تعذّر رفع صورتك. يرجى المحاولة مرة أخرى.",
+      "photoUploading": "جارٍ رفع صورتك…",
+      "phoneCodeLabel": "رمز الدولة"
     },
     "experience": {
       "title": "الخبرة العملية",
@@ -469,7 +472,7 @@
       "editExperience": "تعديل الخبرة",
       "deleteExperience": "حذف الخبرة",
       "typeLabel": "نوع الخبرة",
-      "typeDomestic": "محلي (الهند)",
+      "typeDomestic": "الهند",
       "typeForeign": "دولي",
       "countryLabel": "البلد",
       "companyLabel": "اسم الشركة",

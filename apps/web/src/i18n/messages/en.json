@@ -459,7 +459,10 @@
       "otpSendError": "Something went wrong. Please try again.",
       "otpRateLimited": "Too many attempts. Please wait a few minutes before trying again.",
       "resendOtp": "Resend OTP",
-      "resendIn": "Resend in {seconds}s"
+      "resendIn": "Resend in {seconds}s",
+      "photoUploadError": "We couldn't upload your photo. Please try again.",
+      "photoUploading": "Uploading your photo…",
+      "phoneCodeLabel": "Country code"
     },
     "experience": {
       "title": "Work experience",
@@ -469,7 +472,7 @@
       "editExperience": "Edit experience",
       "deleteExperience": "Delete experience",
       "typeLabel": "Experience type",
-      "typeDomestic": "Domestic (India)",
+      "typeDomestic": "India",
       "typeForeign": "International",
       "countryLabel": "Country",
       "companyLabel": "Company name",
