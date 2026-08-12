@@ -42,7 +42,7 @@ export function AdminHeader({ onMenuClick }: { onMenuClick?: () => void }) {
         )}
         <button
           type="button"
-          onClick={requestLogout}
+          onClick={() => requestLogout()}
           className="flex min-h-[44px] items-center gap-2 rounded-lg px-3 text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >
           <LogOut className="size-4" aria-hidden="true" />

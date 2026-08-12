@@ -7,9 +7,22 @@ import { DialogShell } from '@/components/ui/dialog-shell';
 import { useToast } from '@/components/ui/toast';
 import { useAuth } from './auth-context';
 
+interface LogoutConfirmOptions {
+  /**
+   * Where to land after signing out, as a locale-relative path (e.g. `/signup`).
+   * Defaults to the public landing page.
+   *
+   * Onboarding passes `/signup`: someone abandoning half-finished setup is
+   * usually starting over, and the landing page would make them hunt for the
+   * way back in. It is an OPTION rather than a second copy of this flow so the
+   * confirm → sign out → toast → redirect sequence still lives in one place.
+   */
+  redirectTo?: string;
+}
+
 interface LogoutConfirmContextValue {
   /** Opens the confirmation dialog. Signing out happens only if confirmed. */
-  requestLogout: () => void;
+  requestLogout: (options?: LogoutConfirmOptions) => void;
 }
 
 const LogoutConfirmContext = createContext<LogoutConfirmContextValue | null>(null);
@@ -40,22 +53,28 @@ export function LogoutConfirmProvider({ children }: { children: React.ReactNode 
 
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Captured when the dialog opens so the destination cannot change (or be
+  // lost) between the request and the confirm.
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
 
-  const requestLogout = useCallback(() => setOpen(true), []);
+  const requestLogout = useCallback((options?: LogoutConfirmOptions) => {
+    setRedirectTo(options?.redirectTo ?? null);
+    setOpen(true);
+  }, []);
 
   const handleConfirm = useCallback(async () => {
     setBusy(true);
     try {
       await logout();
       showToast({ message: tCommon('logoutSuccess'), variant: 'success' });
-      // Landing page, not /login — someone who just left should arrive
-      // somewhere public, not at a form asking them to sign back in.
-      router.replace(`/${locale}`);
+      // Default is the landing page, not /login — someone who just left should
+      // arrive somewhere public, not at a form asking them to sign back in.
+      router.replace(`/${locale}${redirectTo ?? ''}`);
     } finally {
       setBusy(false);
       setOpen(false);
     }
-  }, [logout, showToast, tCommon, router, locale]);
+  }, [logout, showToast, tCommon, router, locale, redirectTo]);
 
   const value = useMemo(() => ({ requestLogout }), [requestLogout]);
 
