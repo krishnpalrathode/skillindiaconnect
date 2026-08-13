@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/toast';
+import { canExportResume, RESUME_MIN_COMPLETION_PCT } from '@/lib/resume/completionGate';
 import { CompletionRing } from '@/components/common/CompletionRing';
 import { getResume, generateResume, getResumeStatus, getResumeDownloadUrl } from '@/lib/api/resume';
 import { presignPhoto, confirmPhoto, uploadToPresignedUrl } from '@/lib/api/candidate';
@@ -81,8 +82,26 @@ export function ProfileHero({ profile, completion }: ProfileHeroProps) {
     return url;
   }
 
+  /**
+   * The 80%-complete gate for both export actions.
+   *
+   * Checked HERE rather than by disabling the buttons, deliberately: a disabled
+   * button gives no reason, and on a profile that is 58% complete the reason is
+   * the entire point — the candidate needs to know what to do next, not just
+   * that they cannot do this. Returning true means "blocked, already explained".
+   */
+  function blockedByCompletion(): boolean {
+    if (canExportResume(completion.pct)) return false;
+    showToast({
+      message: tToast('resumeNeedsCompletion', { pct: RESUME_MIN_COMPLETION_PCT }),
+      variant: 'warning',
+    });
+    return true;
+  }
+
   async function handleDownloadResume() {
     if (resumeBusy) return;
+    if (blockedByCompletion()) return;
     setResumeBusy(true);
     setResumeError(false);
     try {
@@ -112,6 +131,7 @@ export function ProfileHero({ profile, completion }: ProfileHeroProps) {
    */
   async function handleShareProfile() {
     if (shareBusy) return;
+    if (blockedByCompletion()) return;
     setShareBusy(true);
     setResumeError(false);
     try {

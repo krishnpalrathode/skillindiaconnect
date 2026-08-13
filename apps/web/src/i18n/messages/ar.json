@@ -167,7 +167,8 @@
     "exportStarted": "تم تنزيل التصدير بنجاح",
     "actionFailed": "لم تنجح العملية. يرجى المحاولة مرة أخرى.",
     "jobArchived": "تمت أرشفة الوظيفة",
-    "otpSent": "تم إرسال رمز التحقق بنجاح"
+    "otpSent": "تم إرسال رمز التحقق بنجاح",
+    "resumeNeedsCompletion": "أكمل {pct}% على الأقل من ملفك الشخصي لتنزيل سيرتك الذاتية أو مشاركتها."
   },
   "field": {
     "requiredError": "[ar] This field is required",
@@ -394,7 +395,8 @@
       "salaryMaxPlaceholder": "مثال: 50000",
       "saveSalary": "حفظ الراتب",
       "salaryNote": "غير مُقيَّم — للتوجيه في المطابقة فقط",
-      "salaryRangeError": "يجب أن يكون الحد الأقصى مساوياً للحد الأدنى أو أكبر منه"
+      "salaryRangeError": "يجب أن يكون الحد الأقصى مساوياً للحد الأدنى أو أكبر منه",
+      "salaryLimitError": "أدخل قيمة لا تتجاوز {max, number}."
     },
     "settingsPageSubtitle": "تحكّم في ما يمكن لأصحاب العمل رؤيته وكيف نتواصل معك."
   },
@@ -537,7 +539,8 @@
       "errInvalidType": "نوع الملف غير مدعوم. ارفع ملف PDF أو JPG أو PNG.",
       "errUploadIncomplete": "لم يكتمل الرفع. يرجى المحاولة مرة أخرى.",
       "dropzoneHint": "اسحب وأفلت أو انقر للاختيار",
-      "maxSize": "الحد الأقصى {size} ميغابايت"
+      "maxSize": "الحد الأقصى {size} ميغابايت",
+      "errPassportExpiry": "يجب أن يكون تاريخ انتهاء جواز سفرك في المستقبل. صحّح التاريخ أعلاه ثم أعد الرفع."
     },
     "nav": {
       "back": "رجوع",

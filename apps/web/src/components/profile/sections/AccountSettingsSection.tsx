@@ -11,6 +11,13 @@ import { useToast } from '@/components/ui/toast';
 import { patchCandidateSettings } from '@/lib/api/candidate';
 import { CURRENCIES } from '@/lib/currencies';
 
+/**
+ * Postgres int4 ceiling — the hard limit on CandidateProfile.salaryExpectationMin
+ * and salaryExpectationMax. Not a product rule: the API validates only `@Min(0)`,
+ * so anything past this reaches the database and comes back as a 500.
+ */
+const SALARY_MAX_VALUE = 2_147_483_647;
+
 type CandidateProfile = components['schemas']['CandidateProfile'];
 
 interface AccountSettingsSectionProps {
@@ -97,6 +104,21 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
     minNum > maxNum;
 
   /*
+    Ceiling check. Both columns are Postgres `int4`, so anything past
+    2,147,483,647 is rejected by the DATABASE — the API has only `@Min(0)` and
+    surfaces the overflow as a 500. Typing a long number therefore used to do
+    nothing visible at all: the request failed, `saveSalary` had no catch, and
+    the candidate was left staring at a Save button that appeared to have
+    worked.
+
+    Caught here so the limit is stated before the round-trip, next to the field
+    that has to change — and the server stays the enforcement point either way.
+  */
+  const salaryOverLimit =
+    (minNum !== null && Number.isFinite(minNum) && minNum > SALARY_MAX_VALUE) ||
+    (maxNum !== null && Number.isFinite(maxNum) && maxNum > SALARY_MAX_VALUE);
+
+  /*
     Nothing to save until one of the three inputs differs from what the server
     last returned. Compared against `profile` rather than tracked with a dirty
     flag because `profile` IS the saved state here — it is replaced by the PATCH
@@ -134,7 +156,7 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
     // Client-side mirror of the server rule (SALARY_RANGE_INVALID) so the user
     // is told before a round-trip. The server remains the enforcement point —
     // this only saves a failed request.
-    if (salaryRangeInvalid) return;
+    if (salaryRangeInvalid || salaryOverLimit) return;
 
     setSalarySaving(true);
     try {
@@ -145,6 +167,14 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
       });
       onProfileUpdate(updated);
       showToast({ message: tToast('salarySaved') });
+    } catch {
+      /*
+        Previously there was no catch at all, so ANY failure here — a dropped
+        connection, a value the server refuses — resolved into silence: no
+        toast, no message, and a Save button that looked like it had worked.
+        Silence is the one outcome a save must never have.
+      */
+      showToast({ message: tToast('saveFailed'), variant: 'error' });
     } finally {
       setSalarySaving(false);
     }
@@ -225,7 +255,15 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
           </h3>
           <div className="flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-3">
-              <Field id="salary-min" label={t('salaryMinLabel')}>
+              <Field
+                id="salary-min"
+                label={t('salaryMinLabel')}
+                error={
+                  minNum !== null && Number.isFinite(minNum) && minNum > SALARY_MAX_VALUE
+                    ? t('salaryLimitError', { max: SALARY_MAX_VALUE })
+                    : undefined
+                }
+              >
                 <Input
                   className="h-12 rounded-xl"
                   type="number"
@@ -241,7 +279,13 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
                 // Reported on MAX, not MIN: the maximum is the value that has to
                 // rise to resolve the conflict, so the message belongs where the
                 // fix is made.
-                error={salaryRangeInvalid ? t('salaryRangeError') : undefined}
+                error={
+                  maxNum !== null && Number.isFinite(maxNum) && maxNum > SALARY_MAX_VALUE
+                    ? t('salaryLimitError', { max: SALARY_MAX_VALUE })
+                    : salaryRangeInvalid
+                      ? t('salaryRangeError')
+                      : undefined
+                }
               >
                 <Input
                   className="h-12 rounded-xl"
@@ -273,7 +317,7 @@ export function AccountSettingsSection({ profile, onProfileUpdate }: AccountSett
               variant="secondary"
               size="sm"
               loading={salarySaving}
-              disabled={salaryRangeInvalid || !salaryDirty}
+              disabled={salaryRangeInvalid || salaryOverLimit || !salaryDirty}
               onClick={saveSalary}
               className="min-h-10 self-start rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] px-5 text-white shadow-sm transition-all hover:shadow-md"
             >

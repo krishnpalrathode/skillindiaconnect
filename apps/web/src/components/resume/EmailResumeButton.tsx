@@ -15,7 +15,16 @@ type Outcome = 'emailed' | 'notReady' | 'error';
  * — never an address from the request. Lighter than the WhatsApp path (no
  * dedicated cap), but the same 422 RESUME_NOT_READY discipline applies.
  */
-export function EmailResumeButton() {
+interface EmailResumeButtonProps {
+  /**
+   * Asked BEFORE the send starts; returning true aborts and leaves the
+   * explaining to the host (the 80%-completion gate). Placed at the top of
+   * `send` so no request is issued and no outcome state is touched.
+   */
+  isBlocked?: () => boolean;
+}
+
+export function EmailResumeButton({ isBlocked }: EmailResumeButtonProps = {}) {
   const t = useTranslations('resume.delivery');
   const tToast = useTranslations('toast');
   const { showToast } = useToast();
@@ -23,6 +32,7 @@ export function EmailResumeButton() {
   const [outcome, setOutcome] = useState<Outcome | null>(null);
 
   async function send() {
+    if (isBlocked?.()) return;
     setSending(true);
     setOutcome(null);
     try {

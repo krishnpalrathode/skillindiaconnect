@@ -219,7 +219,17 @@ export function FileUpload({
                   ? t('errInvalidType')
                   : state.errorCode === 'UPLOAD_NOT_FOUND'
                     ? t('errUploadIncomplete')
-                    : (state.errorMessage ?? t('uploadFailed'))}
+                    : /*
+                        The file was fine — the DATE was rejected. The server
+                        requires a passport expiry strictly in the future, so
+                        today's date fails, and the generic "Upload failed. Tap
+                        to retry." sent people re-uploading the same file
+                        forever. The fix is above the dropzone, not inside it,
+                        so the message has to say so.
+                      */
+                      state.errorCode === 'INVALID_PASSPORT_EXPIRY'
+                      ? t('errPassportExpiry')
+                      : (state.errorMessage ?? t('uploadFailed'))}
             </span>
             <div className="flex gap-2">
               <Button

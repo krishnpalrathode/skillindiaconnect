@@ -167,7 +167,8 @@
     "exportStarted": "Export downloaded successfully",
     "actionFailed": "That didn't work. Please try again.",
     "jobArchived": "Job archived",
-    "otpSent": "OTP sent successfully"
+    "otpSent": "OTP sent successfully",
+    "resumeNeedsCompletion": "Complete at least {pct}% of your profile to download or share your resume."
   },
   "field": {
     "requiredError": "This field is required",
@@ -394,7 +395,8 @@
       "salaryMaxPlaceholder": "e.g. 50000",
       "saveSalary": "Save salary",
       "salaryNote": "Unscored — for matching guidance only",
-      "salaryRangeError": "Maximum must be greater than or equal to the minimum"
+      "salaryRangeError": "Maximum must be greater than or equal to the minimum",
+      "salaryLimitError": "Enter a value up to {max, number}."
     },
     "settingsPageSubtitle": "Control what employers can see and how we contact you."
   },
@@ -537,7 +539,8 @@
       "errInvalidType": "That file type isn't supported. Upload a PDF, JPG, or PNG.",
       "errUploadIncomplete": "The upload didn't finish. Please try again.",
       "dropzoneHint": "Drag & drop or click to select",
-      "maxSize": "Max {size} MB"
+      "maxSize": "Max {size} MB",
+      "errPassportExpiry": "Your passport expiry date must be a future date. Correct the date above, then upload again."
     },
     "nav": {
       "back": "Back",
