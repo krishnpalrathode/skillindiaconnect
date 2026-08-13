@@ -95,5 +95,254 @@
     "medicalCertificate": "የሕክምና ሰርተፍኬት",
     "viewDocument": "ሰነዱን ይመልከቱ",
     "deleteDocument": "ሰነዱን ይሰርዙ"
+  },
+  "landing": {
+    "meta": {
+      "title": "ስኪል ኢንዲያ ኮኔክት — በህንድና በባህረ ሰላጤው ደህንነቱ የተጠበቀ፣ የተረጋገጠ ሥራ",
+      "description": "በህንድና በባህረ ሰላጤው የተረጋገጡ ሥራዎችን ያግኙ። እያንዳንዱ ሥራ መኖሪያ፣ የጤና መድን እና ትራንስፖርት ያካትታል። ለሠራተኞች ነጻ።"
+    },
+    "nav": {
+      "login": "ግባ",
+      "signUp": "በነጻ ተመዝገብ",
+      "skipToContent": "ወደ ዋና ይዘት ዝለል",
+      "home": "ስኪል ኢንዲያ ኮኔክት መነሻ"
+    },
+    "hero": {
+      "headline": "<hl>ደህንነቱ የተጠበቀ፣ የተረጋገጠ ሥራ</hl> በህንድና በባህረ ሰላጤው",
+      "subline": "በስኪል ኢንዲያ ኮኔክት ላይ ያለ እያንዳንዱ ሥራ መኖሪያ፣ የጤና መድን እና ትራንስፖርት መስጠት አለበት። ሥራው ከመታተሙ በፊት እያንዳንዱን ቀጣሪ እንመረምራለን።",
+      "ctaWorker": "ሥራ ፈልግ",
+      "ctaEmployer": "ሠራተኞች ቅጠር",
+      "freeNote": "ለሠራተኞች ነጻ። ሁልጊዜ።"
+    },
+    "trust": {
+      "ariaLabel": "ሠራተኞች ለምን እኛን እንደሚያምኑ",
+      "verifiedEmployers": {
+        "title": "የተረጋገጡ ቀጣሪዎች",
+        "body": "ሥራ ከማስታወቃቸው በፊት እያንዳንዱን ኩባንያ እንመረምራለን።"
+      },
+      "protection": {
+        "title": "የሠራተኛ ጥበቃ",
+        "body": "በእያንዳንዱ ሥራ መኖሪያ፣ የጤና ሽፋን እና ትራንስፖርት።"
+      },
+      "free": {
+        "title": "ለሠራተኞች ነጻ",
+        "body": "መገለጫ ለመፍጠር ወይም ለማመልከት ክፍያ የለም።"
+      },
+      "whatsapp": {
+        "title": "በWhatsApp ማሻሻያዎች",
+        "body": "የሥራ ሁኔታዎ ሲቀየር መልእክት እንልካለን።"
+      }
+    },
+    "howItWorks": {
+      "heading": "እንዴት እንደሚሠራ",
+      "subheading": "ወደ ቀጣዩ ሥራዎ ሦስት ደረጃዎች።",
+      "step1": {
+        "title": "መገለጫዎን ይፍጠሩ",
+        "body": "ችሎታዎችዎን እና የሥራ ልምድዎን ያክሉ። በስልክዎ ጥቂት ደቂቃዎች ይወስዳል።"
+      },
+      "step2": {
+        "title": "ይረጋገጡ",
+        "body": "ሰነዶችዎን ይስቀሉ። ቀጣሪዎች መገለጫዎን እንዲያምኑ ቡድናችን ይመረምራቸዋል።"
+      },
+      "step3": {
+        "title": "ሥራ ያግኙ",
+        "body": "ከችሎታዎ ጋር ለሚስማሙ ሥራዎች ያመልክቱ። ቀጣሪዎች በቀጥታ ያገኙዎታል።"
+      },
+      "cta": "ነጻ መገለጫዎን ይፍጠሩ"
+    },
+    "employers": {
+      "heading": "የሰለጠኑ ሠራተኞችን እየቀጠሩ ነው?",
+      "body": "ሥራ ያስታውቁ እና በመላው ህንድ የተረጋገጡ ሠራተኞችን ያግኙ። የተመረመሩ ሰነዶች እና እውነተኛ የሥራ ልምድ ያላቸውን መገለጫዎች ይመልከቱ። በህንድና በባህረ ሰላጤው ለቅጥር የተሠራ።",
+      "point1": "ሥራ ያስታውቁ እና ተስማሚ አመልካቾችን ያግኙ",
+      "point2": "የተረጋገጡ ሰነዶች ያላቸውን እጩዎች ይመልከቱ",
+      "point3": "ለህንድና ለባህረ ሰላጤ ቅጥር ግልጽ ደንቦች",
+      "cta": "ሠራተኞች ቅጠር"
+    },
+    "protection": {
+      "heading": "እያንዳንዱ ሥራ ይጠብቅዎታል",
+      "lead": "ይህ የእኛ ደንብ ነው፣ ቃል ኪዳን አይደለም። እነዚህ ሦስቱ ከሌሉ ቀጣሪ እዚህ ሥራ ማስታወቅ አይችልም።",
+      "accommodation": {
+        "title": "መኖሪያ ቦታ",
+        "body": "መኖሪያ የሥራው አካል ነው።"
+      },
+      "insurance": {
+        "title": "የጤና መድን",
+        "body": "የሕክምና ሽፋን የሥራው አካል ነው።"
+      },
+      "transport": {
+        "title": "ትራንስፖርት",
+        "body": "ወደ ሥራ መጓጓዝ የሥራው አካል ነው።"
+      },
+      "enforcement": "ከእነዚህ አንዱን የሚያስቀር ማንኛውንም ሥራ ሥርዓታችን ያግዳል።"
+    },
+    "categories": {
+      "heading": "በሙያ የተከፋፈሉ ሥራዎች",
+      "subheading": "ከችሎታዎ ጋር የሚስማማ ሥራ ያግኙ።",
+      "construction": "ግንባታ",
+      "driving": "መንዳት",
+      "electrical": "ኤሌክትሪክ",
+      "welding": "ብየዳ",
+      "plumbing": "ቧንቧ ሥራ",
+      "hospitality": "እንግዳ አቀባበል",
+      "carpentry": "አናጢነት",
+      "housekeeping": "የቤት አያያዝ",
+      "cta": "ለሙያዎ ሥራዎችን ይመልከቱ"
+    },
+    "footer": {
+      "tagline": "የሰለጠኑ ህንዳውያን ሠራተኞችን በህንድና በባህረ ሰላጤው ካሉ የተረጋገጡ ቀጣሪዎች ጋር ያገናኛል።",
+      "company": "ኩባንያ",
+      "about": "ስለ እኛ",
+      "contact": "ያግኙን",
+      "legal": "ሕጋዊ",
+      "privacy": "የግላዊነት ፖሊሲ",
+      "terms": "ውሎች",
+      "support": "ድጋፍ",
+      "emailLabel": "ኢሜይል ይላኩልን",
+      "languageLabel": "ቋንቋ",
+      "rights": "© {year} ስኪል ኢንዲያ ኮኔክት። መብቱ በሙሉ የተጠበቀ ነው።",
+      "getStarted": "ይጀምሩ",
+      "findJobs": "ሥራ ፈልግ",
+      "hireWorkers": "ሠራተኞች ቅጠር",
+      "login": "ግባ",
+      "employerLogin": "የቀጣሪ መግቢያ",
+      "explore": "ያስሱ",
+      "followUs": "ይከተሉን",
+      "callUs": "ይደውሉልን",
+      "visitUs": "ቢሮአችን"
+    },
+    "carousel": {
+      "label": "በስኪል ኢንዲያ ኮኔክት ላይ የሰለጠኑ ሠራተኞች",
+      "prev": "ቀዳሚ ምስል",
+      "next": "ቀጣይ ምስል",
+      "goTo": "ምስል {n} አሳይ",
+      "slideLabel": "ከ{total} ውስጥ ምስል {n}",
+      "categories": {
+        "construction": "ግንባታና ሲቪል",
+        "electrical": "ኤሌክትሪክና ቧንቧ",
+        "driving": "ሾፌሮችና ሎጂስቲክስ",
+        "hospitality": "እንግዳ አቀባበልና ምግብ"
+      },
+      "trust": {
+        "protection": "እያንዳንዱ ሥራ መኖሪያ፣ የጤና መድን እና ትራንስፖርት ያካትታል",
+        "free": "ለሠራተኞች ሁልጊዜ ክፍያ የለም",
+        "verified": "ከማስታወቃቸው በፊት ቀጣሪዎች ይረጋገጣሉ"
+      },
+      "verifiedStrip": "የተረጋገጡ ቀጣሪዎች ብቻ"
+    }
+  },
+  "employer": {
+    "nav": {
+      "ariaLabel": "የቀጣሪ አሰሳ",
+      "openSidebar": "የአሰሳ ዝርዝር ክፈት",
+      "closeSidebar": "የአሰሳ ዝርዝር ዝጋ",
+      "dashboard": "ዳሽቦርድ",
+      "postJob": "ሥራ አስታውቅ",
+      "postJobPendingHint": "ከተፈቀደ በኋላ ይገኛል",
+      "myJobs": "የእኔ ሥራዎች",
+      "candidates": "እጩዎች",
+      "notifications": "ማሳወቂያዎች",
+      "subscription": "ምዝገባ",
+      "profile": "የኩባንያ መገለጫ",
+      "interested": "ፍላጎት ያሳዩ"
+    },
+    "header": {
+      "notifications": "ማሳወቂያዎች",
+      "accountMenu": "የመለያ ዝርዝር",
+      "logout": "ውጣ"
+    },
+    "banner": {
+      "pendingTitle": "ኩባንያዎ በግምገማ ላይ ነው።",
+      "pendingBody": "ማረጋገጫ አብዛኛውን ጊዜ እስከ 24 ሰዓት ይወስዳል። መገለጫዎን አሁን ማዘጋጀት ይችላሉ — ሥራ ማስታወቅ ከተፈቀደ በኋላ ይከፈታል።",
+      "rejectedTitle": "የኩባንያ ምዝገባ ተቀባይነት አላገኘም።",
+      "rejectedBodyFallback": "እባክዎ ማመልከቻዎን ገምግመው እንደገና ያስገቡ።",
+      "rejectedAction": "ምዝገባ እንደገና አስገባ →",
+      "suspendedTitle": "መለያ ታግዷል።",
+      "suspendedBody": "ለእርዳታ እባክዎ ድጋፍን ያግኙ።"
+    },
+    "plan": {
+      "freePlan": "ነጻ ዕቅድ",
+      "proPlan": "ፕሮ ዕቅድ",
+      "gracePlan": "{plan} (የችሮታ ጊዜ)",
+      "freeHint": "ለተጨማሪ ሥራዎች ያሻሽሉ",
+      "daysLeft": "{count, plural, one {# ቀን ቀርቷል} other {# ቀናት ቀርተዋል}}",
+      "graceDaysLeft": "{count, plural, one {የችሮታ ጊዜ በ# ቀን ያበቃል} other {የችሮታ ጊዜ በ# ቀናት ያበቃል}}",
+      "upgrade": "ዕቅድ ያሻሽሉ",
+      "manage": "ምዝገባ ያስተዳድሩ",
+      "renewNow": "አሁን ያድሱ"
+    },
+    "shell": {
+      "loadingCompany": "ኩባንያ በመጫን ላይ…",
+      "errorTitle": "የኩባንያ መገለጫ መጫን አልተቻለም።",
+      "errorBody": "እባክዎ ግንኙነትዎን አረጋግጠው እንደገና ይሞክሩ።",
+      "retry": "እንደገና ሞክር"
+    },
+    "dashboard": {
+      "metaTitle": "የቀጣሪ ዳሽቦርድ",
+      "greeting": "እንደምን አደሩ, {name}",
+      "greetingFallback": "እንኳን ደህና ተመለሱ",
+      "kpi": {
+        "activeJobs": "ንቁ ሥራዎች",
+        "totalApplications": "ጠቅላላ ማመልከቻዎች",
+        "shortlisted": "የተመረጡ",
+        "hired": "በዚህ ወር የተቀጠሩ",
+        "totalJobViews": "ጠቅላላ እይታዎች",
+        "pendingHint": "ማመልከቻዎች ሲከፈቱ ይገኛል"
+      },
+      "checklist": {
+        "title": "የኩባንያ መገለጫዎን ያሟሉ",
+        "cta": "ወደ መገለጫ ይሂዱ",
+        "dismiss": "አስወግድ"
+      },
+      "recentJobs": {
+        "title": "የቅርብ ጊዜ የሥራ ማስታወቂያዎች",
+        "emptyTitle": "እስካሁን ምንም ሥራ አልታወቀም",
+        "emptyBody": "ማመልከቻዎችን መቀበል ለመጀመር የመጀመሪያ ሥራዎን ያስታውቁ።",
+        "statusActive": "ንቁ",
+        "statusDraft": "ረቂቅ",
+        "statusPaused": "ቆሟል",
+        "statusArchived": "ተመዝግቧል",
+        "columnTitle": "የሥራ ርዕስ",
+        "columnStatus": "ሁኔታ",
+        "columnApplications": "ማመልከቻዎች",
+        "columnPosted": "የታወቀበት ቀን"
+      },
+      "recentApplicants": {
+        "title": "የቅርብ ጊዜ አመልካቾች",
+        "emptyTitle": "እስካሁን አመልካቾች የሉም",
+        "emptyBody": "እጩዎች ለሥራዎችዎ ሲያመለክቱ እዚህ ይታያሉ።"
+      },
+      "postJobCta": {
+        "title": "የመጀመሪያ ሥራዎን ያስታውቁ",
+        "body": "በህንድና በባህረ ሰላጤው ያሉ በሺዎች የሚቆጠሩ የተረጋገጡ ሠራተኞችን ያግኙ።",
+        "button": "ሥራ አስታውቅ",
+        "pendingTooltip": "የኩባንያ ፈቃድ ከተሰጠ በኋላ ይገኛል"
+      },
+      "loading": "ዳሽቦርድ በመጫን ላይ…",
+      "errorLoad": "የዳሽቦርድ ውሂብ መጫን አልተሳካም።",
+      "retry": "እንደገና ሞክር"
+    },
+    "login": {
+      "metaTitle": "የቀጣሪ መግቢያ",
+      "pageTitle": "የተረጋገጡ ሠራተኞችን ይቅጠሩ",
+      "pageSubtitle": "በህንድና በባህረ ሰላጤው ካሉ የሰለጠኑና የተረጋገጡ ሠራተኞች ጋር ይገናኙ።",
+      "trustBadge1": "የተረጋገጡ የሠራተኛ መገለጫዎች",
+      "trustBadge2": "ደህንነቱ የተጠበቀ የቅጥር ሂደት",
+      "trustBadge3": "የህንድና ዓለም አቀፍ ገበያዎች",
+      "formTitle": "ወደ ቀጣሪ መለያዎ ይግቡ",
+      "emailLabel": "የሥራ ኢሜይል",
+      "emailPlaceholder": "you@company.com",
+      "passwordLabel": "የይለፍ ቃል",
+      "passwordPlaceholder": "የይለፍ ቃልዎን ያስገቡ",
+      "rememberMe": "አስታውሰኝ",
+      "forgotPassword": "የይለፍ ቃል ረሱ?",
+      "loginButton": "ግባ",
+      "noAccount": "ስኪል ኢንዲያ ኮኔክት አዲስ ነዎት?",
+      "registerLink": "ኩባንያዎን ይመዝግቡ",
+      "candidateLink": "በምትኩ ሥራ እየፈለጉ ነው?",
+      "candidateLoginLink": "የእጩ መግቢያ",
+      "invalidCredentials": "ኢሜይል ወይም የይለፍ ቃል ትክክል አይደለም።",
+      "accountSuspended": "መለያዎ ታግዷል። ለእርዳታ ድጋፍን ያግኙ።",
+      "genericError": "የሆነ ስህተት ተከስቷል። እባክዎ እንደገና ይሞክሩ።"
+    }
   }
 }

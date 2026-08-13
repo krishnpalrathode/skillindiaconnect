@@ -95,5 +95,254 @@
     "medicalCertificate": "Surat keterangan sehat",
     "viewDocument": "Lihat dokumen",
     "deleteDocument": "Hapus dokumen"
+  },
+  "landing": {
+    "meta": {
+      "title": "Skill India Connect — Pekerjaan aman dan terverifikasi di India dan Teluk",
+      "description": "Temukan pekerjaan terverifikasi di India dan Teluk. Setiap pekerjaan mencakup tempat tinggal, asuransi kesehatan, dan transportasi. Gratis untuk pekerja."
+    },
+    "nav": {
+      "login": "Masuk",
+      "signUp": "Daftar gratis",
+      "skipToContent": "Lompat ke konten utama",
+      "home": "Beranda Skill India Connect"
+    },
+    "hero": {
+      "headline": "<hl>Pekerjaan aman dan terverifikasi</hl> di India dan Teluk",
+      "subline": "Setiap pekerjaan di Skill India Connect wajib memberi Anda tempat tinggal, asuransi kesehatan, dan transportasi. Kami memeriksa setiap pemberi kerja sebelum lowongan mereka tayang.",
+      "ctaWorker": "Cari pekerjaan",
+      "ctaEmployer": "Rekrut pekerja",
+      "freeNote": "Gratis untuk pekerja. Selamanya."
+    },
+    "trust": {
+      "ariaLabel": "Mengapa pekerja mempercayai kami",
+      "verifiedEmployers": {
+        "title": "Pemberi kerja terverifikasi",
+        "body": "Kami memeriksa setiap perusahaan sebelum mereka dapat memasang lowongan."
+      },
+      "protection": {
+        "title": "Perlindungan pekerja",
+        "body": "Tempat tinggal, jaminan kesehatan, dan transportasi di setiap pekerjaan."
+      },
+      "free": {
+        "title": "Gratis untuk pekerja",
+        "body": "Tidak ada biaya untuk membuat profil atau melamar."
+      },
+      "whatsapp": {
+        "title": "Pembaruan di WhatsApp",
+        "body": "Kami mengirim pesan saat status lamaran Anda berubah."
+      }
+    },
+    "howItWorks": {
+      "heading": "Cara kerjanya",
+      "subheading": "Tiga langkah menuju pekerjaan berikutnya.",
+      "step1": {
+        "title": "Buat profil Anda",
+        "body": "Tambahkan keahlian dan pengalaman kerja Anda. Hanya perlu beberapa menit di ponsel."
+      },
+      "step2": {
+        "title": "Dapatkan verifikasi",
+        "body": "Unggah dokumen Anda. Tim kami memeriksanya agar pemberi kerja mempercayai profil Anda."
+      },
+      "step3": {
+        "title": "Dapatkan pekerjaan",
+        "body": "Lamar pekerjaan yang sesuai keahlian Anda. Pemberi kerja akan menghubungi Anda langsung."
+      },
+      "cta": "Buat profil gratis Anda"
+    },
+    "employers": {
+      "heading": "Merekrut pekerja terampil?",
+      "body": "Pasang lowongan dan jangkau pekerja terverifikasi di seluruh India. Lihat profil dengan dokumen yang diperiksa dan pengalaman kerja nyata. Dibuat untuk perekrutan di India dan Teluk.",
+      "point1": "Pasang lowongan dan dapatkan pelamar yang sesuai",
+      "point2": "Lihat kandidat dengan dokumen terverifikasi",
+      "point3": "Aturan jelas untuk perekrutan India dan Teluk",
+      "cta": "Rekrut pekerja"
+    },
+    "protection": {
+      "heading": "Setiap pekerjaan melindungi Anda",
+      "lead": "Ini aturan kami, bukan janji. Pemberi kerja tidak dapat memasang lowongan di sini tanpa ketiganya.",
+      "accommodation": {
+        "title": "Tempat tinggal",
+        "body": "Akomodasi adalah bagian dari pekerjaan."
+      },
+      "insurance": {
+        "title": "Asuransi kesehatan",
+        "body": "Jaminan medis adalah bagian dari pekerjaan."
+      },
+      "transport": {
+        "title": "Transportasi",
+        "body": "Perjalanan ke tempat kerja adalah bagian dari pekerjaan."
+      },
+      "enforcement": "Sistem kami memblokir lowongan yang tidak menyertakan salah satunya."
+    },
+    "categories": {
+      "heading": "Pekerjaan berdasarkan bidang",
+      "subheading": "Temukan pekerjaan yang sesuai keahlian Anda.",
+      "construction": "Konstruksi",
+      "driving": "Mengemudi",
+      "electrical": "Kelistrikan",
+      "welding": "Pengelasan",
+      "plumbing": "Perpipaan",
+      "hospitality": "Perhotelan",
+      "carpentry": "Pertukangan kayu",
+      "housekeeping": "Tata graha",
+      "cta": "Lihat pekerjaan untuk bidang Anda"
+    },
+    "footer": {
+      "tagline": "Menghubungkan pekerja terampil India dengan pemberi kerja terverifikasi di India dan Teluk.",
+      "company": "Perusahaan",
+      "about": "Tentang kami",
+      "contact": "Kontak",
+      "legal": "Hukum",
+      "privacy": "Kebijakan privasi",
+      "terms": "Ketentuan",
+      "support": "Dukungan",
+      "emailLabel": "Email kami",
+      "languageLabel": "Bahasa",
+      "rights": "© {year} Skill India Connect. Seluruh hak cipta dilindungi.",
+      "getStarted": "Mulai",
+      "findJobs": "Cari pekerjaan",
+      "hireWorkers": "Rekrut pekerja",
+      "login": "Masuk",
+      "employerLogin": "Masuk pemberi kerja",
+      "explore": "Jelajahi",
+      "followUs": "Ikuti kami",
+      "callUs": "Hubungi kami",
+      "visitUs": "Kantor kami"
+    },
+    "carousel": {
+      "label": "Pekerja terampil di Skill India Connect",
+      "prev": "Gambar sebelumnya",
+      "next": "Gambar berikutnya",
+      "goTo": "Tampilkan gambar {n}",
+      "slideLabel": "Gambar {n} dari {total}",
+      "categories": {
+        "construction": "Konstruksi & Sipil",
+        "electrical": "Kelistrikan & Perpipaan",
+        "driving": "Pengemudi & Logistik",
+        "hospitality": "Perhotelan & Katering"
+      },
+      "trust": {
+        "protection": "Setiap pekerjaan mencakup tempat tinggal, asuransi kesehatan & transportasi",
+        "free": "Tanpa biaya untuk pekerja, selamanya",
+        "verified": "Pemberi kerja diverifikasi sebelum memasang lowongan"
+      },
+      "verifiedStrip": "Hanya pemberi kerja terverifikasi"
+    }
+  },
+  "employer": {
+    "nav": {
+      "ariaLabel": "Navigasi pemberi kerja",
+      "openSidebar": "Buka menu navigasi",
+      "closeSidebar": "Tutup menu navigasi",
+      "dashboard": "Dasbor",
+      "postJob": "Pasang lowongan",
+      "postJobPendingHint": "Tersedia setelah disetujui",
+      "myJobs": "Lowongan saya",
+      "candidates": "Kandidat",
+      "notifications": "Notifikasi",
+      "subscription": "Langganan",
+      "profile": "Profil perusahaan",
+      "interested": "Berminat"
+    },
+    "header": {
+      "notifications": "Notifikasi",
+      "accountMenu": "Menu akun",
+      "logout": "Keluar"
+    },
+    "banner": {
+      "pendingTitle": "Perusahaan Anda sedang ditinjau.",
+      "pendingBody": "Verifikasi biasanya memakan waktu hingga 24 jam. Anda dapat menyiapkan profil sekarang — pemasangan lowongan terbuka setelah disetujui.",
+      "rejectedTitle": "Pendaftaran perusahaan ditolak.",
+      "rejectedBodyFallback": "Silakan tinjau pengajuan Anda dan kirim ulang.",
+      "rejectedAction": "Kirim ulang pendaftaran →",
+      "suspendedTitle": "Akun ditangguhkan.",
+      "suspendedBody": "Silakan hubungi dukungan untuk bantuan."
+    },
+    "plan": {
+      "freePlan": "Paket Gratis",
+      "proPlan": "Paket Pro",
+      "gracePlan": "{plan} (Tenggang)",
+      "freeHint": "Tingkatkan untuk lebih banyak lowongan",
+      "daysLeft": "{count, plural, one {# hari tersisa} other {# hari tersisa}}",
+      "graceDaysLeft": "{count, plural, one {Tenggang berakhir dalam # hari} other {Tenggang berakhir dalam # hari}}",
+      "upgrade": "Tingkatkan paket",
+      "manage": "Kelola langganan",
+      "renewNow": "Perpanjang sekarang"
+    },
+    "shell": {
+      "loadingCompany": "Memuat perusahaan…",
+      "errorTitle": "Tidak dapat memuat profil perusahaan.",
+      "errorBody": "Silakan periksa koneksi Anda dan coba lagi.",
+      "retry": "Coba lagi"
+    },
+    "dashboard": {
+      "metaTitle": "Dasbor pemberi kerja",
+      "greeting": "Selamat pagi, {name}",
+      "greetingFallback": "Selamat datang kembali",
+      "kpi": {
+        "activeJobs": "Lowongan aktif",
+        "totalApplications": "Total lamaran",
+        "shortlisted": "Masuk seleksi",
+        "hired": "Direkrut bulan ini",
+        "totalJobViews": "Total dilihat",
+        "pendingHint": "Tersedia setelah lamaran dibuka"
+      },
+      "checklist": {
+        "title": "Lengkapi profil perusahaan Anda",
+        "cta": "Buka profil",
+        "dismiss": "Tutup"
+      },
+      "recentJobs": {
+        "title": "Lowongan terbaru",
+        "emptyTitle": "Belum ada lowongan dipasang",
+        "emptyBody": "Pasang lowongan pertama Anda untuk mulai menerima lamaran.",
+        "statusActive": "Aktif",
+        "statusDraft": "Draf",
+        "statusPaused": "Dijeda",
+        "statusArchived": "Diarsipkan",
+        "columnTitle": "Judul lowongan",
+        "columnStatus": "Status",
+        "columnApplications": "Lamaran",
+        "columnPosted": "Dipasang"
+      },
+      "recentApplicants": {
+        "title": "Pelamar terbaru",
+        "emptyTitle": "Belum ada pelamar",
+        "emptyBody": "Lamaran akan muncul di sini setelah kandidat melamar."
+      },
+      "postJobCta": {
+        "title": "Pasang lowongan pertama Anda",
+        "body": "Jangkau ribuan pekerja terverifikasi di India dan Teluk.",
+        "button": "Pasang lowongan",
+        "pendingTooltip": "Tersedia setelah perusahaan disetujui"
+      },
+      "loading": "Memuat dasbor…",
+      "errorLoad": "Gagal memuat data dasbor.",
+      "retry": "Coba lagi"
+    },
+    "login": {
+      "metaTitle": "Masuk pemberi kerja",
+      "pageTitle": "Rekrut pekerja terverifikasi",
+      "pageSubtitle": "Terhubung dengan pekerja terampil dan terverifikasi di India dan Teluk.",
+      "trustBadge1": "Profil pekerja terverifikasi",
+      "trustBadge2": "Proses perekrutan aman",
+      "trustBadge3": "Pasar India dan internasional",
+      "formTitle": "Masuk ke akun pemberi kerja Anda",
+      "emailLabel": "Email kerja",
+      "emailPlaceholder": "you@company.com",
+      "passwordLabel": "Kata sandi",
+      "passwordPlaceholder": "Masukkan kata sandi Anda",
+      "rememberMe": "Ingat saya",
+      "forgotPassword": "Lupa kata sandi?",
+      "loginButton": "Masuk",
+      "noAccount": "Baru di Skill India Connect?",
+      "registerLink": "Daftarkan perusahaan Anda",
+      "candidateLink": "Mencari pekerjaan?",
+      "candidateLoginLink": "Masuk kandidat",
+      "invalidCredentials": "Email atau kata sandi salah.",
+      "accountSuspended": "Akun Anda telah ditangguhkan. Hubungi dukungan untuk bantuan.",
+      "genericError": "Terjadi kesalahan. Silakan coba lagi."
+    }
   }
 }
