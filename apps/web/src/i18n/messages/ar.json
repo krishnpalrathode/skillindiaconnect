@@ -91,13 +91,19 @@
         "CLASSIC": "[ar] Classic",
         "MODERN": "[ar] Modern",
         "COMPACT": "[ar] Compact",
-        "MINIMAL": "[ar] Minimal"
+        "MINIMAL": "[ar] Minimal",
+        "ELEGANT": "أنيق",
+        "EXECUTIVE": "تنفيذي",
+        "TIMELINE": "الجدول الزمني"
       },
       "descriptions": {
         "CLASSIC": "تقليدية ورسمية. خيار آمن لأصحاب العمل الدوليين.",
         "MODERN": "[ar] Clean and spacious. Works well for most candidates.",
         "COMPACT": "[ar] Two columns. Fits more experience on one page.",
-        "MINIMAL": "[ar] Plain and simple. Easiest for hiring software to read."
+        "MINIMAL": "[ar] Plain and simple. Easiest for hiring software to read.",
+        "ELEGANT": "خط مزخرف بمظهر رسمي يشبه الشهادة.",
+        "EXECUTIVE": "ترويسة ملونة بارزة. يبرز بين الأوراق المطبوعة.",
+        "TIMELINE": "يعرض خبرتك المهنية كجدول زمني متصل."
       }
     }
   },
@@ -167,7 +173,8 @@
     "exportStarted": "تم تنزيل التصدير بنجاح",
     "actionFailed": "لم تنجح العملية. يرجى المحاولة مرة أخرى.",
     "jobArchived": "تمت أرشفة الوظيفة",
-    "otpSent": "تم إرسال رمز التحقق بنجاح"
+    "otpSent": "تم إرسال رمز التحقق بنجاح",
+    "resumeNeedsCompletion": "أكمل {pct}% على الأقل من ملفك الشخصي لتنزيل سيرتك الذاتية أو مشاركتها."
   },
   "field": {
     "requiredError": "[ar] This field is required",
@@ -394,7 +401,8 @@
       "salaryMaxPlaceholder": "مثال: 50000",
       "saveSalary": "حفظ الراتب",
       "salaryNote": "غير مُقيَّم — للتوجيه في المطابقة فقط",
-      "salaryRangeError": "يجب أن يكون الحد الأقصى مساوياً للحد الأدنى أو أكبر منه"
+      "salaryRangeError": "يجب أن يكون الحد الأقصى مساوياً للحد الأدنى أو أكبر منه",
+      "salaryLimitError": "أدخل قيمة لا تتجاوز {max, number}."
     },
     "settingsPageSubtitle": "تحكّم في ما يمكن لأصحاب العمل رؤيته وكيف نتواصل معك."
   },
@@ -537,7 +545,8 @@
       "errInvalidType": "نوع الملف غير مدعوم. ارفع ملف PDF أو JPG أو PNG.",
       "errUploadIncomplete": "لم يكتمل الرفع. يرجى المحاولة مرة أخرى.",
       "dropzoneHint": "اسحب وأفلت أو انقر للاختيار",
-      "maxSize": "الحد الأقصى {size} ميغابايت"
+      "maxSize": "الحد الأقصى {size} ميغابايت",
+      "errPassportExpiry": "يجب أن يكون تاريخ انتهاء جواز سفرك في المستقبل. صحّح التاريخ أعلاه ثم أعد الرفع."
     },
     "nav": {
       "back": "رجوع",

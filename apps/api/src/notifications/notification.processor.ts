@@ -1,4 +1,5 @@
 import { Inject, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { DeliveryStatus, NotificationType, WaMessageKind } from '@prisma/client';
 import { Job } from 'bullmq';
@@ -24,6 +25,7 @@ import {
   readTemplateVars,
 } from './notification.types';
 import { isWhatsappDeliverable } from './whatsapp-deliverability';
+import { renderNotificationEmail } from './templates';
 
 // RESPONSIVE tier: a candidate is waiting on the other end of these sends.
 // Pickup latency is unaffected — see worker-tuning.ts on the v5 marker.
@@ -38,6 +40,7 @@ export class NotificationProcessor extends WorkerHost {
     private readonly auditService: AuditService,
     private readonly storage: StorageService,
     private readonly metrics: MetricsService,
+    private readonly config: ConfigService,
   ) {
     super();
   }
@@ -379,7 +382,36 @@ export class NotificationProcessor extends WorkerHost {
 
     const attachments = await this.resolveEmailAttachments(payload);
 
+    /*
+      Render the BRANDED email here, in the caller layer.
+
+      This is the enrichment `email.channel.ts` documents as the intended
+      extension point: populating the reserved `subject`/`html`/`text` keys
+      needs no change to the port or to any adapter, so the SES swap stays a
+      one-binding change. Building the markup inside the channel instead would
+      put brand and copy into the provider seam — the one thing that seam is
+      designed not to hold.
+
+      Until now `payload.data` went across on its own, so every email resolved
+      to `<p>escaped text</p>` — the caller's own `title` and `body` never even
+      reached the message.
+
+      A caller that supplies its own `subject`/`html`/`text` still wins: those
+      keys are spread after this, preserving the port's stated precedence.
+    */
+    const rendered = renderNotificationEmail({
+      type,
+      title: payload.title,
+      body: payload.body,
+      data: payload.data ?? {},
+      webAppUrl: this.config.get<string>('WEB_APP_URL') ?? '',
+      hasAttachment: !!attachments,
+    });
+
     const result = await this.emailChannel.send(toEmail, type, {
+      subject: rendered.subject,
+      html: rendered.html,
+      text: rendered.text,
       ...(payload.data ?? {}),
       ...(attachments && { attachments }),
     });

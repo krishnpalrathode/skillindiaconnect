@@ -629,7 +629,7 @@ components:
             not governed by this toggle — only the number itself is.
         template:
           type: string
-          enum: [CLASSIC, MODERN, COMPACT, MINIMAL]
+          enum: [CLASSIC, MODERN, COMPACT, MINIMAL, ELEGANT, EXECUTIVE, TIMELINE]
           default: CLASSIC
           description: |
             Which HTML template renders the PDF (CR-001 B1/B2). Applied at
@@ -847,7 +847,7 @@ components:
           $ref: '#/components/schemas/EmployeeRange'
         languagePref:
           type: string
-          enum: [en, hi, ar]
+          enum: [en, hi, bn, mr, te, ta, gu, kn, ml, pa, or, as, ne, tl, id, si, am, sw, ur, fa, ps, ar]
           default: en
         description:
           type: string
@@ -4060,7 +4060,7 @@ paths:
                   # ResumeSettings.template description. This body carries
                   # additionalProperties: false, so the property must be listed
                   # explicitly to be accepted at all.
-                  enum: [CLASSIC, MODERN, COMPACT, MINIMAL]
+                  enum: [CLASSIC, MODERN, COMPACT, MINIMAL, ELEGANT, EXECUTIVE, TIMELINE]
       responses:
         '200':
           description: Settings updated (the FULL resulting settings)
@@ -4328,7 +4328,7 @@ paths:
                   $ref: '#/components/schemas/EmployeeRange'
                 languagePref:
                   type: string
-                  enum: [en, hi, ar]
+                  enum: [en, hi, bn, mr, te, ta, gu, kn, ml, pa, or, as, ne, tl, id, si, am, sw, ur, fa, ps, ar]
                   default: en
                 description:
                   type: string
@@ -4449,7 +4449,7 @@ paths:
                   $ref: '#/components/schemas/EmployeeRange'
                 languagePref:
                   type: string
-                  enum: [en, hi, ar]
+                  enum: [en, hi, bn, mr, te, ta, gu, kn, ml, pa, or, as, ne, tl, id, si, am, sw, ur, fa, ps, ar]
                 description:
                   type: string
       responses:

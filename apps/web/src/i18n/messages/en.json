@@ -22,13 +22,19 @@
         "CLASSIC": "Classic",
         "MODERN": "Modern",
         "COMPACT": "Compact",
-        "MINIMAL": "Minimal"
+        "MINIMAL": "Minimal",
+        "ELEGANT": "Elegant",
+        "EXECUTIVE": "Executive",
+        "TIMELINE": "Timeline"
       },
       "descriptions": {
         "CLASSIC": "Traditional and formal. A safe choice for international employers.",
         "MODERN": "Clean and spacious. Works well for most candidates.",
         "COMPACT": "Two columns. Fits more experience on one page.",
-        "MINIMAL": "Plain and simple. Easiest for hiring software to read."
+        "MINIMAL": "Plain and simple. Easiest for hiring software to read.",
+        "ELEGANT": "Decorative serif with a formal, certificate-like finish.",
+        "EXECUTIVE": "Bold colour header. Stands out in a printed stack.",
+        "TIMELINE": "Shows your work history as a continuous timeline."
       }
     },
     "downloadPdf": "Download PDF",
@@ -167,7 +173,8 @@
     "exportStarted": "Export downloaded successfully",
     "actionFailed": "That didn't work. Please try again.",
     "jobArchived": "Job archived",
-    "otpSent": "OTP sent successfully"
+    "otpSent": "OTP sent successfully",
+    "resumeNeedsCompletion": "Complete at least {pct}% of your profile to download or share your resume."
   },
   "field": {
     "requiredError": "This field is required",
@@ -394,7 +401,8 @@
       "salaryMaxPlaceholder": "e.g. 50000",
       "saveSalary": "Save salary",
       "salaryNote": "Unscored — for matching guidance only",
-      "salaryRangeError": "Maximum must be greater than or equal to the minimum"
+      "salaryRangeError": "Maximum must be greater than or equal to the minimum",
+      "salaryLimitError": "Enter a value up to {max, number}."
     },
     "settingsPageSubtitle": "Control what employers can see and how we contact you."
   },
@@ -537,7 +545,8 @@
       "errInvalidType": "That file type isn't supported. Upload a PDF, JPG, or PNG.",
       "errUploadIncomplete": "The upload didn't finish. Please try again.",
       "dropzoneHint": "Drag & drop or click to select",
-      "maxSize": "Max {size} MB"
+      "maxSize": "Max {size} MB",
+      "errPassportExpiry": "Your passport expiry date must be a future date. Correct the date above, then upload again."
     },
     "nav": {
       "back": "Back",

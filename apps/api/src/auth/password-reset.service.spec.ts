@@ -141,7 +141,7 @@ describe('PasswordResetService.request', () => {
     expect(h.notified).toHaveLength(1);
     expect(h.notified[0]!.type).toBe(NotificationType.PASSWORD_RESET);
 
-    const link = String((h.notified[0]!.payload as never as { data: { text: string } }).data.text);
+    const link = String((h.notified[0]!.payload as never as { data: { resetUrl: string } }).data.resetUrl);
     expect(link).toContain(`${WEB_APP_URL}/reset-password?token=`);
   });
 
@@ -150,7 +150,7 @@ describe('PasswordResetService.request', () => {
     await h.service.request('a@b.com');
 
     const raw = tokenFromEmail(
-      String((h.notified[0]!.payload as never as { data: { text: string } }).data.text),
+      String((h.notified[0]!.payload as never as { data: { resetUrl: string } }).data.resetUrl),
     );
     const stored = h.tokens[0]!.tokenHash;
 
@@ -174,9 +174,21 @@ describe('PasswordResetService.request', () => {
 
     expect(h.tokens).toHaveLength(0);
     expect(h.notified).toHaveLength(1);
-    const text = String((h.notified[0]!.payload as never as { data: { text: string } }).data.text);
-    expect(text).toMatch(/Google/);
-    expect(text).not.toContain('/reset-password?token=');
+
+    /*
+      The copy now lives in the branded email template, so this asserts on the
+      PAYLOAD the service emits rather than on hand-written body text: the
+      account is flagged as Google-only, the explanation mentions Google, and —
+      the security-relevant part — no reset link is minted for an account that
+      has no password.
+    */
+    const payload = h.notified[0]!.payload as never as {
+      body: string;
+      data: { googleAccount?: boolean; resetUrl?: string };
+    };
+    expect(payload.data.googleAccount).toBe(true);
+    expect(payload.data.resetUrl).toBeUndefined();
+    expect(payload.body).toMatch(/Google/);
   });
 
   it('the per-address budget throttles the 6th request in an hour', async () => {
@@ -198,7 +210,7 @@ describe('PasswordResetService.reset', () => {
     const h = buildHarness({ user: { id: 'u1', email: 'a@b.com', passwordHash: 'argon2$old' } });
     await h.service.request('a@b.com');
     const raw = tokenFromEmail(
-      String((h.notified[0]!.payload as never as { data: { text: string } }).data.text),
+      String((h.notified[0]!.payload as never as { data: { resetUrl: string } }).data.resetUrl),
     );
     return { h, raw };
   }

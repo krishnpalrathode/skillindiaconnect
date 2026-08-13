@@ -46,6 +46,16 @@ interface DownloadResumeButtonProps {
    * set of poll/backoff/duplicate-click guards.
    */
   onRegenerateChange?: (regenerate: (() => void) | null) => void;
+  /**
+   * Asked BEFORE any export work starts; returning true aborts and leaves the
+   * explaining to the host (the 80%-completion gate). Checked in the two
+   * functions that actually initiate work — `startGenerate` and `reDownload` —
+   * rather than in each button, so the idle Download, Regenerate, the retry
+   * inside GenerationStatus, the re-download, and the host's relocated
+   * Regenerate are all covered by one check and the poll state machine is
+   * untouched.
+   */
+  isBlocked?: () => boolean;
 }
 
 const DEFAULT_SCHEDULE = [1500, 1500, 2000, 3000, 4000, 6000];
@@ -82,6 +92,7 @@ export function DownloadResumeButton({
   download = defaultDownload,
   showRegenerate = true,
   onRegenerateChange,
+  isBlocked,
 }: DownloadResumeButtonProps) {
   const t = useTranslations('resume');
   const tToast = useTranslations('toast');
@@ -99,6 +110,15 @@ export function DownloadResumeButton({
   */
   const toastRef = useRef({ showToast, tToast });
   toastRef.current = { showToast, tToast };
+
+  /*
+    Behind a ref for the SAME reason as the toast helpers above: a host passing
+    an inline arrow would change identity every render, and naming it in
+    startGenerate's dependency list would re-open the render loop this file
+    already had to fix once.
+  */
+  const isBlockedRef = useRef(isBlocked);
+  isBlockedRef.current = isBlocked;
 
   const initialPhase: Phase =
     initialGeneration?.status === 'READY'
@@ -184,6 +204,7 @@ export function DownloadResumeButton({
 
   // Trigger a fresh generation (from idle, or a retry/regenerate).
   const startGenerate = useCallback(async () => {
+    if (isBlockedRef.current?.()) return;
     clearTimer();
     setPhase('generating');
     try {
@@ -231,6 +252,7 @@ export function DownloadResumeButton({
   // Re-download a READY resume: re-mint the (short-lived) signed url first, so
   // an expired link refreshes; a 404 means it's gone → regenerate.
   const reDownload = useCallback(async () => {
+    if (isBlockedRef.current?.()) return;
     setDownloading(true);
     try {
       const { url } = await getResumeDownloadUrl();

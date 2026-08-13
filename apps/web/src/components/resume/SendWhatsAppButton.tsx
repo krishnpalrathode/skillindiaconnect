@@ -14,12 +14,22 @@ import { sendResumeWhatsApp } from '@/lib/api/resume';
  */
 type Outcome = 'whatsapp' | 'fallback' | 'notReady' | 'limit' | 'error';
 
-export function SendWhatsAppButton() {
+interface SendWhatsAppButtonProps {
+  /**
+   * Asked BEFORE the send starts; returning true aborts and leaves the
+   * explaining to the host (the 80%-completion gate). Placed at the top of
+   * `send` so no request is issued and no outcome state is touched.
+   */
+  isBlocked?: () => boolean;
+}
+
+export function SendWhatsAppButton({ isBlocked }: SendWhatsAppButtonProps = {}) {
   const t = useTranslations('resume.delivery');
   const [sending, setSending] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
 
   async function send() {
+    if (isBlocked?.()) return;
     setSending(true);
     setOutcome(null);
     try {

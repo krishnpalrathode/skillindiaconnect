@@ -1,0 +1,348 @@
+{
+  "nav": {
+    "home": "Mwanzo",
+    "dashboard": "Dashibodi",
+    "profile": "Wasifu",
+    "jobs": "Kazi",
+    "applications": "Maombi",
+    "notifications": "Arifa",
+    "notificationsShort": "Arifa",
+    "resumeBuilder": "Kitengeneza Wasifu",
+    "resumeBuilderShort": "Wasifu",
+    "settings": "Mipangilio",
+    "logout": "Ondoka",
+    "login": "Ingia"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "Mwezi uliopita",
+      "nextMonth": "Mwezi ujao",
+      "month": "Mwezi",
+      "year": "Mwaka",
+      "clear": "Futa",
+      "today": "Leo"
+    },
+    "continue": "Endelea",
+    "back": "Rudi",
+    "save": "Hifadhi",
+    "cancel": "Ghairi",
+    "loading": "Inapakia…",
+    "required": "Inahitajika",
+    "optional": "Si lazima",
+    "submit": "Wasilisha",
+    "edit": "Hariri",
+    "delete": "Futa",
+    "confirm": "Thibitisha",
+    "close": "Funga",
+    "search": "Tafuta",
+    "filter": "Chuja",
+    "apply": "Omba",
+    "clear": "Ondoa",
+    "next": "Ifuatayo",
+    "previous": "Iliyotangulia",
+    "yes": "Ndiyo",
+    "no": "Hapana",
+    "or": "au",
+    "and": "na",
+    "brand": "Skill India Connect",
+    "logoutSuccess": "Umeondoka kwa mafanikio"
+  },
+  "status": {
+    "pending": "Inasubiri",
+    "shortlisted": "Umeorodheshwa",
+    "selected": "Umechaguliwa",
+    "rejected": "Umekataliwa",
+    "verified": "Imethibitishwa",
+    "unverified": "Haijathibitishwa",
+    "active": "Inatumika",
+    "inactive": "Haitumiki",
+    "expired": "Muda umeisha"
+  },
+  "pagination": {
+    "label": "Urasimishaji wa kurasa",
+    "pageInfo": "Ukurasa {page} kati ya {totalPages}",
+    "prev": "Iliyotangulia",
+    "next": "Ifuatayo",
+    "previousPage": "Ukurasa uliotangulia",
+    "nextPage": "Ukurasa ufuatao"
+  },
+  "sorting": {
+    "sortAscending": "Panga kwa {column}, kupanda",
+    "sortDescending": "Panga kwa {column}, kushuka"
+  },
+  "field": {
+    "requiredError": "Sehemu hii inahitajika",
+    "invalidFormat": "Muundo si sahihi",
+    "tooShort": "Fupi mno",
+    "tooLong": "Ndefu mno"
+  },
+  "errors": {
+    "generic": "Hitilafu imetokea. Tafadhali jaribu tena.",
+    "network": "Hitilafu ya mtandao. Tafadhali angalia muunganisho wako.",
+    "notFound": "Ukurasa haujapatikana",
+    "unauthorized": "Tafadhali ingia ili kuendelea",
+    "forbidden": "Huna ruhusa ya kufanya hili"
+  },
+  "document": {
+    "upload": "Pakia hati",
+    "passport": "Pasipoti",
+    "photo": "Picha ya ukubwa wa pasipoti",
+    "aadhaar": "Kadi ya Aadhaar",
+    "resume": "Wasifu",
+    "marksheet": "Cheti cha alama",
+    "certificate": "Cheti",
+    "policeVerification": "Cheti cha uthibitisho wa polisi",
+    "medicalCertificate": "Cheti cha afya",
+    "viewDocument": "Tazama hati",
+    "deleteDocument": "Futa hati"
+  },
+  "landing": {
+    "meta": {
+      "title": "Skill India Connect — Kazi salama na zilizothibitishwa India na Ghuba",
+      "description": "Tafuta kazi zilizothibitishwa India na Ghuba. Kila kazi inajumuisha malazi, bima ya afya, na usafiri. Bure kwa wafanyakazi."
+    },
+    "nav": {
+      "login": "Ingia",
+      "signUp": "Jisajili bure",
+      "skipToContent": "Rukia hadi maudhui makuu",
+      "home": "Ukurasa wa nyumbani wa Skill India Connect"
+    },
+    "hero": {
+      "headline": "<hl>Kazi salama na zilizothibitishwa</hl> India na Ghuba",
+      "subline": "Kila kazi kwenye Skill India Connect lazima ikupe mahali pa kuishi, bima ya afya, na usafiri. Tunakagua kila mwajiri kabla kazi yake haijachapishwa.",
+      "ctaWorker": "Tafuta kazi",
+      "ctaEmployer": "Ajiri wafanyakazi",
+      "freeNote": "Bure kwa wafanyakazi. Daima."
+    },
+    "trust": {
+      "ariaLabel": "Kwa nini wafanyakazi wanatuamini",
+      "verifiedEmployers": {
+        "title": "Waajiri waliothibitishwa",
+        "body": "Tunakagua kila kampuni kabla haijaweza kutangaza kazi."
+      },
+      "protection": {
+        "title": "Ulinzi wa mfanyakazi",
+        "body": "Malazi, bima ya afya, na usafiri katika kila kazi."
+      },
+      "free": {
+        "title": "Bure kwa wafanyakazi",
+        "body": "Hakuna ada ya kutengeneza wasifu au kuomba kazi."
+      },
+      "whatsapp": {
+        "title": "Taarifa kupitia WhatsApp",
+        "body": "Tunakutumia ujumbe hali ya ombi lako inapobadilika."
+      }
+    },
+    "howItWorks": {
+      "heading": "Jinsi inavyofanya kazi",
+      "subheading": "Hatua tatu hadi kazi yako inayofuata.",
+      "step1": {
+        "title": "Tengeneza wasifu wako",
+        "body": "Ongeza ujuzi na uzoefu wako wa kazi. Inachukua dakika chache kwenye simu yako."
+      },
+      "step2": {
+        "title": "Thibitishwa",
+        "body": "Pakia nyaraka zako. Timu yetu inazikagua ili waajiri waamini wasifu wako."
+      },
+      "step3": {
+        "title": "Pata kazi",
+        "body": "Omba kazi zinazolingana na ujuzi wako. Waajiri watakuwasiliana moja kwa moja."
+      },
+      "cta": "Tengeneza wasifu wako bure"
+    },
+    "employers": {
+      "heading": "Unaajiri wafanyakazi wenye ujuzi?",
+      "body": "Tangaza kazi na ufikie wafanyakazi waliothibitishwa kote India. Angalia wasifu wenye nyaraka zilizokaguliwa na uzoefu halisi wa kazi. Imeundwa kwa ajili ya kuajiri India na Ghuba.",
+      "point1": "Tangaza kazi na upate waombaji wanaolingana",
+      "point2": "Angalia wagombea wenye nyaraka zilizothibitishwa",
+      "point3": "Sheria wazi za kuajiri India na Ghuba",
+      "cta": "Ajiri wafanyakazi"
+    },
+    "protection": {
+      "heading": "Kila kazi inakulinda",
+      "lead": "Hii ni sheria yetu, si ahadi. Mwajiri hawezi kuchapisha kazi hapa bila hizi tatu.",
+      "accommodation": {
+        "title": "Mahali pa kuishi",
+        "body": "Malazi ni sehemu ya kazi."
+      },
+      "insurance": {
+        "title": "Bima ya afya",
+        "body": "Huduma ya matibabu ni sehemu ya kazi."
+      },
+      "transport": {
+        "title": "Usafiri",
+        "body": "Safari ya kwenda kazini ni sehemu ya kazi."
+      },
+      "enforcement": "Mfumo wetu unazuia kazi yoyote inayoacha mojawapo ya haya."
+    },
+    "categories": {
+      "heading": "Kazi kwa fani",
+      "subheading": "Tafuta kazi inayolingana na ujuzi wako.",
+      "construction": "Ujenzi",
+      "driving": "Udereva",
+      "electrical": "Umeme",
+      "welding": "Uchomeleaji",
+      "plumbing": "Mabomba",
+      "hospitality": "Ukarimu",
+      "carpentry": "Useremala",
+      "housekeeping": "Utunzaji wa nyumba",
+      "cta": "Ona kazi za fani yako"
+    },
+    "footer": {
+      "tagline": "Kuunganisha wafanyakazi wenye ujuzi wa India na waajiri waliothibitishwa India na Ghuba.",
+      "company": "Kampuni",
+      "about": "Kutuhusu",
+      "contact": "Wasiliana",
+      "legal": "Kisheria",
+      "privacy": "Sera ya faragha",
+      "terms": "Masharti",
+      "support": "Msaada",
+      "emailLabel": "Tutumie barua pepe",
+      "languageLabel": "Lugha",
+      "rights": "© {year} Skill India Connect. Haki zote zimehifadhiwa.",
+      "getStarted": "Anza",
+      "findJobs": "Tafuta kazi",
+      "hireWorkers": "Ajiri wafanyakazi",
+      "login": "Ingia",
+      "employerLogin": "Kuingia kwa mwajiri",
+      "explore": "Chunguza",
+      "followUs": "Tufuate",
+      "callUs": "Tupigie simu",
+      "visitUs": "Ofisi yetu"
+    },
+    "carousel": {
+      "label": "Wafanyakazi wenye ujuzi kwenye Skill India Connect",
+      "prev": "Picha iliyotangulia",
+      "next": "Picha inayofuata",
+      "goTo": "Onyesha picha {n}",
+      "slideLabel": "Picha {n} kati ya {total}",
+      "categories": {
+        "construction": "Ujenzi na Uhandisi",
+        "electrical": "Umeme na Mabomba",
+        "driving": "Madereva na Usafirishaji",
+        "hospitality": "Ukarimu na Upishi"
+      },
+      "trust": {
+        "protection": "Kila kazi inajumuisha malazi, bima ya afya na usafiri",
+        "free": "Hakuna ada kwa wafanyakazi, daima",
+        "verified": "Waajiri huthibitishwa kabla ya kutangaza"
+      },
+      "verifiedStrip": "Waajiri waliothibitishwa pekee"
+    }
+  },
+  "employer": {
+    "nav": {
+      "ariaLabel": "Urambazaji wa mwajiri",
+      "openSidebar": "Fungua menyu ya urambazaji",
+      "closeSidebar": "Funga menyu ya urambazaji",
+      "dashboard": "Dashibodi",
+      "postJob": "Tangaza kazi",
+      "postJobPendingHint": "Inapatikana baada ya idhini",
+      "myJobs": "Kazi zangu",
+      "candidates": "Wagombea",
+      "notifications": "Arifa",
+      "subscription": "Usajili",
+      "profile": "Wasifu wa kampuni",
+      "interested": "Waliopendezwa"
+    },
+    "header": {
+      "notifications": "Arifa",
+      "accountMenu": "Menyu ya akaunti",
+      "logout": "Toka"
+    },
+    "banner": {
+      "pendingTitle": "Kampuni yako inakaguliwa.",
+      "pendingBody": "Uthibitishaji huchukua hadi saa 24. Unaweza kuandaa wasifu sasa — kutangaza kazi kutafunguliwa baada ya idhini.",
+      "rejectedTitle": "Usajili wa kampuni umekataliwa.",
+      "rejectedBodyFallback": "Tafadhali kagua maombi yako na uwasilishe tena.",
+      "rejectedAction": "Wasilisha usajili tena →",
+      "suspendedTitle": "Akaunti imesimamishwa.",
+      "suspendedBody": "Tafadhali wasiliana na msaada kwa usaidizi."
+    },
+    "plan": {
+      "freePlan": "Mpango wa bure",
+      "proPlan": "Mpango wa Pro",
+      "gracePlan": "{plan} (Neema)",
+      "freeHint": "Boresha kwa kazi zaidi",
+      "daysLeft": "{count, plural, one {siku # imebaki} other {siku # zimebaki}}",
+      "graceDaysLeft": "{count, plural, one {Neema inaisha baada ya siku #} other {Neema inaisha baada ya siku #}}",
+      "upgrade": "Boresha mpango",
+      "manage": "Dhibiti usajili",
+      "renewNow": "Fanya upya sasa"
+    },
+    "shell": {
+      "loadingCompany": "Inapakia kampuni…",
+      "errorTitle": "Imeshindwa kupakia wasifu wa kampuni.",
+      "errorBody": "Tafadhali angalia muunganisho wako na ujaribu tena.",
+      "retry": "Jaribu tena"
+    },
+    "dashboard": {
+      "metaTitle": "Dashibodi ya mwajiri",
+      "greeting": "Habari za asubuhi, {name}",
+      "greetingFallback": "Karibu tena",
+      "kpi": {
+        "activeJobs": "Kazi zinazoendelea",
+        "totalApplications": "Jumla ya maombi",
+        "shortlisted": "Waliochaguliwa",
+        "hired": "Walioajiriwa mwezi huu",
+        "totalJobViews": "Jumla ya kutazamwa",
+        "pendingHint": "Inapatikana maombi yakianza"
+      },
+      "checklist": {
+        "title": "Kamilisha wasifu wa kampuni yako",
+        "cta": "Nenda kwenye wasifu",
+        "dismiss": "Ondoa"
+      },
+      "recentJobs": {
+        "title": "Matangazo ya hivi karibuni",
+        "emptyTitle": "Hakuna kazi iliyotangazwa bado",
+        "emptyBody": "Tangaza kazi yako ya kwanza ili kuanza kupokea maombi.",
+        "statusActive": "Inaendelea",
+        "statusDraft": "Rasimu",
+        "statusPaused": "Imesitishwa",
+        "statusArchived": "Imehifadhiwa",
+        "columnTitle": "Jina la kazi",
+        "columnStatus": "Hali",
+        "columnApplications": "Maombi",
+        "columnPosted": "Ilitangazwa"
+      },
+      "recentApplicants": {
+        "title": "Waombaji wa hivi karibuni",
+        "emptyTitle": "Hakuna mwombaji bado",
+        "emptyBody": "Maombi yataonekana hapa wagombea watakapoomba."
+      },
+      "postJobCta": {
+        "title": "Tangaza kazi yako ya kwanza",
+        "body": "Fikia maelfu ya wafanyakazi waliothibitishwa India na Ghuba.",
+        "button": "Tangaza kazi",
+        "pendingTooltip": "Inapatikana baada ya idhini ya kampuni"
+      },
+      "loading": "Inapakia dashibodi…",
+      "errorLoad": "Imeshindwa kupakia data ya dashibodi.",
+      "retry": "Jaribu tena"
+    },
+    "login": {
+      "metaTitle": "Kuingia kwa mwajiri",
+      "pageTitle": "Ajiri wafanyakazi waliothibitishwa",
+      "pageSubtitle": "Ungana na wafanyakazi wenye ujuzi na waliothibitishwa India na Ghuba.",
+      "trustBadge1": "Wasifu wa wafanyakazi waliothibitishwa",
+      "trustBadge2": "Mchakato salama wa kuajiri",
+      "trustBadge3": "Masoko ya India na kimataifa",
+      "formTitle": "Ingia kwenye akaunti yako ya mwajiri",
+      "emailLabel": "Barua pepe ya kazi",
+      "emailPlaceholder": "you@company.com",
+      "passwordLabel": "Nenosiri",
+      "passwordPlaceholder": "Weka nenosiri lako",
+      "rememberMe": "Nikumbuke",
+      "forgotPassword": "Umesahau nenosiri?",
+      "loginButton": "Ingia",
+      "noAccount": "Mgeni kwenye Skill India Connect?",
+      "registerLink": "Sajili kampuni yako",
+      "candidateLink": "Unatafuta kazi badala yake?",
+      "candidateLoginLink": "Kuingia kwa mgombea",
+      "invalidCredentials": "Barua pepe au nenosiri si sahihi.",
+      "accountSuspended": "Akaunti yako imesimamishwa. Wasiliana na msaada.",
+      "genericError": "Hitilafu imetokea. Tafadhali jaribu tena."
+    }
+  }
+}

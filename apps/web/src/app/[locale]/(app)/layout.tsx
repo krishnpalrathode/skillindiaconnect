@@ -216,7 +216,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="px-3 py-4 border-t border-neutral-100">
           <button
             type="button"
-            onClick={requestLogout}
+            onClick={() => requestLogout()}
             className="flex w-full items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-neutral-600 hover:bg-error-bg hover:text-error-fg transition-all duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
           >
             <LogOut className="size-5 shrink-0" aria-hidden="true" />
@@ -239,7 +239,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
         <button
           type="button"
-          onClick={requestLogout}
+          onClick={() => requestLogout()}
           aria-label={t('logout')}
           className="flex items-center justify-center size-9 rounded-lg text-neutral-600 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >

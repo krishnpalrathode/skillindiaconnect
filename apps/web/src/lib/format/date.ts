@@ -6,17 +6,16 @@
  * day-first ("15 Jun 2026") — the convention the majority of the UI already used
  * — while `hi`/`ar` localise naturally. Only formatting lives here; no behaviour.
  */
+import { getIntlLocale } from '@/i18n/locales';
+
 type DateInput = string | number | Date;
 
-const LOCALE_MAP: Record<string, string> = {
-  en: 'en-IN',
-  hi: 'hi-IN',
-  ar: 'ar',
-};
-
 function resolveLocale(locale?: string): string {
-  if (!locale) return 'en-IN';
-  return LOCALE_MAP[locale] ?? locale;
+  // The app-locale → BCP-47 mapping lives in the locale registry (`intlLocale`),
+  // so a new language gets correct date formatting from its registry entry
+  // alone. This file used to keep its own three-entry map, which meant any
+  // language added elsewhere silently formatted through the raw code.
+  return getIntlLocale(locale);
 }
 
 /** Rendered in place of a date that cannot be parsed. */

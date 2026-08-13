@@ -45,8 +45,10 @@ export function renderInvoiceHtml(data: InvoiceRenderData): string {
   @page { size: A4; margin: 18mm 16mm; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 10.5pt; color: #1a202c; line-height: 1.5; }
-  header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1d4ed8; padding-bottom: 5mm; margin-bottom: 8mm; }
-  .brand { font-size: 16pt; font-weight: 700; color: #1d4ed8; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0F3D91; padding-bottom: 5mm; margin-bottom: 8mm; }
+  .brand { font-size: 16pt; font-weight: 700; color: #0F3D91; letter-spacing: -0.01em; }
+  .brand-accent { color: #F57C20; }
+  .tagline { font-size: 8pt; letter-spacing: 0.12em; text-transform: uppercase; color: #94a3b8; margin-top: 1mm; }
   .doc { text-align: right; }
   .doc h1 { font-size: 14pt; letter-spacing: 0.08em; }
   .doc p { font-size: 9.5pt; color: #475569; }
@@ -59,14 +61,20 @@ export function renderInvoiceHtml(data: InvoiceRenderData): string {
   table.totals { width: 60mm; margin-left: auto; border-collapse: collapse; }
   table.totals td { padding: 1.5mm 0; }
   table.totals .num { text-align: right; font-variant-numeric: tabular-nums; }
-  table.totals tr.total td { border-top: 1.5px solid #1d4ed8; font-weight: 700; padding-top: 2.5mm; }
+  table.totals tr.total td { border-top: 1.5px solid #0F3D91; font-weight: 700; padding-top: 2.5mm; }
   footer { margin-top: 12mm; font-size: 8.5pt; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 3mm; }
   .num { text-align: right; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
   <header>
-    <div class="brand">Skill India Connect</div>
+    <div>
+      <!-- The wordmark carries the same two-tone treatment as the app and the
+           email shell, so an invoice filed by an employer's accounts team is
+           recognisably the same company as the platform they bought from. -->
+      <div class="brand">Skill India <span class="brand-accent">Connect</span></div>
+      <div class="tagline">Elevating Skills, Connecting Futures</div>
+    </div>
     <div class="doc">
       <h1>TAX INVOICE</h1>
       <p>Invoice no. <strong>${esc(data.number)}</strong></p>

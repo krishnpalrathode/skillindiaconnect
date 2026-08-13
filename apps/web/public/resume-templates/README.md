@@ -19,7 +19,20 @@ directory can be wrong, so it is the thing to watch for.
    renderer with `toResumeView(<realistic source>, settings, null)`, and writes
    the HTML to disk. Delete the spec afterwards — it is a generator, not a test.
 
-2. Screenshot each at A4 (794×1123 at 96dpi) and save as JPEG q82:
+2. Re-apply the template's page margin before shooting. `@page { margin }` is
+   honoured by the PDF path but **ignored by a screenshot**, so a raw screenshot
+   renders edge-to-edge and advertises a tighter layout than the PDF the
+   candidate actually receives. Read the margin out of the template's own CSS and
+   set it as `body` padding:
+
+   ```js
+   const margin = (html.match(/@page\s*\{[^}]*margin:\s*([^;}]+)/) || [, '0'])[1].trim();
+   html = html.replace('</style>', `body { padding: ${margin}; }\n</style>`);
+   ```
+
+   EXECUTIVE is deliberately `margin: 0` — it is full-bleed, and gets no padding.
+
+3. Screenshot each at A4 (794×1123 at 96dpi) and save as JPEG q82:
 
    ```js
    import { chromium } from '@playwright/test';

@@ -15,6 +15,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DeliveryStatus, NotificationType, WaMessageKind } from '@prisma/client';
 import { Job } from 'bullmq';
 import { PrismaService } from '../core/prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
 import { MetricsService } from '../core/observability/metrics.service';
 import { AuditService } from '../audit/audit.service';
 import { StorageService } from '../core/storage/storage.service';
@@ -172,6 +173,14 @@ describe('NotificationProcessor', () => {
         // one means these specs exercise the counters the alerts fire on rather
         // than a stub that would hide a broken call site.
         MetricsService,
+        {
+          // Supplies WEB_APP_URL to the branded email templates. A real url so
+          // the rendered mail carries real buttons — with it blank the layout
+          // deliberately drops the call to action, which would quietly weaken
+          // every assertion about email content here.
+          provide: ConfigService,
+          useValue: { get: (key: string) => (key === 'WEB_APP_URL' ? 'https://app.test' : undefined) },
+        },
       ],
     })
       .overrideProvider(QUEUE_NAMES.NOTIFICATION as never)

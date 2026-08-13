@@ -9,6 +9,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { CompanyType } from '@prisma/client';
+import { SUPPORTED_LOCALES } from '../../core/locales';
 import {
   COMPANY_COUNTRY_MAX,
   COMPANY_NAME_HAS_ALNUM,
@@ -75,7 +76,7 @@ export class RegisterCompanyDto {
   // Contract: single optional locale string (default 'en'); stored as an
   // array on the Company row. The web form omits it entirely.
   @IsOptional()
-  @IsIn(['en', 'hi', 'ar'])
+  @IsIn(SUPPORTED_LOCALES as unknown as string[])
   languagePref?: string;
 
   @IsOptional()

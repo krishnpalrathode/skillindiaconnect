@@ -91,13 +91,19 @@
         "CLASSIC": "[hi] Classic",
         "MODERN": "[hi] Modern",
         "COMPACT": "[hi] Compact",
-        "MINIMAL": "[hi] Minimal"
+        "MINIMAL": "[hi] Minimal",
+        "ELEGANT": "सुरुचिपूर्ण",
+        "EXECUTIVE": "कार्यकारी",
+        "TIMELINE": "टाइमलाइन"
       },
       "descriptions": {
         "CLASSIC": "पारंपरिक और औपचारिक। अंतर्राष्ट्रीय नियोक्ताओं के लिए एक सुरक्षित विकल्प।",
         "MODERN": "[hi] Clean and spacious. Works well for most candidates.",
         "COMPACT": "[hi] Two columns. Fits more experience on one page.",
-        "MINIMAL": "[hi] Plain and simple. Easiest for hiring software to read."
+        "MINIMAL": "[hi] Plain and simple. Easiest for hiring software to read.",
+        "ELEGANT": "सजावटी सेरिफ़ फ़ॉन्ट, प्रमाणपत्र जैसा औपचारिक रूप।",
+        "EXECUTIVE": "गहरे रंग का हेडर। छपे हुए ढेर में अलग दिखता है।",
+        "TIMELINE": "आपके कार्य अनुभव को एक सतत टाइमलाइन के रूप में दिखाता है।"
       }
     }
   },
@@ -167,7 +173,8 @@
     "exportStarted": "एक्सपोर्ट सफलतापूर्वक डाउनलोड हुआ",
     "actionFailed": "यह काम नहीं कर सका। कृपया फिर से प्रयास करें।",
     "jobArchived": "नौकरी संग्रहीत की गई",
-    "otpSent": "OTP सफलतापूर्वक भेजा गया"
+    "otpSent": "OTP सफलतापूर्वक भेजा गया",
+    "resumeNeedsCompletion": "रिज़्यूमे डाउनलोड या साझा करने के लिए अपनी प्रोफ़ाइल कम से कम {pct}% पूरी करें।"
   },
   "field": {
     "requiredError": "[hi] This field is required",
@@ -394,7 +401,8 @@
       "salaryMaxPlaceholder": "जैसे 50000",
       "saveSalary": "वेतन सहेजें",
       "salaryNote": "बिना स्कोर के — केवल मिलान मार्गदर्शन के लिए",
-      "salaryRangeError": "अधिकतम राशि न्यूनतम के बराबर या उससे ज़्यादा होनी चाहिए"
+      "salaryRangeError": "अधिकतम राशि न्यूनतम के बराबर या उससे ज़्यादा होनी चाहिए",
+      "salaryLimitError": "{max, number} तक का मान दर्ज करें।"
     },
     "settingsPageSubtitle": "तय करें कि कंपनियाँ क्या देख सकती हैं और हम आपसे कैसे संपर्क करें।"
   },
@@ -537,7 +545,8 @@
       "errInvalidType": "यह फ़ाइल प्रकार समर्थित नहीं है। PDF, JPG या PNG अपलोड करें।",
       "errUploadIncomplete": "अपलोड पूरा नहीं हुआ। कृपया पुनः प्रयास करें।",
       "dropzoneHint": "खींचें और छोड़ें या क्लिक करके चुनें",
-      "maxSize": "अधिकतम {size} MB"
+      "maxSize": "अधिकतम {size} MB",
+      "errPassportExpiry": "पासपोर्ट की समाप्ति तिथि भविष्य की होनी चाहिए। ऊपर तिथि ठीक करें, फिर दोबारा अपलोड करें।"
     },
     "nav": {
       "back": "वापस",

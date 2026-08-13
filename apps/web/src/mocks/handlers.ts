@@ -1,5 +1,8 @@
 ﻿import { http, HttpResponse } from 'msw';
 import type { components } from '@skillindiaconnect/shared-types';
+
+/** Alias so `languagePref` tracks the contract enum instead of a literal union. */
+type CompanySchema = components['schemas']['Company'];
 import {
   db,
   buildProfile,
@@ -1214,7 +1217,7 @@ const employersRegister = http.post(`${BASE}/employers/register`, async ({ reque
     location: body.location,
     website: body.website,
     employeeRange: body.employeeRange as components['schemas']['EmployeeRange'],
-    languagePref: (body.languagePref ?? 'en') as 'en' | 'hi' | 'ar',
+    languagePref: (body.languagePref ?? 'en') as CompanySchema['languagePref'],
     description: body.description,
     registrationCertKey: body.registrationCertKey ?? null,
     rejectionReason: null,
@@ -1565,6 +1568,31 @@ const postJobs = http.post(`${BASE}/employers/me/jobs`, async ({ request }) => {
 
   db.jobs.set(job.id, job);
   return HttpResponse.json({ data: job }, { status: 201 });
+});
+
+/**
+ * ONE job, read as its owner — what the edit screen loads.
+ *
+ * Missing until now, which is why nothing caught the edit page reading the
+ * PUBLIC `GET /jobs/{id}` instead: that route only serves publicly-visible jobs,
+ * so Edit 404'd for DRAFT and PAUSED jobs against the real API while the mock
+ * happily answered the public route. Serves ANY status, unlike the public one.
+ */
+const getMyJobById = http.get(`${BASE}/employers/me/jobs/:id`, ({ request, params }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+  const id = params['id'] as string;
+  const job = db.jobs.get(id);
+  if (!job) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Job not found.');
+
+  const company = db.employers.get(user.id);
+  if (!company || company.id !== job.companyId) {
+    return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'You do not own this job.');
+  }
+
+  return HttpResponse.json({ data: job });
 });
 
 const patchJobById = http.patch(`${BASE}/employers/me/jobs/:id`, async ({ request, params }) => {
@@ -4475,6 +4503,7 @@ export const handlers = [
   getJobCategories,
   // S2: Jobs — employer CRUD + lifecycle
   postJobs,
+  getMyJobById,
   patchJobById,
   publishJob,
   pauseJob,

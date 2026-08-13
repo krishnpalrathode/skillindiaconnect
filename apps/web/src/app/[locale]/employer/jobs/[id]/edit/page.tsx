@@ -8,9 +8,8 @@ import { Button } from '@/components/ui/button';
 import { JobForm } from '@/components/employer/jobform/JobForm';
 import { JobLivePreview } from '@/components/employer/jobform/JobLivePreview';
 import { useEmployer } from '@/lib/employer/employer-context';
-import { type Job } from '@/lib/api/jobs-employer';
+import { getMyJob, type Job } from '@/lib/api/jobs-employer';
 import { jobToFormValues, type JobFormValues } from '@/lib/jobs/jobFormState';
-import { apiFetch } from '@/lib/api/client';
 
 export default function EditJobPage() {
   const t = useTranslations('jobform');
@@ -28,7 +27,13 @@ export default function EditJobPage() {
   useEffect(() => {
     if (!jobId) return;
     setIsLoading(true);
-    apiFetch<Job>(`/jobs/${encodeURIComponent(jobId)}`)
+    /*
+      Read through the EMPLOYER-scoped route, not the public `/jobs/{id}`.
+      The public one only serves publicly-visible jobs, so a DRAFT or PAUSED job
+      404'd here and this screen fell straight through to its "couldn't load"
+      state — Edit appeared broken for precisely the jobs that are not live yet.
+    */
+    getMyJob(jobId)
       .then((j) => {
         setJob(j);
         setPreviewValues(jobToFormValues(j));

@@ -7,6 +7,8 @@ import { CompletionRing } from '@/components/common/CompletionRing';
 import { Button } from '@/components/ui/button';
 import { BrandLoader } from '@/components/ui/brand-loader';
 import { getCandidateCompletion } from '@/lib/api/candidate';
+import { useToast } from '@/components/ui/toast';
+import { canExportResume, RESUME_MIN_COMPLETION_PCT } from '@/lib/resume/completionGate';
 import { getResume, type ResumeInfo } from '@/lib/api/resume';
 import { ResumePreview } from './ResumePreview';
 import { DownloadResumeButton } from './DownloadResumeButton';
@@ -41,6 +43,8 @@ interface ResumeExportHubProps {
  */
 export function ResumeExportHub({ profile }: ResumeExportHubProps) {
   const t = useTranslations('resume');
+  const tToast = useTranslations('toast');
+  const { showToast } = useToast();
 
   const [info, setInfo] = useState<ResumeInfo | null>(null);
   const [settings, setSettings] = useState<ResumeSettings | null>(null);
@@ -67,6 +71,32 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
     });
   }, []);
   const [loading, setLoading] = useState(true);
+
+  const completionPct = completion?.pct ?? profile.completionPct ?? 0;
+
+  /**
+   * The 80%-completion gate, shared by every export on this page: Download PDF,
+   * the relocated Regenerate, re-download, Send to WhatsApp and Email to myself.
+   *
+   * Returns true when the action must NOT proceed, having already told the
+   * candidate why. Buttons stay enabled on purpose — a disabled control gives
+   * no reason, and the reason is the actionable part.
+   *
+   * The SAME rule and threshold as the Profile page's Download/Share, imported
+   * from one module rather than restated, so the two screens cannot drift.
+   *
+   * `useCallback` is load-bearing, not decoration: DownloadResumeButton keeps
+   * this behind a ref precisely because an unstable identity here would feed
+   * the render loop this pair already had once.
+   */
+  const blockedByCompletion = useCallback((): boolean => {
+    if (canExportResume(completionPct)) return false;
+    showToast({
+      message: tToast('resumeNeedsCompletion', { pct: RESUME_MIN_COMPLETION_PCT }),
+      variant: 'warning',
+    });
+    return true;
+  }, [completionPct, showToast, tToast]);
 
   const hasGenerated = !!lastRenderedAt || info?.current?.status === 'READY';
 
@@ -113,17 +143,24 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
         SAME number, so rendering it in two different styles read as a bug.
       */}
       <section className="flex flex-col items-center gap-4 rounded-2xl border border-neutral-200/70 bg-gradient-to-br from-white to-[#E8F0FE]/50 px-5 py-5 shadow-sm sm:flex-row sm:gap-6 sm:px-6">
-        {/* Same props as the Profile hero's ring — the two screens show the SAME
-            number, so they must not render it in two different styles. */}
-        <CompletionRing
-          pct={completion?.pct ?? profile.completionPct ?? 0}
-          size={132}
-          strokeWidth={12}
-          gradient
-          gradientColors={['#0F3D91', '#F57C20']}
-          glow
-          milestones
-        />
+        {/*
+          IDENTICAL to the Profile hero's ring — same size, same stroke, same
+          panel treatment around it. The comment here already claimed they
+          matched while the numbers said 132/12 against the hero's 150/13, so
+          the same percentage rendered visibly differently on the two screens
+          that show it. Anything changed here belongs in ProfileHero too.
+        */}
+        <div className="flex shrink-0 items-center justify-center rounded-2xl border border-neutral-200/60 bg-gradient-to-br from-neutral-50 to-[#E8F0FE]/50 px-6 py-5">
+          <CompletionRing
+            pct={completion?.pct ?? profile.completionPct ?? 0}
+            size={150}
+            strokeWidth={13}
+            gradient
+            gradientColors={['#0F3D91', '#F57C20']}
+            glow
+            milestones
+          />
+        </div>
         <p className="text-center text-sm font-bold text-neutral-800 sm:text-start">
           {t('completionTitle')}
         </p>
@@ -142,6 +179,7 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
           button floating on the page background. */}
       <section className="rounded-2xl border border-neutral-200/70 bg-white p-5 shadow-sm sm:p-6">
         <DownloadResumeButton
+          isBlocked={blockedByCompletion}
           initialGeneration={info?.current ?? null}
           onGenerated={(ts) => {
             setLastRenderedAt(ts);
@@ -186,7 +224,10 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
                   type="button"
                   variant="outline"
                   size="md"
-                  onClick={regenerate}
+                  onClick={() => {
+                    if (blockedByCompletion()) return;
+                    regenerate();
+                  }}
                   className="self-start"
                 >
                   {t('regenerate')}
@@ -209,8 +250,8 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
           <section className="rounded-2xl border border-neutral-200/70 bg-white p-5 shadow-sm sm:p-6">
             <p className="mb-2.5 text-sm font-bold text-neutral-800">{t('delivery.title')}</p>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <SendWhatsAppButton />
-              <EmailResumeButton />
+              <SendWhatsAppButton isBlocked={blockedByCompletion} />
+              <EmailResumeButton isBlocked={blockedByCompletion} />
             </div>
           </section>
         </div>

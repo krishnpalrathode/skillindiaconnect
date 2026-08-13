@@ -26,7 +26,8 @@ export interface RegisterCompanyBody {
   registrationNumber?: string;
   industryType?: string;
   website?: string;
-  languagePref?: 'en' | 'hi' | 'ar';
+  /** Derived from the contract so it widens with the `languagePref` enum. */
+  languagePref?: Company['languagePref'];
   description?: string;
   registrationCertKey?: string;
 }

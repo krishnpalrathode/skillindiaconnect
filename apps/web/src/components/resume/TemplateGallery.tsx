@@ -11,8 +11,23 @@ import { cn } from '@/lib/utils';
 type ResumeSettings = components['schemas']['ResumeSettings'];
 type ResumeTemplate = ResumeSettings['template'];
 
-/** The order the gallery presents. MODERN first — it is the recommended one. */
-const TEMPLATES: ResumeTemplate[] = ['MODERN', 'CLASSIC', 'COMPACT', 'MINIMAL'];
+/**
+ * The order the gallery presents. MODERN first — it is the recommended one —
+ * then the plainer layouts, then the three decorative ones. Ordered by how
+ * SAFE the choice is rather than by how striking it looks: a candidate
+ * scanning left to right meets the conservative options first, which are the
+ * right default for most Gulf employers, and reaches the expressive ones only
+ * after passing those.
+ */
+const TEMPLATES: ResumeTemplate[] = [
+  'MODERN',
+  'CLASSIC',
+  'COMPACT',
+  'MINIMAL',
+  'EXECUTIVE',
+  'TIMELINE',
+  'ELEGANT',
+];
 const RECOMMENDED: ResumeTemplate = 'MODERN';
 
 /** Committed, generated from the REAL templates. See the folder's README. */
@@ -21,6 +36,9 @@ const PREVIEW: Record<ResumeTemplate, string> = {
   MODERN: '/resume-templates/modern.jpg',
   COMPACT: '/resume-templates/compact.jpg',
   MINIMAL: '/resume-templates/minimal.jpg',
+  ELEGANT: '/resume-templates/elegant.jpg',
+  EXECUTIVE: '/resume-templates/executive.jpg',
+  TIMELINE: '/resume-templates/timeline.jpg',
 };
 
 interface TemplateGalleryProps {
