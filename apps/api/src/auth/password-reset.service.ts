@@ -66,15 +66,14 @@ export class PasswordResetService {
     if (!user.passwordHash) {
       await this.notifications.notify(user.id, NotificationType.PASSWORD_RESET, {
         title: 'Sign in with Google',
-        body: 'This account uses Google sign-in, so it has no password to reset.',
-        data: {
-          subject: 'Skill India Connect — sign in with Google',
-          text:
-            'You asked to reset the password for your Skill India Connect account, ' +
-            'but this account signs in with Google and has no password.\n\n' +
-            'Use "Continue with Google" on the sign-in page.\n\n' +
-            'If you did not request this, you can ignore this email.',
-        },
+        body:
+          'You asked to reset your password, but this account signs in with Google — ' +
+          'there is no password on it to change.',
+        // No hand-written subject/text/html: the branded email template renders
+        // this type. Supplying raw markup here would win over the shell (the
+        // port's documented precedence) and put an unbranded email back in the
+        // one place a user is already worried about their account.
+        data: { googleAccount: true },
       });
       return;
     }
@@ -97,18 +96,15 @@ export class PasswordResetService {
 
     await this.notifications.notify(user.id, NotificationType.PASSWORD_RESET, {
       title: 'Reset your password',
-      body: 'Use the link in this email to choose a new password.',
-      data: {
-        subject: 'Skill India Connect — reset your password',
-        text:
-          'Someone asked to reset the password for your Skill India Connect account.\n\n' +
-          `Open this link to choose a new one (valid for 1 hour):\n${url}\n\n` +
-          'If you did not request this, ignore this email — your password will not change.',
-        html:
-          '<p>Someone asked to reset the password for your Skill India Connect account.</p>' +
-          `<p><a href="${url}">Choose a new password</a> — this link is valid for 1 hour.</p>` +
-          '<p>If you did not request this, ignore this email — your password will not change.</p>',
-      },
+      body: 'Someone asked to reset the password for your Skill India Connect account.',
+      /*
+        Only the URL travels. The subject, the button and the "you did not ask
+        for this" note are all rendered by the branded email template, which is
+        why this no longer hand-writes `subject`/`text`/`html` — those keys win
+        over the shell by design, and a security email is the last one that
+        should arrive looking like a bare paragraph.
+      */
+      data: { resetUrl: url },
     });
 
     // No-PII rule: the address and the token never reach the logs.
