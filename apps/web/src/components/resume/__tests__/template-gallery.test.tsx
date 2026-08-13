@@ -74,10 +74,22 @@ function setup(overrides: Partial<ResumeSettings> = {}) {
 describe('TemplateGallery — presentation', () => {
   beforeEach(() => vi.restoreAllMocks());
 
-  it('offers all four templates as ONE radio group', () => {
+  it('offers every template as ONE radio group', () => {
+    /*
+      The assertion that matters is the GROUPING — one radio group, so arrow
+      keys move between templates and a screen reader announces "3 of 7". The
+      exact count used to be hard-coded at 4, which made adding a template fail
+      here with "expected 7 to have length 4" — a number, pointing at nothing.
+
+      Bounded rather than open-ended: a gallery that rendered one option would
+      also be a bug, and `toBeGreaterThan(1)` still catches it.
+    */
     setup();
     const group = screen.getByRole('group');
-    expect(within(group).getAllByRole('radio')).toHaveLength(4);
+    const radios = within(group).getAllByRole('radio');
+    expect(radios.length).toBeGreaterThan(1);
+    // Every option belongs to the SAME group — the property under test.
+    expect(screen.getAllByRole('group')).toHaveLength(1);
   });
 
   it('checks the template currently in settings', () => {

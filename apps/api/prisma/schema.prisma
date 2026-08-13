@@ -469,6 +469,9 @@ enum ResumeTemplate {
   MODERN
   COMPACT
   MINIMAL
+  ELEGANT
+  EXECUTIVE
+  TIMELINE
 }
 
 // ───────── EMPLOYER ─────────

@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "ମୂଳପୃଷ୍ଠା",
+    "dashboard": "ଡ୍ୟାସବୋର୍ଡ",
+    "profile": "ପ୍ରୋଫାଇଲ",
+    "jobs": "ଚାକିରି",
+    "applications": "ଆବେଦନ",
+    "notifications": "ବିଜ୍ଞପ୍ତି",
+    "notificationsShort": "ବିଜ୍ଞପ୍ତି",
+    "resumeBuilder": "ରିଜ୍ୟୁମେ ବିଲଡର",
+    "resumeBuilderShort": "ରିଜ୍ୟୁମେ",
+    "settings": "ସେଟିଂସ",
+    "logout": "ଲଗ ଆଉଟ",
+    "login": "ଲଗ ଇନ"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "ପୂର୍ବ ମାସ",
+      "nextMonth": "ପରବର୍ତ୍ତୀ ମାସ",
+      "month": "ମାସ",
+      "year": "ବର୍ଷ",
+      "clear": "ସଫା କରନ୍ତୁ",
+      "today": "ଆଜି"
+    },
+    "continue": "ଜାରି ରଖନ୍ତୁ",
+    "back": "ପଛକୁ",
+    "save": "ସଞ୍ଚୟ କରନ୍ତୁ",
+    "cancel": "ବାତିଲ କରନ୍ତୁ",
+    "loading": "ଲୋଡ ହେଉଛି…",
+    "required": "ଆବଶ୍ୟକ",
+    "optional": "ଐଚ୍ଛିକ",
+    "submit": "ଦାଖଲ କରନ୍ତୁ",
+    "edit": "ସମ୍ପାଦନ କରନ୍ତୁ",
+    "delete": "ବିଲୋପ କରନ୍ତୁ",
+    "confirm": "ନିଶ୍ଚିତ କରନ୍ତୁ",
+    "close": "ବନ୍ଦ କରନ୍ତୁ",
+    "search": "ଖୋଜନ୍ତୁ",
+    "filter": "ଫିଲଟର",
+    "apply": "ଆବେଦନ କରନ୍ତୁ",
+    "clear": "ସଫା କରନ୍ତୁ",
+    "next": "ପରବର୍ତ୍ତୀ",
+    "previous": "ପୂର୍ବବର୍ତ୍ତୀ",
+    "yes": "ହଁ",
+    "no": "ନା",
+    "or": "କିମ୍ବା",
+    "and": "ଏବଂ",
+    "brand": "ସ୍କିଲ ଇଣ୍ଡିଆ କନେକ୍ଟ",
+    "logoutSuccess": "ସଫଳତାର ସହ ଲଗ ଆଉଟ ହୋଇଛନ୍ତି"
+  },
+  "status": {
+    "pending": "ବିଚାରାଧୀନ",
+    "shortlisted": "ସର୍ଟଲିଷ୍ଟ ହୋଇଛି",
+    "selected": "ମନୋନୀତ",
+    "rejected": "ଅଗ୍ରାହ୍ୟ",
+    "verified": "ଯାଞ୍ଚ ହୋଇଛି",
+    "unverified": "ଯାଞ୍ଚ ହୋଇନାହିଁ",
+    "active": "ସକ୍ରିୟ",
+    "inactive": "ନିଷ୍କ୍ରିୟ",
+    "expired": "ମିଆଦ ଶେଷ"
+  },
+  "pagination": {
+    "label": "ପୃଷ୍ଠା ନାଭିଗେସନ",
+    "pageInfo": "ପୃଷ୍ଠା {page} / {totalPages}",
+    "prev": "ପୂର୍ବବର୍ତ୍ତୀ",
+    "next": "ପରବର୍ତ୍ତୀ",
+    "previousPage": "ପୂର୍ବ ପୃଷ୍ଠା",
+    "nextPage": "ପରବର୍ତ୍ତୀ ପୃଷ୍ଠା"
+  },
+  "sorting": {
+    "sortAscending": "{column} ଅନୁସାରେ ଆରୋହୀ କ୍ରମରେ ସଜାନ୍ତୁ",
+    "sortDescending": "{column} ଅନୁସାରେ ଅବରୋହୀ କ୍ରମରେ ସଜାନ୍ତୁ"
+  },
+  "field": {
+    "requiredError": "ଏହି ଘରଟି ପୂରଣ କରିବା ଆବଶ୍ୟକ",
+    "invalidFormat": "ଅବୈଧ ଗଠନ",
+    "tooShort": "ବହୁତ ଛୋଟ",
+    "tooLong": "ବହୁତ ଲମ୍ବା"
+  },
+  "errors": {
+    "generic": "କିଛି ଭୁଲ ହୋଇଛି। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+    "network": "ନେଟୱାର୍କ ତ୍ରୁଟି। ଦୟାକରି ଆପଣଙ୍କ ସଂଯୋଗ ଯାଞ୍ଚ କରନ୍ତୁ।",
+    "notFound": "ପୃଷ୍ଠା ମିଳିଲା ନାହିଁ",
+    "unauthorized": "ଜାରି ରଖିବାକୁ ଲଗ ଇନ କରନ୍ତୁ",
+    "forbidden": "ଏହା କରିବାକୁ ଆପଣଙ୍କର ଅନୁମତି ନାହିଁ"
+  },
+  "document": {
+    "upload": "ଦଲିଲ ଅପଲୋଡ କରନ୍ତୁ",
+    "passport": "ପାସପୋର୍ଟ",
+    "photo": "ପାସପୋର୍ଟ ଆକାରର ଫଟୋ",
+    "aadhaar": "ଆଧାର କାର୍ଡ",
+    "resume": "ରିଜ୍ୟୁମେ",
+    "marksheet": "ମାର୍କସିଟ",
+    "certificate": "ପ୍ରମାଣପତ୍ର",
+    "policeVerification": "ପୋଲିସ ଯାଞ୍ଚ ପ୍ରମାଣପତ୍ର",
+    "medicalCertificate": "ଡାକ୍ତରୀ ପ୍ରମାଣପତ୍ର",
+    "viewDocument": "ଦଲିଲ ଦେଖନ୍ତୁ",
+    "deleteDocument": "ଦଲିଲ ବିଲୋପ କରନ୍ତୁ"
+  }
+}

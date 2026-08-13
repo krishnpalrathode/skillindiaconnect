@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "ঘৰ",
+    "dashboard": "ডেশ্ববৰ্ড",
+    "profile": "প্ৰফাইল",
+    "jobs": "চাকৰি",
+    "applications": "আবেদন",
+    "notifications": "জাননী",
+    "notificationsShort": "জাননী",
+    "resumeBuilder": "ৰিজিউমে বিল্ডাৰ",
+    "resumeBuilderShort": "ৰিজিউমে",
+    "settings": "ছেটিংছ",
+    "logout": "লগ আউট",
+    "login": "লগ ইন"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "আগৰ মাহ",
+      "nextMonth": "পৰৱৰ্তী মাহ",
+      "month": "মাহ",
+      "year": "বছৰ",
+      "clear": "চাফা কৰক",
+      "today": "আজি"
+    },
+    "continue": "আগবাঢ়ক",
+    "back": "পিছলৈ",
+    "save": "ছেভ কৰক",
+    "cancel": "বাতিল কৰক",
+    "loading": "লোড হৈ আছে…",
+    "required": "আৱশ্যক",
+    "optional": "ঐচ্ছিক",
+    "submit": "দাখিল কৰক",
+    "edit": "সম্পাদনা কৰক",
+    "delete": "মচি পেলাওক",
+    "confirm": "নিশ্চিত কৰক",
+    "close": "বন্ধ কৰক",
+    "search": "সন্ধান কৰক",
+    "filter": "ফিল্টাৰ",
+    "apply": "আবেদন কৰক",
+    "clear": "চাফা কৰক",
+    "next": "পৰৱৰ্তী",
+    "previous": "পূৰ্বৱৰ্তী",
+    "yes": "হয়",
+    "no": "নহয়",
+    "or": "বা",
+    "and": "আৰু",
+    "brand": "স্কিল ইণ্ডিয়া কানেক্ট",
+    "logoutSuccess": "সফলতাৰে লগ আউট হ'ল"
+  },
+  "status": {
+    "pending": "বিচাৰাধীন",
+    "shortlisted": "শ্বৰ্টলিষ্ট হৈছে",
+    "selected": "নিৰ্বাচিত",
+    "rejected": "প্ৰত্যাখ্যাত",
+    "verified": "সত্যাপিত",
+    "unverified": "সত্যাপিত নহয়",
+    "active": "সক্ৰিয়",
+    "inactive": "নিষ্ক্ৰিয়",
+    "expired": "ম্যাদ উকলিছে"
+  },
+  "pagination": {
+    "label": "পৃষ্ঠা নেভিগেশ্বন",
+    "pageInfo": "পৃষ্ঠা {page} / {totalPages}",
+    "prev": "পূৰ্বৱৰ্তী",
+    "next": "পৰৱৰ্তী",
+    "previousPage": "পূৰ্বৱৰ্তী পৃষ্ঠা",
+    "nextPage": "পৰৱৰ্তী পৃষ্ঠা"
+  },
+  "sorting": {
+    "sortAscending": "{column} অনুসৰি ঊৰ্ধ্বক্ৰমত সজাওক",
+    "sortDescending": "{column} অনুসৰি অধোক্ৰমত সজাওক"
+  },
+  "field": {
+    "requiredError": "এই ঘৰটো পূৰণ কৰাটো আৱশ্যক",
+    "invalidFormat": "অবৈধ ৰূপ",
+    "tooShort": "বৰ চুটি",
+    "tooLong": "বৰ দীঘল"
+  },
+  "errors": {
+    "generic": "কিবা ভুল হ'ল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
+    "network": "নেটৱৰ্ক ত্ৰুটি। অনুগ্ৰহ কৰি আপোনাৰ সংযোগ পৰীক্ষা কৰক।",
+    "notFound": "পৃষ্ঠা পোৱা নগ'ল",
+    "unauthorized": "আগবাঢ়িবলৈ লগ ইন কৰক",
+    "forbidden": "এইটো কৰাৰ অনুমতি আপোনাৰ নাই"
+  },
+  "document": {
+    "upload": "নথি আপলোড কৰক",
+    "passport": "পাছপৰ্ট",
+    "photo": "পাছপৰ্ট আকাৰৰ ফটো",
+    "aadhaar": "আধাৰ কাৰ্ড",
+    "resume": "ৰিজিউমে",
+    "marksheet": "নম্বৰ পত্ৰ",
+    "certificate": "প্ৰমাণপত্ৰ",
+    "policeVerification": "আৰক্ষী সত্যাপন প্ৰমাণপত্ৰ",
+    "medicalCertificate": "চিকিৎসা প্ৰমাণপত্ৰ",
+    "viewDocument": "নথি চাওক",
+    "deleteDocument": "নথি মচি পেলাওক"
+  }
+}

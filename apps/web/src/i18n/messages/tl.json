@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "jobs": "Mga Trabaho",
+    "applications": "Mga Aplikasyon",
+    "notifications": "Mga Abiso",
+    "notificationsShort": "Abiso",
+    "resumeBuilder": "Gumawa ng Resume",
+    "resumeBuilderShort": "Resume",
+    "settings": "Mga Setting",
+    "logout": "Mag-log out",
+    "login": "Mag-log in"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "Nakaraang buwan",
+      "nextMonth": "Susunod na buwan",
+      "month": "Buwan",
+      "year": "Taon",
+      "clear": "I-clear",
+      "today": "Ngayon"
+    },
+    "continue": "Magpatuloy",
+    "back": "Bumalik",
+    "save": "I-save",
+    "cancel": "Kanselahin",
+    "loading": "Naglo-load…",
+    "required": "Kinakailangan",
+    "optional": "Opsyonal",
+    "submit": "Isumite",
+    "edit": "I-edit",
+    "delete": "Burahin",
+    "confirm": "Kumpirmahin",
+    "close": "Isara",
+    "search": "Maghanap",
+    "filter": "Salain",
+    "apply": "Mag-apply",
+    "clear": "I-clear",
+    "next": "Susunod",
+    "previous": "Nakaraan",
+    "yes": "Oo",
+    "no": "Hindi",
+    "or": "o",
+    "and": "at",
+    "brand": "Skill India Connect",
+    "logoutSuccess": "Matagumpay na nakalabas"
+  },
+  "status": {
+    "pending": "Nakabinbin",
+    "shortlisted": "Nasa shortlist",
+    "selected": "Napili",
+    "rejected": "Tinanggihan",
+    "verified": "Na-verify",
+    "unverified": "Hindi na-verify",
+    "active": "Aktibo",
+    "inactive": "Hindi aktibo",
+    "expired": "Napaso na"
+  },
+  "pagination": {
+    "label": "Pagination",
+    "pageInfo": "Pahina {page} ng {totalPages}",
+    "prev": "Nakaraan",
+    "next": "Susunod",
+    "previousPage": "Nakaraang pahina",
+    "nextPage": "Susunod na pahina"
+  },
+  "sorting": {
+    "sortAscending": "Ayusin ayon sa {column}, pataas",
+    "sortDescending": "Ayusin ayon sa {column}, pababa"
+  },
+  "field": {
+    "requiredError": "Kinakailangan ang field na ito",
+    "invalidFormat": "Hindi wastong format",
+    "tooShort": "Masyadong maikli",
+    "tooLong": "Masyadong mahaba"
+  },
+  "errors": {
+    "generic": "May naganap na problema. Pakisubukang muli.",
+    "network": "Problema sa network. Pakisuri ang iyong koneksyon.",
+    "notFound": "Hindi natagpuan ang pahina",
+    "unauthorized": "Mag-log in upang magpatuloy",
+    "forbidden": "Wala kang pahintulot na gawin ito"
+  },
+  "document": {
+    "upload": "Mag-upload ng dokumento",
+    "passport": "Pasaporte",
+    "photo": "Larawang sukat pasaporte",
+    "aadhaar": "Aadhaar card",
+    "resume": "Resume",
+    "marksheet": "Marksheet",
+    "certificate": "Sertipiko",
+    "policeVerification": "Sertipiko ng police verification",
+    "medicalCertificate": "Medikal na sertipiko",
+    "viewDocument": "Tingnan ang dokumento",
+    "deleteDocument": "Burahin ang dokumento"
+  }
+}

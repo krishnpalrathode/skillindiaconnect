@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "ਹੋਮ",
+    "dashboard": "ਡੈਸ਼ਬੋਰਡ",
+    "profile": "ਪ੍ਰੋਫਾਈਲ",
+    "jobs": "ਨੌਕਰੀਆਂ",
+    "applications": "ਅਰਜ਼ੀਆਂ",
+    "notifications": "ਸੂਚਨਾਵਾਂ",
+    "notificationsShort": "ਸੂਚਨਾਵਾਂ",
+    "resumeBuilder": "ਰਿਜ਼ਿਊਮੇ ਬਿਲਡਰ",
+    "resumeBuilderShort": "ਰਿਜ਼ਿਊਮੇ",
+    "settings": "ਸੈਟਿੰਗਾਂ",
+    "logout": "ਲੌਗ ਆਊਟ",
+    "login": "ਲੌਗ ਇਨ"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "ਪਿਛਲਾ ਮਹੀਨਾ",
+      "nextMonth": "ਅਗਲਾ ਮਹੀਨਾ",
+      "month": "ਮਹੀਨਾ",
+      "year": "ਸਾਲ",
+      "clear": "ਸਾਫ਼ ਕਰੋ",
+      "today": "ਅੱਜ"
+    },
+    "continue": "ਜਾਰੀ ਰੱਖੋ",
+    "back": "ਪਿੱਛੇ",
+    "save": "ਸੰਭਾਲੋ",
+    "cancel": "ਰੱਦ ਕਰੋ",
+    "loading": "ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ…",
+    "required": "ਲਾਜ਼ਮੀ",
+    "optional": "ਵਿਕਲਪਿਕ",
+    "submit": "ਜਮ੍ਹਾਂ ਕਰੋ",
+    "edit": "ਸੋਧੋ",
+    "delete": "ਮਿਟਾਓ",
+    "confirm": "ਪੁਸ਼ਟੀ ਕਰੋ",
+    "close": "ਬੰਦ ਕਰੋ",
+    "search": "ਖੋਜੋ",
+    "filter": "ਫਿਲਟਰ",
+    "apply": "ਅਰਜ਼ੀ ਦਿਓ",
+    "clear": "ਸਾਫ਼ ਕਰੋ",
+    "next": "ਅਗਲਾ",
+    "previous": "ਪਿਛਲਾ",
+    "yes": "ਹਾਂ",
+    "no": "ਨਹੀਂ",
+    "or": "ਜਾਂ",
+    "and": "ਅਤੇ",
+    "brand": "ਸਕਿੱਲ ਇੰਡੀਆ ਕਨੈਕਟ",
+    "logoutSuccess": "ਸਫਲਤਾਪੂਰਵਕ ਲੌਗ ਆਊਟ ਹੋ ਗਏ"
+  },
+  "status": {
+    "pending": "ਬਕਾਇਆ",
+    "shortlisted": "ਸ਼ਾਰਟਲਿਸਟ ਹੋਇਆ",
+    "selected": "ਚੁਣਿਆ ਗਿਆ",
+    "rejected": "ਰੱਦ ਕੀਤਾ ਗਿਆ",
+    "verified": "ਤਸਦੀਕ ਹੋਇਆ",
+    "unverified": "ਤਸਦੀਕ ਨਹੀਂ ਹੋਇਆ",
+    "active": "ਸਰਗਰਮ",
+    "inactive": "ਅਕਿਰਿਆਸ਼ੀਲ",
+    "expired": "ਮਿਆਦ ਪੁੱਗ ਗਈ"
+  },
+  "pagination": {
+    "label": "ਪੰਨਾ ਨੈਵੀਗੇਸ਼ਨ",
+    "pageInfo": "ਪੰਨਾ {page} / {totalPages}",
+    "prev": "ਪਿਛਲਾ",
+    "next": "ਅਗਲਾ",
+    "previousPage": "ਪਿਛਲਾ ਪੰਨਾ",
+    "nextPage": "ਅਗਲਾ ਪੰਨਾ"
+  },
+  "sorting": {
+    "sortAscending": "{column} ਅਨੁਸਾਰ ਵਧਦੇ ਕ੍ਰਮ ਵਿੱਚ ਲਗਾਓ",
+    "sortDescending": "{column} ਅਨੁਸਾਰ ਘਟਦੇ ਕ੍ਰਮ ਵਿੱਚ ਲਗਾਓ"
+  },
+  "field": {
+    "requiredError": "ਇਹ ਖਾਨਾ ਭਰਨਾ ਲਾਜ਼ਮੀ ਹੈ",
+    "invalidFormat": "ਗਲਤ ਰੂਪ",
+    "tooShort": "ਬਹੁਤ ਛੋਟਾ",
+    "tooLong": "ਬਹੁਤ ਲੰਮਾ"
+  },
+  "errors": {
+    "generic": "ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+    "network": "ਨੈੱਟਵਰਕ ਗਲਤੀ। ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਕਨੈਕਸ਼ਨ ਜਾਂਚੋ।",
+    "notFound": "ਪੰਨਾ ਨਹੀਂ ਮਿਲਿਆ",
+    "unauthorized": "ਜਾਰੀ ਰੱਖਣ ਲਈ ਲੌਗ ਇਨ ਕਰੋ",
+    "forbidden": "ਤੁਹਾਨੂੰ ਇਹ ਕਰਨ ਦੀ ਇਜਾਜ਼ਤ ਨਹੀਂ ਹੈ"
+  },
+  "document": {
+    "upload": "ਦਸਤਾਵੇਜ਼ ਅੱਪਲੋਡ ਕਰੋ",
+    "passport": "ਪਾਸਪੋਰਟ",
+    "photo": "ਪਾਸਪੋਰਟ ਆਕਾਰ ਦੀ ਫੋਟੋ",
+    "aadhaar": "ਆਧਾਰ ਕਾਰਡ",
+    "resume": "ਰਿਜ਼ਿਊਮੇ",
+    "marksheet": "ਅੰਕ ਪੱਤਰੀ",
+    "certificate": "ਸਰਟੀਫਿਕੇਟ",
+    "policeVerification": "ਪੁਲਿਸ ਤਸਦੀਕ ਸਰਟੀਫਿਕੇਟ",
+    "medicalCertificate": "ਮੈਡੀਕਲ ਸਰਟੀਫਿਕੇਟ",
+    "viewDocument": "ਦਸਤਾਵੇਜ਼ ਵੇਖੋ",
+    "deleteDocument": "ਦਸਤਾਵੇਜ਼ ਮਿਟਾਓ"
+  }
+}

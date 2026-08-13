@@ -22,13 +22,19 @@
         "CLASSIC": "Classic",
         "MODERN": "Modern",
         "COMPACT": "Compact",
-        "MINIMAL": "Minimal"
+        "MINIMAL": "Minimal",
+        "ELEGANT": "Elegant",
+        "EXECUTIVE": "Executive",
+        "TIMELINE": "Timeline"
       },
       "descriptions": {
         "CLASSIC": "Traditional and formal. A safe choice for international employers.",
         "MODERN": "Clean and spacious. Works well for most candidates.",
         "COMPACT": "Two columns. Fits more experience on one page.",
-        "MINIMAL": "Plain and simple. Easiest for hiring software to read."
+        "MINIMAL": "Plain and simple. Easiest for hiring software to read.",
+        "ELEGANT": "Decorative serif with a formal, certificate-like finish.",
+        "EXECUTIVE": "Bold colour header. Stands out in a printed stack.",
+        "TIMELINE": "Shows your work history as a continuous timeline."
       }
     },
     "downloadPdf": "Download PDF",

@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "गृहपृष्ठ",
+    "dashboard": "ड्यासबोर्ड",
+    "profile": "प्रोफाइल",
+    "jobs": "जागिरहरू",
+    "applications": "आवेदनहरू",
+    "notifications": "सूचनाहरू",
+    "notificationsShort": "सूचनाहरू",
+    "resumeBuilder": "रेजुमे बिल्डर",
+    "resumeBuilderShort": "रेजुमे",
+    "settings": "सेटिङहरू",
+    "logout": "लग आउट",
+    "login": "लग इन"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "अघिल्लो महिना",
+      "nextMonth": "अर्को महिना",
+      "month": "महिना",
+      "year": "वर्ष",
+      "clear": "हटाउनुहोस्",
+      "today": "आज"
+    },
+    "continue": "जारी राख्नुहोस्",
+    "back": "पछाडि",
+    "save": "सुरक्षित गर्नुहोस्",
+    "cancel": "रद्द गर्नुहोस्",
+    "loading": "लोड हुँदैछ…",
+    "required": "अनिवार्य",
+    "optional": "वैकल्पिक",
+    "submit": "पेस गर्नुहोस्",
+    "edit": "सम्पादन गर्नुहोस्",
+    "delete": "मेटाउनुहोस्",
+    "confirm": "पुष्टि गर्नुहोस्",
+    "close": "बन्द गर्नुहोस्",
+    "search": "खोज्नुहोस्",
+    "filter": "फिल्टर",
+    "apply": "आवेदन दिनुहोस्",
+    "clear": "खाली गर्नुहोस्",
+    "next": "अर्को",
+    "previous": "अघिल्लो",
+    "yes": "हो",
+    "no": "होइन",
+    "or": "वा",
+    "and": "र",
+    "brand": "स्किल इन्डिया कनेक्ट",
+    "logoutSuccess": "सफलतापूर्वक लग आउट भयो"
+  },
+  "status": {
+    "pending": "विचाराधीन",
+    "shortlisted": "छनोट सूचीमा",
+    "selected": "चयन भएको",
+    "rejected": "अस्वीकृत",
+    "verified": "प्रमाणित",
+    "unverified": "अप्रमाणित",
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय",
+    "expired": "म्याद सकिएको"
+  },
+  "pagination": {
+    "label": "पृष्ठ नेभिगेसन",
+    "pageInfo": "पृष्ठ {page} / {totalPages}",
+    "prev": "अघिल्लो",
+    "next": "अर्को",
+    "previousPage": "अघिल्लो पृष्ठ",
+    "nextPage": "अर्को पृष्ठ"
+  },
+  "sorting": {
+    "sortAscending": "{column} अनुसार बढ्दो क्रममा मिलाउनुहोस्",
+    "sortDescending": "{column} अनुसार घट्दो क्रममा मिलाउनुहोस्"
+  },
+  "field": {
+    "requiredError": "यो फिल्ड भर्न अनिवार्य छ",
+    "invalidFormat": "अमान्य ढाँचा",
+    "tooShort": "धेरै छोटो",
+    "tooLong": "धेरै लामो"
+  },
+  "errors": {
+    "generic": "केही गडबड भयो। कृपया फेरि प्रयास गर्नुहोस्।",
+    "network": "नेटवर्क त्रुटि। कृपया आफ्नो जडान जाँच्नुहोस्।",
+    "notFound": "पृष्ठ फेला परेन",
+    "unauthorized": "जारी राख्न लग इन गर्नुहोस्",
+    "forbidden": "यो गर्ने अनुमति तपाईंलाई छैन"
+  },
+  "document": {
+    "upload": "कागजात अपलोड गर्नुहोस्",
+    "passport": "राहदानी",
+    "photo": "राहदानी आकारको फोटो",
+    "aadhaar": "आधार कार्ड",
+    "resume": "रेजुमे",
+    "marksheet": "अङ्कपत्र",
+    "certificate": "प्रमाणपत्र",
+    "policeVerification": "प्रहरी प्रमाणीकरण प्रमाणपत्र",
+    "medicalCertificate": "स्वास्थ्य प्रमाणपत्र",
+    "viewDocument": "कागजात हेर्नुहोस्",
+    "deleteDocument": "कागजात मेटाउनुहोस्"
+  }
+}

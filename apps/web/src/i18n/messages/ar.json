@@ -91,13 +91,19 @@
         "CLASSIC": "[ar] Classic",
         "MODERN": "[ar] Modern",
         "COMPACT": "[ar] Compact",
-        "MINIMAL": "[ar] Minimal"
+        "MINIMAL": "[ar] Minimal",
+        "ELEGANT": "أنيق",
+        "EXECUTIVE": "تنفيذي",
+        "TIMELINE": "الجدول الزمني"
       },
       "descriptions": {
         "CLASSIC": "تقليدية ورسمية. خيار آمن لأصحاب العمل الدوليين.",
         "MODERN": "[ar] Clean and spacious. Works well for most candidates.",
         "COMPACT": "[ar] Two columns. Fits more experience on one page.",
-        "MINIMAL": "[ar] Plain and simple. Easiest for hiring software to read."
+        "MINIMAL": "[ar] Plain and simple. Easiest for hiring software to read.",
+        "ELEGANT": "خط مزخرف بمظهر رسمي يشبه الشهادة.",
+        "EXECUTIVE": "ترويسة ملونة بارزة. يبرز بين الأوراق المطبوعة.",
+        "TIMELINE": "يعرض خبرتك المهنية كجدول زمني متصل."
       }
     }
   },

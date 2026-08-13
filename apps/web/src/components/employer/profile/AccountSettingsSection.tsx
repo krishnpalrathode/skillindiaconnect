@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { EditableSection } from '@/components/profile/EditableSection';
 import { Field } from '@/components/ui/field';
 import { patchCompany } from '@/lib/api/employer';
+import { LOCALES, type Locale } from '@/i18n/locales';
 import type { components } from '@skillindiaconnect/shared-types';
 
 type Company = components['schemas']['Company'];
@@ -14,13 +15,17 @@ interface AccountSettingsSectionProps {
   onUpdated: (updated: Company) => void;
 }
 
-const LANGUAGES = [
-  { value: 'en', label: 'English' },
-  { value: 'hi', label: 'हिन्दी (Hindi)' },
-  { value: 'ar', label: 'العربية (Arabic)' },
-] as const;
+/**
+ * Built from the locale registry so this picker can never fall behind the
+ * languages the app actually serves. Labelled "native (English)" because this is
+ * a staff-facing field an English-reading admin may also need to scan.
+ */
+const LANGUAGES = LOCALES.map(({ code, nativeName, englishName }) => ({
+  value: code,
+  label: nativeName === englishName ? englishName : `${nativeName} (${englishName})`,
+}));
 
-type LangValue = 'en' | 'hi' | 'ar';
+type LangValue = Locale;
 
 /**
  * Account settings section — minimal: language preference only.

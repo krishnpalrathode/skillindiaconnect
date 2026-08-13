@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "হোম",
+    "dashboard": "ড্যাশবোর্ড",
+    "profile": "প্রোফাইল",
+    "jobs": "চাকরি",
+    "applications": "আবেদন",
+    "notifications": "বিজ্ঞপ্তি",
+    "notificationsShort": "বিজ্ঞপ্তি",
+    "resumeBuilder": "রেজিউমে বিল্ডার",
+    "resumeBuilderShort": "রেজিউমে",
+    "settings": "সেটিংস",
+    "logout": "লগ আউট",
+    "login": "লগ ইন"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "আগের মাস",
+      "nextMonth": "পরের মাস",
+      "month": "মাস",
+      "year": "বছর",
+      "clear": "মুছুন",
+      "today": "আজ"
+    },
+    "continue": "চালিয়ে যান",
+    "back": "পিছনে",
+    "save": "সংরক্ষণ করুন",
+    "cancel": "বাতিল করুন",
+    "loading": "লোড হচ্ছে…",
+    "required": "আবশ্যক",
+    "optional": "ঐচ্ছিক",
+    "submit": "জমা দিন",
+    "edit": "সম্পাদনা করুন",
+    "delete": "মুছুন",
+    "confirm": "নিশ্চিত করুন",
+    "close": "বন্ধ করুন",
+    "search": "খুঁজুন",
+    "filter": "ফিল্টার",
+    "apply": "আবেদন করুন",
+    "clear": "পরিষ্কার করুন",
+    "next": "পরবর্তী",
+    "previous": "পূর্ববর্তী",
+    "yes": "হ্যাঁ",
+    "no": "না",
+    "or": "অথবা",
+    "and": "এবং",
+    "brand": "স্কিল ইন্ডিয়া কানেক্ট",
+    "logoutSuccess": "সফলভাবে লগ আউট হয়েছে"
+  },
+  "status": {
+    "pending": "অপেক্ষমাণ",
+    "shortlisted": "বাছাই করা হয়েছে",
+    "selected": "নির্বাচিত",
+    "rejected": "প্রত্যাখ্যাত",
+    "verified": "যাচাই করা হয়েছে",
+    "unverified": "যাচাই করা হয়নি",
+    "active": "সক্রিয়",
+    "inactive": "নিষ্ক্রিয়",
+    "expired": "মেয়াদ শেষ"
+  },
+  "pagination": {
+    "label": "পৃষ্ঠা বিভাজন",
+    "pageInfo": "পৃষ্ঠা {page} / {totalPages}",
+    "prev": "পূর্ববর্তী",
+    "next": "পরবর্তী",
+    "previousPage": "পূর্ববর্তী পৃষ্ঠা",
+    "nextPage": "পরবর্তী পৃষ্ঠা"
+  },
+  "sorting": {
+    "sortAscending": "{column} অনুসারে ঊর্ধ্বক্রমে সাজান",
+    "sortDescending": "{column} অনুসারে অধঃক্রমে সাজান"
+  },
+  "field": {
+    "requiredError": "এই ঘরটি পূরণ করা আবশ্যক",
+    "invalidFormat": "ভুল বিন্যাস",
+    "tooShort": "খুব ছোট",
+    "tooLong": "খুব বড়"
+  },
+  "errors": {
+    "generic": "কিছু ভুল হয়েছে। আবার চেষ্টা করুন।",
+    "network": "নেটওয়ার্ক সমস্যা। আপনার সংযোগ পরীক্ষা করুন।",
+    "notFound": "পৃষ্ঠা পাওয়া যায়নি",
+    "unauthorized": "চালিয়ে যেতে লগ ইন করুন",
+    "forbidden": "এটি করার অনুমতি আপনার নেই"
+  },
+  "document": {
+    "upload": "নথি আপলোড করুন",
+    "passport": "পাসপোর্ট",
+    "photo": "পাসপোর্ট সাইজের ছবি",
+    "aadhaar": "আধার কার্ড",
+    "resume": "রেজিউমে",
+    "marksheet": "মার্কশিট",
+    "certificate": "সার্টিফিকেট",
+    "policeVerification": "পুলিশ ভেরিফিকেশন সার্টিফিকেট",
+    "medicalCertificate": "মেডিকেল সার্টিফিকেট",
+    "viewDocument": "নথি দেখুন",
+    "deleteDocument": "নথি মুছুন"
+  }
+}

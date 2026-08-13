@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "ಮುಖಪುಟ",
+    "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+    "profile": "ಪ್ರೊಫೈಲ್",
+    "jobs": "ಉದ್ಯೋಗಗಳು",
+    "applications": "ಅರ್ಜಿಗಳು",
+    "notifications": "ಅಧಿಸೂಚನೆಗಳು",
+    "notificationsShort": "ಅಧಿಸೂಚನೆಗಳು",
+    "resumeBuilder": "ರೆಸ್ಯೂಮ್ ಬಿಲ್ಡರ್",
+    "resumeBuilderShort": "ರೆಸ್ಯೂಮ್",
+    "settings": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+    "logout": "ಲಾಗ್ ಔಟ್",
+    "login": "ಲಾಗ್ ಇನ್"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "ಹಿಂದಿನ ತಿಂಗಳು",
+      "nextMonth": "ಮುಂದಿನ ತಿಂಗಳು",
+      "month": "ತಿಂಗಳು",
+      "year": "ವರ್ಷ",
+      "clear": "ಅಳಿಸಿ",
+      "today": "ಇಂದು"
+    },
+    "continue": "ಮುಂದುವರಿಸಿ",
+    "back": "ಹಿಂದೆ",
+    "save": "ಉಳಿಸಿ",
+    "cancel": "ರದ್ದುಗೊಳಿಸಿ",
+    "loading": "ಲೋಡ್ ಆಗುತ್ತಿದೆ…",
+    "required": "ಕಡ್ಡಾಯ",
+    "optional": "ಐಚ್ಛಿಕ",
+    "submit": "ಸಲ್ಲಿಸಿ",
+    "edit": "ಸಂಪಾದಿಸಿ",
+    "delete": "ಅಳಿಸಿ",
+    "confirm": "ದೃಢೀಕರಿಸಿ",
+    "close": "ಮುಚ್ಚಿ",
+    "search": "ಹುಡುಕಿ",
+    "filter": "ಫಿಲ್ಟರ್",
+    "apply": "ಅರ್ಜಿ ಸಲ್ಲಿಸಿ",
+    "clear": "ತೆರವುಗೊಳಿಸಿ",
+    "next": "ಮುಂದೆ",
+    "previous": "ಹಿಂದಿನ",
+    "yes": "ಹೌದು",
+    "no": "ಇಲ್ಲ",
+    "or": "ಅಥವಾ",
+    "and": "ಮತ್ತು",
+    "brand": "ಸ್ಕಿಲ್ ಇಂಡಿಯಾ ಕನೆಕ್ಟ್",
+    "logoutSuccess": "ಯಶಸ್ವಿಯಾಗಿ ಲಾಗ್ ಔಟ್ ಆಗಿದ್ದೀರಿ"
+  },
+  "status": {
+    "pending": "ಬಾಕಿ ಇದೆ",
+    "shortlisted": "ಶಾರ್ಟ್‌ಲಿಸ್ಟ್ ಆಗಿದೆ",
+    "selected": "ಆಯ್ಕೆಯಾಗಿದೆ",
+    "rejected": "ತಿರಸ್ಕರಿಸಲಾಗಿದೆ",
+    "verified": "ಪರಿಶೀಲಿಸಲಾಗಿದೆ",
+    "unverified": "ಪರಿಶೀಲಿಸಲಾಗಿಲ್ಲ",
+    "active": "ಸಕ್ರಿಯ",
+    "inactive": "ನಿಷ್ಕ್ರಿಯ",
+    "expired": "ಅವಧಿ ಮುಗಿದಿದೆ"
+  },
+  "pagination": {
+    "label": "ಪುಟ ಸಂಚಾರ",
+    "pageInfo": "ಪುಟ {page} / {totalPages}",
+    "prev": "ಹಿಂದಿನ",
+    "next": "ಮುಂದೆ",
+    "previousPage": "ಹಿಂದಿನ ಪುಟ",
+    "nextPage": "ಮುಂದಿನ ಪುಟ"
+  },
+  "sorting": {
+    "sortAscending": "{column} ಪ್ರಕಾರ ಏರುಕ್ರಮದಲ್ಲಿ ಜೋಡಿಸಿ",
+    "sortDescending": "{column} ಪ್ರಕಾರ ಇಳಿಕ್ರಮದಲ್ಲಿ ಜೋಡಿಸಿ"
+  },
+  "field": {
+    "requiredError": "ಈ ಕ್ಷೇತ್ರ ಕಡ್ಡಾಯವಾಗಿದೆ",
+    "invalidFormat": "ಅಮಾನ್ಯ ಸ್ವರೂಪ",
+    "tooShort": "ತುಂಬಾ ಚಿಕ್ಕದು",
+    "tooLong": "ತುಂಬಾ ಉದ್ದವಾಗಿದೆ"
+  },
+  "errors": {
+    "generic": "ಏನೋ ತಪ್ಪಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+    "network": "ನೆಟ್‌ವರ್ಕ್ ದೋಷ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಸಂಪರ್ಕವನ್ನು ಪರಿಶೀಲಿಸಿ.",
+    "notFound": "ಪುಟ ಕಂಡುಬಂದಿಲ್ಲ",
+    "unauthorized": "ಮುಂದುವರಿಯಲು ಲಾಗ್ ಇನ್ ಮಾಡಿ",
+    "forbidden": "ಇದನ್ನು ಮಾಡಲು ನಿಮಗೆ ಅನುಮತಿ ಇಲ್ಲ"
+  },
+  "document": {
+    "upload": "ದಾಖಲೆ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ",
+    "passport": "ಪಾಸ್‌ಪೋರ್ಟ್",
+    "photo": "ಪಾಸ್‌ಪೋರ್ಟ್ ಗಾತ್ರದ ಫೋಟೋ",
+    "aadhaar": "ಆಧಾರ್ ಕಾರ್ಡ್",
+    "resume": "ರೆಸ್ಯೂಮ್",
+    "marksheet": "ಅಂಕಪಟ್ಟಿ",
+    "certificate": "ಪ್ರಮಾಣಪತ್ರ",
+    "policeVerification": "ಪೊಲೀಸ್ ಪರಿಶೀಲನಾ ಪ್ರಮಾಣಪತ್ರ",
+    "medicalCertificate": "ವೈದ್ಯಕೀಯ ಪ್ರಮಾಣಪತ್ರ",
+    "viewDocument": "ದಾಖಲೆ ವೀಕ್ಷಿಸಿ",
+    "deleteDocument": "ದಾಖಲೆ ಅಳಿಸಿ"
+  }
+}

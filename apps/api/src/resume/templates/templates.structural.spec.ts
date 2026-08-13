@@ -18,6 +18,7 @@
  */
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
+import { TEMPLATE_REGISTRY } from './registry';
 
 const TEMPLATE_DIR = __dirname;
 
@@ -50,14 +51,21 @@ function importsOf(source: string): string[] {
 describe('template modules are structurally unable to bypass the mapper', () => {
   const files = templateFiles();
 
-  it('finds all four templates (guards against the scan silently matching nothing)', () => {
-    // A spec that scans zero files passes loudly and proves nothing.
-    expect(files.sort()).toEqual([
-      'classic.template.ts',
-      'compact.template.ts',
-      'minimal.template.ts',
-      'modern.template.ts',
-    ]);
+  it('scans one file per registered template (guards against matching nothing)', () => {
+    /*
+      A spec that scans zero files passes loudly and proves nothing — that is
+      what this guards. It used to name the four template files literally, which
+      also meant the guard FAILED the moment a fifth template was added, telling
+      whoever added it nothing useful.
+
+      Comparing against TEMPLATE_REGISTRY keeps both properties and adds a real
+      one: a renderer that exists but was never registered (so it can never be
+      selected) and a registry entry with no file both surface here.
+    */
+    const expected = Object.keys(TEMPLATE_REGISTRY)
+      .map((t) => `${t.toLowerCase()}.template.ts`)
+      .sort();
+    expect(files.sort()).toEqual(expected);
   });
 
   it.each(templateFiles())('%s imports ONLY the view type and shared helpers', (file) => {

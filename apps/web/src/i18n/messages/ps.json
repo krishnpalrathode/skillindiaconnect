@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "کور",
+    "dashboard": "ډشبورډ",
+    "profile": "پروفایل",
+    "jobs": "دندې",
+    "applications": "غوښتنلیکونه",
+    "notifications": "خبرتیاوې",
+    "notificationsShort": "خبرتیاوې",
+    "resumeBuilder": "د بیوگرافي جوړونکی",
+    "resumeBuilderShort": "بیوگرافي",
+    "settings": "تنظیمات",
+    "logout": "وتل",
+    "login": "ننوتل"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "تېره میاشت",
+      "nextMonth": "راتلونکې میاشت",
+      "month": "میاشت",
+      "year": "کال",
+      "clear": "پاکول",
+      "today": "نن"
+    },
+    "continue": "دوام ورکړئ",
+    "back": "شاته",
+    "save": "خوندي کول",
+    "cancel": "لغوه کول",
+    "loading": "پورته کیږي…",
+    "required": "اړین",
+    "optional": "اختیاري",
+    "submit": "وسپارئ",
+    "edit": "سمول",
+    "delete": "ړنګول",
+    "confirm": "تایید",
+    "close": "بندول",
+    "search": "لټون",
+    "filter": "چاڼ",
+    "apply": "غوښتنه وکړئ",
+    "clear": "پاکول",
+    "next": "راتلونکی",
+    "previous": "پخوانی",
+    "yes": "هو",
+    "no": "نه",
+    "or": "یا",
+    "and": "او",
+    "brand": "سکیل انډیا کنېکټ",
+    "logoutSuccess": "په بریالیتوب سره ووتلئ"
+  },
+  "status": {
+    "pending": "پاتې",
+    "shortlisted": "لنډ لیست شوی",
+    "selected": "غوره شوی",
+    "rejected": "رد شوی",
+    "verified": "تایید شوی",
+    "unverified": "تایید نشوی",
+    "active": "فعال",
+    "inactive": "غیر فعال",
+    "expired": "نېټه یې تېره ده"
+  },
+  "pagination": {
+    "label": "د پاڼو شمېرل",
+    "pageInfo": "پاڼه {page} له {totalPages}",
+    "prev": "پخوانی",
+    "next": "راتلونکی",
+    "previousPage": "پخوانۍ پاڼه",
+    "nextPage": "راتلونکې پاڼه"
+  },
+  "sorting": {
+    "sortAscending": "د {column} له مخې په صعودي ترتیب",
+    "sortDescending": "د {column} له مخې په نزولي ترتیب"
+  },
+  "field": {
+    "requiredError": "دا خانه ډکول اړین دي",
+    "invalidFormat": "ناسم بڼه",
+    "tooShort": "ډېر لنډ",
+    "tooLong": "ډېر اوږد"
+  },
+  "errors": {
+    "generic": "یوه ستونزه رامنځته شوه. مهرباني وکړئ بیا هڅه وکړئ.",
+    "network": "د شبکې ستونزه. مهرباني وکړئ خپل ارتباط وګورئ.",
+    "notFound": "پاڼه ونه موندل شوه",
+    "unauthorized": "د دوام لپاره ننوځئ",
+    "forbidden": "تاسو د دې کار اجازه نلرئ"
+  },
+  "document": {
+    "upload": "سند پورته کړئ",
+    "passport": "پاسپورټ",
+    "photo": "د پاسپورټ اندازې انځور",
+    "aadhaar": "د آدهار کارت",
+    "resume": "بیوگرافي",
+    "marksheet": "د نمرو پاڼه",
+    "certificate": "سند",
+    "policeVerification": "د پولیسو د تایید سند",
+    "medicalCertificate": "طبي سند",
+    "viewDocument": "سند وګورئ",
+    "deleteDocument": "سند ړنګ کړئ"
+  }
+}

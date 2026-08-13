@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "ہوم",
+    "dashboard": "ڈیش بورڈ",
+    "profile": "پروفائل",
+    "jobs": "ملازمتیں",
+    "applications": "درخواستیں",
+    "notifications": "اطلاعات",
+    "notificationsShort": "اطلاعات",
+    "resumeBuilder": "ریزیومے بلڈر",
+    "resumeBuilderShort": "ریزیومے",
+    "settings": "ترتیبات",
+    "logout": "لاگ آؤٹ",
+    "login": "لاگ ان"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "پچھلا مہینہ",
+      "nextMonth": "اگلا مہینہ",
+      "month": "مہینہ",
+      "year": "سال",
+      "clear": "صاف کریں",
+      "today": "آج"
+    },
+    "continue": "جاری رکھیں",
+    "back": "واپس",
+    "save": "محفوظ کریں",
+    "cancel": "منسوخ کریں",
+    "loading": "لوڈ ہو رہا ہے…",
+    "required": "لازمی",
+    "optional": "اختیاری",
+    "submit": "جمع کرائیں",
+    "edit": "ترمیم کریں",
+    "delete": "حذف کریں",
+    "confirm": "تصدیق کریں",
+    "close": "بند کریں",
+    "search": "تلاش کریں",
+    "filter": "فلٹر",
+    "apply": "درخواست دیں",
+    "clear": "صاف کریں",
+    "next": "اگلا",
+    "previous": "پچھلا",
+    "yes": "ہاں",
+    "no": "نہیں",
+    "or": "یا",
+    "and": "اور",
+    "brand": "اسکل انڈیا کنیکٹ",
+    "logoutSuccess": "کامیابی سے لاگ آؤٹ ہو گئے"
+  },
+  "status": {
+    "pending": "زیر التوا",
+    "shortlisted": "شارٹ لسٹ ہو گیا",
+    "selected": "منتخب",
+    "rejected": "مسترد",
+    "verified": "تصدیق شدہ",
+    "unverified": "غیر تصدیق شدہ",
+    "active": "فعال",
+    "inactive": "غیر فعال",
+    "expired": "میعاد ختم"
+  },
+  "pagination": {
+    "label": "صفحہ بندی",
+    "pageInfo": "صفحہ {page} / {totalPages}",
+    "prev": "پچھلا",
+    "next": "اگلا",
+    "previousPage": "پچھلا صفحہ",
+    "nextPage": "اگلا صفحہ"
+  },
+  "sorting": {
+    "sortAscending": "{column} کے مطابق صعودی ترتیب دیں",
+    "sortDescending": "{column} کے مطابق نزولی ترتیب دیں"
+  },
+  "field": {
+    "requiredError": "یہ خانہ پُر کرنا لازمی ہے",
+    "invalidFormat": "غلط فارمیٹ",
+    "tooShort": "بہت مختصر",
+    "tooLong": "بہت طویل"
+  },
+  "errors": {
+    "generic": "کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔",
+    "network": "نیٹ ورک کی خرابی۔ براہ کرم اپنا کنکشن چیک کریں۔",
+    "notFound": "صفحہ نہیں ملا",
+    "unauthorized": "جاری رکھنے کے لیے لاگ ان کریں",
+    "forbidden": "آپ کو یہ کرنے کی اجازت نہیں ہے"
+  },
+  "document": {
+    "upload": "دستاویز اپ لوڈ کریں",
+    "passport": "پاسپورٹ",
+    "photo": "پاسپورٹ سائز تصویر",
+    "aadhaar": "آدھار کارڈ",
+    "resume": "ریزیومے",
+    "marksheet": "مارک شیٹ",
+    "certificate": "سرٹیفکیٹ",
+    "policeVerification": "پولیس تصدیقی سرٹیفکیٹ",
+    "medicalCertificate": "طبی سرٹیفکیٹ",
+    "viewDocument": "دستاویز دیکھیں",
+    "deleteDocument": "دستاویز حذف کریں"
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "मुख्यपृष्ठ",
+    "dashboard": "डॅशबोर्ड",
+    "profile": "प्रोफाइल",
+    "jobs": "नोकऱ्या",
+    "applications": "अर्ज",
+    "notifications": "सूचना",
+    "notificationsShort": "सूचना",
+    "resumeBuilder": "रेझ्युमे बिल्डर",
+    "resumeBuilderShort": "रेझ्युमे",
+    "settings": "सेटिंग्ज",
+    "logout": "बाहेर पडा",
+    "login": "लॉग इन करा"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "मागील महिना",
+      "nextMonth": "पुढील महिना",
+      "month": "महिना",
+      "year": "वर्ष",
+      "clear": "साफ करा",
+      "today": "आज"
+    },
+    "continue": "पुढे चला",
+    "back": "मागे",
+    "save": "जतन करा",
+    "cancel": "रद्द करा",
+    "loading": "लोड होत आहे…",
+    "required": "आवश्यक",
+    "optional": "पर्यायी",
+    "submit": "सादर करा",
+    "edit": "संपादित करा",
+    "delete": "हटवा",
+    "confirm": "निश्चित करा",
+    "close": "बंद करा",
+    "search": "शोधा",
+    "filter": "फिल्टर",
+    "apply": "अर्ज करा",
+    "clear": "साफ करा",
+    "next": "पुढील",
+    "previous": "मागील",
+    "yes": "होय",
+    "no": "नाही",
+    "or": "किंवा",
+    "and": "आणि",
+    "brand": "स्किल इंडिया कनेक्ट",
+    "logoutSuccess": "यशस्वीरित्या बाहेर पडलात"
+  },
+  "status": {
+    "pending": "प्रलंबित",
+    "shortlisted": "निवडसूचीत",
+    "selected": "निवडलेले",
+    "rejected": "नाकारलेले",
+    "verified": "पडताळणी झाली",
+    "unverified": "पडताळणी झाली नाही",
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय",
+    "expired": "मुदत संपली"
+  },
+  "pagination": {
+    "label": "पृष्ठक्रम",
+    "pageInfo": "पृष्ठ {page} / {totalPages}",
+    "prev": "मागील",
+    "next": "पुढील",
+    "previousPage": "मागील पृष्ठ",
+    "nextPage": "पुढील पृष्ठ"
+  },
+  "sorting": {
+    "sortAscending": "{column} नुसार चढत्या क्रमाने लावा",
+    "sortDescending": "{column} नुसार उतरत्या क्रमाने लावा"
+  },
+  "field": {
+    "requiredError": "हे क्षेत्र भरणे आवश्यक आहे",
+    "invalidFormat": "चुकीचे स्वरूप",
+    "tooShort": "खूप लहान",
+    "tooLong": "खूप मोठे"
+  },
+  "errors": {
+    "generic": "काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.",
+    "network": "नेटवर्क त्रुटी. कृपया तुमचे कनेक्शन तपासा.",
+    "notFound": "पृष्ठ सापडले नाही",
+    "unauthorized": "पुढे जाण्यासाठी लॉग इन करा",
+    "forbidden": "हे करण्याची तुम्हाला परवानगी नाही"
+  },
+  "document": {
+    "upload": "कागदपत्र अपलोड करा",
+    "passport": "पासपोर्ट",
+    "photo": "पासपोर्ट आकाराचा फोटो",
+    "aadhaar": "आधार कार्ड",
+    "resume": "रेझ्युमे",
+    "marksheet": "गुणपत्रिका",
+    "certificate": "प्रमाणपत्र",
+    "policeVerification": "पोलीस पडताळणी प्रमाणपत्र",
+    "medicalCertificate": "वैद्यकीय प्रमाणपत्र",
+    "viewDocument": "कागदपत्र पहा",
+    "deleteDocument": "कागदपत्र हटवा"
+  }
+}

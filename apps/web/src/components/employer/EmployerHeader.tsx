@@ -9,25 +9,23 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { useLogoutConfirm } from '@/lib/auth/logout-confirm';
 import { useEmployer } from '@/lib/employer/employer-context';
 import { cn } from '@/lib/utils';
+import { LOCALES, isLocale, type Locale } from '@/i18n/locales';
 
-const LOCALES = [
-  { code: 'en', label: 'EN' },
-  { code: 'hi', label: 'हि' },
-  { code: 'ar', label: 'ع' },
-] as const;
-
-type LocaleCode = (typeof LOCALES)[number]['code'];
-const ALL_LOCALE_CODES = LOCALES.map((l) => l.code);
-
+/**
+ * Same control and same reasoning as the candidate-side `LanguageSwitcher`: the
+ * locale list comes from the registry (`@/i18n/locales`) instead of a local
+ * copy, and a native `<select>` replaces the button row because fifteen
+ * languages do not fit in a header.
+ */
 function HeaderLangSwitcher() {
   const currentLocale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
 
-  function switchLocale(newLocale: LocaleCode) {
+  function switchLocale(newLocale: Locale) {
     if (newLocale === currentLocale) return;
     const segments = pathname.split('/').filter(Boolean);
-    if (ALL_LOCALE_CODES.includes(segments[0] as LocaleCode)) {
+    if (isLocale(segments[0])) {
       segments[0] = newLocale;
     } else {
       segments.unshift(newLocale);
@@ -36,25 +34,28 @@ function HeaderLangSwitcher() {
   }
 
   return (
-    <div className="flex gap-0.5" role="group" aria-label="Select language">
-      {LOCALES.map(({ code, label }) => (
-        <button
-          key={code}
-          type="button"
-          onClick={() => switchLocale(code)}
-          aria-pressed={currentLocale === code}
-          aria-label={`Switch language to ${code}`}
-          className={cn(
-            'px-2.5 py-1 rounded-lg text-xs font-semibold transition-all min-w-[2rem] h-8',
-            'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
-            currentLocale === code
-              ? 'bg-[#0F3D91] text-white shadow-sm'
-              : 'text-neutral-600 hover:text-[#0F3D91] hover:bg-white',
-          )}
-        >
-          {label}
-        </button>
-      ))}
+    <div className="relative inline-flex items-center">
+      <select
+        aria-label="Select language / भाषा चुनें"
+        value={currentLocale}
+        onChange={(e) => switchLocale(e.target.value as Locale)}
+        className={cn(
+          'h-9 cursor-pointer appearance-none rounded-lg ps-2.5 pe-7 text-xs font-semibold',
+          'border border-neutral-200 bg-white text-neutral-700 transition-colors',
+          'hover:border-[#0F3D91]/40 hover:text-[#0F3D91]',
+          'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
+        )}
+      >
+        {LOCALES.map(({ code, nativeName }) => (
+          <option key={code} value={code}>
+            {nativeName}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        className="pointer-events-none absolute end-2 size-3.5 text-neutral-600"
+        aria-hidden="true"
+      />
     </div>
   );
 }

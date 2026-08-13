@@ -1,5 +1,8 @@
 ﻿import { http, HttpResponse } from 'msw';
 import type { components } from '@skillindiaconnect/shared-types';
+
+/** Alias so `languagePref` tracks the contract enum instead of a literal union. */
+type CompanySchema = components['schemas']['Company'];
 import {
   db,
   buildProfile,
@@ -1214,7 +1217,7 @@ const employersRegister = http.post(`${BASE}/employers/register`, async ({ reque
     location: body.location,
     website: body.website,
     employeeRange: body.employeeRange as components['schemas']['EmployeeRange'],
-    languagePref: (body.languagePref ?? 'en') as 'en' | 'hi' | 'ar',
+    languagePref: (body.languagePref ?? 'en') as CompanySchema['languagePref'],
     description: body.description,
     registrationCertKey: body.registrationCertKey ?? null,
     rejectionReason: null,

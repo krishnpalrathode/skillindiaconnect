@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "መነሻ",
+    "dashboard": "ዳሽቦርድ",
+    "profile": "መገለጫ",
+    "jobs": "ሥራዎች",
+    "applications": "ማመልከቻዎች",
+    "notifications": "ማሳወቂያዎች",
+    "notificationsShort": "ማሳወቂያዎች",
+    "resumeBuilder": "ሲቪ ገንቢ",
+    "resumeBuilderShort": "ሲቪ",
+    "settings": "ቅንብሮች",
+    "logout": "ውጣ",
+    "login": "ግባ"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "ያለፈው ወር",
+      "nextMonth": "የሚቀጥለው ወር",
+      "month": "ወር",
+      "year": "ዓመት",
+      "clear": "አጽዳ",
+      "today": "ዛሬ"
+    },
+    "continue": "ቀጥል",
+    "back": "ተመለስ",
+    "save": "አስቀምጥ",
+    "cancel": "ሰርዝ",
+    "loading": "በመጫን ላይ…",
+    "required": "ያስፈልጋል",
+    "optional": "አማራጭ",
+    "submit": "አስገባ",
+    "edit": "አርትዕ",
+    "delete": "ሰርዝ",
+    "confirm": "አረጋግጥ",
+    "close": "ዝጋ",
+    "search": "ፈልግ",
+    "filter": "አጣራ",
+    "apply": "አመልክት",
+    "clear": "አጽዳ",
+    "next": "ቀጣይ",
+    "previous": "ቀዳሚ",
+    "yes": "አዎ",
+    "no": "አይ",
+    "or": "ወይም",
+    "and": "እና",
+    "brand": "ስኪል ኢንዲያ ኮኔክት",
+    "logoutSuccess": "በተሳካ ሁኔታ ወጥተዋል"
+  },
+  "status": {
+    "pending": "በመጠባበቅ ላይ",
+    "shortlisted": "ተመርጧል ለአጭር ዝርዝር",
+    "selected": "ተመርጧል",
+    "rejected": "ተቀባይነት አላገኘም",
+    "verified": "ተረጋግጧል",
+    "unverified": "አልተረጋገጠም",
+    "active": "ንቁ",
+    "inactive": "ንቁ ያልሆነ",
+    "expired": "ጊዜው አልፎበታል"
+  },
+  "pagination": {
+    "label": "ገጽ አሰሳ",
+    "pageInfo": "ገጽ {page} ከ {totalPages}",
+    "prev": "ቀዳሚ",
+    "next": "ቀጣይ",
+    "previousPage": "ቀዳሚ ገጽ",
+    "nextPage": "ቀጣይ ገጽ"
+  },
+  "sorting": {
+    "sortAscending": "በ{column} መሠረት ከትንሽ ወደ ትልቅ ደርድር",
+    "sortDescending": "በ{column} መሠረት ከትልቅ ወደ ትንሽ ደርድር"
+  },
+  "field": {
+    "requiredError": "ይህ ሳጥን መሞላት አለበት",
+    "invalidFormat": "ልክ ያልሆነ ቅርጸት",
+    "tooShort": "በጣም አጭር",
+    "tooLong": "በጣም ረጅም"
+  },
+  "errors": {
+    "generic": "የሆነ ስህተት ተከስቷል። እባክዎ እንደገና ይሞክሩ።",
+    "network": "የኔትወርክ ስህተት። እባክዎ ግንኙነትዎን ያረጋግጡ።",
+    "notFound": "ገጹ አልተገኘም",
+    "unauthorized": "ለመቀጠል ይግቡ",
+    "forbidden": "ይህን ለማድረግ ፈቃድ የለዎትም"
+  },
+  "document": {
+    "upload": "ሰነድ ይስቀሉ",
+    "passport": "ፓስፖርት",
+    "photo": "የፓስፖርት መጠን ፎቶ",
+    "aadhaar": "የአድሃር ካርድ",
+    "resume": "ሲቪ",
+    "marksheet": "የውጤት ማስረጃ",
+    "certificate": "ሰርተፍኬት",
+    "policeVerification": "የፖሊስ ማረጋገጫ ሰርተፍኬት",
+    "medicalCertificate": "የሕክምና ሰርተፍኬት",
+    "viewDocument": "ሰነዱን ይመልከቱ",
+    "deleteDocument": "ሰነዱን ይሰርዙ"
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "මුල් පිටුව",
+    "dashboard": "උපකරණ පුවරුව",
+    "profile": "පැතිකඩ",
+    "jobs": "රැකියා",
+    "applications": "අයදුම්පත්",
+    "notifications": "දැනුම්දීම්",
+    "notificationsShort": "දැනුම්දීම්",
+    "resumeBuilder": "ජීව දත්ත සකසනය",
+    "resumeBuilderShort": "ජීව දත්ත",
+    "settings": "සැකසුම්",
+    "logout": "පිටවීම",
+    "login": "පිවිසීම"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "පෙර මාසය",
+      "nextMonth": "ඊළඟ මාසය",
+      "month": "මාසය",
+      "year": "වර්ෂය",
+      "clear": "මකන්න",
+      "today": "අද"
+    },
+    "continue": "ඉදිරියට",
+    "back": "ආපසු",
+    "save": "සුරකින්න",
+    "cancel": "අවලංගු කරන්න",
+    "loading": "පූරණය වෙමින්…",
+    "required": "අනිවාර්යයි",
+    "optional": "විකල්පයි",
+    "submit": "ඉදිරිපත් කරන්න",
+    "edit": "සංස්කරණය",
+    "delete": "මකන්න",
+    "confirm": "තහවුරු කරන්න",
+    "close": "වසන්න",
+    "search": "සොයන්න",
+    "filter": "පෙරහන",
+    "apply": "අයදුම් කරන්න",
+    "clear": "හිස් කරන්න",
+    "next": "ඊළඟ",
+    "previous": "පෙර",
+    "yes": "ඔව්",
+    "no": "නැත",
+    "or": "හෝ",
+    "and": "සහ",
+    "brand": "ස්කිල් ඉන්දියා කනෙක්ට්",
+    "logoutSuccess": "සාර්ථකව පිටවිය"
+  },
+  "status": {
+    "pending": "විසඳීමට ඇත",
+    "shortlisted": "කෙටි ලැයිස්තුගත",
+    "selected": "තෝරාගත්",
+    "rejected": "ප්‍රතික්ෂේප කළ",
+    "verified": "සත්‍යාපිත",
+    "unverified": "සත්‍යාපනය නොකළ",
+    "active": "සක්‍රීය",
+    "inactive": "අක්‍රීය",
+    "expired": "කල් ඉකුත් වූ"
+  },
+  "pagination": {
+    "label": "පිටු අංකනය",
+    "pageInfo": "පිටුව {page} / {totalPages}",
+    "prev": "පෙර",
+    "next": "ඊළඟ",
+    "previousPage": "පෙර පිටුව",
+    "nextPage": "ඊළඟ පිටුව"
+  },
+  "sorting": {
+    "sortAscending": "{column} අනුව ආරෝහණ පිළිවෙළට සකසන්න",
+    "sortDescending": "{column} අනුව අවරෝහණ පිළිවෙළට සකසන්න"
+  },
+  "field": {
+    "requiredError": "මෙම කොටස පිරවීම අනිවාර්යයි",
+    "invalidFormat": "වලංගු නොවන ආකෘතිය",
+    "tooShort": "ඉතා කෙටියි",
+    "tooLong": "ඉතා දිගයි"
+  },
+  "errors": {
+    "generic": "යම් දෝෂයක් ඇති විය. නැවත උත්සාහ කරන්න.",
+    "network": "ජාල දෝෂයකි. ඔබගේ සම්බන්ධතාවය පරීක්ෂා කරන්න.",
+    "notFound": "පිටුව හමු නොවීය",
+    "unauthorized": "ඉදිරියට යාමට පිවිසෙන්න",
+    "forbidden": "මෙය කිරීමට ඔබට අවසර නැත"
+  },
+  "document": {
+    "upload": "ලේඛනය උඩුගත කරන්න",
+    "passport": "ගමන් බලපත්‍රය",
+    "photo": "ගමන් බලපත්‍ර ප්‍රමාණයේ ඡායාරූපය",
+    "aadhaar": "ආධාර් කාඩ්පත",
+    "resume": "ජීව දත්ත",
+    "marksheet": "ලකුණු පත්‍රය",
+    "certificate": "සහතිකය",
+    "policeVerification": "පොලිස් සත්‍යාපන සහතිකය",
+    "medicalCertificate": "වෛද්‍ය සහතිකය",
+    "viewDocument": "ලේඛනය බලන්න",
+    "deleteDocument": "ලේඛනය මකන්න"
+  }
+}

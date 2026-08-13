@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "முகப்பு",
+    "dashboard": "டாஷ்போர்டு",
+    "profile": "சுயவிவரம்",
+    "jobs": "வேலைகள்",
+    "applications": "விண்ணப்பங்கள்",
+    "notifications": "அறிவிப்புகள்",
+    "notificationsShort": "அறிவிப்புகள்",
+    "resumeBuilder": "ரெஸ்யூம் உருவாக்கி",
+    "resumeBuilderShort": "ரெஸ்யூம்",
+    "settings": "அமைப்புகள்",
+    "logout": "வெளியேறு",
+    "login": "உள்நுழை"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "முந்தைய மாதம்",
+      "nextMonth": "அடுத்த மாதம்",
+      "month": "மாதம்",
+      "year": "ஆண்டு",
+      "clear": "அழி",
+      "today": "இன்று"
+    },
+    "continue": "தொடரவும்",
+    "back": "பின்செல்",
+    "save": "சேமி",
+    "cancel": "ரத்து செய்",
+    "loading": "ஏற்றுகிறது…",
+    "required": "கட்டாயம்",
+    "optional": "விருப்பத்தேர்வு",
+    "submit": "சமர்ப்பி",
+    "edit": "திருத்து",
+    "delete": "நீக்கு",
+    "confirm": "உறுதிப்படுத்து",
+    "close": "மூடு",
+    "search": "தேடு",
+    "filter": "வடிகட்டி",
+    "apply": "விண்ணப்பி",
+    "clear": "அழி",
+    "next": "அடுத்து",
+    "previous": "முந்தைய",
+    "yes": "ஆம்",
+    "no": "இல்லை",
+    "or": "அல்லது",
+    "and": "மற்றும்",
+    "brand": "ஸ்கில் இந்தியா கனெக்ட்",
+    "logoutSuccess": "வெற்றிகரமாக வெளியேறினீர்கள்"
+  },
+  "status": {
+    "pending": "நிலுவையில்",
+    "shortlisted": "தேர்வுப் பட்டியலில்",
+    "selected": "தேர்ந்தெடுக்கப்பட்டது",
+    "rejected": "நிராகரிக்கப்பட்டது",
+    "verified": "சரிபார்க்கப்பட்டது",
+    "unverified": "சரிபார்க்கப்படவில்லை",
+    "active": "செயலில்",
+    "inactive": "செயலற்ற",
+    "expired": "காலாவதியானது"
+  },
+  "pagination": {
+    "label": "பக்க வழிசெலுத்தல்",
+    "pageInfo": "பக்கம் {page} / {totalPages}",
+    "prev": "முந்தைய",
+    "next": "அடுத்து",
+    "previousPage": "முந்தைய பக்கம்",
+    "nextPage": "அடுத்த பக்கம்"
+  },
+  "sorting": {
+    "sortAscending": "{column} வரிசையில் ஏறுவரிசையாக அடுக்கு",
+    "sortDescending": "{column} வரிசையில் இறங்குவரிசையாக அடுக்கு"
+  },
+  "field": {
+    "requiredError": "இந்தப் புலம் கட்டாயமானது",
+    "invalidFormat": "தவறான வடிவம்",
+    "tooShort": "மிகவும் குறுகியது",
+    "tooLong": "மிகவும் நீளமானது"
+  },
+  "errors": {
+    "generic": "ஏதோ தவறு நடந்துவிட்டது. மீண்டும் முயற்சிக்கவும்.",
+    "network": "நெட்வொர்க் பிழை. உங்கள் இணைப்பைச் சரிபார்க்கவும்.",
+    "notFound": "பக்கம் கிடைக்கவில்லை",
+    "unauthorized": "தொடர உள்நுழையவும்",
+    "forbidden": "இதைச் செய்ய உங்களுக்கு அனுமதி இல்லை"
+  },
+  "document": {
+    "upload": "ஆவணத்தைப் பதிவேற்று",
+    "passport": "கடவுச்சீட்டு",
+    "photo": "கடவுச்சீட்டு அளவு புகைப்படம்",
+    "aadhaar": "ஆதார் அட்டை",
+    "resume": "ரெஸ்யூம்",
+    "marksheet": "மதிப்பெண் பட்டியல்",
+    "certificate": "சான்றிதழ்",
+    "policeVerification": "காவல்துறை சரிபார்ப்புச் சான்றிதழ்",
+    "medicalCertificate": "மருத்துவச் சான்றிதழ்",
+    "viewDocument": "ஆவணத்தைப் பார்",
+    "deleteDocument": "ஆவணத்தை நீக்கு"
+  }
+}

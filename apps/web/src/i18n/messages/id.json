@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "Beranda",
+    "dashboard": "Dasbor",
+    "profile": "Profil",
+    "jobs": "Lowongan",
+    "applications": "Lamaran",
+    "notifications": "Notifikasi",
+    "notificationsShort": "Notifikasi",
+    "resumeBuilder": "Pembuat Resume",
+    "resumeBuilderShort": "Resume",
+    "settings": "Pengaturan",
+    "logout": "Keluar",
+    "login": "Masuk"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "Bulan sebelumnya",
+      "nextMonth": "Bulan berikutnya",
+      "month": "Bulan",
+      "year": "Tahun",
+      "clear": "Hapus",
+      "today": "Hari ini"
+    },
+    "continue": "Lanjutkan",
+    "back": "Kembali",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "loading": "Memuat…",
+    "required": "Wajib",
+    "optional": "Opsional",
+    "submit": "Kirim",
+    "edit": "Ubah",
+    "delete": "Hapus",
+    "confirm": "Konfirmasi",
+    "close": "Tutup",
+    "search": "Cari",
+    "filter": "Filter",
+    "apply": "Lamar",
+    "clear": "Bersihkan",
+    "next": "Berikutnya",
+    "previous": "Sebelumnya",
+    "yes": "Ya",
+    "no": "Tidak",
+    "or": "atau",
+    "and": "dan",
+    "brand": "Skill India Connect",
+    "logoutSuccess": "Berhasil keluar"
+  },
+  "status": {
+    "pending": "Menunggu",
+    "shortlisted": "Masuk daftar pendek",
+    "selected": "Terpilih",
+    "rejected": "Ditolak",
+    "verified": "Terverifikasi",
+    "unverified": "Belum terverifikasi",
+    "active": "Aktif",
+    "inactive": "Tidak aktif",
+    "expired": "Kedaluwarsa"
+  },
+  "pagination": {
+    "label": "Penomoran halaman",
+    "pageInfo": "Halaman {page} dari {totalPages}",
+    "prev": "Sebelumnya",
+    "next": "Berikutnya",
+    "previousPage": "Halaman sebelumnya",
+    "nextPage": "Halaman berikutnya"
+  },
+  "sorting": {
+    "sortAscending": "Urutkan menurut {column}, menaik",
+    "sortDescending": "Urutkan menurut {column}, menurun"
+  },
+  "field": {
+    "requiredError": "Kolom ini wajib diisi",
+    "invalidFormat": "Format tidak valid",
+    "tooShort": "Terlalu pendek",
+    "tooLong": "Terlalu panjang"
+  },
+  "errors": {
+    "generic": "Terjadi kesalahan. Silakan coba lagi.",
+    "network": "Kesalahan jaringan. Silakan periksa koneksi Anda.",
+    "notFound": "Halaman tidak ditemukan",
+    "unauthorized": "Silakan masuk untuk melanjutkan",
+    "forbidden": "Anda tidak memiliki izin untuk melakukan ini"
+  },
+  "document": {
+    "upload": "Unggah dokumen",
+    "passport": "Paspor",
+    "photo": "Foto ukuran paspor",
+    "aadhaar": "Kartu Aadhaar",
+    "resume": "Resume",
+    "marksheet": "Transkrip nilai",
+    "certificate": "Sertifikat",
+    "policeVerification": "Surat keterangan catatan kepolisian",
+    "medicalCertificate": "Surat keterangan sehat",
+    "viewDocument": "Lihat dokumen",
+    "deleteDocument": "Hapus dokumen"
+  }
+}

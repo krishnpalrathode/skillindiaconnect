@@ -91,13 +91,19 @@
         "CLASSIC": "[hi] Classic",
         "MODERN": "[hi] Modern",
         "COMPACT": "[hi] Compact",
-        "MINIMAL": "[hi] Minimal"
+        "MINIMAL": "[hi] Minimal",
+        "ELEGANT": "सुरुचिपूर्ण",
+        "EXECUTIVE": "कार्यकारी",
+        "TIMELINE": "टाइमलाइन"
       },
       "descriptions": {
         "CLASSIC": "पारंपरिक और औपचारिक। अंतर्राष्ट्रीय नियोक्ताओं के लिए एक सुरक्षित विकल्प।",
         "MODERN": "[hi] Clean and spacious. Works well for most candidates.",
         "COMPACT": "[hi] Two columns. Fits more experience on one page.",
-        "MINIMAL": "[hi] Plain and simple. Easiest for hiring software to read."
+        "MINIMAL": "[hi] Plain and simple. Easiest for hiring software to read.",
+        "ELEGANT": "सजावटी सेरिफ़ फ़ॉन्ट, प्रमाणपत्र जैसा औपचारिक रूप।",
+        "EXECUTIVE": "गहरे रंग का हेडर। छपे हुए ढेर में अलग दिखता है।",
+        "TIMELINE": "आपके कार्य अनुभव को एक सतत टाइमलाइन के रूप में दिखाता है।"
       }
     }
   },

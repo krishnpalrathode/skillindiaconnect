@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "Mwanzo",
+    "dashboard": "Dashibodi",
+    "profile": "Wasifu",
+    "jobs": "Kazi",
+    "applications": "Maombi",
+    "notifications": "Arifa",
+    "notificationsShort": "Arifa",
+    "resumeBuilder": "Kitengeneza Wasifu",
+    "resumeBuilderShort": "Wasifu",
+    "settings": "Mipangilio",
+    "logout": "Ondoka",
+    "login": "Ingia"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "Mwezi uliopita",
+      "nextMonth": "Mwezi ujao",
+      "month": "Mwezi",
+      "year": "Mwaka",
+      "clear": "Futa",
+      "today": "Leo"
+    },
+    "continue": "Endelea",
+    "back": "Rudi",
+    "save": "Hifadhi",
+    "cancel": "Ghairi",
+    "loading": "Inapakia…",
+    "required": "Inahitajika",
+    "optional": "Si lazima",
+    "submit": "Wasilisha",
+    "edit": "Hariri",
+    "delete": "Futa",
+    "confirm": "Thibitisha",
+    "close": "Funga",
+    "search": "Tafuta",
+    "filter": "Chuja",
+    "apply": "Omba",
+    "clear": "Ondoa",
+    "next": "Ifuatayo",
+    "previous": "Iliyotangulia",
+    "yes": "Ndiyo",
+    "no": "Hapana",
+    "or": "au",
+    "and": "na",
+    "brand": "Skill India Connect",
+    "logoutSuccess": "Umeondoka kwa mafanikio"
+  },
+  "status": {
+    "pending": "Inasubiri",
+    "shortlisted": "Umeorodheshwa",
+    "selected": "Umechaguliwa",
+    "rejected": "Umekataliwa",
+    "verified": "Imethibitishwa",
+    "unverified": "Haijathibitishwa",
+    "active": "Inatumika",
+    "inactive": "Haitumiki",
+    "expired": "Muda umeisha"
+  },
+  "pagination": {
+    "label": "Urasimishaji wa kurasa",
+    "pageInfo": "Ukurasa {page} kati ya {totalPages}",
+    "prev": "Iliyotangulia",
+    "next": "Ifuatayo",
+    "previousPage": "Ukurasa uliotangulia",
+    "nextPage": "Ukurasa ufuatao"
+  },
+  "sorting": {
+    "sortAscending": "Panga kwa {column}, kupanda",
+    "sortDescending": "Panga kwa {column}, kushuka"
+  },
+  "field": {
+    "requiredError": "Sehemu hii inahitajika",
+    "invalidFormat": "Muundo si sahihi",
+    "tooShort": "Fupi mno",
+    "tooLong": "Ndefu mno"
+  },
+  "errors": {
+    "generic": "Hitilafu imetokea. Tafadhali jaribu tena.",
+    "network": "Hitilafu ya mtandao. Tafadhali angalia muunganisho wako.",
+    "notFound": "Ukurasa haujapatikana",
+    "unauthorized": "Tafadhali ingia ili kuendelea",
+    "forbidden": "Huna ruhusa ya kufanya hili"
+  },
+  "document": {
+    "upload": "Pakia hati",
+    "passport": "Pasipoti",
+    "photo": "Picha ya ukubwa wa pasipoti",
+    "aadhaar": "Kadi ya Aadhaar",
+    "resume": "Wasifu",
+    "marksheet": "Cheti cha alama",
+    "certificate": "Cheti",
+    "policeVerification": "Cheti cha uthibitisho wa polisi",
+    "medicalCertificate": "Cheti cha afya",
+    "viewDocument": "Tazama hati",
+    "deleteDocument": "Futa hati"
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "హోమ్",
+    "dashboard": "డాష్‌బోర్డ్",
+    "profile": "ప్రొఫైల్",
+    "jobs": "ఉద్యోగాలు",
+    "applications": "దరఖాస్తులు",
+    "notifications": "నోటిఫికేషన్లు",
+    "notificationsShort": "నోటిఫికేషన్లు",
+    "resumeBuilder": "రెజ్యూమె బిల్డర్",
+    "resumeBuilderShort": "రెజ్యూమె",
+    "settings": "సెట్టింగ్‌లు",
+    "logout": "లాగ్ అవుట్",
+    "login": "లాగిన్"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "మునుపటి నెల",
+      "nextMonth": "తదుపరి నెల",
+      "month": "నెల",
+      "year": "సంవత్సరం",
+      "clear": "తొలగించు",
+      "today": "ఈరోజు"
+    },
+    "continue": "కొనసాగించు",
+    "back": "వెనుకకు",
+    "save": "సేవ్ చేయి",
+    "cancel": "రద్దు చేయి",
+    "loading": "లోడ్ అవుతోంది…",
+    "required": "తప్పనిసరి",
+    "optional": "ఐచ్ఛికం",
+    "submit": "సమర్పించు",
+    "edit": "సవరించు",
+    "delete": "తొలగించు",
+    "confirm": "నిర్ధారించు",
+    "close": "మూసివేయి",
+    "search": "వెతకండి",
+    "filter": "ఫిల్టర్",
+    "apply": "దరఖాస్తు చేయి",
+    "clear": "క్లియర్ చేయి",
+    "next": "తదుపరి",
+    "previous": "మునుపటి",
+    "yes": "అవును",
+    "no": "కాదు",
+    "or": "లేదా",
+    "and": "మరియు",
+    "brand": "స్కిల్ ఇండియా కనెక్ట్",
+    "logoutSuccess": "విజయవంతంగా లాగ్ అవుట్ అయ్యారు"
+  },
+  "status": {
+    "pending": "పెండింగ్‌లో ఉంది",
+    "shortlisted": "షార్ట్‌లిస్ట్ అయింది",
+    "selected": "ఎంపికయ్యారు",
+    "rejected": "తిరస్కరించబడింది",
+    "verified": "ధృవీకరించబడింది",
+    "unverified": "ధృవీకరించబడలేదు",
+    "active": "క్రియాశీలం",
+    "inactive": "నిష్క్రియం",
+    "expired": "గడువు ముగిసింది"
+  },
+  "pagination": {
+    "label": "పేజీ నావిగేషన్",
+    "pageInfo": "పేజీ {page} / {totalPages}",
+    "prev": "మునుపటి",
+    "next": "తదుపరి",
+    "previousPage": "మునుపటి పేజీ",
+    "nextPage": "తదుపరి పేజీ"
+  },
+  "sorting": {
+    "sortAscending": "{column} ప్రకారం ఆరోహణ క్రమంలో అమర్చు",
+    "sortDescending": "{column} ప్రకారం అవరోహణ క్రమంలో అమర్చు"
+  },
+  "field": {
+    "requiredError": "ఈ ఫీల్డ్ తప్పనిసరి",
+    "invalidFormat": "చెల్లని ఫార్మాట్",
+    "tooShort": "చాలా చిన్నది",
+    "tooLong": "చాలా పొడవుగా ఉంది"
+  },
+  "errors": {
+    "generic": "ఏదో తప్పు జరిగింది. దయచేసి మళ్లీ ప్రయత్నించండి.",
+    "network": "నెట్‌వర్క్ లోపం. దయచేసి మీ కనెక్షన్‌ను తనిఖీ చేయండి.",
+    "notFound": "పేజీ కనుగొనబడలేదు",
+    "unauthorized": "కొనసాగించడానికి లాగిన్ అవ్వండి",
+    "forbidden": "ఇది చేయడానికి మీకు అనుమతి లేదు"
+  },
+  "document": {
+    "upload": "పత్రాన్ని అప్‌లోడ్ చేయండి",
+    "passport": "పాస్‌పోర్ట్",
+    "photo": "పాస్‌పోర్ట్ సైజు ఫోటో",
+    "aadhaar": "ఆధార్ కార్డు",
+    "resume": "రెజ్యూమె",
+    "marksheet": "మార్క్‌షీట్",
+    "certificate": "సర్టిఫికెట్",
+    "policeVerification": "పోలీస్ వెరిఫికేషన్ సర్టిఫికెట్",
+    "medicalCertificate": "వైద్య ధృవీకరణ పత్రం",
+    "viewDocument": "పత్రాన్ని చూడండి",
+    "deleteDocument": "పత్రాన్ని తొలగించండి"
+  }
+}

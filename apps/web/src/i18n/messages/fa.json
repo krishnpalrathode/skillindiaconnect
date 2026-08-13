@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "خانه",
+    "dashboard": "داشبورد",
+    "profile": "نمایه",
+    "jobs": "مشاغل",
+    "applications": "درخواست‌ها",
+    "notifications": "اعلان‌ها",
+    "notificationsShort": "اعلان‌ها",
+    "resumeBuilder": "رزومه‌ساز",
+    "resumeBuilderShort": "رزومه",
+    "settings": "تنظیمات",
+    "logout": "خروج",
+    "login": "ورود"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "ماه قبل",
+      "nextMonth": "ماه بعد",
+      "month": "ماه",
+      "year": "سال",
+      "clear": "پاک کردن",
+      "today": "امروز"
+    },
+    "continue": "ادامه",
+    "back": "بازگشت",
+    "save": "ذخیره",
+    "cancel": "لغو",
+    "loading": "در حال بارگذاری…",
+    "required": "الزامی",
+    "optional": "اختیاری",
+    "submit": "ثبت",
+    "edit": "ویرایش",
+    "delete": "حذف",
+    "confirm": "تأیید",
+    "close": "بستن",
+    "search": "جستجو",
+    "filter": "فیلتر",
+    "apply": "درخواست دادن",
+    "clear": "پاک کردن",
+    "next": "بعدی",
+    "previous": "قبلی",
+    "yes": "بله",
+    "no": "خیر",
+    "or": "یا",
+    "and": "و",
+    "brand": "اسکیل ایندیا کانکت",
+    "logoutSuccess": "با موفقیت خارج شدید"
+  },
+  "status": {
+    "pending": "در انتظار",
+    "shortlisted": "در فهرست کوتاه",
+    "selected": "انتخاب‌شده",
+    "rejected": "رد شده",
+    "verified": "تأییدشده",
+    "unverified": "تأییدنشده",
+    "active": "فعال",
+    "inactive": "غیرفعال",
+    "expired": "منقضی‌شده"
+  },
+  "pagination": {
+    "label": "صفحه‌بندی",
+    "pageInfo": "صفحه {page} از {totalPages}",
+    "prev": "قبلی",
+    "next": "بعدی",
+    "previousPage": "صفحه قبل",
+    "nextPage": "صفحه بعد"
+  },
+  "sorting": {
+    "sortAscending": "مرتب‌سازی بر اساس {column}، صعودی",
+    "sortDescending": "مرتب‌سازی بر اساس {column}، نزولی"
+  },
+  "field": {
+    "requiredError": "پر کردن این فیلد الزامی است",
+    "invalidFormat": "قالب نامعتبر",
+    "tooShort": "خیلی کوتاه",
+    "tooLong": "خیلی بلند"
+  },
+  "errors": {
+    "generic": "خطایی رخ داد. لطفاً دوباره تلاش کنید.",
+    "network": "خطای شبکه. لطفاً اتصال خود را بررسی کنید.",
+    "notFound": "صفحه پیدا نشد",
+    "unauthorized": "برای ادامه وارد شوید",
+    "forbidden": "شما اجازه انجام این کار را ندارید"
+  },
+  "document": {
+    "upload": "بارگذاری مدرک",
+    "passport": "گذرنامه",
+    "photo": "عکس اندازه گذرنامه",
+    "aadhaar": "کارت آدهار",
+    "resume": "رزومه",
+    "marksheet": "کارنامه",
+    "certificate": "گواهی",
+    "policeVerification": "گواهی تأیید پلیس",
+    "medicalCertificate": "گواهی پزشکی",
+    "viewDocument": "مشاهده مدرک",
+    "deleteDocument": "حذف مدرک"
+  }
+}

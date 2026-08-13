@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "હોમ",
+    "dashboard": "ડેશબોર્ડ",
+    "profile": "પ્રોફાઇલ",
+    "jobs": "નોકરીઓ",
+    "applications": "અરજીઓ",
+    "notifications": "સૂચનાઓ",
+    "notificationsShort": "સૂચનાઓ",
+    "resumeBuilder": "રેઝ્યુમે બિલ્ડર",
+    "resumeBuilderShort": "રેઝ્યુમે",
+    "settings": "સેટિંગ્સ",
+    "logout": "લોગ આઉટ",
+    "login": "લોગ ઇન"
+  },
+  "common": {
+    "calendar": {
+      "prevMonth": "પાછલો મહિનો",
+      "nextMonth": "આગલો મહિનો",
+      "month": "મહિનો",
+      "year": "વર્ષ",
+      "clear": "સાફ કરો",
+      "today": "આજે"
+    },
+    "continue": "ચાલુ રાખો",
+    "back": "પાછળ",
+    "save": "સાચવો",
+    "cancel": "રદ કરો",
+    "loading": "લોડ થઈ રહ્યું છે…",
+    "required": "આવશ્યક",
+    "optional": "વૈકલ્પિક",
+    "submit": "સબમિટ કરો",
+    "edit": "સંપાદિત કરો",
+    "delete": "કાઢી નાખો",
+    "confirm": "પુષ્ટિ કરો",
+    "close": "બંધ કરો",
+    "search": "શોધો",
+    "filter": "ફિલ્ટર",
+    "apply": "અરજી કરો",
+    "clear": "સાફ કરો",
+    "next": "આગળ",
+    "previous": "પાછળ",
+    "yes": "હા",
+    "no": "ના",
+    "or": "અથવા",
+    "and": "અને",
+    "brand": "સ્કિલ ઇન્ડિયા કનેક્ટ",
+    "logoutSuccess": "સફળતાપૂર્વક લોગ આઉટ થયા"
+  },
+  "status": {
+    "pending": "બાકી",
+    "shortlisted": "શોર્ટલિસ્ટ થયું",
+    "selected": "પસંદ થયું",
+    "rejected": "નકારવામાં આવ્યું",
+    "verified": "ચકાસાયેલ",
+    "unverified": "ચકાસાયેલ નથી",
+    "active": "સક્રિય",
+    "inactive": "નિષ્ક્રિય",
+    "expired": "સમયમર્યાદા પૂરી"
+  },
+  "pagination": {
+    "label": "પૃષ્ઠ ક્રમાંકન",
+    "pageInfo": "પૃષ્ઠ {page} / {totalPages}",
+    "prev": "પાછળ",
+    "next": "આગળ",
+    "previousPage": "પાછલું પૃષ્ઠ",
+    "nextPage": "આગલું પૃષ્ઠ"
+  },
+  "sorting": {
+    "sortAscending": "{column} મુજબ ચઢતા ક્રમમાં ગોઠવો",
+    "sortDescending": "{column} મુજબ ઊતરતા ક્રમમાં ગોઠવો"
+  },
+  "field": {
+    "requiredError": "આ ક્ષેત્ર ભરવું આવશ્યક છે",
+    "invalidFormat": "અમાન્ય ફોર્મેટ",
+    "tooShort": "ખૂબ ટૂંકું",
+    "tooLong": "ખૂબ લાંબું"
+  },
+  "errors": {
+    "generic": "કંઈક ખોટું થયું. કૃપા કરીને ફરી પ્રયાસ કરો.",
+    "network": "નેટવર્ક ભૂલ. કૃપા કરીને તમારું કનેક્શન તપાસો.",
+    "notFound": "પૃષ્ઠ મળ્યું નથી",
+    "unauthorized": "ચાલુ રાખવા માટે લોગ ઇન કરો",
+    "forbidden": "આ કરવાની તમને પરવાનગી નથી"
+  },
+  "document": {
+    "upload": "દસ્તાવેજ અપલોડ કરો",
+    "passport": "પાસપોર્ટ",
+    "photo": "પાસપોર્ટ સાઇઝનો ફોટો",
+    "aadhaar": "આધાર કાર્ડ",
+    "resume": "રેઝ્યુમે",
+    "marksheet": "માર્કશીટ",
+    "certificate": "પ્રમાણપત્ર",
+    "policeVerification": "પોલીસ ચકાસણી પ્રમાણપત્ર",
+    "medicalCertificate": "તબીબી પ્રમાણપત્ર",
+    "viewDocument": "દસ્તાવેજ જુઓ",
+    "deleteDocument": "દસ્તાવેજ કાઢી નાખો"
+  }
+}
