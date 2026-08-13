@@ -121,6 +121,23 @@ export function listMyJobs(params?: {
   return apiFetchRaw<MyJobsResult>(`/employers/me/jobs${query ? `?${query}` : ''}`);
 }
 
+/**
+ * ONE job, read as its owner.
+ *
+ * The edit screen used to load through the PUBLIC `GET /jobs/{id}`, which serves
+ * only publicly-visible jobs. That works for an ACTIVE job and 404s for a DRAFT
+ * or PAUSED one — so Edit was broken for exactly the jobs an employer most needs
+ * to edit: the ones not yet live. The employer-scoped route returns the job at
+ * ANY status and enforces ownership server-side, which is what an owner-only
+ * screen should be reading anyway.
+ *
+ * Same base as every other employer job call below — the read was the one
+ * outlier.
+ */
+export function getMyJob(id: string): Promise<Job> {
+  return apiFetch<Job>(`/employers/me/jobs/${encodeURIComponent(id)}`);
+}
+
 // Employer job mutations live under /employers/me/jobs (the employer-scoped
 // JobsController), NOT the public /jobs search routes. listMyJobs above already
 // uses this prefix; keep every write on the same base.

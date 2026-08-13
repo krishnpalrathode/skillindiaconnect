@@ -1570,6 +1570,31 @@ const postJobs = http.post(`${BASE}/employers/me/jobs`, async ({ request }) => {
   return HttpResponse.json({ data: job }, { status: 201 });
 });
 
+/**
+ * ONE job, read as its owner — what the edit screen loads.
+ *
+ * Missing until now, which is why nothing caught the edit page reading the
+ * PUBLIC `GET /jobs/{id}` instead: that route only serves publicly-visible jobs,
+ * so Edit 404'd for DRAFT and PAUSED jobs against the real API while the mock
+ * happily answered the public route. Serves ANY status, unlike the public one.
+ */
+const getMyJobById = http.get(`${BASE}/employers/me/jobs/:id`, ({ request, params }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+  const id = params['id'] as string;
+  const job = db.jobs.get(id);
+  if (!job) return errorResponse(404, 'NOT_FOUND', 'Not found', 'Job not found.');
+
+  const company = db.employers.get(user.id);
+  if (!company || company.id !== job.companyId) {
+    return errorResponse(403, 'FORBIDDEN', 'Forbidden', 'You do not own this job.');
+  }
+
+  return HttpResponse.json({ data: job });
+});
+
 const patchJobById = http.patch(`${BASE}/employers/me/jobs/:id`, async ({ request, params }) => {
   const user = getAuthUser(request);
   if (!user)
@@ -4478,6 +4503,7 @@ export const handlers = [
   getJobCategories,
   // S2: Jobs — employer CRUD + lifecycle
   postJobs,
+  getMyJobById,
   patchJobById,
   publishJob,
   pauseJob,
