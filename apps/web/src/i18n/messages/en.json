@@ -2275,6 +2275,7 @@
           "match": "Match",
           "applied": "Applied"
         },
+        "matchValue": "{score}%",
         "detailAria": "Open application {id}",
         "deletedUser": "Deleted user",
         "status": {
