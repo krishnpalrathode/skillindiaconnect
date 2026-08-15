@@ -470,7 +470,9 @@
       "resendIn": "Resend in {seconds}s",
       "photoUploadError": "We couldn't upload your photo. Please try again.",
       "photoUploading": "Uploading your photo…",
-      "phoneCodeLabel": "Country code"
+      "phoneCodeLabel": "Country code",
+      "phoneCodeSearch": "Search country or code",
+      "phoneCodeEmpty": "No country matches"
     },
     "experience": {
       "title": "Work experience",
@@ -649,6 +651,10 @@
       "registrationNumberPlaceholder": "e.g. U12345MH2020PTC000000",
       "industryTypeLabel": "Industry type",
       "industryTypePlaceholder": "Select industry",
+      "industryOtherLabel": "Your industry",
+      "industryOtherPlaceholder": "e.g. Marine logistics",
+      "industryOtherRequired": "Please enter your industry",
+      "industryOtherTooLong": "Industry cannot be longer than {max} characters",
       "phoneLabel": "Company phone",
       "phonePlaceholder": "+91 98765 43210",
       "phoneRequired": "Company phone is required",
@@ -700,7 +706,9 @@
         "kuwait": "Kuwait",
         "oman": "Oman",
         "bahrain": "Bahrain"
-      }
+      },
+      "phoneCodeSearch": "Search country or code",
+      "phoneCodeEmpty": "No country matches"
     },
     "dashboard": {
       "metaTitle": "Employer Dashboard",
