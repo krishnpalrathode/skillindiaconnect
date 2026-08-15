@@ -1917,6 +1917,25 @@
             "description": "Route foreign-company checkout through Stripe instead of Razorpay International."
           }
         }
+      },
+      "plans": {
+        "heading": "Subscription plans",
+        "subheading": "Applies to the next checkout. Past invoices and current subscriptions are unchanged.",
+        "save": "Save",
+        "savedNote": "Price updated. New checkouts use it immediately.",
+        "saveFailed": "Couldn't save the price. Please try again.",
+        "loadFailed": "Couldn't load plans.",
+        "retry": "Try again",
+        "invalid": "Enter an amount like 2999 or 2999.00.",
+        "inactive": "Off sale",
+        "freeLocked": "The Free plan stays at zero — pricing it would put Free on the paid upgrade path.",
+        "unlimitedJobs": "Unlimited jobs",
+        "maxJobs": "{count, plural, one {# active job} other {# active jobs}}",
+        "period": {
+          "MONTHLY": "Billed monthly",
+          "YEARLY": "Billed yearly",
+          "none": "No billing period"
+        }
       }
     },
     "logs": {

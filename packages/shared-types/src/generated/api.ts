@@ -1552,6 +1552,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List subscription plans with prices (admin)
+         * @description **RBAC: `settings.view`.** Every plan including inactive ones — `isActive=false` is the kill switch, and a plan the console cannot show is one it cannot turn back on. Rendered inside Screen 28's Payments tab beside the GST rate.
+         */
+        get: operations["getAdminPlans"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/plans/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update a plan's price (admin)
+         * @description **RBAC: `settings.manage`.** Sets the price in INTEGER SUBUNITS (paise).
+         *
+         *     Takes effect on the NEXT checkout — `CheckoutService` reads the price at
+         *     order-creation time. It does NOT touch history: orders and invoices
+         *     snapshot their own amounts at purchase, so nobody's past charge changes.
+         *     Existing subscriptions run to their `expiresAt` and pay the new price on
+         *     their next purchase.
+         *
+         *     Two structural rules, both 422:
+         *     `FREE_PLAN_NOT_PRICEABLE` — the zero-priced plan must stay at zero;
+         *     pricing it would make Free purchasable.
+         *     `PAID_PLAN_NEEDS_PRICE` — a paid plan cannot be set to zero; that would
+         *     silently remove it from sale. Deactivate it instead.
+         */
+        patch: operations["patchAdminPlanPrice"];
+        trace?: never;
+    };
     "/admin/settings": {
         parameters: {
             query?: never;
@@ -3243,6 +3295,26 @@ export interface components {
             relatedEntityType?: "job" | "application";
             /** Format: date-time */
             createdAt: string;
+        };
+        /** @description A subscription plan as the admin console edits it. Distinct from the employer-facing plan DTO: this one carries `isActive` and `priceEditable`, which are operator concerns and never shown to a buyer. */
+        AdminPlan: {
+            /** @example PRO_MONTHLY */
+            code: string;
+            /** @example Pro Monthly */
+            name: string;
+            /**
+             * @description Price in paise. 299900 = 2,999.00.
+             * @example 299900
+             */
+            priceSubunits: number;
+            /** @enum {string|null} */
+            period: "MONTHLY" | "YEARLY" | null;
+            /** @description Null means unlimited. */
+            maxActiveJobs: number | null;
+            /** @description False takes the plan off sale without deleting it. */
+            isActive: boolean;
+            /** @description False for the zero-priced Free plan, whose price is structural — checkout uses `priceSubunits === 0` to decide purchasability, so it must stay at zero. The console disables the input rather than letting an admin discover the rule through a 422. */
+            priceEditable: boolean;
         };
         /**
          * @description Platform configuration setting — EXACTLY the persisted row, no
@@ -7317,6 +7389,96 @@ export interface operations {
             };
             /** @description Company is not currently SUSPENDED */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getAdminPlans: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description All plans, cheapest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminPlan"][];
+                    };
+                };
+            };
+            /** @description Missing settings.view */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    patchAdminPlanPrice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Plan code, e.g. PRO_MONTHLY. */
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Price in paise. 100000000 = 10,00,000.00. */
+                    priceSubunits: number;
+                };
+            };
+        };
+        responses: {
+            /** @description The updated plan */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminPlan"];
+                    };
+                };
+            };
+            /** @description Missing settings.manage */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description No plan with that code */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description FREE_PLAN_NOT_PRICEABLE, PAID_PLAN_NEEDS_PRICE or PLAN_PRICE_INVALID */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
