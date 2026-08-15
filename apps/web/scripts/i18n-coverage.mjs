@@ -57,29 +57,44 @@ const details = process.argv.includes('--details');
 const minIdx = process.argv.indexOf('--min');
 const min = minIdx !== -1 ? Number(process.argv[minIdx + 1]) : null;
 
+/**
+ * `[hi] Choose a template` — a scaffolding placeholder, not a translation.
+ *
+ * These are non-empty strings, so a naive count scores them as done and the
+ * locale looks further along than it is. They are worse than a missing key:
+ * a missing key falls back to clean English, while a placeholder renders the
+ * bracketed locale tag on screen to a real user.
+ */
+const PLACEHOLDER = /^\s*\[[a-z]{2}(-[A-Za-z]+)?\]\s/;
+const isTranslated = (v) => typeof v === 'string' && v.trim() !== '' && !PLACEHOLDER.test(v);
+
 console.log(`\nReference: en — ${total} keys\n`);
-console.log('locale   coverage   translated   missing   file');
-console.log('─'.repeat(58));
+console.log('locale   coverage   translated   missing   placeholder   file');
+console.log('─'.repeat(72));
 
 const failures = [];
 for (const code of codes) {
   if (code === 'en') continue;
   const catalog = readCatalog(code);
-  const present = catalog
-    ? Object.keys(english).filter((k) => typeof catalog[k] === 'string' && catalog[k].trim() !== '')
+  const present = catalog ? Object.keys(english).filter((k) => isTranslated(catalog[k])) : [];
+  const placeholders = catalog
+    ? Object.keys(english).filter((k) => typeof catalog[k] === 'string' && PLACEHOLDER.test(catalog[k]))
     : [];
   const pct = Math.round((present.length / total) * 100);
   const missing = total - present.length;
   const bar = `${String(pct).padStart(3)}%`;
   console.log(
-    `${code.padEnd(8)} ${bar.padEnd(10)} ${String(present.length).padStart(10)} ${String(missing).padStart(9)}   ${catalog ? 'yes' : 'MISSING'}`,
+    `${code.padEnd(8)} ${bar.padEnd(10)} ${String(present.length).padStart(10)} ${String(missing).padStart(9)} ${String(placeholders.length).padStart(13)}   ${catalog ? 'yes' : 'MISSING'}`,
   );
   if (min !== null && pct < min) failures.push(`${code} at ${pct}% (min ${min}%)`);
 
   if (details && catalog) {
-    const missingKeys = Object.keys(english).filter(
-      (k) => !(typeof catalog[k] === 'string' && catalog[k].trim() !== ''),
-    );
+    if (placeholders.length) {
+      console.log(
+        `         placeholders: ${placeholders.slice(0, 3).join(', ')}${placeholders.length > 3 ? ` … +${placeholders.length - 3}` : ''}`,
+      );
+    }
+    const missingKeys = Object.keys(english).filter((k) => !isTranslated(catalog[k]));
     // Grouped by top-level namespace — that is the unit translation work is
     // actually commissioned in.
     const byNamespace = {};
