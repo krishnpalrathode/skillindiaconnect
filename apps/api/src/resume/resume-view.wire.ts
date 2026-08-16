@@ -31,6 +31,7 @@ export interface WireResumeView {
   maritalStatus: string | null;
   nationality: string | null;
   currentLocation: string | null;
+  summary: string | null;
   languages: string[];
   jobCategory: string | null;
   experiences: StoredResumeView['experiences'];
@@ -41,10 +42,7 @@ export interface WireResumeView {
 }
 
 /** Render view → the row we store (data URI out, key in). */
-export function toStoredResumeView(
-  view: ResumeViewDto,
-  photoKey: string | null,
-): StoredResumeView {
+export function toStoredResumeView(view: ResumeViewDto, photoKey: string | null): StoredResumeView {
   const rest = { ...view } as Partial<ResumeViewDto>;
   delete rest.photoDataUri;
   return { ...(rest as Omit<ResumeViewDto, 'photoDataUri'>), photoKey };
@@ -68,6 +66,7 @@ export function toWireResumeView(
     maritalStatus: stored.maritalStatus,
     nationality: stored.nationality,
     currentLocation: stored.currentLocation,
+    summary: stored.summary,
     languages: stored.languages,
     jobCategory: stored.jobCategory,
     experiences: stored.experiences,

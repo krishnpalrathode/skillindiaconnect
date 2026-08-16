@@ -97,9 +97,7 @@ describe('CR-WA — WhatsApp metric wiring (real MetricsService, no Docker)', ()
     it('an APPLIED status increments sic_whatsapp_delivery_status_total', async () => {
       const { service, metrics } = buildWebhookService(1);
 
-      await service.applyStatuses([
-        { waMessageId: 'wamid.1', status: DeliveryStatus.DELIVERED },
-      ]);
+      await service.applyStatuses([{ waMessageId: 'wamid.1', status: DeliveryStatus.DELIVERED }]);
 
       expect(metrics.render()).toMatch(
         /sic_whatsapp_delivery_status_total\{status="DELIVERED"\}\s+1/,

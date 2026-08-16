@@ -106,7 +106,9 @@ beforeAll(async () => {
     otherJobId = await mkJob(otherCompanyId);
 
     // Candidate with showPhone=false (privacy), a dob, and a passport doc.
-    await prismaClient.user.create({ data: { id: 'rd-cand-u', email: 'rd@x.com', role: UserRole.CANDIDATE } });
+    await prismaClient.user.create({
+      data: { id: 'rd-cand-u', email: 'rd@x.com', role: UserRole.CANDIDATE },
+    });
     candidateId = (
       await prismaClient.candidateProfile.create({
         data: {
@@ -119,7 +121,14 @@ beforeAll(async () => {
           completionPct: 80,
           documents: {
             create: [
-              { type: DocumentType.PASSPORT, r2Key: 'k', fileName: 'p', mimeType: 'application/pdf', sizeBytes: 1, expiryDate: new Date('2030-01-01') },
+              {
+                type: DocumentType.PASSPORT,
+                r2Key: 'k',
+                fileName: 'p',
+                mimeType: 'application/pdf',
+                sizeBytes: 1,
+                expiryDate: new Date('2030-01-01'),
+              },
             ],
           },
         },
@@ -131,7 +140,15 @@ beforeAll(async () => {
       getJobForApplication: async (id: string) => {
         const j = await prismaClient.job.findUnique({
           where: { id },
-          select: { id: true, status: true, market: true, categoryId: true, experienceRequiredYears: true, companyId: true, title: true },
+          select: {
+            id: true,
+            status: true,
+            market: true,
+            categoryId: true,
+            experienceRequiredYears: true,
+            companyId: true,
+            title: true,
+          },
         });
         if (!j) throw new NotFoundException({ code: 'JOB_NOT_FOUND' });
         return j;
@@ -139,17 +156,43 @@ beforeAll(async () => {
       getJobSubsets: async (ids: string[]) => {
         const rows = await prismaClient.job.findMany({
           where: { id: { in: ids } },
-          select: { id: true, title: true, location: true, market: true, company: { select: { name: true } } },
+          select: {
+            id: true,
+            title: true,
+            location: true,
+            market: true,
+            company: { select: { name: true } },
+          },
         });
-        return new Map(rows.map((j) => [j.id, { id: j.id, title: j.title, companyName: j.company.name, location: j.location, market: j.market }]));
+        return new Map(
+          rows.map((j) => [
+            j.id,
+            {
+              id: j.id,
+              title: j.title,
+              companyName: j.company.name,
+              location: j.location,
+              market: j.market,
+            },
+          ]),
+        );
       },
     } as unknown as JobsService;
     const storageStub = { presignGet: async () => null } as unknown as StorageService;
 
-    service = new ApplicationsReadService(prismaSvc, jobsStub, new CandidateReadService(prismaSvc), storageStub);
+    service = new ApplicationsReadService(
+      prismaSvc,
+      jobsStub,
+      new CandidateReadService(prismaSvc),
+      storageStub,
+    );
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    if (/container runtime|Docker|ENOENT|ECONNREFUSED|not recognized|prisma: command not found/.test(msg)) {
+    if (
+      /container runtime|Docker|ENOENT|ECONNREFUSED|not recognized|prisma: command not found/.test(
+        msg,
+      )
+    ) {
       dockerUnavailable = true;
       console.warn('[read-service] Docker unavailable — skipped:', msg);
     } else throw err;
@@ -179,7 +222,12 @@ async function mkApp(
         candidateId,
         status,
         matchScore: 70,
-        matchBreakdown: { category: { score: 40, max: 40 }, experienceYears: { raw: 0, clamped: 0, score: 0, max: 30 }, foreignExperience: { score: 20, max: 20 }, documents: { score: 10, max: 10 } },
+        matchBreakdown: {
+          category: { score: 40, max: 40 },
+          experienceYears: { raw: 0, clamped: 0, score: 0, max: 30 },
+          foreignExperience: { score: 20, max: 20 },
+          documents: { score: 10, max: 10 },
+        },
         docsCompleteCount: 2,
         docsRequiredCount: 2,
         passportValidAtApply: true,
@@ -206,7 +254,9 @@ describe('candidate applications list + detail', () => {
     expect(all.data[0]!.job).toHaveProperty('companyName');
     expect(all.data[0]!.job).not.toHaveProperty('companyId');
 
-    const short = await service.listCandidateApplications(candidateId, { status: ApplicationStatus.SHORTLISTED });
+    const short = await service.listCandidateApplications(candidateId, {
+      status: ApplicationStatus.SHORTLISTED,
+    });
     expect(short.data).toHaveLength(1);
     expect(short.data[0]!.status).toBe(ApplicationStatus.SHORTLISTED);
   });
@@ -227,7 +277,7 @@ describe('candidate applications list + detail', () => {
     expect(p2.meta).toMatchObject({ page: 2, total: 2, totalPages: 2 });
   });
 
-  gatedIt('detail: another candidate\'s application → 404', async () => {
+  gatedIt("detail: another candidate's application → 404", async () => {
     const id = await mkApp(jobId, ApplicationStatus.PENDING);
     await expect(
       service.getCandidateApplicationDetail('some-other-candidate-id', id),
@@ -264,24 +314,29 @@ describe('candidate applications list + detail', () => {
 
 describe('employer applicants', () => {
   gatedIt('ownership: a job on another company → 404', async () => {
-    await expect(service.listJobApplicants(otherJobId, companyId, {})).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.listJobApplicants(otherJobId, companyId, {})).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
-  gatedIt('privacy INHERITANCE (composed S3 mapper): no phone key, no dob, docs status-only', async () => {
-    await mkApp(jobId, ApplicationStatus.PENDING);
-    const res = await service.listJobApplicants(jobId, companyId, {});
-    expect(res.data).toHaveLength(1);
-    const raw = JSON.stringify(res.data[0]);
-    // showPhone=false → phone key ABSENT (not null)
-    expect('phone' in res.data[0]!).toBe(false);
-    expect(raw).not.toContain('9876543210');
-    // dob NEVER serialized
-    expect(raw).not.toContain('dob');
-    expect(raw).not.toContain('1995-01-01');
-    // documents are status-only (no r2Key)
-    expect(raw).not.toContain('r2Key');
-    expect(res.data[0]!.documentsStatus.length).toBeGreaterThan(0);
-  });
+  gatedIt(
+    'privacy INHERITANCE (composed S3 mapper): no phone key, no dob, docs status-only',
+    async () => {
+      await mkApp(jobId, ApplicationStatus.PENDING);
+      const res = await service.listJobApplicants(jobId, companyId, {});
+      expect(res.data).toHaveLength(1);
+      const raw = JSON.stringify(res.data[0]);
+      // showPhone=false → phone key ABSENT (not null)
+      expect('phone' in res.data[0]!).toBe(false);
+      expect(raw).not.toContain('9876543210');
+      // dob NEVER serialized
+      expect(raw).not.toContain('dob');
+      expect(raw).not.toContain('1995-01-01');
+      // documents are status-only (no r2Key)
+      expect(raw).not.toContain('r2Key');
+      expect(res.data[0]!.documentsStatus.length).toBeGreaterThan(0);
+    },
+  );
 
   gatedIt('counts match the seeded distribution', async () => {
     await mkApp(jobId, ApplicationStatus.PENDING);
@@ -289,23 +344,41 @@ describe('employer applicants', () => {
     expect(res.counts).toEqual({ pending: 1, shortlisted: 0, selected: 0, rejected: 0 });
   });
 
-  gatedIt('SNAPSHOT lock: editing the candidate profile leaves matchBreakdown unchanged', async () => {
-    await mkApp(jobId, ApplicationStatus.PENDING);
-    const before = (await service.listJobApplicants(jobId, companyId, {})).data[0]!.matchBreakdown;
+  gatedIt(
+    'SNAPSHOT lock: editing the candidate profile leaves matchBreakdown unchanged',
+    async () => {
+      await mkApp(jobId, ApplicationStatus.PENDING);
+      const before = (await service.listJobApplicants(jobId, companyId, {})).data[0]!
+        .matchBreakdown;
 
-    // Mutate the candidate's category + add experience — inputs that would change a
-    // recomputed score. The snapshot must NOT move.
-    await prismaClient.candidateProfile.update({ where: { id: candidateId }, data: { jobCategoryId: null } });
-    await prismaClient.workExperience.create({
-      data: { candidateId, type: 'FOREIGN', country: 'UAE', companyName: 'X', role: 'M', years: 9, months: 0 },
-    });
+      // Mutate the candidate's category + add experience — inputs that would change a
+      // recomputed score. The snapshot must NOT move.
+      await prismaClient.candidateProfile.update({
+        where: { id: candidateId },
+        data: { jobCategoryId: null },
+      });
+      await prismaClient.workExperience.create({
+        data: {
+          candidateId,
+          type: 'FOREIGN',
+          country: 'UAE',
+          companyName: 'X',
+          role: 'M',
+          years: 9,
+          months: 0,
+        },
+      });
 
-    const after = (await service.listJobApplicants(jobId, companyId, {})).data[0]!.matchBreakdown;
-    expect(after).toEqual(before);
-    // restore
-    await prismaClient.candidateProfile.update({ where: { id: candidateId }, data: { jobCategoryId: CATEGORY_ID } });
-    await prismaClient.workExperience.deleteMany({ where: { candidateId } });
-  });
+      const after = (await service.listJobApplicants(jobId, companyId, {})).data[0]!.matchBreakdown;
+      expect(after).toEqual(before);
+      // restore
+      await prismaClient.candidateProfile.update({
+        where: { id: candidateId },
+        data: { jobCategoryId: CATEGORY_ID },
+      });
+      await prismaClient.workExperience.deleteMany({ where: { candidateId } });
+    },
+  );
 
   gatedIt('match sort orders by matchScore desc across applicants (stable)', async () => {
     // Two DIFFERENT candidates on the SAME job (the applicants list is per-job).
@@ -350,7 +423,9 @@ describe('admin applications', () => {
     expect(page1.meta.total).toBe(2);
     expect(page1.meta.totalPages).toBe(2);
 
-    const shortlisted = await service.listAdminApplications({ status: ApplicationStatus.SHORTLISTED });
+    const shortlisted = await service.listAdminApplications({
+      status: ApplicationStatus.SHORTLISTED,
+    });
     expect(shortlisted.data).toHaveLength(1);
     expect(shortlisted.data[0]!.candidateName).toBe('Amir Khan');
     // admin card carries candidate name + ids, no document keys

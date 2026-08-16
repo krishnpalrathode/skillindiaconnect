@@ -275,9 +275,10 @@ export class JobsService {
     const where = {
       companyId: company.id,
       ...(dto.status !== undefined && { status: dto.status }),
-      ...(dto.search !== undefined && dto.search.length > 0 && {
-        title: { contains: dto.search, mode: 'insensitive' as const },
-      }),
+      ...(dto.search !== undefined &&
+        dto.search.length > 0 && {
+          title: { contains: dto.search, mode: 'insensitive' as const },
+        }),
     };
 
     const page = dto.page ?? 1;
@@ -428,9 +429,7 @@ export class JobsService {
     );
     const autoArchiveDays = await this.settingsService.get(SETTING_KEYS.AUTO_ARCHIVE_DAYS);
 
-    const targetStatus = requireAdminApproval
-      ? JobStatus.PENDING_REVIEW
-      : JobStatus.ACTIVE;
+    const targetStatus = requireAdminApproval ? JobStatus.PENDING_REVIEW : JobStatus.ACTIVE;
 
     const now = new Date();
     const autoArchiveAt =
@@ -662,7 +661,13 @@ export class JobsService {
     return new Map(
       rows.map((j) => [
         j.id,
-        { id: j.id, title: j.title, companyName: j.company.name, location: j.location, market: j.market },
+        {
+          id: j.id,
+          title: j.title,
+          companyName: j.company.name,
+          location: j.location,
+          market: j.market,
+        },
       ]),
     );
   }
@@ -766,10 +771,7 @@ export class JobsService {
    * Pause all ACTIVE jobs for a company (used by the employer.suspended event handler).
    * Reactivation does NOT auto-resume — the employer must manually resume each job.
    */
-  async pauseAllActiveJobsForCompany(
-    companyId: string,
-    reason: string,
-  ): Promise<void> {
+  async pauseAllActiveJobsForCompany(companyId: string, reason: string): Promise<void> {
     const jobs = await this.prisma.job.findMany({
       where: { companyId, status: JobStatus.ACTIVE },
       select: { id: true },

@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Currency, DocumentType, ExperienceType, Prisma, UserRole, UserStatus } from '@prisma/client';
+import {
+  Currency,
+  DocumentType,
+  ExperienceType,
+  Prisma,
+  UserRole,
+  UserStatus,
+} from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { resolvePaging } from '../core/pagination';
 
@@ -72,9 +79,7 @@ export class CandidateReadService {
         (sum, e) => sum + e.years + e.months / 12,
         0,
       ),
-      hasForeignExperience: profile.experiences.some(
-        (e) => e.type === ExperienceType.FOREIGN,
-      ),
+      hasForeignExperience: profile.experiences.some((e) => e.type === ExperienceType.FOREIGN),
       documents: profile.documents,
     };
   }
@@ -128,9 +133,7 @@ export class CandidateReadService {
    * still flow through `toEmployerView` — this read just supplies the raw source.
    * Same field selection as the single-candidate employer view. One query for the page.
    */
-  async getEmployerViewsByIds(
-    ids: string[],
-  ): Promise<Map<string, CandidateForEmployerView>> {
+  async getEmployerViewsByIds(ids: string[]): Promise<Map<string, CandidateForEmployerView>> {
     if (ids.length === 0) return new Map();
     const rows = await this.prisma.candidateProfile.findMany({
       where: { id: { in: ids } },
@@ -219,6 +222,7 @@ export class CandidateReadService {
       select: {
         id: true,
         fullName: true,
+        summary: true,
         fatherName: true,
         dob: true,
         phone: true,
@@ -358,9 +362,7 @@ export class CandidateReadService {
    * Only documents' type + expiryDate are selected — NO r2Key, NO fileName, NO URLs.
    * The employer context exposes document STATUS only (S3-0 decision 2).
    */
-  async findVisibleCandidateForEmployerView(
-    id: string,
-  ): Promise<CandidateForEmployerView | null> {
+  async findVisibleCandidateForEmployerView(id: string): Promise<CandidateForEmployerView | null> {
     const profile = await this.prisma.candidateProfile.findFirst({
       where: {
         id,
@@ -671,6 +673,7 @@ export interface AdminCandidateDetailSource extends AdminCandidateSource {
 export interface ResumeSource {
   id: string;
   fullName: string;
+  summary: string | null;
   fatherName: string | null;
   dob: Date | null;
   phone: string | null;

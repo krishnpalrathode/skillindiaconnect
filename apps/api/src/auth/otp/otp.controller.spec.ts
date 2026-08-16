@@ -43,7 +43,9 @@ describe('OtpController', () => {
     candidateProfile: { findFirst: jest.Mock; update: jest.Mock };
     user: { update: jest.Mock; findUniqueOrThrow: jest.Mock };
   };
-  let candidateReadMock: jest.Mocked<Pick<CandidateReadService, 'findCandidateUserByVerifiedPhone'>>;
+  let candidateReadMock: jest.Mocked<
+    Pick<CandidateReadService, 'findCandidateUserByVerifiedPhone'>
+  >;
   let tokenMock: jest.Mocked<Pick<TokenService, 'issue'>>;
 
   const mockReq = { ip: '1.2.3.4', headers: {} } as unknown as import('express').Request;
@@ -244,7 +246,9 @@ describe('OtpController', () => {
         userId: 'user-1',
         candidateId: 'profile-1',
       });
-      prismaMock.user.findUniqueOrThrow.mockResolvedValue(makeUser({ status: UserStatus.SUSPENDED }));
+      prismaMock.user.findUniqueOrThrow.mockResolvedValue(
+        makeUser({ status: UserStatus.SUSPENDED }),
+      );
       await expect(
         controller.phoneLoginVerify({ phone: '+911234567890', otp: '123456' }, mockReq, makeRes()),
       ).rejects.toThrow(ForbiddenException);

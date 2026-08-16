@@ -132,7 +132,6 @@ export class WhatsappWebhookService {
     return { ok: true, challenge };
   }
 
-
   // ── Signature ─────────────────────────────────────────────────────────────
 
   /**
@@ -229,9 +228,7 @@ export class WhatsappWebhookService {
     return result;
   }
 
-  private async applyOne(
-    update: WhatsappStatusUpdate,
-  ): Promise<'applied' | 'ignored' | 'unknown'> {
+  private async applyOne(update: WhatsappStatusUpdate): Promise<'applied' | 'ignored' | 'unknown'> {
     const rank = STATUS_RANK[update.status];
 
     /**

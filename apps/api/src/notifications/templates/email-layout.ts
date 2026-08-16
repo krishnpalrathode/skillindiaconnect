@@ -321,5 +321,8 @@ export function renderEmailText(body: EmailBody): string {
   if (body.note) lines.push(body.note, '');
 
   lines.push('—', `${BRAND.name} · ${BRAND.tagline}`);
-  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  return lines
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }

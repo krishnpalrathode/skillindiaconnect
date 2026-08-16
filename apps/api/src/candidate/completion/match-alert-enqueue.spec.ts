@@ -32,7 +32,14 @@ function fullProfile(over: Record<string, unknown> = {}) {
     nationality: 'Indian',
     matchAlertSentAt: null,
     experiences: [
-      { type: 'FOREIGN', country: 'UAE', companyName: 'A', role: 'Electrician', years: 5, months: 0 },
+      {
+        type: 'FOREIGN',
+        country: 'UAE',
+        companyName: 'A',
+        role: 'Electrician',
+        years: 5,
+        months: 0,
+      },
     ],
     skills: [{ name: 'a' }, { name: 'b' }, { name: 'c' }],
     documents: [{ type: 'PASSPORT' }, { type: 'EXPERIENCE_CERT' }, { type: 'EDUCATIONAL_CERT' }],
@@ -61,6 +68,8 @@ function build(profile: Record<string, unknown>, threshold: number | undefined =
   const service = new CompletionService(
     prisma as unknown as PrismaService,
     { add } as unknown as Queue,
+    // Notification is a separate side effect; this suite is about the queue.
+    { notify: jest.fn() } as never,
   );
   return { service, add, prisma };
 }
@@ -133,6 +142,7 @@ describe('CompletionService — match-alert enqueue', () => {
     const failing = new CompletionService(
       prisma as unknown as PrismaService,
       { add: jest.fn().mockRejectedValue(new Error('redis down')) } as unknown as Queue,
+      { notify: jest.fn() } as never,
     );
 
     // The completion write is the user's actual request; the alert is a nicety.

@@ -48,8 +48,7 @@ export class CheckoutBodyGuard implements CanActivate {
   private static readonly ALLOWED = new Set(['planCode']);
 
   canActivate(ctx: ExecutionContext): boolean {
-    const body =
-      ctx.switchToHttp().getRequest<{ body?: Record<string, unknown> }>().body ?? {};
+    const body = ctx.switchToHttp().getRequest<{ body?: Record<string, unknown> }>().body ?? {};
     const smuggled = Object.keys(body).filter((k) => !CheckoutBodyGuard.ALLOWED.has(k));
     if (smuggled.length > 0) {
       throw new BadRequestException({

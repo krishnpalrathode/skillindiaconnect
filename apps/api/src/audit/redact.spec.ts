@@ -143,16 +143,19 @@ describe('redact — PII denylist (SECURITY-CRITICAL)', () => {
 
   it('redacts deeply nested PII', () => {
     const result = redact({ a: { b: { c: { phone: '+1234567890' } } } });
-    expect(
-      ((result.a as Record<string, unknown>).b as Record<string, unknown>).c,
-    ).toEqual({ phone: '[REDACTED]' });
+    expect(((result.a as Record<string, unknown>).b as Record<string, unknown>).c).toEqual({
+      phone: '[REDACTED]',
+    });
   });
 
   // ── Recursion — arrays ───────────────────────────────────────────────────────
 
   it('redacts PII inside arrays', () => {
     const result = redact({
-      items: [{ phone: '+1234567890', name: 'Alice' }, { email: 'b@c.com', id: 'uuid-123' }],
+      items: [
+        { phone: '+1234567890', name: 'Alice' },
+        { email: 'b@c.com', id: 'uuid-123' },
+      ],
     });
     const items = result.items as Array<Record<string, unknown>>;
     expect(items[0]?.phone).toBe('[REDACTED]');

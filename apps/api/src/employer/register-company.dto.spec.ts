@@ -39,7 +39,10 @@ describe('RegisterCompanyDto validation', () => {
   });
 
   it('rejects an empty-string registrationNumber — omit the field instead', async () => {
-    const errors = fieldErrors(await errorsFor({ ...VALID, registrationNumber: '' }), 'registrationNumber');
+    const errors = fieldErrors(
+      await errorsFor({ ...VALID, registrationNumber: '' }),
+      'registrationNumber',
+    );
     expect(errors).toHaveLength(1);
     expect(errors[0]?.constraints).toHaveProperty('isNotEmpty');
   });

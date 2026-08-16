@@ -38,7 +38,9 @@ describe('WhatsApp handshake — the exact response Meta receives', () => {
         { provide: APP_FILTER, useClass: HttpProblemFilter },
         {
           provide: ConfigService,
-          useValue: { get: (k: string) => (k === 'WHATSAPP_VERIFY_TOKEN' ? VERIFY_TOKEN : undefined) },
+          useValue: {
+            get: (k: string) => (k === 'WHATSAPP_VERIFY_TOKEN' ? VERIFY_TOKEN : undefined),
+          },
         },
         { provide: PrismaService, useValue: { whatsappMessage: {} } },
         MetricsService,
@@ -57,7 +59,11 @@ describe('WhatsApp handshake — the exact response Meta receives', () => {
     it('200, text/plain, and the challenge BARE — no JSON, no { data } envelope', async () => {
       const res = await supertest(app.getHttpServer())
         .get(BASE)
-        .query({ 'hub.mode': 'subscribe', 'hub.verify_token': VERIFY_TOKEN, 'hub.challenge': '1158201444' })
+        .query({
+          'hub.mode': 'subscribe',
+          'hub.verify_token': VERIFY_TOKEN,
+          'hub.challenge': '1158201444',
+        })
         .expect(200);
 
       // Byte-for-byte. Meta compares the body verbatim; a wrapped or
@@ -73,7 +79,11 @@ describe('WhatsApp handshake — the exact response Meta receives', () => {
     it('no leading/trailing whitespace and no BOM', async () => {
       const res = await supertest(app.getHttpServer())
         .get(BASE)
-        .query({ 'hub.mode': 'subscribe', 'hub.verify_token': VERIFY_TOKEN, 'hub.challenge': 'CHAL' })
+        .query({
+          'hub.mode': 'subscribe',
+          'hub.verify_token': VERIFY_TOKEN,
+          'hub.challenge': 'CHAL',
+        })
         .expect(200);
 
       expect(res.text).toBe(res.text.trim());
@@ -87,7 +97,11 @@ describe('WhatsApp handshake — the exact response Meta receives', () => {
       // a round-trip through Number(). Echoing the raw string is what protects it.
       const res = await supertest(app.getHttpServer())
         .get(BASE)
-        .query({ 'hub.mode': 'subscribe', 'hub.verify_token': VERIFY_TOKEN, 'hub.challenge': '00912345678901234567890' })
+        .query({
+          'hub.mode': 'subscribe',
+          'hub.verify_token': VERIFY_TOKEN,
+          'hub.challenge': '00912345678901234567890',
+        })
         .expect(200);
 
       expect(res.text).toBe('00912345678901234567890');
@@ -128,7 +142,11 @@ describe('WhatsApp handshake — the exact response Meta receives', () => {
     it('a wrong hub.mode names itself', async () => {
       const res = await supertest(app.getHttpServer())
         .get(BASE)
-        .query({ 'hub.mode': 'unsubscribe', 'hub.verify_token': VERIFY_TOKEN, 'hub.challenge': 'C' })
+        .query({
+          'hub.mode': 'unsubscribe',
+          'hub.verify_token': VERIFY_TOKEN,
+          'hub.challenge': 'C',
+        })
         .expect(403);
 
       expect(res.body.code).toBe('BAD_HUB_MODE');

@@ -17,9 +17,7 @@ import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
 export class PassportExpiryCron {
   private readonly logger = new Logger(PassportExpiryCron.name);
 
-  constructor(
-    @InjectQueue(QUEUE_NAMES.PASSPORT_EXPIRY) private readonly queue: Queue,
-  ) {}
+  constructor(@InjectQueue(QUEUE_NAMES.PASSPORT_EXPIRY) private readonly queue: Queue) {}
 
   @Cron('0 1 * * *')
   async schedulePassportExpiryReminders(): Promise<void> {

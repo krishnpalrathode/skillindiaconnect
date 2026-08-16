@@ -67,7 +67,9 @@ export class ApplicationsAggregateService {
         where: {
           jobId: { in: jobIds },
           status: ApplicationStatus.SELECTED,
-          timeline: { some: { toStatus: ApplicationStatus.SELECTED, createdAt: { gte: monthStart } } },
+          timeline: {
+            some: { toStatus: ApplicationStatus.SELECTED, createdAt: { gte: monthStart } },
+          },
         },
       }),
     ]);
@@ -90,16 +92,16 @@ export class ApplicationsAggregateService {
     });
 
     const [names, jobs] = await Promise.all([
-      this.candidateRead.getNamesByIds(
-        [...new Set(rows.map((a) => a.candidateId).filter((x): x is string => !!x))],
-      ),
+      this.candidateRead.getNamesByIds([
+        ...new Set(rows.map((a) => a.candidateId).filter((x): x is string => !!x)),
+      ]),
       this.jobsService.getJobSubsets([...new Set(rows.map((a) => a.jobId))]),
     ]);
 
     return rows.map((a) => ({
       applicationId: a.id,
       candidateId: a.candidateId,
-      candidateName: a.candidateId ? names.get(a.candidateId) ?? null : null,
+      candidateName: a.candidateId ? (names.get(a.candidateId) ?? null) : null,
       jobId: a.jobId,
       jobTitle: jobs.get(a.jobId)?.title ?? null,
       status: a.status,
@@ -147,7 +149,9 @@ export class ApplicationsAggregateService {
    * page (never N queries for N rows). Jobs absent from the result have zero counts.
    */
   async countsPerJob(jobIds: string[]): Promise<Map<string, PerJobCounts>> {
-    const result = new Map<string, PerJobCounts>(jobIds.map((id) => [id, { applications: 0, shortlisted: 0 }]));
+    const result = new Map<string, PerJobCounts>(
+      jobIds.map((id) => [id, { applications: 0, shortlisted: 0 }]),
+    );
     if (jobIds.length === 0) return result;
 
     const grouped = await this.prisma.application.groupBy({

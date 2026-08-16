@@ -69,8 +69,7 @@ const uid = (p: string) => `${p}_${Date.now()}_${++seq}`;
 
 // Settings stub: protection rules OFF, Free cap = 1 (the seeded default).
 const settingsStub = {
-  get: async (def: { key: string }) =>
-    def.key === 'jobs.free_max_active_jobs' ? 1 : false,
+  get: async (def: { key: string }) => (def.key === 'jobs.free_max_active_jobs' ? 1 : false),
 } as unknown as SettingsService;
 
 function signedRzpSuccess(orderId: string): {
@@ -90,9 +89,7 @@ function signedRzpSuccess(orderId: string): {
   return {
     body,
     headers: {
-      'x-razorpay-signature': createHmac('sha256', RZP_WEBHOOK_SECRET)
-        .update(body)
-        .digest('hex'),
+      'x-razorpay-signature': createHmac('sha256', RZP_WEBHOOK_SECRET).update(body).digest('hex'),
       'x-razorpay-event-id': uid('evt'),
     },
   };
@@ -101,7 +98,11 @@ function signedRzpSuccess(orderId: string): {
 beforeAll(async () => {
   try {
     pg = await new GenericContainer('postgres:16-alpine')
-      .withEnvironment({ POSTGRES_USER: 'sic', POSTGRES_PASSWORD: 'sic', POSTGRES_DB: 'sic_quota_seam' })
+      .withEnvironment({
+        POSTGRES_USER: 'sic',
+        POSTGRES_PASSWORD: 'sic',
+        POSTGRES_DB: 'sic_quota_seam',
+      })
       .withExposedPorts(5432)
       .start();
     const url = `postgresql://sic:sic@localhost:${pg.getMappedPort(5432)}/sic_quota_seam`;
@@ -116,7 +117,14 @@ beforeAll(async () => {
 
     proPlanId = (
       await prisma.plan.create({
-        data: { code: 'PRO_MONTHLY', name: 'Pro Monthly', priceSubunits: 299_900, period: PlanPeriod.MONTHLY, maxActiveJobs: null, features: [] },
+        data: {
+          code: 'PRO_MONTHLY',
+          name: 'Pro Monthly',
+          priceSubunits: 299_900,
+          period: PlanPeriod.MONTHLY,
+          maxActiveJobs: null,
+          features: [],
+        },
       })
     ).id;
     categoryId = (
@@ -145,7 +153,7 @@ beforeAll(async () => {
 
     const prismaSvc = prisma as unknown as PrismaService;
     const audit = new AuditService(prismaSvc);
-    const employer = new EmployerService(prismaSvc, null as never);
+    const employer = new EmployerService(prismaSvc, null as never, { notify: jest.fn() } as never);
 
     // The gate under test — with the REAL converged read.
     publishGuard = new PublishGuardService(

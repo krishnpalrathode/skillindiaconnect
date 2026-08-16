@@ -122,7 +122,11 @@ async function mkCandidate(o: {
 beforeAll(async () => {
   try {
     pg = await new GenericContainer('postgres:16-alpine')
-      .withEnvironment({ POSTGRES_USER: 'sic', POSTGRES_PASSWORD: 'sic', POSTGRES_DB: 'sic_doc_gate' })
+      .withEnvironment({
+        POSTGRES_USER: 'sic',
+        POSTGRES_PASSWORD: 'sic',
+        POSTGRES_DB: 'sic_doc_gate',
+      })
       .withExposedPorts(5432)
       .start();
     const url = `postgresql://sic:sic@localhost:${pg.getMappedPort(5432)}/sic_doc_gate`;
@@ -137,7 +141,14 @@ beforeAll(async () => {
 
     const proPlanId = (
       await prisma.plan.create({
-        data: { code: 'PRO_MONTHLY', name: 'Pro Monthly', priceSubunits: 299_900, period: PlanPeriod.MONTHLY, maxActiveJobs: null, features: [] },
+        data: {
+          code: 'PRO_MONTHLY',
+          name: 'Pro Monthly',
+          priceSubunits: 299_900,
+          period: PlanPeriod.MONTHLY,
+          maxActiveJobs: null,
+          features: [],
+        },
       })
     ).id;
 
@@ -166,7 +177,7 @@ beforeAll(async () => {
 
     const prismaSvc = prisma as unknown as PrismaService;
     service = new DocumentAccessService(
-      new EmployerService(prismaSvc, null as never),
+      new EmployerService(prismaSvc, null as never, { notify: jest.fn() } as never),
       new SubscriptionReadService(prismaSvc, settingsStub),
       new CandidateReadService(prismaSvc),
       { presignGet } as unknown as StorageService,
@@ -212,88 +223,103 @@ describe('plan gate — checked BEFORE candidate resolution', () => {
     expect((body as { code: string }).code).toBe('PLAN_UPGRADE_REQUIRED');
   });
 
-  gatedIt('zero existence leakage: invisible and NONEXISTENT candidates give the byte-identical plan 403; storage untouched', async () => {
-    presignGet.mockClear();
-    const visible = await capture(
-      service.issueDocumentUrl(freeUserId, visibleCandId, DocumentType.PASSPORT),
-    );
-    const invisible = await capture(
-      service.issueDocumentUrl(freeUserId, invisibleCandId, DocumentType.PASSPORT),
-    );
-    const nonexistent = await capture(
-      service.issueDocumentUrl(freeUserId, NONEXISTENT_ID, DocumentType.PASSPORT),
-    );
-    expect(invisible).toEqual(visible);
-    expect(nonexistent).toEqual(visible);
-    expect(presignGet).not.toHaveBeenCalled();
-  });
+  gatedIt(
+    'zero existence leakage: invisible and NONEXISTENT candidates give the byte-identical plan 403; storage untouched',
+    async () => {
+      presignGet.mockClear();
+      const visible = await capture(
+        service.issueDocumentUrl(freeUserId, visibleCandId, DocumentType.PASSPORT),
+      );
+      const invisible = await capture(
+        service.issueDocumentUrl(freeUserId, invisibleCandId, DocumentType.PASSPORT),
+      );
+      const nonexistent = await capture(
+        service.issueDocumentUrl(freeUserId, NONEXISTENT_ID, DocumentType.PASSPORT),
+      );
+      expect(invisible).toEqual(visible);
+      expect(nonexistent).toEqual(visible);
+      expect(presignGet).not.toHaveBeenCalled();
+    },
+  );
 
-  gatedIt('not-approved employer → 403 EMPLOYER_NOT_APPROVED (check 1 precedes the plan gate)', async () => {
-    const { status, body } = await capture(
-      service.issueDocumentUrl(pendingUserId, visibleCandId, DocumentType.PASSPORT),
-    );
-    expect(status).toBe(403);
-    expect((body as { code: string }).code).toBe('EMPLOYER_NOT_APPROVED');
-  });
+  gatedIt(
+    'not-approved employer → 403 EMPLOYER_NOT_APPROVED (check 1 precedes the plan gate)',
+    async () => {
+      const { status, body } = await capture(
+        service.issueDocumentUrl(pendingUserId, visibleCandId, DocumentType.PASSPORT),
+      );
+      expect(status).toBe(403);
+      expect((body as { code: string }).code).toBe('EMPLOYER_NOT_APPROVED');
+    },
+  );
 });
 
 // ── The grant + the audit trail ───────────────────────────────────────────────
 
 describe('Pro grant + per-issuance audit', () => {
-  gatedIt('Pro + visible + uploaded → 300s signed URL; presignGet called with (r2Key, 300)', async () => {
-    presignGet.mockClear();
-    const grant = await service.issueDocumentUrl(proUserId, visibleCandId, DocumentType.PASSPORT);
-    expect(grant).toEqual({ url: 'https://stub.r2/signed?exp=300', expiresInSeconds: 300 });
-    expect(presignGet).toHaveBeenCalledWith(PASSPORT_KEY, 300);
-  });
+  gatedIt(
+    'Pro + visible + uploaded → 300s signed URL; presignGet called with (r2Key, 300)',
+    async () => {
+      presignGet.mockClear();
+      const grant = await service.issueDocumentUrl(proUserId, visibleCandId, DocumentType.PASSPORT);
+      expect(grant).toEqual({ url: 'https://stub.r2/signed?exp=300', expiresInSeconds: 300 });
+      expect(presignGet).toHaveBeenCalledWith(PASSPORT_KEY, 300);
+    },
+  );
 
-  gatedIt('EVERY issuance writes document.viewed — raw meta has the TYPE, never the key or URL', async () => {
-    await prisma.auditLog.deleteMany({ where: { action: AUDIT_ACTIONS.DOCUMENT_VIEWED } });
+  gatedIt(
+    'EVERY issuance writes document.viewed — raw meta has the TYPE, never the key or URL',
+    async () => {
+      await prisma.auditLog.deleteMany({ where: { action: AUDIT_ACTIONS.DOCUMENT_VIEWED } });
 
-    await service.issueDocumentUrl(proUserId, visibleCandId, DocumentType.PASSPORT);
-    await service.issueDocumentUrl(proUserId, visibleCandId, DocumentType.PASSPORT);
+      await service.issueDocumentUrl(proUserId, visibleCandId, DocumentType.PASSPORT);
+      await service.issueDocumentUrl(proUserId, visibleCandId, DocumentType.PASSPORT);
 
-    const rows = await prisma.auditLog.findMany({
-      where: { action: AUDIT_ACTIONS.DOCUMENT_VIEWED },
-    });
-    expect(rows).toHaveLength(2); // per-issuance, not per-document
+      const rows = await prisma.auditLog.findMany({
+        where: { action: AUDIT_ACTIONS.DOCUMENT_VIEWED },
+      });
+      expect(rows).toHaveLength(2); // per-issuance, not per-document
 
-    for (const row of rows) {
-      expect(row.actorUserId).toBe(proUserId);
-      expect(row.targetId).toBe(visibleCandId);
-      const meta = row.meta as Record<string, unknown>;
-      expect(meta.documentType).toBe('PASSPORT');
-      expect(meta.companyId).toBe(proCompanyId);
-      expect(meta.candidateId).toBe(visibleCandId);
-      // The DPDP trail must never carry the object key or a signed URL —
-      // asserted on the RAW persisted JSON, not the mapper output.
-      const raw = JSON.stringify(meta);
-      expect(raw).not.toContain(PASSPORT_KEY);
-      expect(raw).not.toContain('stub.r2');
-      expect(Object.keys(meta)).toEqual(
-        expect.not.arrayContaining(['r2Key', 'url', 'signedUrl', 'documentUrl']),
-      );
-    }
-  });
+      for (const row of rows) {
+        expect(row.actorUserId).toBe(proUserId);
+        expect(row.targetId).toBe(visibleCandId);
+        const meta = row.meta as Record<string, unknown>;
+        expect(meta.documentType).toBe('PASSPORT');
+        expect(meta.companyId).toBe(proCompanyId);
+        expect(meta.candidateId).toBe(visibleCandId);
+        // The DPDP trail must never carry the object key or a signed URL —
+        // asserted on the RAW persisted JSON, not the mapper output.
+        const raw = JSON.stringify(meta);
+        expect(raw).not.toContain(PASSPORT_KEY);
+        expect(raw).not.toContain('stub.r2');
+        expect(Object.keys(meta)).toEqual(
+          expect.not.arrayContaining(['r2Key', 'url', 'signedUrl', 'documentUrl']),
+        );
+      }
+    },
+  );
 });
 
 // ── The one indistinguishable 404 ─────────────────────────────────────────────
 
 describe('privacy inheritance — one 404 for all causes', () => {
-  gatedIt('nonexistent / invisible / PENDING_DELETION / type-not-uploaded → byte-identical 404s', async () => {
-    const results = await Promise.all([
-      capture(service.issueDocumentUrl(proUserId, NONEXISTENT_ID, DocumentType.PASSPORT)),
-      capture(service.issueDocumentUrl(proUserId, invisibleCandId, DocumentType.PASSPORT)),
-      capture(service.issueDocumentUrl(proUserId, deletionCandId, DocumentType.PASSPORT)),
-      capture(service.issueDocumentUrl(proUserId, noDocCandId, DocumentType.PASSPORT)),
-      // Visible candidate, but a type they never uploaded — same 404 class.
-      capture(service.issueDocumentUrl(proUserId, visibleCandId, DocumentType.WORKING_VIDEO)),
-    ]);
-    for (const r of results) {
-      expect(r.status).toBe(404);
-      expect(r).toEqual(results[0]);
-    }
-  });
+  gatedIt(
+    'nonexistent / invisible / PENDING_DELETION / type-not-uploaded → byte-identical 404s',
+    async () => {
+      const results = await Promise.all([
+        capture(service.issueDocumentUrl(proUserId, NONEXISTENT_ID, DocumentType.PASSPORT)),
+        capture(service.issueDocumentUrl(proUserId, invisibleCandId, DocumentType.PASSPORT)),
+        capture(service.issueDocumentUrl(proUserId, deletionCandId, DocumentType.PASSPORT)),
+        capture(service.issueDocumentUrl(proUserId, noDocCandId, DocumentType.PASSPORT)),
+        // Visible candidate, but a type they never uploaded — same 404 class.
+        capture(service.issueDocumentUrl(proUserId, visibleCandId, DocumentType.WORKING_VIDEO)),
+      ]);
+      for (const r of results) {
+        expect(r.status).toBe(404);
+        expect(r).toEqual(results[0]);
+      }
+    },
+  );
 });
 
 // ── GRACE / EXPIRED semantics ─────────────────────────────────────────────────

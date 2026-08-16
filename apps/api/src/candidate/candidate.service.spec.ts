@@ -16,6 +16,7 @@ import { CandidateService } from './candidate.service';
 import { CompletionService } from './completion/completion.service';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { StorageService } from '../core/storage/storage.service';
+import { NotificationService } from '../notifications/notification.service';
 import { CANDIDATE_EVENTS } from './events/candidate.events';
 
 // â”€â”€â”€ Factories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -100,7 +101,9 @@ describe('CandidateService', () => {
 
     const storageMock = {
       presignGet: jest.fn().mockResolvedValue('https://signed.example/photo'),
-      presignPut: jest.fn().mockResolvedValue({ url: 'https://put.example', expiresInSeconds: 300 }),
+      presignPut: jest
+        .fn()
+        .mockResolvedValue({ url: 'https://put.example', expiresInSeconds: 300 }),
       headObject: jest.fn().mockResolvedValue({ sizeBytes: 1024, contentType: 'image/jpeg' }),
       deleteObject: jest.fn().mockResolvedValue(undefined),
     };
@@ -112,6 +115,10 @@ describe('CandidateService', () => {
         { provide: CompletionService, useValue: completionMock },
         { provide: EventEmitter2, useValue: eventEmitterMock },
         { provide: StorageService, useValue: storageMock },
+        // CompletionService's queue + notification deps — stubs; this suite
+        // asserts profile reads, not the side effects of a recompute.
+        { provide: 'BullQueue_match-alert', useValue: { add: jest.fn() } },
+        { provide: NotificationService, useValue: { notify: jest.fn() } },
       ],
     }).compile();
 
@@ -290,10 +297,17 @@ describe('CandidateService â€” integration (real DB)', () => {
               presignPut: jest
                 .fn()
                 .mockResolvedValue({ url: 'https://put.example', expiresInSeconds: 300 }),
-              headObject: jest.fn().mockResolvedValue({ sizeBytes: 1024, contentType: 'image/jpeg' }),
+              headObject: jest
+                .fn()
+                .mockResolvedValue({ sizeBytes: 1024, contentType: 'image/jpeg' }),
               deleteObject: jest.fn().mockResolvedValue(undefined),
             },
           },
+          // CompletionService's queue + notification deps. Stubs: this block
+          // exercises the DOCUMENT_CHANGED → recompute wiring, not what the
+          // recompute goes on to enqueue or send.
+          { provide: 'BullQueue_match-alert', useValue: { add: jest.fn() } },
+          { provide: NotificationService, useValue: { notify: jest.fn() } },
         ],
       }).compile();
 
@@ -637,4 +651,3 @@ describe('CandidateService â€” integration (real DB)', () => {
     expect(after!.completionPct).toBe(10);
   });
 });
-

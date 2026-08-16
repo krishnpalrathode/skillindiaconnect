@@ -15,10 +15,7 @@ import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
 import { ActorType, allowedTransitions } from './transition.matrix';
 import { resolveSelectedTemplateVars } from './selected-template-vars';
-import {
-  APPLICATION_EVENTS,
-  ApplicationStatusChangedPayload,
-} from './events/application.events';
+import { APPLICATION_EVENTS, ApplicationStatusChangedPayload } from './events/application.events';
 
 /** The caller identity + authorization context for a transition. */
 export type TransitionActor =
@@ -119,7 +116,8 @@ export class StatusService {
       }
 
       // 4. Guard decision — made HERE, under the lock, and carried to post-commit.
-      const firstSelectedEntry = to === ApplicationStatus.SELECTED && app.selectedNotifiedAt === null;
+      const firstSelectedEntry =
+        to === ApplicationStatus.SELECTED && app.selectedNotifiedAt === null;
 
       // 5. Write status (+ set the guard in the SAME update on first SELECTED entry).
       const updated = await tx.application.update({
@@ -236,7 +234,10 @@ export class StatusService {
    */
   private candidateNotification(
     c: CommittedTransition,
-  ): { type: NotificationType; payload: { title: string; body: string; data?: Record<string, unknown> } } | null {
+  ): {
+    type: NotificationType;
+    payload: { title: string; body: string; data?: Record<string, unknown> };
+  } | null {
     switch (c.toStatus) {
       case ApplicationStatus.SELECTED:
         return {

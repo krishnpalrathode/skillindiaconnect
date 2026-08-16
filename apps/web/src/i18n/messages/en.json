@@ -105,6 +105,13 @@
       "retry": "Try again",
       "timeoutTitle": "Taking longer than expected",
       "timeoutBody": "Your resume is still being prepared. Please try again in a moment."
+    },
+    "summary": {
+      "title": "About you",
+      "hint": "A short intro in your own words. It appears at the top of your resume, above your details.",
+      "placeholder": "Example: Electrician with 6 years on residential and commercial sites in Kerala and Dubai. Comfortable with wiring, panel work and site safety. Looking for Gulf projects.",
+      "counter": "{used}/{max}",
+      "save": "Save"
     }
   },
   "common": {
@@ -520,7 +527,11 @@
         "PENDING": "Pending review",
         "VERIFIED": "Verified",
         "REJECTED": "Rejected"
-      }
+      },
+      "passportExpiryRule": "Your passport must be valid for at least 6 more months.",
+      "passportExpiryTooSoon": "Gulf employers need at least {months} months of passport validity. Please renew your passport, then upload it here.",
+      "passportExpiryWarnTitle": "Your passport expires in {days} days",
+      "passportExpiryWarnBody": "You can continue for now, but you will not be able to apply for jobs once it drops below {months} months. Renewal can take several weeks — start early."
     },
     "preview": {
       "title": "Preview & Export",
@@ -548,7 +559,8 @@
       "errUploadIncomplete": "The upload didn't finish. Please try again.",
       "dropzoneHint": "Drag & drop or click to select",
       "maxSize": "Max {size} MB",
-      "errPassportExpiry": "Your passport expiry date must be a future date. Correct the date above, then upload again."
+      "errPassportExpiry": "Your passport expiry date must be a future date. Correct the date above, then upload again.",
+      "errPassportTooSoon": "This passport expires too soon for a Gulf work visa. Renew it first, then upload the new one."
     },
     "nav": {
       "back": "Back",

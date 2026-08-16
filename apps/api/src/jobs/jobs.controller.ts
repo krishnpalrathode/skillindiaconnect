@@ -31,27 +31,18 @@ export class JobsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(
-    @Body() dto: CreateJobDto,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async create(@Body() dto: CreateJobDto, @CurrentUser() user: CurrentUserPayload) {
     const job = await this.jobsService.create(dto, user.userId, user.role as UserRole);
     return { data: job };
   }
 
   @Get()
-  async list(
-    @Query() query: ListJobsDto,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async list(@Query() query: ListJobsDto, @CurrentUser() user: CurrentUserPayload) {
     return this.jobsService.list(user.userId, query);
   }
 
   @Get(':id')
-  async findOne(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: CurrentUserPayload) {
     const job = await this.jobsService.findOne(id, user.userId);
     return { data: job };
   }
@@ -68,50 +59,35 @@ export class JobsController {
 
   @Post(':id/publish')
   @HttpCode(HttpStatus.OK)
-  async publish(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async publish(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: CurrentUserPayload) {
     const job = await this.jobsService.publish(id, user.userId, user.role as UserRole);
     return { data: job };
   }
 
   @Post(':id/pause')
   @HttpCode(HttpStatus.OK)
-  async pause(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async pause(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: CurrentUserPayload) {
     const job = await this.jobsService.pause(id, user.userId, user.role as UserRole);
     return { data: job };
   }
 
   @Post(':id/resume')
   @HttpCode(HttpStatus.OK)
-  async resume(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async resume(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: CurrentUserPayload) {
     const job = await this.jobsService.resume(id, user.userId, user.role as UserRole);
     return { data: job };
   }
 
   @Post(':id/archive')
   @HttpCode(HttpStatus.OK)
-  async archive(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async archive(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: CurrentUserPayload) {
     const job = await this.jobsService.archive(id, user.userId, user.role as UserRole);
     return { data: job };
   }
 
   @Post(':id/duplicate')
   @HttpCode(HttpStatus.CREATED)
-  async duplicate(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async duplicate(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: CurrentUserPayload) {
     const job = await this.jobsService.duplicate(id, user.userId, user.role as UserRole);
     return { data: job };
   }

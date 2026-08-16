@@ -2627,6 +2627,9 @@ export function buildResumeView(candidate: MockCandidate, settings: ResumeSettin
     maritalStatus: p.maritalStatus ?? null,
     nationality: p.nationality ?? null,
     currentLocation: p.currentLocation ?? null,
+    // Not settings-governed: writing an intro is itself the opt-in, so the only
+    // thing that omits it is the candidate leaving it empty.
+    summary: p.summary?.trim() || null,
     languages: p.languages ?? [],
     jobCategory: p.jobCategoryId ?? null,
     experiences: p.experiences ?? [],

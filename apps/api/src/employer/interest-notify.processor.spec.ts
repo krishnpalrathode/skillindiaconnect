@@ -7,10 +7,7 @@
  */
 import { CompanyStatus, NotificationType, UserStatus } from '@prisma/client';
 import { Job as BullJob } from 'bullmq';
-import {
-  InterestNotifyProcessor,
-  type InterestNotifyJobData,
-} from './interest-notify.processor';
+import { InterestNotifyProcessor, type InterestNotifyJobData } from './interest-notify.processor';
 import { JOB_NAMES } from '../queue/queue.constants';
 
 const COMPANY_ID = 'co-1';
@@ -77,9 +74,7 @@ describe('InterestNotifyProcessor', () => {
   });
 
   it('refuses to message the same candidate twice', async () => {
-    const { processor, update, notify } = build(
-      mkInterest({ notifiedAt: new Date('2026-01-01') }),
-    );
+    const { processor, update, notify } = build(mkInterest({ notifiedAt: new Date('2026-01-01') }));
 
     const result = await processor.process(bullJob());
 

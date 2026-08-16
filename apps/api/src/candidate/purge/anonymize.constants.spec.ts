@@ -23,9 +23,7 @@ import {
 function scalarFieldNames(modelName: string): string[] {
   const model = Prisma.dmmf.datamodel.models.find((m) => m.name === modelName);
   if (!model) throw new Error(`model ${modelName} not in DMMF`);
-  return model.fields
-    .filter((f) => f.kind === 'scalar' || f.kind === 'enum')
-    .map((f) => f.name);
+  return model.fields.filter((f) => f.kind === 'scalar' || f.kind === 'enum').map((f) => f.name);
 }
 
 describe('anonymize.constants — the erasure map covers the whole schema surface', () => {

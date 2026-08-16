@@ -34,8 +34,8 @@ import { AdminJobsService } from './admin-jobs.service';
 @Module({
   imports: [
     forwardRef(() => EmployerModule), // forwardRef: EmployerModule also imports JobsModule for the dashboard seam (S3-B1)
-    SettingsModule,   // SettingsService: protection rules, auto-archive days, quota settings
-    QueueModule,      // BullMQ: auto-archive queue registration (producer side)
+    SettingsModule, // SettingsService: protection rules, auto-archive days, quota settings
+    QueueModule, // BullMQ: auto-archive queue registration (producer side)
     forwardRef(() => ApplicationsModule), // ApplicationsAggregateService: live My-Jobs applicant counts (S4-B3)
     SubscriptionReadModule, // effectivePlan(): the publish-quota plan truth (S5-B3)
     NotificationModule, // S6b-B2: moderation outcomes notify the employer (matrix rows)

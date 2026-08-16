@@ -66,7 +66,9 @@ export class RazorpayAdapter implements PaymentGatewayPort {
       notes: { orderId: input.orderId },
     });
     // No PII in logs: gateway/DB ids only.
-    this.logger.log(`Razorpay order created (orderId=${input.orderId}, gatewayOrderId=${order.id})`);
+    this.logger.log(
+      `Razorpay order created (orderId=${input.orderId}, gatewayOrderId=${order.id})`,
+    );
     return { gatewayOrderId: order.id, keyId: this.keyId };
   }
 

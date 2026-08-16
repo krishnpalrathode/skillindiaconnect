@@ -54,7 +54,14 @@ export class MetricsService {
   private ensure(name: string, help: string, type: Series['type'], buckets?: number[]): Series {
     let s = this.series.get(name);
     if (!s) {
-      s = { name, help, type, values: new Map(), buckets, hist: type === 'histogram' ? new Map() : undefined };
+      s = {
+        name,
+        help,
+        type,
+        values: new Map(),
+        buckets,
+        hist: type === 'histogram' ? new Map() : undefined,
+      };
       this.series.set(name, s);
     }
     return s;
@@ -144,7 +151,9 @@ export class MetricsService {
   }
 
   recordActivation(outcome: 'activated' | 'noop' | 'failed'): void {
-    this.increment('sic_payment_activations_total', 'Subscription activation outcomes', { outcome });
+    this.increment('sic_payment_activations_total', 'Subscription activation outcomes', {
+      outcome,
+    });
   }
 
   recordWebhook(provider: string, outcome: string, ms: number): void {

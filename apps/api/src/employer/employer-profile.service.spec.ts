@@ -12,13 +12,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import {
-  CompanyStatus,
-  CompanyType,
-  PrismaClient,
-  UserRole,
-  UserStatus,
-} from '@prisma/client';
+import { CompanyStatus, CompanyType, PrismaClient, UserRole, UserStatus } from '@prisma/client';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
 import { execSync } from 'child_process';
 import * as path from 'path';
@@ -91,12 +85,20 @@ describe('computeChecklist (pure function)', () => {
   });
 
   it('hasLogo flips to true when logoKey is set', () => {
-    const result = computeChecklist({ ...baseCompany, logoKey: 'companies/c1/logo/x.jpg' } as any, null, []);
+    const result = computeChecklist(
+      { ...baseCompany, logoKey: 'companies/c1/logo/x.jpg' } as any,
+      null,
+      [],
+    );
     expect(result.hasLogo).toBe(true);
   });
 
   it('hasDescription flips to true when description is non-empty', () => {
-    const result = computeChecklist({ ...baseCompany, description: 'We hire globally.' } as any, null, []);
+    const result = computeChecklist(
+      { ...baseCompany, description: 'We hire globally.' } as any,
+      null,
+      [],
+    );
     expect(result.hasDescription).toBe(true);
   });
 
@@ -111,8 +113,13 @@ describe('computeChecklist (pure function)', () => {
   });
 
   it('hasSecondContact requires at least 2 contacts', () => {
-    expect(computeChecklist(baseCompany as any, null, [makeContact('a')]).hasSecondContact).toBe(false);
-    expect(computeChecklist(baseCompany as any, null, [makeContact('a'), makeContact('b')]).hasSecondContact).toBe(true);
+    expect(computeChecklist(baseCompany as any, null, [makeContact('a')]).hasSecondContact).toBe(
+      false,
+    );
+    expect(
+      computeChecklist(baseCompany as any, null, [makeContact('a'), makeContact('b')])
+        .hasSecondContact,
+    ).toBe(true);
   });
 
   it('hint picks the first failing check (logo → description → prefs → second contact)', () => {
@@ -125,11 +132,10 @@ describe('computeChecklist (pure function)', () => {
     expect(noLogo.hint).toMatch(/logo/i);
 
     // logo present, description missing
-    const noDesc = computeChecklist(
-      { ...baseCompany, logoKey: 'k' } as any,
-      basePrefs as any,
-      [makeContact('a'), makeContact('b')],
-    );
+    const noDesc = computeChecklist({ ...baseCompany, logoKey: 'k' } as any, basePrefs as any, [
+      makeContact('a'),
+      makeContact('b'),
+    ]);
     expect(noDesc.hint).toMatch(/description/i);
 
     // logo + desc, prefs missing
@@ -193,7 +199,9 @@ describe('EmployerProfileService — prefs + logo (mocked Prisma)', () => {
     };
 
     mockStorage = {
-      presignPut: jest.fn().mockResolvedValue({ url: 'https://r2.example/put', expiresInSeconds: 300 }),
+      presignPut: jest
+        .fn()
+        .mockResolvedValue({ url: 'https://r2.example/put', expiresInSeconds: 300 }),
       presignGet: jest.fn().mockResolvedValue('https://r2.example/get'),
       headObject: jest.fn().mockResolvedValue({ sizeBytes: 512 * 1024, contentType: 'image/jpeg' }),
     };
@@ -256,8 +264,14 @@ describe('EmployerProfileService — prefs + logo (mocked Prisma)', () => {
     mockPrisma.jobCategory.findMany.mockResolvedValue([{ id: 'cat-uuid' }]);
     mockPrisma.hiringPreference.upsert.mockResolvedValue(fakePref);
 
-    await service.upsertHiringPreferences('user-1', { preferredCategories: ['cat-uuid'], minExperience: 2 });
-    await service.upsertHiringPreferences('user-1', { preferredCategories: ['cat-uuid'], minExperience: 3 });
+    await service.upsertHiringPreferences('user-1', {
+      preferredCategories: ['cat-uuid'],
+      minExperience: 2,
+    });
+    await service.upsertHiringPreferences('user-1', {
+      preferredCategories: ['cat-uuid'],
+      minExperience: 3,
+    });
 
     // Both calls route through upsert; the DB ensures one-per-company via unique constraint
     expect(mockPrisma.hiringPreference.upsert).toHaveBeenCalledTimes(2);
@@ -322,13 +336,20 @@ describe('EmployerProfileService — prefs + logo (mocked Prisma)', () => {
   it('confirmLogo: object missing in R2 → 422 UPLOAD_NOT_FOUND', async () => {
     mockStorage.headObject.mockResolvedValueOnce(null);
     const key = 'companies/company-uuid/logo/missing.jpg';
-    await expect(service.confirmLogo('user-1', { key })).rejects.toThrow(UnprocessableEntityException);
+    await expect(service.confirmLogo('user-1', { key })).rejects.toThrow(
+      UnprocessableEntityException,
+    );
   });
 
   it('confirmLogo: HEAD returns oversized object → 422 FILE_TOO_LARGE', async () => {
-    mockStorage.headObject.mockResolvedValueOnce({ sizeBytes: 3 * 1024 * 1024, contentType: 'image/jpeg' });
+    mockStorage.headObject.mockResolvedValueOnce({
+      sizeBytes: 3 * 1024 * 1024,
+      contentType: 'image/jpeg',
+    });
     const key = 'companies/company-uuid/logo/big.jpg';
-    await expect(service.confirmLogo('user-1', { key })).rejects.toThrow(UnprocessableEntityException);
+    await expect(service.confirmLogo('user-1', { key })).rejects.toThrow(
+      UnprocessableEntityException,
+    );
   });
 });
 
@@ -339,11 +360,14 @@ let prisma: PrismaClient;
 let profileService: EmployerProfileService;
 let dockerUnavailable = false;
 
-const mockStorage2: jest.Mocked<Pick<StorageService, 'presignPut' | 'presignGet' | 'headObject'>> = {
-  presignPut: jest.fn().mockResolvedValue({ url: 'https://r2.example/put', expiresInSeconds: 300 }),
-  presignGet: jest.fn().mockResolvedValue('https://r2.example/get'),
-  headObject: jest.fn().mockResolvedValue({ sizeBytes: 512 * 1024, contentType: 'image/jpeg' }),
-};
+const mockStorage2: jest.Mocked<Pick<StorageService, 'presignPut' | 'presignGet' | 'headObject'>> =
+  {
+    presignPut: jest
+      .fn()
+      .mockResolvedValue({ url: 'https://r2.example/put', expiresInSeconds: 300 }),
+    presignGet: jest.fn().mockResolvedValue('https://r2.example/get'),
+    headObject: jest.fn().mockResolvedValue({ sizeBytes: 512 * 1024, contentType: 'image/jpeg' }),
+  };
 
 const mockAudit2: jest.Mocked<Pick<AuditService, 'log'>> = {
   log: jest.fn().mockResolvedValue(undefined),
@@ -375,6 +399,7 @@ beforeAll(async () => {
     const realEmployerService = new EmployerService(
       prisma as unknown as PrismaService,
       mockStorage2 as unknown as StorageService,
+      { notify: jest.fn() } as never,
     );
 
     profileService = new EmployerProfileService(

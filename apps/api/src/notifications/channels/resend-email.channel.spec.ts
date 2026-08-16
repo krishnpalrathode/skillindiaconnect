@@ -97,7 +97,10 @@ describe('ResendEmailChannel', () => {
 
   it('FAILURE HONESTY: a rejected API key → ok:false EAUTH (never a false SENT)', async () => {
     const ch = new StubResend(configStub());
-    ch.response = { status: 401, body: { name: 'validation_error', message: 'API key is invalid' } };
+    ch.response = {
+      status: 401,
+      body: { name: 'validation_error', message: 'API key is invalid' },
+    };
 
     const result = await ch.send('worker@example.com', 'APPLICATION_SELECTED', {});
     expect(result.ok).toBe(false);

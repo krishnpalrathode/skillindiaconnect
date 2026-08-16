@@ -26,10 +26,7 @@ export class CandidateApplicationsController {
   }
 
   @Get(':id')
-  async detail(
-    @CurrentUser() user: CurrentUserPayload,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
+  async detail(@CurrentUser() user: CurrentUserPayload, @Param('id', ParseUUIDPipe) id: string) {
     const candidateId = await this.resolveCandidateId(user);
     const data = await this.readService.getCandidateApplicationDetail(candidateId, id);
     return { data };

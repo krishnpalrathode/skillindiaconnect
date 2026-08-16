@@ -54,7 +54,7 @@ beforeAll(async () => {
       cwd: API_DIR,
       env: { ...process.env, DATABASE_URL: pgUrl },
       stdio: 'pipe',
-      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',  // Windows: ensures pnpm is resolved via PATH
+      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh', // Windows: ensures pnpm is resolved via PATH
     });
 
     prismaClient = new PrismaClient({ datasources: { db: { url: pgUrl } } });
@@ -89,11 +89,14 @@ beforeAll(async () => {
       msg.includes('Docker') ||
       msg.includes('ENOENT') ||
       msg.includes('connect ECONNREFUSED') ||
-      msg.includes('not recognized') ||          // Windows: pnpm/prisma not in PATH
-      msg.includes('prisma: command not found')  // Unix: prisma not in PATH
+      msg.includes('not recognized') || // Windows: pnpm/prisma not in PATH
+      msg.includes('prisma: command not found') // Unix: prisma not in PATH
     ) {
       dockerUnavailable = true;
-      console.warn('[notification-svc-integration] Docker or infra unavailable â€” tests will be skipped:', msg);
+      console.warn(
+        '[notification-svc-integration] Docker or infra unavailable â€” tests will be skipped:',
+        msg,
+      );
     } else {
       throw err;
     }
@@ -210,15 +213,31 @@ describe('notify(JOB_CLOSING_SOON) â€” matrix: inApp âœ“ Â· whatsapp 
 // â”€â”€ listNotifications + markRead â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('role guards', () => {
+  /*
+    Built standalone rather than reusing the container-backed `service`.
+
+    These two guards are pure — they read a role and throw or don't, touching
+    neither Prisma nor the queue — so gating them on Testcontainers bought
+    nothing and cost correctness: every other test in this file opts out with
+    `if (dockerUnavailable) return`, these two never did, so on any machine
+    without Docker they failed on `service` being undefined rather than skipping
+    like their neighbours. A red suite that says nothing about the code is worse
+    than either outcome.
+  */
+  const guards = new NotificationService(
+    undefined as never, // prisma — unreachable from a role guard
+    undefined as never, // queue  — likewise
+  );
+
   it('assertEmployerRole allows EMPLOYER and rejects everyone else', () => {
-    expect(() => service.assertEmployerRole(UserRole.EMPLOYER)).not.toThrow();
-    expect(() => service.assertEmployerRole(UserRole.CANDIDATE)).toThrow(/NOT_EMPLOYER|Forbidden/);
-    expect(() => service.assertEmployerRole(UserRole.ADMIN)).toThrow(/NOT_EMPLOYER|Forbidden/);
+    expect(() => guards.assertEmployerRole(UserRole.EMPLOYER)).not.toThrow();
+    expect(() => guards.assertEmployerRole(UserRole.CANDIDATE)).toThrow(/NOT_EMPLOYER|Forbidden/);
+    expect(() => guards.assertEmployerRole(UserRole.ADMIN)).toThrow(/NOT_EMPLOYER|Forbidden/);
   });
 
   it('assertCandidateRole allows CANDIDATE and rejects an EMPLOYER', () => {
-    expect(() => service.assertCandidateRole(UserRole.CANDIDATE)).not.toThrow();
-    expect(() => service.assertCandidateRole(UserRole.EMPLOYER)).toThrow(/NOT_CANDIDATE|Forbidden/);
+    expect(() => guards.assertCandidateRole(UserRole.CANDIDATE)).not.toThrow();
+    expect(() => guards.assertCandidateRole(UserRole.EMPLOYER)).toThrow(/NOT_CANDIDATE|Forbidden/);
   });
 });
 
@@ -318,4 +337,3 @@ describe('listNotifications + markRead', () => {
     expect(after.every((n) => n.readAt !== null)).toBe(true);
   });
 });
-

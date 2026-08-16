@@ -1,7 +1,9 @@
 import { IsIn, IsInt, IsNotEmpty, IsString, Max, Min } from 'class-validator';
+import { MAX_UPLOAD_BYTES } from '../../core/uploads';
 
 const ACCEPTED_CERT_MIMES = ['application/pdf', 'image/jpeg', 'image/png'] as const;
-export const CERT_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+/** Re-exported for callers that still import it; the value is the shared ceiling. */
+export const CERT_MAX_BYTES = MAX_UPLOAD_BYTES;
 
 export class PresignCertDto {
   @IsString()

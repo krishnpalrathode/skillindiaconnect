@@ -29,14 +29,14 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 
 describe('WORKER_TUNING defaults', () => {
-  it('long-polls far less often than BullMQ\'s 5s default', () => {
+  it("long-polls far less often than BullMQ's 5s default", () => {
     expect(WORKER_TUNING.responsiveDrainDelayS).toBeGreaterThanOrEqual(60);
     expect(WORKER_TUNING.maintenanceDrainDelayS).toBeGreaterThanOrEqual(
       WORKER_TUNING.responsiveDrainDelayS,
     );
   });
 
-  it('sweeps for stalled jobs far less often than BullMQ\'s 30s default', () => {
+  it("sweeps for stalled jobs far less often than BullMQ's 30s default", () => {
     expect(WORKER_TUNING.responsiveStalledIntervalMs).toBeGreaterThanOrEqual(300_000);
     expect(WORKER_TUNING.maintenanceStalledIntervalMs).toBeGreaterThanOrEqual(
       WORKER_TUNING.responsiveStalledIntervalMs,
@@ -51,7 +51,9 @@ describe('WORKER_TUNING defaults', () => {
 });
 
 describe('every @Processor declares a tuning tier', () => {
-  const processorFiles = walk(SRC_ROOT).filter((f) => readFileSync(f, 'utf8').includes('@Processor('));
+  const processorFiles = walk(SRC_ROOT).filter((f) =>
+    readFileSync(f, 'utf8').includes('@Processor('),
+  );
 
   it('finds the processors (guards against the walker silently matching nothing)', () => {
     expect(processorFiles.length).toBeGreaterThanOrEqual(8);

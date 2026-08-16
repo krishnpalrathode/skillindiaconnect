@@ -163,6 +163,14 @@ enum NotificationType {
   // S7-B2: "your resume PDF is ready" — fired when a generation flips READY so
   // a candidate who navigated away mid-render still learns it finished.
   RESUME_READY
+  /// Sent ONCE, the first time a candidate's profile reaches the apply
+  /// threshold — the moment they can actually start applying. Confirms the
+  /// onboarding they just finished actually landed.
+  CANDIDATE_PROFILE_COMPLETE
+  /// Sent when an employer finishes company registration. Acknowledges receipt
+  /// and sets the expectation of review; EMPLOYER_APPROVED is the later,
+  /// separate "you are live" message.
+  EMPLOYER_REGISTERED
   /// Emailed password-reset link. SECURITY mail, not a notification: it is
   /// email-only (no in-app row — the recipient cannot sign in to read one, and
   /// a feed entry announcing a reset would leak the event to a session that may
@@ -320,6 +328,12 @@ model CandidateProfile {
   currentLocation String?
   nationality     String?
   noticePeriod    Int?
+  /// Candidate-written intro shown at the TOP of the resume, above personal
+  /// details. Their own words about themselves — the one part of the document
+  /// the structured fields cannot express. Capped at 500 characters because a
+  /// resume summary that runs longer stops being a summary and starts pushing
+  /// the work history onto a second page.
+  summary         String?        @db.VarChar(500)
   salaryExpectationMin      Int?
   salaryExpectationMax      Int?
   salaryExpectationCurrency Currency?

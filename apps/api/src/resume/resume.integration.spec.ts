@@ -125,13 +125,9 @@ beforeAll(async () => {
       add: notificationQueueAdd,
     } as unknown as Queue);
     settingsService = new ResumeSettingsService(prismaSvc);
-    resumeService = new ResumeService(
-      prismaSvc,
-      storage,
-      candidateRead,
-      settingsService,
-      { add: renderQueueAdd } as unknown as Queue,
-    );
+    resumeService = new ResumeService(prismaSvc, storage, candidateRead, settingsService, {
+      add: renderQueueAdd,
+    } as unknown as Queue);
     deliveryService = new ResumeDeliveryService(
       redis,
       resumeService,

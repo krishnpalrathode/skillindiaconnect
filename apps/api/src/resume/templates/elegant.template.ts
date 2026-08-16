@@ -8,6 +8,7 @@ import {
   factRows,
   pageFrame,
   safePhotoSrc,
+  summaryText,
   stickyFooterFrame,
 } from './shared';
 
@@ -102,6 +103,7 @@ function documentsSection(view: ResumeViewDto): string {
 
 export function renderElegant(view: ResumeViewDto): string {
   const src = safePhotoSrc(view);
+  const summary = summaryText(view);
   const photo = src ? `<img class="photo" src="${src}" alt="" />` : '';
   const video = view.hasVideo
     ? `<section><h2><span>Video Portfolio</span></h2><p>A video introduction is available on Skill India Connect.</p></section>`
@@ -165,6 +167,7 @@ export function renderElegant(view: ResumeViewDto): string {
 
   footer { padding-top: 3mm; border-top: 0.5pt solid #d8cbb2;
            font-size: 8pt; color: #98a2b3; text-align: center; font-style: italic; }
+  .summary { font-size: 11pt; line-height: 1.65; color: #3f3a34; font-style: italic; text-align: center; margin: 0 auto 7mm; max-width: 150mm; }
 </style>
 </head>
 <body>
@@ -175,6 +178,8 @@ export function renderElegant(view: ResumeViewDto): string {
     <div class="rule"></div>
     <p class="contact">${contactParts(view).map(esc).join(' &nbsp;&middot;&nbsp; ')}</p>
   </header>
+
+  ${summary ? `<p class="summary">${summary}</p>` : ''}
 
   <main>
     ${detailsSection(view)}

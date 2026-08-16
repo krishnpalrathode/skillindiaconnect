@@ -25,6 +25,7 @@ export type PatchCandidateBody = Partial<
     | 'salaryExpectationMin'
     | 'salaryExpectationMax'
     | 'salaryExpectationCurrency'
+    | 'summary'
   >
 >;
 

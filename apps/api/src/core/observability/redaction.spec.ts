@@ -33,7 +33,10 @@ describe('redaction', () => {
     });
 
     it('redacts a denied key even when it holds a nested object', () => {
-      const out = redactValue({ passport: { number: 'P1234567', issued: '2020' } }) as Record<string, unknown>;
+      const out = redactValue({ passport: { number: 'P1234567', issued: '2020' } }) as Record<
+        string,
+        unknown
+      >;
       // The value is replaced wholesale — the nested content is never walked,
       // so nothing under a denied key can escape.
       expect(out.passport).toBe(REDACTED);

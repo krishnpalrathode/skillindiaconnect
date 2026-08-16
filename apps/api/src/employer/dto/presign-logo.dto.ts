@@ -1,6 +1,7 @@
 import { IsIn, IsInt, IsString, Max, Min } from 'class-validator';
+import { MAX_UPLOAD_BYTES } from '../../core/uploads';
 
-export const LOGO_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
+export const LOGO_MAX_BYTES = MAX_UPLOAD_BYTES;
 export const LOGO_ALLOWED_MIMES = ['image/jpeg', 'image/png'] as const;
 
 export class PresignLogoDto {

@@ -37,14 +37,22 @@ describe('OtpService.issue — a send failure must never become a 500', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const redisMock = { incr: jest.fn().mockResolvedValue(1), expire: jest.fn().mockResolvedValue(1) };
+    const redisMock = {
+      incr: jest.fn().mockResolvedValue(1),
+      expire: jest.fn().mockResolvedValue(1),
+    };
     prismaMock = {
       $transaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
         fn({
           otpChallenge: { updateMany: jest.fn(), create: jest.fn() },
         }),
       ),
-      otpChallenge: { findFirst: jest.fn(), create: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
+      otpChallenge: {
+        findFirst: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        updateMany: jest.fn(),
+      },
       whatsappMessage: { create: jest.fn().mockResolvedValue({ id: 'wa-1' }) },
     };
 
@@ -68,12 +76,15 @@ describe('OtpService.issue — a send failure must never become a 500', () => {
     ['an auth failure (bad token)', { ok: false, errorCode: 'EAUTH' }],
     ['a provider 5xx', { ok: false, errorCode: 'PROVIDER_ERROR' }],
     ['a Meta-specific error code', { ok: false, errorCode: 'META_131047' }],
-  ])('%s resolves normally — the caller gets an answer, not an exception', async (_label, result) => {
-    sendOtp.mockResolvedValue(result);
+  ])(
+    '%s resolves normally — the caller gets an answer, not an exception',
+    async (_label, result) => {
+      sendOtp.mockResolvedValue(result);
 
-    // RESOLVES. A rejection here is a 500 on the login screen.
-    await expect(service.issue(PHONE, OtpPurpose.LOGIN, IP)).resolves.toBeDefined();
-  });
+      // RESOLVES. A rejection here is a 500 on the login screen.
+      await expect(service.issue(PHONE, OtpPurpose.LOGIN, IP)).resolves.toBeDefined();
+    },
+  );
 
   it('an unreachable number returns notOnWhatsapp so the UI can fall back', async () => {
     // This signal is the entire reason the OTP send stayed synchronous — it is

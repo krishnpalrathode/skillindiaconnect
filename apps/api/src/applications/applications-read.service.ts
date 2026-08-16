@@ -156,7 +156,9 @@ export class ApplicationsReadService {
     const page = rows;
 
     // Batch-resolve candidate subjects (one query) + presign photos in parallel.
-    const candidateIds = [...new Set(page.map((a) => a.candidateId).filter((x): x is string => !!x))];
+    const candidateIds = [
+      ...new Set(page.map((a) => a.candidateId).filter((x): x is string => !!x)),
+    ];
     const sources = await this.candidateRead.getEmployerViewsByIds(candidateIds);
     const photoUrls = new Map<string, string | null>();
     await Promise.all(
@@ -167,7 +169,9 @@ export class ApplicationsReadService {
 
     const data = page.map((a) => {
       const src = a.candidateId ? sources.get(a.candidateId) : undefined;
-      const view = src ? toEmployerView({ ...src, photoUrl: photoUrls.get(src.id) ?? null }) : undefined;
+      const view = src
+        ? toEmployerView({ ...src, photoUrl: photoUrls.get(src.id) ?? null })
+        : undefined;
       return toApplicantCard(a, view);
     });
 
@@ -219,16 +223,16 @@ export class ApplicationsReadService {
     ]);
 
     const [names, jobs, overrideReasons] = await Promise.all([
-      this.candidateRead.getNamesByIds(
-        [...new Set(rows.map((a) => a.candidateId).filter((x): x is string => !!x))],
-      ),
+      this.candidateRead.getNamesByIds([
+        ...new Set(rows.map((a) => a.candidateId).filter((x): x is string => !!x)),
+      ]),
       this.jobsService.getJobSubsets([...new Set(rows.map((a) => a.jobId))]),
       this.latestOverrideReasons(rows.map((a) => a.id)),
     ]);
 
     const data = rows.map((a) => ({
       ...toApplicationResponse(a),
-      candidateName: a.candidateId ? names.get(a.candidateId) ?? null : null,
+      candidateName: a.candidateId ? (names.get(a.candidateId) ?? null) : null,
       jobTitle: jobs.get(a.jobId)?.title ?? null,
       overrideReason: overrideReasons.get(a.id) ?? null,
     }));
@@ -274,7 +278,7 @@ export class ApplicationsReadService {
 
     return {
       ...toApplicationResponse(app),
-      candidateName: app.candidateId ? names.get(app.candidateId) ?? null : null,
+      candidateName: app.candidateId ? (names.get(app.candidateId) ?? null) : null,
       jobTitle: jobs.get(app.jobId)?.title ?? null,
       overrideReason: lastOverride?.overrideReason ?? null,
       timeline: timeline.map((t) => ({
@@ -289,7 +293,9 @@ export class ApplicationsReadService {
   }
 
   /** Batched most-recent override reason per application (one query per page). */
-  private async latestOverrideReasons(applicationIds: string[]): Promise<Map<string, string | null>> {
+  private async latestOverrideReasons(
+    applicationIds: string[],
+  ): Promise<Map<string, string | null>> {
     if (applicationIds.length === 0) return new Map();
     const entries = await this.prisma.applicationTimelineEntry.findMany({
       where: { applicationId: { in: applicationIds }, isAdminOverride: true },

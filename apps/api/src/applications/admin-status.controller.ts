@@ -27,13 +27,18 @@ export class AdminStatusController {
     @Body() dto: AdminOverrideDto,
     @CurrentUser() user: CurrentUserPayload,
   ): Promise<{ data: ApplicationResponse & { overrideReason: string } }> {
-    const updated = await this.statusService.transition(id, dto.status, {
-      type: 'ADMIN',
-      userId: user.userId,
-      role: user.role,
-    }, {
-      overrideReason: dto.overrideReason,
-    });
+    const updated = await this.statusService.transition(
+      id,
+      dto.status,
+      {
+        type: 'ADMIN',
+        userId: user.userId,
+        role: user.role,
+      },
+      {
+        overrideReason: dto.overrideReason,
+      },
+    );
 
     // The transition above throws OVERRIDE_REASON_REQUIRED for any absent/blank
     // reason, so reaching here guarantees a non-empty reason to echo back.

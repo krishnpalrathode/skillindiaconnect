@@ -16,10 +16,7 @@ describe('AuditSubscriber', () => {
 
     app = await Test.createTestingModule({
       imports: [EventEmitterModule.forRoot()],
-      providers: [
-        AuditSubscriber,
-        { provide: AuditService, useValue: { log: logSpy } },
-      ],
+      providers: [AuditSubscriber, { provide: AuditService, useValue: { log: logSpy } }],
     }).compile();
 
     await app.init();

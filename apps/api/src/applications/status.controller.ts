@@ -29,14 +29,19 @@ export class StatusController {
     this.statusService.assertEmployer(user.role);
     const company = await this.employerService.getCompanyForEmployerUser(user.userId);
 
-    const updated = await this.statusService.transition(id, dto.status, {
-      type: 'EMPLOYER',
-      userId: user.userId,
-      role: user.role,
-      companyId: company.id,
-    }, {
-      rejectionFeedback: dto.rejectionFeedback,
-    });
+    const updated = await this.statusService.transition(
+      id,
+      dto.status,
+      {
+        type: 'EMPLOYER',
+        userId: user.userId,
+        role: user.role,
+        companyId: company.id,
+      },
+      {
+        rejectionFeedback: dto.rejectionFeedback,
+      },
+    );
 
     return { data: toApplicationResponse(updated) };
   }

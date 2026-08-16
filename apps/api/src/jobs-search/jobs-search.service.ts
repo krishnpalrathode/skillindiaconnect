@@ -343,8 +343,8 @@ export class JobsSearchService {
       sortBy === 'relevance' && q
         ? Prisma.sql`${rankExpr} DESC, j."publishedAt" DESC, j.id DESC`
         : sortBy === 'salary'
-        ? Prisma.raw('j."salaryMax" DESC, j.id DESC')
-        : Prisma.raw('j."publishedAt" DESC, j.id DESC');
+          ? Prisma.raw('j."salaryMax" DESC, j.id DESC')
+          : Prisma.raw('j."publishedAt" DESC, j.id DESC');
 
     const whereClause = Prisma.join(filters, ' AND ');
 

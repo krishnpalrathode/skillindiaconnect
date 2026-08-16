@@ -40,7 +40,10 @@ function makeDeps(overrides?: {
   const jobsService = {
     getJobSubsets: jest.fn().mockImplementation(async () => {
       if (overrides?.throws) throw new Error('jobs unavailable');
-      const job = overrides && 'job' in overrides ? overrides.job : { title: 'Senior Electrician', companyName: 'Gulf Wiring LLC' };
+      const job =
+        overrides && 'job' in overrides
+          ? overrides.job
+          : { title: 'Senior Electrician', companyName: 'Gulf Wiring LLC' };
       return job ? new Map([[JOB_ID, { id: JOB_ID, ...job }]]) : new Map();
     }),
   } as unknown as JobsService;

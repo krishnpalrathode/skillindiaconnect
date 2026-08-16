@@ -52,14 +52,15 @@ export class AdminDashboardService {
   ) {}
 
   async getDashboard(): Promise<AdminDashboardDto> {
-    const [candidates, employers, jobs, applications, revenueThisMonthSubunits] =
-      await Promise.all([
+    const [candidates, employers, jobs, applications, revenueThisMonthSubunits] = await Promise.all(
+      [
         this.candidateRead.countCandidates(),
         this.employerService.countByStatus(),
         this.jobsService.countByStatus(),
         this.applicationsAggregate.countsPlatformWide(),
         this.subscriptionRead.revenueThisMonthSubunits(),
-      ]);
+      ],
+    );
 
     return {
       // The contract's `counts.candidates` is an INTEGER (non-purged profiles)

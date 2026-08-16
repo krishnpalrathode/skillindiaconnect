@@ -53,7 +53,9 @@ function build(overrides?: {
     getJobSubsets: jest
       .fn()
       .mockResolvedValue(
-        new Map([['job-1', { id: 'job-1', title: 'Senior Electrician', companyName: 'Gulf Wiring LLC' }]]),
+        new Map([
+          ['job-1', { id: 'job-1', title: 'Senior Electrician', companyName: 'Gulf Wiring LLC' }],
+        ]),
       ),
   } as unknown as JobsService;
 

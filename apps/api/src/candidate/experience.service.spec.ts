@@ -50,7 +50,11 @@ beforeAll(async () => {
     prisma = new PrismaClient({ datasources: { db: { url } } });
     await prisma.$connect();
 
-    const completionService = new CompletionService(prisma as unknown as PrismaService, { add: jest.fn() } as unknown as Queue);
+    const completionService = new CompletionService(
+      prisma as unknown as PrismaService,
+      { add: jest.fn() } as unknown as Queue,
+      { notify: jest.fn() } as never,
+    );
     experienceService = new ExperienceService(
       prisma as unknown as PrismaService,
       completionService,
@@ -311,4 +315,3 @@ describe('ExperienceService â€” integration (real DB)', () => {
     );
   });
 });
-

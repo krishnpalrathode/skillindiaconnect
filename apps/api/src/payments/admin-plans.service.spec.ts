@@ -19,7 +19,13 @@ const FREE = {
   features: [],
   isActive: true,
 };
-const PRO = { ...FREE, id: 'p-pro', code: 'PRO_MONTHLY', name: 'Pro Monthly', priceSubunits: 299900 };
+const PRO = {
+  ...FREE,
+  id: 'p-pro',
+  code: 'PRO_MONTHLY',
+  name: 'Pro Monthly',
+  priceSubunits: 299900,
+};
 
 function build(plan: unknown) {
   const update = jest.fn().mockImplementation(({ data }) => ({ ...(plan as object), ...data }));

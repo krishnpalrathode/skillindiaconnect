@@ -145,7 +145,9 @@ describe('toEmployerView — privacy toggle fields never exposed', () => {
 describe('toEmployerView — documentsStatus', () => {
   it('documents: [] → all mandatory types shown as uploaded:false', () => {
     const result = toEmployerView(makeSource({ documents: [] }));
-    const json = JSON.parse(JSON.stringify(result)) as { documentsStatus: Record<string, unknown>[] };
+    const json = JSON.parse(JSON.stringify(result)) as {
+      documentsStatus: Record<string, unknown>[];
+    };
     expect(Array.isArray(json.documentsStatus)).toBe(true);
     for (const entry of json.documentsStatus) {
       expect(entry['uploaded']).toBe(false);
@@ -164,7 +166,9 @@ describe('toEmployerView — documentsStatus', () => {
         documents: [{ type: DocumentType.PASSPORT, expiryDate: futureDate }],
       }),
     );
-    const json = JSON.parse(JSON.stringify(result)) as { documentsStatus: Record<string, unknown>[] };
+    const json = JSON.parse(JSON.stringify(result)) as {
+      documentsStatus: Record<string, unknown>[];
+    };
     const passport = json.documentsStatus.find((d) => d['type'] === 'PASSPORT');
     expect(passport).toBeDefined();
     expect(passport!['uploaded']).toBe(true);
@@ -181,7 +185,9 @@ describe('toEmployerView — documentsStatus', () => {
         documents: [{ type: DocumentType.PASSPORT, expiryDate: pastDate }],
       }),
     );
-    const json = JSON.parse(JSON.stringify(result)) as { documentsStatus: Record<string, unknown>[] };
+    const json = JSON.parse(JSON.stringify(result)) as {
+      documentsStatus: Record<string, unknown>[];
+    };
     const passport = json.documentsStatus.find((d) => d['type'] === 'PASSPORT');
     expect(passport!['passportValid']).toBe(false);
   });
@@ -192,7 +198,9 @@ describe('toEmployerView — documentsStatus', () => {
         documents: [{ type: DocumentType.PASSPORT, expiryDate: null }],
       }),
     );
-    const json = JSON.parse(JSON.stringify(result)) as { documentsStatus: Record<string, unknown>[] };
+    const json = JSON.parse(JSON.stringify(result)) as {
+      documentsStatus: Record<string, unknown>[];
+    };
     const passport = json.documentsStatus.find((d) => d['type'] === 'PASSPORT');
     expect(passport!['passportValid']).toBe(true);
   });
@@ -203,7 +211,9 @@ describe('toEmployerView — documentsStatus', () => {
         documents: [{ type: DocumentType.EXPERIENCE_CERT, expiryDate: null }],
       }),
     );
-    const json = JSON.parse(JSON.stringify(result)) as { documentsStatus: Record<string, unknown>[] };
+    const json = JSON.parse(JSON.stringify(result)) as {
+      documentsStatus: Record<string, unknown>[];
+    };
     const cert = json.documentsStatus.find((d) => d['type'] === 'EXPERIENCE_CERT');
     expect(cert!['uploaded']).toBe(true);
     expect('passportValid' in cert!).toBe(false);
@@ -221,7 +231,9 @@ describe('toEmployerView — salaryExpectation', () => {
   });
 
   it('min set → salaryExpectation present with min', () => {
-    const result = toEmployerView(makeSource({ salaryExpectationMin: 50000, salaryExpectationMax: null }));
+    const result = toEmployerView(
+      makeSource({ salaryExpectationMin: 50000, salaryExpectationMax: null }),
+    );
     expect(result.salaryExpectation).not.toBeNull();
     expect(result.salaryExpectation!.min).toBe(50000);
   });

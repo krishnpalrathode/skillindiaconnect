@@ -8,6 +8,7 @@ import {
   factRows,
   pageFrame,
   safePhotoSrc,
+  summaryText,
   stickyFooterFrame,
 } from './shared';
 
@@ -41,7 +42,9 @@ function detailsSection(view: ResumeViewDto): string {
   // "Label: value" lines rather than a layout table — a parser reads these as
   // sentences; a table it may read column-first and scramble.
   const items = rows
-    .map(([label, value]) => `<p class="line"><span class="k">${esc(label)}:</span> ${esc(value)}</p>`)
+    .map(
+      ([label, value]) => `<p class="line"><span class="k">${esc(label)}:</span> ${esc(value)}</p>`,
+    )
     .join('\n');
   return `<section>
     <h2>Personal Details</h2>
@@ -101,6 +104,7 @@ export function renderMinimal(view: ResumeViewDto): string {
   // anyway so the shared guard stays on the single code path every template uses.
   void safePhotoSrc(view);
 
+  const summary = summaryText(view);
   const video = view.hasVideo
     ? `<section><h2>Video Portfolio</h2><p>A video introduction is available on Skill India Connect.</p></section>`
     : '';
@@ -132,6 +136,7 @@ export function renderMinimal(view: ResumeViewDto): string {
   .job .co { color: #333; }
   .job .meta { font-size: 9.5pt; color: #777; }
   footer { font-size: 8.5pt; color: #999; }
+  .summary { font-size: 10.5pt; line-height: 1.6; color: #444; margin-bottom: 7mm; }
 </style>
 </head>
 <body>
@@ -140,6 +145,8 @@ export function renderMinimal(view: ResumeViewDto): string {
     ${view.jobCategory ? `<p class="headline">${esc(view.jobCategory)}</p>` : ''}
     <p class="contact">${contactParts(view).map(esc).join(' | ')}</p>
   </header>
+
+  ${summary ? `<p class="summary">${summary}</p>` : ''}
 
   <main>
     ${detailsSection(view)}

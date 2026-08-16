@@ -13,12 +13,7 @@
  * test is the metadata that ships); their services are stubbed, because what is
  * being tested is the gate, not the payload.
  */
-import {
-  CanActivate,
-  ExecutionContext,
-  INestApplication,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, INestApplication, Injectable } from '@nestjs/common';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { PrismaClient, UserRole } from '@prisma/client';
@@ -236,12 +231,15 @@ describe('document grants are gated per key', () => {
     },
   );
 
-  gatedIt('employer certificate is gated on employers.view (ADMIN + MODERATOR hold it)', async () => {
-    await get(`/admin/employers/${COMPANY_ID}/certificate/url`, UserRole.ADMIN).expect(200);
-    await get(`/admin/employers/${COMPANY_ID}/certificate/url`, UserRole.MODERATOR).expect(200);
-    // SUPPORT has no employers.view row seeded here → denied.
-    await get(`/admin/employers/${COMPANY_ID}/certificate/url`, UserRole.SUPPORT).expect(403);
-  });
+  gatedIt(
+    'employer certificate is gated on employers.view (ADMIN + MODERATOR hold it)',
+    async () => {
+      await get(`/admin/employers/${COMPANY_ID}/certificate/url`, UserRole.ADMIN).expect(200);
+      await get(`/admin/employers/${COMPANY_ID}/certificate/url`, UserRole.MODERATOR).expect(200);
+      // SUPPORT has no employers.view row seeded here → denied.
+      await get(`/admin/employers/${COMPANY_ID}/certificate/url`, UserRole.SUPPORT).expect(403);
+    },
+  );
 });
 
 // ── Dashboard ────────────────────────────────────────────────────────────────

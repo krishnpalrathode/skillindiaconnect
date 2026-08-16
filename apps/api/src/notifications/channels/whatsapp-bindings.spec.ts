@@ -76,14 +76,12 @@ describe('the default is the SAFE one', () => {
   ])('%s falls back to the MOCK when WHATSAPP_PROVIDER is unset', async (_label, mod) => {
     // An unset variable must mean "sends nothing", never "sends with missing
     // credentials" — and mock is the documented rollback.
-    expect(await resolveFrom(mod as typeof WhatsappModule, {})).toBeInstanceOf(
-      MockWhatsappChannel,
-    );
+    expect(await resolveFrom(mod as typeof WhatsappModule, {})).toBeInstanceOf(MockWhatsappChannel);
   });
 
   it('an unknown provider THROWS rather than guessing', async () => {
-    await expect(
-      resolveFrom(WhatsappModule, { WHATSAPP_PROVIDER: 'twilio' }),
-    ).rejects.toThrow(/unknown whatsapp_provider/i);
+    await expect(resolveFrom(WhatsappModule, { WHATSAPP_PROVIDER: 'twilio' })).rejects.toThrow(
+      /unknown whatsapp_provider/i,
+    );
   });
 });

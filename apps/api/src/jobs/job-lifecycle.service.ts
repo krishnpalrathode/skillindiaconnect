@@ -194,11 +194,7 @@ export class JobLifecycleService {
 
   // ── Internal helpers ────────────────────────────────────────────────────────
 
-  private async loadAndAssert(
-    jobId: string,
-    companyId: string,
-    toStatus: JobStatus,
-  ): Promise<Job> {
+  private async loadAndAssert(jobId: string, companyId: string, toStatus: JobStatus): Promise<Job> {
     const job = await this.prisma.job.findUnique({ where: { id: jobId } });
     if (!job || job.companyId !== companyId) {
       throw new NotFoundException({ code: 'JOB_NOT_FOUND' });

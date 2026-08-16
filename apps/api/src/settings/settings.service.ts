@@ -60,7 +60,11 @@ export class SettingsService {
       });
     }
 
-    await this.redis.setex(cacheKey(keyDef.key), SETTINGS_CACHE_TTL_SECONDS, JSON.stringify(parsed));
+    await this.redis.setex(
+      cacheKey(keyDef.key),
+      SETTINGS_CACHE_TTL_SECONDS,
+      JSON.stringify(parsed),
+    );
     return parsed as TypedValue<D>;
   }
 
@@ -107,7 +111,9 @@ export class SettingsService {
     // concurrent reader could get a stale protection-rule value.
     await this.redis.del(cacheKey(keyDef.key));
 
-    this.eventEmitter.emit('settings.changed', { key: keyDef.key } satisfies SettingsChangedPayload);
+    this.eventEmitter.emit('settings.changed', {
+      key: keyDef.key,
+    } satisfies SettingsChangedPayload);
 
     return updated;
   }

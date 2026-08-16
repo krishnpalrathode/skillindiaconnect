@@ -431,10 +431,11 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
         </Button>
 
         <Button
+          variant="brand"
           type="button"
           onClick={handlePublish}
           disabled={draftStatus === 'saving' || publishStatus === 'saving'}
-          className="min-h-[44px] rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] shadow-md shadow-[#0F3D91]/20 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+          className="min-h-[44px] rounded-xl shadow-md shadow-[#0F3D91]/20 transition-all hover:-translate-y-0.5 hover:shadow-lg"
         >
           {publishStatus === 'saving' ? (
             <>

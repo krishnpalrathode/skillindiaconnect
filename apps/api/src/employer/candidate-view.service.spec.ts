@@ -100,7 +100,11 @@ describe('CandidateViewService', () => {
       mockCandidateReadService as unknown as CandidateReadService,
       mockProfileViewService as unknown as ProfileViewService,
       mockStorage as unknown as StorageService,
-      { getInterestState: jest.fn().mockResolvedValue({ isInterested: false, interestNotified: false }) } as unknown as CandidateInterestService,
+      {
+        getInterestState: jest
+          .fn()
+          .mockResolvedValue({ isInterested: false, interestNotified: false }),
+      } as unknown as CandidateInterestService,
     );
   });
 

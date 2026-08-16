@@ -38,10 +38,7 @@ export class PublishGuardService {
   ) {}
 
   async assertPublishable(
-    job: Pick<
-      Job,
-      'id' | 'companyId' | 'accommodation' | 'healthInsurance' | 'transportation'
-    >,
+    job: Pick<Job, 'id' | 'companyId' | 'accommodation' | 'healthInsurance' | 'transportation'>,
     company: Pick<Company, 'id'>,
     actorUserId: string,
     actorRole: UserRole,

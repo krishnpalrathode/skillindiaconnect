@@ -242,19 +242,19 @@ describe('ApplyGateService (integration)', () => {
     });
     const p = gate.assertCanApply(candidate(), job(), SETTINGS);
     await expect(p).rejects.toBeInstanceOf(ConflictException);
-    await expectGate(
-      gate.assertCanApply(candidate(), job(), SETTINGS),
-      'ALREADY_APPLIED',
-    );
+    await expectGate(gate.assertCanApply(candidate(), job(), SETTINGS), 'ALREADY_APPLIED');
   });
 
-  gatedIt('gate 3 — low completion → PROFILE_INCOMPLETE with {completionPct, threshold}', async () => {
-    await expectGate(
-      gate.assertCanApply(candidate({ completionPct: 50 }), job(), SETTINGS),
-      'PROFILE_INCOMPLETE',
-      { completionPct: 50, threshold: 70 },
-    );
-  });
+  gatedIt(
+    'gate 3 — low completion → PROFILE_INCOMPLETE with {completionPct, threshold}',
+    async () => {
+      await expectGate(
+        gate.assertCanApply(candidate({ completionPct: 50 }), job(), SETTINGS),
+        'PROFILE_INCOMPLETE',
+        { completionPct: 50, threshold: 70 },
+      );
+    },
+  );
 
   gatedIt('gate 4 — missing mandatory doc → MANDATORY_DOCS_MISSING with missing[]', async () => {
     await expectGate(
@@ -285,17 +285,20 @@ describe('ApplyGateService (integration)', () => {
     );
   });
 
-  gatedIt('gate 5 — passport absent (not mandatory) → PASSPORT_INVALID reason=missing', async () => {
-    await expectGate(
-      gate.assertCanApply(
-        candidate({ documents: [{ type: DocumentType.EXPERIENCE_CERT, expiryDate: null }] }),
-        job(),
-        { minCompletionPct: 70, mandatoryDocs: [DocumentType.EXPERIENCE_CERT] },
-      ),
-      'PASSPORT_INVALID',
-      { reason: 'missing' },
-    );
-  });
+  gatedIt(
+    'gate 5 — passport absent (not mandatory) → PASSPORT_INVALID reason=missing',
+    async () => {
+      await expectGate(
+        gate.assertCanApply(
+          candidate({ documents: [{ type: DocumentType.EXPERIENCE_CERT, expiryDate: null }] }),
+          job(),
+          { minCompletionPct: 70, mandatoryDocs: [DocumentType.EXPERIENCE_CERT] },
+        ),
+        'PASSPORT_INVALID',
+        { reason: 'missing' },
+      );
+    },
+  );
 
   // ── ORDER (multi-failing fixtures) ──────────────────────────────────────────
   gatedIt('order — inactive job + incomplete profile → JOB_NOT_ACTIVE (gate 1 first)', async () => {
@@ -309,39 +312,45 @@ describe('ApplyGateService (integration)', () => {
     );
   });
 
-  gatedIt('order — docs missing + expired passport → MANDATORY_DOCS_MISSING (gate 4 before 5)', async () => {
-    await expectGate(
-      gate.assertCanApply(
-        // only an expired passport present: EXPERIENCE_CERT missing (gate 4) AND
-        // passport expired (gate 5) — gate 4 must win.
-        candidate({ documents: [{ type: DocumentType.PASSPORT, expiryDate: past() }] }),
-        job(),
-        SETTINGS,
-      ),
-      'MANDATORY_DOCS_MISSING',
-      { missing: [DocumentType.EXPERIENCE_CERT] },
-    );
-  });
+  gatedIt(
+    'order — docs missing + expired passport → MANDATORY_DOCS_MISSING (gate 4 before 5)',
+    async () => {
+      await expectGate(
+        gate.assertCanApply(
+          // only an expired passport present: EXPERIENCE_CERT missing (gate 4) AND
+          // passport expired (gate 5) — gate 4 must win.
+          candidate({ documents: [{ type: DocumentType.PASSPORT, expiryDate: past() }] }),
+          job(),
+          SETTINGS,
+        ),
+        'MANDATORY_DOCS_MISSING',
+        { missing: [DocumentType.EXPERIENCE_CERT] },
+      );
+    },
+  );
 
   // ── Settings-driven threshold ───────────────────────────────────────────────
-  gatedIt('settings — raising MIN_COMPLETION_PCT flips a passing candidate to PROFILE_INCOMPLETE', async () => {
-    // completion 75 passes at min 70 …
-    const pass = await gate.assertCanApply(candidate({ completionPct: 75 }), job(), {
-      ...SETTINGS,
-      minCompletionPct: 70,
-    });
-    expect(pass).toEqual({ docsPresentCount: 2, docsRequiredCount: 2 });
-
-    // … and fails once the threshold is raised to 80.
-    await expectGate(
-      gate.assertCanApply(candidate({ completionPct: 75 }), job(), {
+  gatedIt(
+    'settings — raising MIN_COMPLETION_PCT flips a passing candidate to PROFILE_INCOMPLETE',
+    async () => {
+      // completion 75 passes at min 70 …
+      const pass = await gate.assertCanApply(candidate({ completionPct: 75 }), job(), {
         ...SETTINGS,
-        minCompletionPct: 80,
-      }),
-      'PROFILE_INCOMPLETE',
-      { completionPct: 75, threshold: 80 },
-    );
-  });
+        minCompletionPct: 70,
+      });
+      expect(pass).toEqual({ docsPresentCount: 2, docsRequiredCount: 2 });
+
+      // … and fails once the threshold is raised to 80.
+      await expectGate(
+        gate.assertCanApply(candidate({ completionPct: 75 }), job(), {
+          ...SETTINGS,
+          minCompletionPct: 80,
+        }),
+        'PROFILE_INCOMPLETE',
+        { completionPct: 75, threshold: 80 },
+      );
+    },
+  );
 
   // ── Happy path ──────────────────────────────────────────────────────────────
   gatedIt('pass — returns docs present/required counts', async () => {

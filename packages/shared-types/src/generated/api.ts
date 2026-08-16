@@ -439,9 +439,9 @@ export interface paths {
          * @description Issues a short-lived presigned PUT URL for direct R2 upload.
          *
          *     **Accepted types and size limits:**
-         *     - `PASSPORT`: 10 MB max; image/jpeg, image/png, application/pdf
-         *     - `EXPERIENCE_CERT`: 5 MB max; application/pdf
-         *     - `EDUCATIONAL_CERT`: 5 MB max; application/pdf
+         *     - `PASSPORT`: 2 MB max; image/jpeg, image/png, application/pdf
+         *     - `EXPERIENCE_CERT`: 2 MB max; application/pdf, image/jpeg, image/png
+         *     - `EDUCATIONAL_CERT`: 2 MB max; application/pdf, image/jpeg, image/png
          *
          *     `WORKING_VIDEO` is Phase 2 only — not accepted at MVP.
          */
@@ -481,7 +481,7 @@ export interface paths {
         /**
          * Get a presigned R2 upload URL for the profile photo
          * @description Issues a short-lived presigned PUT URL for the candidate's avatar image.
-         *     Accepted: image/jpeg, image/png, image/webp — 5 MB max. The declared
+         *     Accepted: image/jpeg, image/png, image/webp — 2 MB max. The declared
          *     mime/size are a first-line check; the authoritative gate is the HEAD
          *     re-validation in confirm.
          */
@@ -882,7 +882,7 @@ export interface paths {
          *     registration certificate. After upload, call
          *     `POST /employers/me/company/documents/confirm` with the returned `key`.
          *
-         *     Accepted: application/pdf, image/jpeg, image/png. Max 10 MB.
+         *     Accepted: application/pdf, image/jpeg, image/png. Max 2 MB.
          */
         post: operations["postEmployersMeCompanyDocumentsPresign"];
         delete?: never;
@@ -2885,6 +2885,8 @@ export interface components {
             nationality?: string;
             /** @description Notice period in days */
             noticePeriod?: number;
+            /** @description Candidate-written intro rendered at the top of the resume. Self context only — never serialized to employer or admin views. */
+            summary?: string | null;
             /** @description Server-computed, single-source profile completion percentage */
             completionPct?: number;
             /** @default true */
@@ -3080,6 +3082,8 @@ export interface components {
             maritalStatus?: string | null;
             nationality?: string | null;
             currentLocation?: string | null;
+            /** @description The candidate's own intro, rendered at the TOP of the resume above the personal details. Null when they have not written one — every template omits the block entirely rather than leaving a gap. */
+            summary?: string | null;
             languages?: string[];
             /** @description Display name of the candidate's job category. */
             jobCategory?: string | null;
@@ -4866,6 +4870,8 @@ export interface operations {
                     currentLocation?: string;
                     nationality?: string;
                     noticePeriod?: number;
+                    /** @description Candidate-written intro rendered at the TOP of the resume. Send an empty string to clear it. */
+                    summary?: string;
                 };
             };
         };
@@ -5973,7 +5979,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Invalid file type or exceeds 10 MB limit */
+            /** @description Invalid file type or exceeds 2 MB limit */
             422: {
                 headers: {
                     [name: string]: unknown;

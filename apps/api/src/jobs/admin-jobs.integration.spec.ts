@@ -194,7 +194,11 @@ beforeAll(async () => {
   try {
     [pg, redisContainer] = await Promise.all([
       new GenericContainer('postgres:16-alpine')
-        .withEnvironment({ POSTGRES_USER: 'sic', POSTGRES_PASSWORD: 'sic', POSTGRES_DB: 'sic_test' })
+        .withEnvironment({
+          POSTGRES_USER: 'sic',
+          POSTGRES_PASSWORD: 'sic',
+          POSTGRES_DB: 'sic_test',
+        })
         .withExposedPorts(5432)
         .start(),
       new GenericContainer('redis:7-alpine').withExposedPorts(6379).start(),
@@ -271,7 +275,10 @@ beforeAll(async () => {
         { provide: PrismaService, useValue: prisma as unknown as PrismaService },
         { provide: REDIS_CLIENT, useValue: redis },
         { provide: StorageService, useValue: {} }, // EmployerService dep; unused here
-        { provide: getQueueToken(QUEUE_NAMES.NOTIFICATION), useValue: { add: notificationQueueAdd } },
+        {
+          provide: getQueueToken(QUEUE_NAMES.NOTIFICATION),
+          useValue: { add: notificationQueueAdd },
+        },
         { provide: APP_GUARD, useClass: TestAuthGuard },
         {
           provide: APP_GUARD,
@@ -487,7 +494,9 @@ describe('GET /admin/jobs', () => {
     const { companyId } = await mkCompany(CompanyStatus.APPROVED);
     const featuredId = await mkJob(companyId, JobStatus.ACTIVE, { isFeatured: true });
 
-    const res = await get('/admin/jobs?featured=true&pageSize=100', UserRole.SUPER_ADMIN).expect(200);
+    const res = await get('/admin/jobs?featured=true&pageSize=100', UserRole.SUPER_ADMIN).expect(
+      200,
+    );
     const rows = res.body.data as Array<{ id: string; isFeatured: boolean }>;
     expect(rows.every((r) => r.isFeatured)).toBe(true);
     expect(rows.some((r) => r.id === featuredId)).toBe(true);
@@ -749,9 +758,10 @@ describe('notes + resend endpoints (applications module)', () => {
     }).expect(201);
     expect(created.body.data.authorRole).toBe('SUPER_ADMIN');
 
-    const listed = await get(`/admin/applications/${applicationId}/notes`, UserRole.SUPER_ADMIN).expect(
-      200,
-    );
+    const listed = await get(
+      `/admin/applications/${applicationId}/notes`,
+      UserRole.SUPER_ADMIN,
+    ).expect(200);
     expect(listed.body.data).toHaveLength(1);
 
     await get(`/admin/applications/${applicationId}/notes`, UserRole.MODERATOR).expect(403);

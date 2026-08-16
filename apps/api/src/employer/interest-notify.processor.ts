@@ -15,7 +15,11 @@ export interface InterestNotifyJobData {
 
 export interface InterestNotifyResult {
   sent: boolean;
-  reason?: 'no-interest-row' | 'already-notified' | 'company-not-approved' | 'candidate-unavailable';
+  reason?:
+    | 'no-interest-row'
+    | 'already-notified'
+    | 'company-not-approved'
+    | 'candidate-unavailable';
 }
 
 @Injectable()
@@ -77,7 +81,8 @@ export class InterestNotifyProcessor extends WorkerHost {
     }
 
     const companyName = interest.company.name;
-    const firstName = interest.candidate.fullName.trim().split(/\s+/)[0] || interest.candidate.fullName;
+    const firstName =
+      interest.candidate.fullName.trim().split(/\s+/)[0] || interest.candidate.fullName;
 
     await this.notificationService.notify(
       interest.candidate.userId,

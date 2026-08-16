@@ -68,10 +68,10 @@ export function ExperienceStep({ profile, onProfileUpdate, onNext, onBack }: Exp
         </Button>
         <Button
           type="button"
-          variant="primary"
+          variant="brand"
           size="md"
           onClick={onNext}
-          className="rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] px-8 shadow-md transition-all hover:shadow-lg"
+          className="rounded-xl px-8 shadow-md transition-all hover:shadow-lg"
         >
           {tNav('next')}
         </Button>

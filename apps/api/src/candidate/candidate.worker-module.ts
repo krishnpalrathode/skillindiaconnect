@@ -40,19 +40,19 @@ import { MatchService } from '../applications/match/match.service';
     R2Module,
   ],
   providers: [
-    NotificationService,        // fan-out entry point used by the processor
-    PassportExpiryCron,          // @Cron → enqueue
-    PassportExpiryProcessor,     // BullMQ processor → scan + notify
-    PurgeCron,                   // @Cron → enqueue the daily sweep
-    PurgeProcessor,              // BullMQ processor → sweep fan-out + per-user purge
-    PurgeService,                // the anonymization transaction + R2 destruction
+    NotificationService, // fan-out entry point used by the processor
+    PassportExpiryCron, // @Cron → enqueue
+    PassportExpiryProcessor, // BullMQ processor → scan + notify
+    PurgeCron, // @Cron → enqueue the daily sweep
+    PurgeProcessor, // BullMQ processor → sweep fan-out + per-user purge
+    PurgeService, // the anonymization transaction + R2 destruction
     // Profile-completion job-match alert. The three collaborators are provided
     // DIRECTLY rather than by importing JobsModule/ApplicationsModule, which
     // carry HTTP controllers — the worker root must never load those.
-    MatchAlertProcessor,         // BullMQ processor → match + notify
-    JobsMatchReadService,        // Jobs-owned narrow read (Prisma only)
-    MatchService,                // the same pure scoring engine apply-time uses
-    CompletionService,           // threshold + mandatory-doc count
+    MatchAlertProcessor, // BullMQ processor → match + notify
+    JobsMatchReadService, // Jobs-owned narrow read (Prisma only)
+    MatchService, // the same pure scoring engine apply-time uses
+    CompletionService, // threshold + mandatory-doc count
   ],
 })
 export class CandidateWorkerModule {}

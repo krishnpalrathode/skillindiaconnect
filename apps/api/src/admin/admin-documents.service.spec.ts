@@ -136,13 +136,13 @@ beforeAll(async () => {
       },
     });
 
-    presignGet = jest.fn().mockImplementation(async (_key: string, exp: number) =>
-      `https://stub.r2/signed?exp=${exp}`,
-    );
+    presignGet = jest
+      .fn()
+      .mockImplementation(async (_key: string, exp: number) => `https://stub.r2/signed?exp=${exp}`);
 
     const prismaSvc = prisma as unknown as PrismaService;
     service = new AdminDocumentsService(
-      new EmployerService(prismaSvc, null as never),
+      new EmployerService(prismaSvc, null as never, { notify: jest.fn() } as never),
       new CandidateReadService(prismaSvc),
       { presignGet } as unknown as StorageService,
       new AuditService(prismaSvc),
@@ -207,14 +207,17 @@ describe('candidate documents — the deliberate visibility relaxation', () => {
     },
   );
 
-  gatedIt('a PENDING_DELETION candidate is still reachable (a dispute may concern them)', async () => {
-    const grant = await service.issueCandidateDocumentUrl(
-      deletingCandidateId,
-      DocumentType.PASSPORT,
-      ADMIN,
-    );
-    expect(grant.expiresInSeconds).toBe(300);
-  });
+  gatedIt(
+    'a PENDING_DELETION candidate is still reachable (a dispute may concern them)',
+    async () => {
+      const grant = await service.issueCandidateDocumentUrl(
+        deletingCandidateId,
+        DocumentType.PASSPORT,
+        ADMIN,
+      );
+      expect(grant.expiresInSeconds).toBe(300);
+    },
+  );
 
   gatedIt('unknown candidate / never-uploaded type → 404 (indistinguishable)', async () => {
     await expect(
@@ -227,11 +230,7 @@ describe('candidate documents — the deliberate visibility relaxation', () => {
 
     // Visible candidate, a type they never uploaded — the same 404.
     await expect(
-      service.issueCandidateDocumentUrl(
-        visibleCandidateId,
-        DocumentType.WORKING_VIDEO,
-        ADMIN,
-      ),
+      service.issueCandidateDocumentUrl(visibleCandidateId, DocumentType.WORKING_VIDEO, ADMIN),
     ).rejects.toThrow(NotFoundException);
   });
 });
@@ -239,26 +238,29 @@ describe('candidate documents — the deliberate visibility relaxation', () => {
 // ── The audit meta discipline ────────────────────────────────────────────────
 
 describe('every issuance is audited with TYPE-not-key meta', () => {
-  gatedIt('candidate grant: raw persisted meta has the TYPE, never the r2Key or the URL', async () => {
-    await prisma.auditLog.deleteMany();
+  gatedIt(
+    'candidate grant: raw persisted meta has the TYPE, never the r2Key or the URL',
+    async () => {
+      await prisma.auditLog.deleteMany();
 
-    await service.issueCandidateDocumentUrl(visibleCandidateId, DocumentType.PASSPORT, ADMIN);
+      await service.issueCandidateDocumentUrl(visibleCandidateId, DocumentType.PASSPORT, ADMIN);
 
-    const rows = await viewedRows();
-    expect(rows).toHaveLength(1);
-    const meta = rows[0]!.meta as Record<string, unknown>;
-    expect(meta['documentType']).toBe('PASSPORT');
-    expect(meta['candidateId']).toBe(visibleCandidateId);
+      const rows = await viewedRows();
+      expect(rows).toHaveLength(1);
+      const meta = rows[0]!.meta as Record<string, unknown>;
+      expect(meta['documentType']).toBe('PASSPORT');
+      expect(meta['candidateId']).toBe(visibleCandidateId);
 
-    // Asserted on the RAW persisted JSON — the DPDP trail must never carry the
-    // object key or a signed URL.
-    const raw = JSON.stringify(meta);
-    expect(raw).not.toContain(VISIBLE_KEY);
-    expect(raw).not.toContain('stub.r2');
-    expect(Object.keys(meta)).toEqual(
-      expect.not.arrayContaining(['r2Key', 'url', 'signedUrl', 'documentUrl']),
-    );
-  });
+      // Asserted on the RAW persisted JSON — the DPDP trail must never carry the
+      // object key or a signed URL.
+      const raw = JSON.stringify(meta);
+      expect(raw).not.toContain(VISIBLE_KEY);
+      expect(raw).not.toContain('stub.r2');
+      expect(Object.keys(meta)).toEqual(
+        expect.not.arrayContaining(['r2Key', 'url', 'signedUrl', 'documentUrl']),
+      );
+    },
+  );
 
   gatedIt('EVERY issuance writes a row — two grants, two rows (not one per document)', async () => {
     await prisma.auditLog.deleteMany();

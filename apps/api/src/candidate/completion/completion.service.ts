@@ -1,15 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { DocumentType, WorkExperience } from '@prisma/client';
+import { DocumentType, NotificationType, WorkExperience } from '@prisma/client';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { QUEUE_NAMES, JOB_NAMES } from '../../queue/queue.constants';
+import { NotificationService } from '../../notifications/notification.service';
 import {
   DEFAULT_MATCH_ALERT_MIN_PCT,
   MVP_MANDATORY_DOC_COUNT,
   MVP_MANDATORY_DOC_TYPES,
   SETTING_KEY_MANDATORY_DOC_COUNT,
   SETTING_KEY_MATCH_ALERT_MIN_PCT,
+  SETTING_KEY_MIN_COMPLETION_PCT,
+  DEFAULT_MIN_COMPLETION_FOR_APPLY,
   WEIGHTS,
 } from './completion.constants';
 
@@ -137,6 +140,7 @@ export class CompletionService {
   constructor(
     private readonly prisma: PrismaService,
     @InjectQueue(QUEUE_NAMES.MATCH_ALERT) private readonly matchAlertQueue: Queue,
+    private readonly notifications: NotificationService,
   ) {}
 
   /**
@@ -193,8 +197,60 @@ export class CompletionService {
     });
 
     await this.maybeEnqueueMatchAlert(candidateId, result.pct, profile.matchAlertSentAt);
+    await this.maybeNotifyProfileComplete(profile.userId, result.pct);
 
     return result;
+  }
+
+  /**
+   * Confirm, once, that the profile is now good enough to apply with.
+   *
+   * ── Why the APPLY threshold and not 100% ────────────────────────────────────
+   * 100% is a score, not a capability. A candidate sitting at 96% can already
+   * apply to every job on the platform, and telling them nothing until they
+   * fill an optional field would withhold the one message that says their work
+   * paid off. Crossing the apply threshold is the moment something real
+   * changes, so that is the moment worth an email — and it is why the copy says
+   * "you can now apply" rather than "profile complete".
+   *
+   * ── Fire-once, without a new column ─────────────────────────────────────────
+   * Deduped by asking whether this notification already exists for the user,
+   * the same approach `passport-expiry.processor` uses for its per-window gate.
+   * A dedicated `profileCompleteNotifiedAt` column would have been the obvious
+   * design and would have cost a schema change plus a backfill; the feed row is
+   * already the durable record of "we told them".
+   *
+   * Failures are logged and swallowed for the same reason the match alert's are:
+   * a notification outage must not turn a successful profile save into a 500.
+   */
+  private async maybeNotifyProfileComplete(userId: string, pct: number): Promise<void> {
+    try {
+      const threshold = await this.getMinCompletionPct();
+      if (pct < threshold) return;
+
+      const alreadySent = await this.prisma.notification.count({
+        where: { userId, type: NotificationType.CANDIDATE_PROFILE_COMPLETE },
+      });
+      if (alreadySent > 0) return;
+
+      await this.notifications.notify(userId, NotificationType.CANDIDATE_PROFILE_COMPLETE, {
+        title: 'Your profile is ready',
+        body: `Your profile is ${pct}% complete — enough to start applying for jobs.`,
+        data: { completionPct: pct },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`profile-complete notify failed for user ${userId}: ${msg}`);
+    }
+  }
+
+  /** Apply threshold from Settings, falling back to the default when unset. */
+  async getMinCompletionPct(): Promise<number> {
+    const setting = await this.prisma.setting.findUnique({
+      where: { key: SETTING_KEY_MIN_COMPLETION_PCT },
+    });
+    const val = setting?.value;
+    return typeof val === 'number' && Number.isFinite(val) ? val : DEFAULT_MIN_COMPLETION_FOR_APPLY;
   }
 
   /**

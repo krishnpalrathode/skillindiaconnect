@@ -1,11 +1,4 @@
-import {
-  Controller,
-  ForbiddenException,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Query,
-} from '@nestjs/common';
+import { Controller, ForbiddenException, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user.decorator';
 import { CandidateViewService } from './candidate-view.service';
@@ -18,10 +11,7 @@ export class CandidateViewController {
   // ── GET /employers/candidates ─────────────────────────────────────────────
 
   @Get('candidates')
-  async browse(
-    @CurrentUser() user: CurrentUserPayload,
-    @Query() dto: BrowseQueryDto,
-  ) {
+  async browse(@CurrentUser() user: CurrentUserPayload, @Query() dto: BrowseQueryDto) {
     this.assertEmployerRole(user.role);
     return this.candidateViewService.browse(user.userId, dto);
   }

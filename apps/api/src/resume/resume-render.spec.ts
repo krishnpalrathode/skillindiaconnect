@@ -19,11 +19,7 @@ import { CandidateReadService, ResumeSource } from '../candidate/candidate-read.
 import { AuditService } from '../audit/audit.service';
 import { BrowserPoolService } from '../pdf/browser-pool.service';
 import { PdfRenderService } from '../pdf/pdf-render.service';
-import {
-  RESUME_SETTINGS_DEFAULTS,
-  ResumeRenderSettings,
-  toResumeView,
-} from './resume-view.mapper';
+import { RESUME_SETTINGS_DEFAULTS, ResumeRenderSettings, toResumeView } from './resume-view.mapper';
 import { renderClassic } from './templates/classic.template';
 import { TEMPLATE_REGISTRY, selectTemplate } from './templates/registry';
 import { ResumeRenderService } from './resume-render.service';
@@ -36,10 +32,15 @@ const PASSPORT_NUMBER = 'Z9876543';
 const RELIGION = 'Hindu';
 const PHONE = '+919876543210';
 const FATHER_NAME = 'Ram Prasad Kumar';
+// Deliberately one unbroken line: pdf-parse would otherwise split a wrapped
+// paragraph across extracted lines and `toContain` would fail on layout, not on
+// the thing under test.
+const SUMMARY = 'Electrician with six years of Gulf site experience.';
 
 const source: ResumeSource = {
   id: 'cand-1',
   fullName: 'Suresh Kumar',
+  summary: null,
   fatherName: FATHER_NAME,
   dob: new Date('1994-03-12'),
   phone: PHONE,
@@ -113,6 +114,22 @@ async function extractText(buffer: Buffer): Promise<string> {
   }
 }
 
+/**
+ * "The candidate's name is on the page", asserted the way it should be.
+ *
+ * ELEGANT sets `text-transform: uppercase` on the name, so the extracted bytes
+ * read SURESH KUMAR and a case-sensitive `toContain` failed there — reporting a
+ * privacy-gate failure when the only thing that differed was typography. These
+ * are SANITY checks ("the document rendered at all") sitting inside omission
+ * tests; letting a template's casing decision break them tells us nothing true.
+ *
+ * Case-insensitive and nothing else: spacing is left alone deliberately, since
+ * a name that came out letter-spaced is a real rendering fault worth failing on.
+ */
+function expectNameRendered(text: string): void {
+  expect(text.toLowerCase()).toContain('suresh kumar');
+}
+
 /** Renders through the REGISTRY, so the template under test is the real one. */
 async function renderToText(settings: ResumeRenderSettings): Promise<string> {
   const view = toResumeView(source, settings, null);
@@ -151,7 +168,7 @@ describe.each(REGISTERED_TEMPLATES)(
       expect(text).toContain(PHONE);
       expect(text).toContain(FATHER_NAME);
       // Sanity: the unconditional content rendered too.
-      expect(text).toContain('Suresh Kumar');
+      expectNameRendered(text);
       expect(text).toContain('Gulf Wiring LLC');
     });
 
@@ -162,7 +179,7 @@ describe.each(REGISTERED_TEMPLATES)(
       expect(text).not.toContain(PHONE);
       expect(text).not.toContain(FATHER_NAME);
       // The resume is still a resume.
-      expect(text).toContain('Suresh Kumar');
+      expectNameRendered(text);
       expect(text).toContain('suresh@example.com');
     });
 
@@ -172,6 +189,31 @@ describe.each(REGISTERED_TEMPLATES)(
       expect(text).toContain(RELIGION);
       expect(text).toContain(PHONE);
       expect(text).toContain(FATHER_NAME);
+    });
+
+    it('the candidate-written summary reaches the PDF BYTES, above the work history', async () => {
+      /*
+        Asserted on parsed bytes rather than on the HTML, because the HTML-level
+        version of this test already passes in templates.render.spec.ts and a
+        block can still fail to reach the page: an absolutely-positioned or
+        overflowing paragraph renders into markup and out of the printed area.
+        This is a document the candidate sends to employers — "it is in the
+        HTML" is not the claim being made.
+
+        The toggles are irrelevant here (writing the intro IS the opt-in), so
+        this runs under `on` purely because that is the fuller document.
+      */
+      const text = await extractText(
+        await pool.render(
+          selectTemplate(template)(
+            toResumeView({ ...source, summary: SUMMARY }, on, null),
+          ),
+        ),
+      );
+      expect(text).toContain(SUMMARY);
+      // pdf-parse emits text in layout order, so an index comparison is a real
+      // statement about where it sits on the page.
+      expect(text.indexOf(SUMMARY)).toBeLessThan(text.indexOf('Gulf Wiring LLC'));
     });
 
     it('renders a SPARSE profile without breaking', async () => {
@@ -187,7 +229,7 @@ describe.each(REGISTERED_TEMPLATES)(
       };
       const view = toResumeView(sparse, on, null);
       const text = await extractText(await pool.render(selectTemplate(template)(view)));
-      expect(text).toContain('Suresh Kumar');
+      expectNameRendered(text);
       // No video → the section must be absent, never an empty placeholder.
       expect(text).not.toContain('Video Portfolio');
     });
@@ -250,7 +292,10 @@ describe('toResumeView (the chokepoint, object level)', () => {
       const html = renderClassic(toResumeView(hostile, allOn, null));
 
       for (const live of ['<script>', '<img src=x', '<svg/onload', '</table><h1>']) {
-        expect({ marker: live, present: html.includes(live) }).toEqual({ marker: live, present: false });
+        expect({ marker: live, present: html.includes(live) }).toEqual({
+          marker: live,
+          present: false,
+        });
       }
       // Present in ESCAPED form — proves the content rendered and was
       // neutralised, rather than silently dropped (which would make the
@@ -262,9 +307,7 @@ describe('toResumeView (the chokepoint, object level)', () => {
       // The photo data-URI is the one value landing in an attribute rather than
       // in text. A quote in it would close src="" and turn the remainder into
       // attributes — a live event handler inside the Chromium render context.
-      const html = renderClassic(
-        toResumeView(source, allOn, `data:image/png" onload="alert(1)`),
-      );
+      const html = renderClassic(toResumeView(source, allOn, `data:image/png" onload="alert(1)`));
       expect(/<img[^>]*\sonload=/i.test(html)).toBe(false);
     });
 

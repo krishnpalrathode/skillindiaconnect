@@ -12,6 +12,7 @@ import { DocumentValidity } from '@/components/common/DocumentValidity';
 import { FileUpload } from '@/components/upload/FileUpload';
 import { getCandidateProfile } from '@/lib/api/candidate';
 import type { PresignRequest } from '@/lib/api/candidate';
+import { MAX_UPLOAD_MB } from '@/lib/uploads';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type CandidateDocument = components['schemas']['CandidateDocument'];
@@ -36,14 +37,20 @@ const STATUS_LABEL: Record<DocumentStatus, string> = {
   REJECTED: 'Rejected',
 };
 
+/* Size is the platform-wide ceiling for every type — see lib/uploads.ts. */
 const DOC_TYPES: { type: DocType; labelKey: string; hintKey: string; maxMb: number }[] = [
-  { type: 'PASSPORT', labelKey: 'passport', hintKey: 'passportHint', maxMb: 10 },
-  { type: 'EXPERIENCE_CERT', labelKey: 'experienceCert', hintKey: 'experienceCertHint', maxMb: 5 },
+  { type: 'PASSPORT', labelKey: 'passport', hintKey: 'passportHint', maxMb: MAX_UPLOAD_MB },
+  {
+    type: 'EXPERIENCE_CERT',
+    labelKey: 'experienceCert',
+    hintKey: 'experienceCertHint',
+    maxMb: MAX_UPLOAD_MB,
+  },
   {
     type: 'EDUCATIONAL_CERT',
     labelKey: 'educationalCert',
     hintKey: 'educationalCertHint',
-    maxMb: 5,
+    maxMb: MAX_UPLOAD_MB,
   },
 ];
 

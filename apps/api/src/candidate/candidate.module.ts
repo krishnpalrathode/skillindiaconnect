@@ -5,6 +5,7 @@ import { CandidateReadService } from './candidate-read.service';
 import { ExperienceService } from './experience.service';
 import { SkillService } from './skill.service';
 import { CompletionService } from './completion/completion.service';
+import { NotificationModule } from '../notifications/notification.module';
 import { DocumentController } from './document.controller';
 import { DocumentService } from './document.service';
 import { OnboardingController } from './onboarding.controller';
@@ -14,7 +15,7 @@ import { QueueModule } from '../queue/queue.module';
 import { ApplicationsModule } from '../applications/applications.module';
 
 @Module({
-  imports: [QueueModule, forwardRef(() => ApplicationsModule)],
+  imports: [QueueModule, NotificationModule, forwardRef(() => ApplicationsModule)],
   controllers: [CandidateController, DocumentController, OnboardingController],
   providers: [
     CandidateService,

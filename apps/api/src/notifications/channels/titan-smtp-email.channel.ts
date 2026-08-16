@@ -59,11 +59,7 @@ export class TitanSmtpEmailChannel implements EmailChannel {
     this.transporter = this.createTransport(smtp);
   }
 
-  async send(
-    to: string,
-    type: string,
-    payload: Record<string, unknown>,
-  ): Promise<EmailSendResult> {
+  async send(to: string, type: string, payload: Record<string, unknown>): Promise<EmailSendResult> {
     const email = resolveOutboundEmail(to, type, payload, this.from);
     try {
       const info = (await this.transporter.sendMail(this.toNodemailer(email))) as {

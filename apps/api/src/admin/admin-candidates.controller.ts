@@ -65,7 +65,10 @@ export class AdminCandidatesController {
   @Post(':id/reactivate')
   @HttpCode(HttpStatus.OK) // contract: 200 with the refreshed card
   @RequirePermissions(Permission.CANDIDATES_EDIT)
-  async reactivate(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: CurrentUserPayload) {
+  async reactivate(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: CurrentUserPayload,
+  ) {
     return {
       data: await this.adminCandidates.reactivate(id, {
         userId: user.userId,

@@ -76,7 +76,9 @@ describe('AdminEmployerController — RBAC unit tests', () => {
     } as unknown as jest.Mocked<EmployerApprovalService>;
 
     employerMock = {
-      adminList: jest.fn().mockResolvedValue({ data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } }),
+      adminList: jest
+        .fn()
+        .mockResolvedValue({ data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } }),
       getCompanyById: jest.fn().mockResolvedValue(makeCompany(CompanyStatus.PENDING)),
     } as unknown as jest.Mocked<EmployerService>;
 
@@ -111,8 +113,17 @@ describe('AdminEmployerController — RBAC unit tests', () => {
       ...makeCompany(CompanyStatus.REJECTED),
       rejectionReason: 'Docs expired',
     });
-    const result = await controller.reject('comp-1', { reason: 'Docs expired' }, makeUser(UserRole.ADMIN));
-    expect(approvalMock.reject).toHaveBeenCalledWith('comp-1', 'Docs expired', 'admin-1', UserRole.ADMIN);
+    const result = await controller.reject(
+      'comp-1',
+      { reason: 'Docs expired' },
+      makeUser(UserRole.ADMIN),
+    );
+    expect(approvalMock.reject).toHaveBeenCalledWith(
+      'comp-1',
+      'Docs expired',
+      'admin-1',
+      UserRole.ADMIN,
+    );
     expect(result.data.rejectionReason).toBe('Docs expired');
   });
 
@@ -205,7 +216,10 @@ describe('AdminEmployerController — RBAC unit tests', () => {
 
   it('guard throws 403 when caller lacks EMPLOYERS_APPROVE_REJECT', async () => {
     permServiceMock.getPermissionsForRole.mockResolvedValue(new Set([]));
-    const guard = new PermissionsGuard(new Reflector(), permServiceMock as unknown as PermissionService);
+    const guard = new PermissionsGuard(
+      new Reflector(),
+      permServiceMock as unknown as PermissionService,
+    );
 
     // Build a mock execution context that has the approve method's metadata
     const ctx = {
@@ -219,7 +233,10 @@ describe('AdminEmployerController — RBAC unit tests', () => {
 
   it('guard throws 403 when caller lacks EMPLOYERS_SUSPEND', async () => {
     permServiceMock.getPermissionsForRole.mockResolvedValue(new Set([]));
-    const guard = new PermissionsGuard(new Reflector(), permServiceMock as unknown as PermissionService);
+    const guard = new PermissionsGuard(
+      new Reflector(),
+      permServiceMock as unknown as PermissionService,
+    );
 
     const ctx = {
       switchToHttp: () => ({ getRequest: () => ({ user: makeUser(UserRole.MODERATOR) }) }),

@@ -50,10 +50,7 @@ export class SearchCacheSubscriber {
 
   private async invalidate(jobId: string, event: string): Promise<void> {
     try {
-      await Promise.all([
-        this.cache.bumpSearchVersion(),
-        this.cache.invalidateJobDetail(jobId),
-      ]);
+      await Promise.all([this.cache.bumpSearchVersion(), this.cache.invalidateJobDetail(jobId)]);
     } catch (err) {
       // Redis failure must not crash the event emitter or roll back the DB write.
       this.logger.error(`[search-cache] invalidation failed for ${event} jobId=${jobId}`, err);

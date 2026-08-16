@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { JobsModule } from '../jobs/jobs.module';
 import { QueueModule } from '../queue/queue.module';
+import { NotificationModule } from '../notifications/notification.module';
 import { CandidateModule } from '../candidate/candidate.module';
 import { ApplicationsModule } from '../applications/applications.module';
 import { SubscriptionReadModule } from '../payments/subscription-read.module';
@@ -36,6 +37,8 @@ import { DocumentAccessService } from './document-access.service';
     SubscriptionReadModule,
     // INTEREST_NOTIFY queue — the API enqueues onto it; the worker consumes.
     QueueModule,
+    // EMPLOYER_REGISTERED acknowledgement on successful company registration.
+    NotificationModule,
   ],
   controllers: [
     EmployerController,

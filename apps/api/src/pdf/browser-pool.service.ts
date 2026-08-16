@@ -10,9 +10,9 @@ import { RENDER_TUNING } from './render-tuning';
  * resolves itself in every environment (dev ts-node, compiled dist, jest).
  * The type-side imports above are erased at compile time.
  */
-const importPuppeteer = new Function(
-  'return import("puppeteer")',
-) as () => Promise<typeof import('puppeteer')>;
+const importPuppeteer = new Function('return import("puppeteer")') as () => Promise<
+  typeof import('puppeteer')
+>;
 
 /**
  * THE bounded Chromium pool (S7-B1) — WORKER PROCESS ONLY. The API never
@@ -186,12 +186,19 @@ export class BrowserPoolService implements OnModuleDestroy {
       // unboundedly: against a wedged renderer close() hangs forever (the
       // timeout path SIGKILLs the browser instead, taking the page with it).
       // 2s covers every healthy close.
-      await this.boundedWait(page.close().catch(() => undefined), 2_000);
+      await this.boundedWait(
+        page.close().catch(() => undefined),
+        2_000,
+      );
     }
   }
 
   /** Race `work` against a deadline, CLEARING the timer either way (no held handles). */
-  private async boundedWait(work: Promise<unknown>, ms: number, onDeadline?: () => void): Promise<void> {
+  private async boundedWait(
+    work: Promise<unknown>,
+    ms: number,
+    onDeadline?: () => void,
+  ): Promise<void> {
     let timer: NodeJS.Timeout | undefined;
     const deadline = new Promise<void>((resolve) => {
       timer = setTimeout(() => {
@@ -307,8 +314,10 @@ export class BrowserPoolService implements OnModuleDestroy {
     if (browser) {
       // Polite close, bounded; a wedged instance gets the SIGKILL — a redeploy
       // must never hang on a stuck renderer.
-      await this.boundedWait(browser.close().catch(() => undefined), 3_000, () =>
-        browser.process()?.kill('SIGKILL'),
+      await this.boundedWait(
+        browser.close().catch(() => undefined),
+        3_000,
+        () => browser.process()?.kill('SIGKILL'),
       );
     }
   }

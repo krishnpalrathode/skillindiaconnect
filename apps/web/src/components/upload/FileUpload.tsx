@@ -4,6 +4,7 @@ import React, { useId, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Upload, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MAX_UPLOAD_MB } from '@/lib/uploads';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
@@ -37,7 +38,7 @@ interface FileUploadProps {
 export function FileUpload({
   docType,
   accept = '.pdf,image/*',
-  maxMb = 5,
+  maxMb = MAX_UPLOAD_MB,
   label,
   hint,
   expiryDate,
@@ -229,7 +230,16 @@ export function FileUpload({
                       */
                       state.errorCode === 'INVALID_PASSPORT_EXPIRY'
                       ? t('errPassportExpiry')
-                      : (state.errorMessage ?? t('uploadFailed'))}
+                      : /*
+                          Distinct from the date-format failure above: this
+                          passport's date is fine, the passport itself is too
+                          short-dated to be usable for a Gulf visa. Retrying the
+                          upload cannot help — only renewing can — so the message
+                          has to say that rather than "tap to retry".
+                        */
+                        state.errorCode === 'PASSPORT_EXPIRES_TOO_SOON'
+                        ? t('errPassportTooSoon')
+                        : (state.errorMessage ?? t('uploadFailed'))}
             </span>
             <div className="flex gap-2">
               <Button

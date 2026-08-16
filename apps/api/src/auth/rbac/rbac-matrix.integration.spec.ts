@@ -112,7 +112,11 @@ beforeAll(async () => {
   try {
     [pg, redisContainer] = await Promise.all([
       new GenericContainer('postgres:16-alpine')
-        .withEnvironment({ POSTGRES_USER: 'sic', POSTGRES_PASSWORD: 'sic', POSTGRES_DB: 'sic_test' })
+        .withEnvironment({
+          POSTGRES_USER: 'sic',
+          POSTGRES_PASSWORD: 'sic',
+          POSTGRES_DB: 'sic_test',
+        })
         .withExposedPorts(5432)
         .start(),
       new GenericContainer('redis:7-alpine').withExposedPorts(6379).start(),
@@ -339,9 +343,7 @@ describe('PATCH /admin/roles/matrix', () => {
       UserRole.SUPER_ADMIN,
     ).expect(400);
     expect(res.body.code).toBe('VALIDATION_ERROR');
-    expect(res.body.meta.errors).toContainEqual(
-      expect.objectContaining({ field: 'permission' }),
-    );
+    expect(res.body.meta.errors).toContainEqual(expect.objectContaining({ field: 'permission' }));
   });
 
   it('rejects a non-matrix role (EMPLOYER is not a console column)', async () => {
@@ -533,7 +535,7 @@ describe('PATCH /admin/roles/matrix', () => {
 
 // ─── THE cache-invalidation proof ────────────────────────────────────────────
 
-describe('cache invalidation — the first runtime exercise of 5b\'s path', () => {
+describe("cache invalidation — the first runtime exercise of 5b's path", () => {
   const EXPORT = '/admin/logs/export';
   const cacheKey = (role: UserRole) => `rbac:perms:${role}`;
 

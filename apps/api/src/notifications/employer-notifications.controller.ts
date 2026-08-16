@@ -38,10 +38,7 @@ export class EmployerNotificationsController {
    */
   @Post('read')
   @HttpCode(HttpStatus.OK)
-  async markRead(
-    @CurrentUser() user: CurrentUserPayload,
-    @Body() dto: MarkReadDto,
-  ): Promise<void> {
+  async markRead(@CurrentUser() user: CurrentUserPayload, @Body() dto: MarkReadDto): Promise<void> {
     this.notificationService.assertEmployerRole(user.role);
     await this.notificationService.markRead(user.userId, dto);
   }

@@ -6,10 +6,7 @@ import { PrismaService } from '../../core/prisma/prisma.service';
 import { JOB_NAMES } from '../../queue/queue.constants';
 
 describe('PurgeProcessor', () => {
-  const makeProcessor = (overrides?: {
-    dueUsers?: { id: string }[];
-    captureKeys?: string[];
-  }) => {
+  const makeProcessor = (overrides?: { dueUsers?: { id: string }[]; captureKeys?: string[] }) => {
     const prisma = {
       user: { findMany: jest.fn().mockResolvedValue(overrides?.dueUsers ?? []) },
     } as unknown as PrismaService;
@@ -18,7 +15,12 @@ describe('PurgeProcessor', () => {
       purgeUser: jest.fn().mockResolvedValue({ outcome: 'purged', counts: {} }),
     } as unknown as jest.Mocked<PurgeService>;
     const queue = { add: jest.fn().mockResolvedValue(undefined) } as unknown as Queue;
-    return { processor: new PurgeProcessor(prisma, purgeService, queue), prisma, purgeService, queue };
+    return {
+      processor: new PurgeProcessor(prisma, purgeService, queue),
+      prisma,
+      purgeService,
+      queue,
+    };
   };
 
   const makeJob = (name: string, data: PurgeJobData): BullJob<PurgeJobData> =>

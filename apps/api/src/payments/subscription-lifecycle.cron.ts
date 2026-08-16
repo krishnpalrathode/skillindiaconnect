@@ -18,9 +18,7 @@ import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
 export class SubscriptionLifecycleCron {
   private readonly logger = new Logger(SubscriptionLifecycleCron.name);
 
-  constructor(
-    @InjectQueue(QUEUE_NAMES.SUBSCRIPTION_LIFECYCLE) private readonly queue: Queue,
-  ) {}
+  constructor(@InjectQueue(QUEUE_NAMES.SUBSCRIPTION_LIFECYCLE) private readonly queue: Queue) {}
 
   @Cron('0 3 * * *')
   async scheduleSubscriptionLifecycleSweep(): Promise<void> {

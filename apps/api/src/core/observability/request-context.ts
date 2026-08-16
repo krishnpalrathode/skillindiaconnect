@@ -55,8 +55,7 @@ export const REQUEST_ID_HEADER = 'x-request-id';
  */
 export function requestContextMiddleware(req: Request, res: Response, next: NextFunction): void {
   const inbound = req.header(REQUEST_ID_HEADER);
-  const requestId =
-    inbound && /^[A-Za-z0-9._-]{1,64}$/.test(inbound) ? inbound : randomUUID();
+  const requestId = inbound && /^[A-Za-z0-9._-]{1,64}$/.test(inbound) ? inbound : randomUUID();
 
   res.setHeader(REQUEST_ID_HEADER, requestId);
 

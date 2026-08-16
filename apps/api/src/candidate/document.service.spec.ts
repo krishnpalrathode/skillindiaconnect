@@ -21,6 +21,7 @@ import { DocumentService } from './document.service';
 import { OnboardingService } from './onboarding.service';
 import { CandidateService } from './candidate.service';
 import { CompletionService } from './completion/completion.service';
+import { NotificationService } from '../notifications/notification.service';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { StorageService } from '../core/storage/storage.service';
 
@@ -85,6 +86,16 @@ beforeAll(async () => {
           provide: 'BullQueue_r2-delete',
           useValue: mockR2Queue,
         },
+        /*
+          CompletionService's other two dependencies. Absent, Nest cannot build
+          it and every test in this file fails — which it silently did NOT do
+          while Docker was unavailable, because the skip path swallowed the
+          module-compile error along with the container failure. Both are stubs:
+          this suite is about document upload, and the match-alert enqueue and
+          the profile-complete notification are side effects it never asserts on.
+        */
+        { provide: 'BullQueue_match-alert', useValue: { add: jest.fn() } },
+        { provide: NotificationService, useValue: { notify: jest.fn() } },
       ],
     }).compile();
 
@@ -568,4 +579,3 @@ describe('OnboardingService.complete (soft-block)', () => {
     expect(result.completionPct).toBe(10); // 1/3 docs = 10%
   });
 });
-

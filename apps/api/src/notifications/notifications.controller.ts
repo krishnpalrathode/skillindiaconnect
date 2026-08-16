@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
 import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user.decorator';
 import { NotificationService } from './notification.service';
 import { NotificationDto } from './notification.mapper';
@@ -45,10 +37,7 @@ export class NotificationsController {
    */
   @Post('read')
   @HttpCode(HttpStatus.OK)
-  async markRead(
-    @CurrentUser() user: CurrentUserPayload,
-    @Body() dto: MarkReadDto,
-  ): Promise<void> {
+  async markRead(@CurrentUser() user: CurrentUserPayload, @Body() dto: MarkReadDto): Promise<void> {
     this.notificationService.assertCandidateRole(user.role);
     await this.notificationService.markRead(user.userId, dto);
   }

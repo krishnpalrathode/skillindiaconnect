@@ -200,7 +200,7 @@ describe('SearchCacheService', () => {
 
       // First call: miss → call query → store in cache
       redis.get
-        .mockResolvedValueOnce(null)       // miss
+        .mockResolvedValueOnce(null) // miss
         .mockResolvedValueOnce(JSON.stringify(result)); // hit on second
       redis.incr.mockResolvedValue(1);
       redis.setex.mockResolvedValue('OK');

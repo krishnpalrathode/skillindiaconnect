@@ -1,4 +1,5 @@
 import { IsInt, IsString, Max, Min } from 'class-validator';
+import { MAX_UPLOAD_BYTES } from '../../core/uploads';
 
 /**
  * Profile-photo presign request. Mirrors PresignDocumentDto but for the single
@@ -14,6 +15,6 @@ export class PresignPhotoDto {
 
   @IsInt()
   @Min(1)
-  @Max(5 * 1024 * 1024) // 5 MB hard ceiling
+  @Max(MAX_UPLOAD_BYTES)
   sizeBytes!: number;
 }

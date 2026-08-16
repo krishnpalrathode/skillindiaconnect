@@ -55,42 +55,103 @@ beforeAll(async () => {
     prismaClient = new PrismaClient({ datasources: { db: { url } } });
     await prismaClient.$connect();
 
-    await prismaClient.jobCategory.create({ data: { id: CATEGORY_ID, slug: 'ag2', nameEn: 'AG2' } });
+    await prismaClient.jobCategory.create({
+      data: { id: CATEGORY_ID, slug: 'ag2', nameEn: 'AG2' },
+    });
     companyId = (
       await prismaClient.company.create({
-        data: { name: 'Agg Co', type: CompanyType.FOREIGN, registrationNumber: 'AGG-1', industryType: 'C', phone: '+91', location: 'Dubai', employeeRange: '10-50', status: CompanyStatus.APPROVED },
+        data: {
+          name: 'Agg Co',
+          type: CompanyType.FOREIGN,
+          registrationNumber: 'AGG-1',
+          industryType: 'C',
+          phone: '+91',
+          location: 'Dubai',
+          employeeRange: '10-50',
+          status: CompanyStatus.APPROVED,
+        },
       })
     ).id;
     const mkJob = async () =>
       (
         await prismaClient.job.create({
-          data: { companyId, title: 'Mason', employmentType: EmploymentType.FULL_TIME, market: JobMarket.GULF, status: JobStatus.ACTIVE, location: 'Dubai', description: 'd', categoryId: CATEGORY_ID, salaryMin: 1, salaryMax: 2, currency: Currency.AED, hoursPerDay: 8, daysPerWeek: 6 },
+          data: {
+            companyId,
+            title: 'Mason',
+            employmentType: EmploymentType.FULL_TIME,
+            market: JobMarket.GULF,
+            status: JobStatus.ACTIVE,
+            location: 'Dubai',
+            description: 'd',
+            categoryId: CATEGORY_ID,
+            salaryMin: 1,
+            salaryMax: 2,
+            currency: Currency.AED,
+            hoursPerDay: 8,
+            daysPerWeek: 6,
+          },
         })
       ).id;
     jobA = await mkJob();
     jobB = await mkJob();
 
     for (let i = 0; i < 4; i++) {
-      await prismaClient.user.create({ data: { id: `agg-u-${i}`, email: `agg${i}@x.com`, role: UserRole.CANDIDATE } });
+      await prismaClient.user.create({
+        data: { id: `agg-u-${i}`, email: `agg${i}@x.com`, role: UserRole.CANDIDATE },
+      });
       candidateIds.push(
-        (await prismaClient.candidateProfile.create({ data: { userId: `agg-u-${i}`, fullName: `Cand ${i}`, completionPct: 80 } })).id,
+        (
+          await prismaClient.candidateProfile.create({
+            data: { userId: `agg-u-${i}`, fullName: `Cand ${i}`, completionPct: 80 },
+          })
+        ).id,
       );
     }
 
     const prismaSvc = prismaClient as unknown as PrismaService;
     const jobsStub = {
       getJobIdsForCompany: async (cId: string) =>
-        (await prismaClient.job.findMany({ where: { companyId: cId }, select: { id: true } })).map((j) => j.id),
+        (await prismaClient.job.findMany({ where: { companyId: cId }, select: { id: true } })).map(
+          (j) => j.id,
+        ),
       getJobSubsets: async (ids: string[]) => {
-        const rows = await prismaClient.job.findMany({ where: { id: { in: ids } }, select: { id: true, title: true, location: true, market: true, company: { select: { name: true } } } });
-        return new Map(rows.map((j) => [j.id, { id: j.id, title: j.title, companyName: j.company.name, location: j.location, market: j.market }]));
+        const rows = await prismaClient.job.findMany({
+          where: { id: { in: ids } },
+          select: {
+            id: true,
+            title: true,
+            location: true,
+            market: true,
+            company: { select: { name: true } },
+          },
+        });
+        return new Map(
+          rows.map((j) => [
+            j.id,
+            {
+              id: j.id,
+              title: j.title,
+              companyName: j.company.name,
+              location: j.location,
+              market: j.market,
+            },
+          ]),
+        );
       },
     } as unknown as JobsService;
 
-    service = new ApplicationsAggregateService(prismaSvc, jobsStub, new CandidateReadService(prismaSvc));
+    service = new ApplicationsAggregateService(
+      prismaSvc,
+      jobsStub,
+      new CandidateReadService(prismaSvc),
+    );
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    if (/container runtime|Docker|ENOENT|ECONNREFUSED|not recognized|prisma: command not found/.test(msg)) {
+    if (
+      /container runtime|Docker|ENOENT|ECONNREFUSED|not recognized|prisma: command not found/.test(
+        msg,
+      )
+    ) {
       dockerUnavailable = true;
       console.warn('[aggregate] Docker unavailable — skipped:', msg);
     } else throw err;
@@ -108,10 +169,25 @@ beforeEach(async () => {
   await prismaClient.application.deleteMany();
 });
 
-async function mkApp(jobId: string, candidateId: string, status: ApplicationStatus, createdAt?: Date): Promise<string> {
+async function mkApp(
+  jobId: string,
+  candidateId: string,
+  status: ApplicationStatus,
+  createdAt?: Date,
+): Promise<string> {
   return (
     await prismaClient.application.create({
-      data: { jobId, candidateId, status, matchScore: 50, matchBreakdown: {}, docsCompleteCount: 2, docsRequiredCount: 2, passportValidAtApply: true, ...(createdAt && { createdAt }) },
+      data: {
+        jobId,
+        candidateId,
+        status,
+        matchScore: 50,
+        matchBreakdown: {},
+        docsCompleteCount: 2,
+        docsRequiredCount: 2,
+        passportValidAtApply: true,
+        ...(createdAt && { createdAt }),
+      },
     })
   ).id;
 }
@@ -138,7 +214,13 @@ describe('countsForCompany', () => {
     // Hired this month: SELECTED now + a SELECTED timeline entry this month.
     const thisMonth = await mkApp(jobA, candidateIds[0]!, ApplicationStatus.SELECTED);
     await prismaClient.applicationTimelineEntry.create({
-      data: { applicationId: thisMonth, fromStatus: ApplicationStatus.PENDING, toStatus: ApplicationStatus.SELECTED, actorRole: UserRole.EMPLOYER, createdAt: new Date() },
+      data: {
+        applicationId: thisMonth,
+        fromStatus: ApplicationStatus.PENDING,
+        toStatus: ApplicationStatus.SELECTED,
+        actorRole: UserRole.EMPLOYER,
+        createdAt: new Date(),
+      },
     });
 
     // Hired LAST month: SELECTED now but the SELECTED transition was last month.
@@ -146,7 +228,13 @@ describe('countsForCompany', () => {
     const lm = new Date();
     lm.setUTCMonth(lm.getUTCMonth() - 1, 15);
     await prismaClient.applicationTimelineEntry.create({
-      data: { applicationId: lastMonth, fromStatus: ApplicationStatus.PENDING, toStatus: ApplicationStatus.SELECTED, actorRole: UserRole.EMPLOYER, createdAt: lm },
+      data: {
+        applicationId: lastMonth,
+        fromStatus: ApplicationStatus.PENDING,
+        toStatus: ApplicationStatus.SELECTED,
+        actorRole: UserRole.EMPLOYER,
+        createdAt: lm,
+      },
     });
 
     const c = await service.countsForCompany(companyId);

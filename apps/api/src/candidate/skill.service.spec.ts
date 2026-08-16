@@ -50,7 +50,12 @@ beforeAll(async () => {
     prisma = new PrismaClient({ datasources: { db: { url } } });
     await prisma.$connect();
 
-    const completionService = new CompletionService(prisma as unknown as PrismaService, { add: jest.fn() } as unknown as Queue);
+    const completionService = new CompletionService(
+      prisma as unknown as PrismaService,
+      { add: jest.fn() } as unknown as Queue,
+      // Notification is a post-commit side effect this suite does not assert on.
+      { notify: jest.fn() } as never,
+    );
     skillService = new SkillService(prisma as unknown as PrismaService, completionService, {
       emit: jest.fn(),
       emitAsync: jest.fn(),
@@ -263,4 +268,3 @@ describe('SkillService â€” integration (real DB)', () => {
     expect(afterFour!.completionPct).toBe(atCap!.completionPct);
   });
 });
-

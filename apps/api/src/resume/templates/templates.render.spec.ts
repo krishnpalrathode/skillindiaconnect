@@ -26,6 +26,7 @@ const settings: ResumeRenderSettings = { ...RESUME_SETTINGS_DEFAULTS, showPhone:
 const full: ResumeSource = {
   id: 'cand-1',
   fullName: 'Suresh Kumar',
+  summary: null,
   fatherName: 'Ram Prasad Kumar',
   dob: new Date('1994-03-12'),
   phone: '+919876543210',
@@ -55,9 +56,7 @@ const full: ResumeSource = {
     { id: 'sk-1', name: 'Panel Installation' },
     { id: 'sk-2', name: 'Circuit Testing' },
   ],
-  documents: [
-    { type: 'PASSPORT', expiryDate: new Date('2031-01-01'), documentNumber: 'Z9876543' },
-  ],
+  documents: [{ type: 'PASSPORT', expiryDate: new Date('2031-01-01'), documentNumber: 'Z9876543' }],
 };
 
 /** One experience, no photo, no skills, no documents — the common case here. */
@@ -132,6 +131,34 @@ describe.each(ALL)('%s — robustness', (template) => {
     }));
     const out = html(template, { ...full, skills: many });
     for (const s of many) expect(out).toContain(s.name);
+  });
+
+  it('renders the summary ABOVE the personal details and the experience', () => {
+    // "At the top of the resume" is the whole requirement. Assert POSITION, not
+    // merely presence: a template that appended the intro after the work history
+    // would pass a contains-check while getting the feature exactly backwards.
+    const text = 'Electrician with 6 years across residential and Gulf sites.';
+    const out = html(template, { ...full, summary: text });
+
+    const at = out.indexOf(text);
+    expect(at).toBeGreaterThan(-1);
+    expect(at).toBeLessThan(out.indexOf('Senior Electrician'));
+    // The name still leads — the summary sits under the header, not above it.
+    expect(at).toBeGreaterThan(out.indexOf('Suresh Kumar'));
+  });
+
+  it('omits the summary block entirely when there is none', () => {
+    // Not an empty styled paragraph: a bare accent rule with no text beside it
+    // reads as a rendering fault on the sparse profiles that are the common case.
+    expect(html(template, { ...full, summary: null })).not.toContain('class="summary"');
+    expect(html(template, { ...full, summary: '   ' })).not.toContain('class="summary"');
+  });
+
+  it('escapes markup inside the summary — it is free-text user input', () => {
+    const out = html(template, { ...full, summary: '<script>alert(1)</script> & "quoted"' });
+    expect(out).not.toContain('<script>alert(1)</script>');
+    expect(out).toContain('&lt;script&gt;');
+    expect(out).toContain('&amp;');
   });
 
   it('declares a wrapping rule so long tokens cannot overflow the page', () => {

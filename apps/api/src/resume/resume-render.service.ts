@@ -4,11 +4,7 @@ import { PrismaService } from '../core/prisma/prisma.service';
 import { StorageService } from '../core/storage/storage.service';
 import { CandidateReadService } from '../candidate/candidate-read.service';
 import { PdfRenderService } from '../pdf/pdf-render.service';
-import {
-  RESUME_SETTINGS_DEFAULTS,
-  ResumeRenderSettings,
-  toResumeView,
-} from './resume-view.mapper';
+import { RESUME_SETTINGS_DEFAULTS, ResumeRenderSettings, toResumeView } from './resume-view.mapper';
 import { toSettings } from './resume-settings.service';
 import { toStoredResumeView } from './resume-view.wire';
 import { selectTemplate } from './templates/registry';
@@ -147,8 +143,7 @@ export class ResumeRenderService {
         showPhone: snap.showPhone,
         showReligion: snap.showReligion ?? RESUME_SETTINGS_DEFAULTS.showReligion,
         showFatherName: snap.showFatherName ?? RESUME_SETTINGS_DEFAULTS.showFatherName,
-        showPassportNumber:
-          snap.showPassportNumber ?? RESUME_SETTINGS_DEFAULTS.showPassportNumber,
+        showPassportNumber: snap.showPassportNumber ?? RESUME_SETTINGS_DEFAULTS.showPassportNumber,
         // A snapshot written before this column existed carries no template.
         // CLASSIC is the right answer for exactly those rows: it is what they
         // WERE rendered with, so a re-render reproduces the same document.

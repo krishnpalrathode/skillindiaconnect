@@ -75,11 +75,7 @@ export class ResendEmailChannel implements EmailChannel {
     this.config = this.readConfig(config);
   }
 
-  async send(
-    to: string,
-    type: string,
-    payload: Record<string, unknown>,
-  ): Promise<EmailSendResult> {
+  async send(to: string, type: string, payload: Record<string, unknown>): Promise<EmailSendResult> {
     const email = resolveOutboundEmail(to, type, payload, this.config.from);
     try {
       const { status, body } = await this.post(this.toResend(email));

@@ -24,9 +24,7 @@ describe('AutoArchiveProcessor', () => {
 
   beforeEach(() => {
     lifecycleMock = makeLifecycleMock();
-    processor = new AutoArchiveProcessor(
-      lifecycleMock as unknown as JobLifecycleService,
-    );
+    processor = new AutoArchiveProcessor(lifecycleMock as unknown as JobLifecycleService);
   });
 
   it('calls batchAutoArchive and resolves without error', async () => {

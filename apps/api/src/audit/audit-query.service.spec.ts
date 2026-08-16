@@ -106,29 +106,32 @@ const gatedIt = (name: string, fn: () => Promise<void>) =>
 // ── Keyset pagination — the completeness proof ───────────────────────────────
 
 describe('keyset pagination on the BigInt PK', () => {
-  gatedIt('walking every page yields every row EXACTLY once (no skips, no duplicates)', async () => {
-    await seedRows(250);
+  gatedIt(
+    'walking every page yields every row EXACTLY once (no skips, no duplicates)',
+    async () => {
+      await seedRows(250);
 
-    const seen: string[] = [];
-    let cursor: string | undefined;
-    let pages = 0;
+      const seen: string[] = [];
+      let cursor: string | undefined;
+      let pages = 0;
 
-    do {
-      const page = await service.query({ limit: 40, ...(cursor && { cursor }) });
-      seen.push(...page.data.map((r) => r.id));
-      cursor = page.nextCursor ?? undefined;
-      pages++;
-      expect(pages).toBeLessThan(20); // guard against an infinite walk
-    } while (cursor);
+      do {
+        const page = await service.query({ limit: 40, ...(cursor && { cursor }) });
+        seen.push(...page.data.map((r) => r.id));
+        cursor = page.nextCursor ?? undefined;
+        pages++;
+        expect(pages).toBeLessThan(20); // guard against an infinite walk
+      } while (cursor);
 
-    expect(seen).toHaveLength(250);
-    expect(new Set(seen).size).toBe(250); // every id distinct — no duplicates
-    // …and strictly descending, which is what makes the cursor sound.
-    const ids = seen.map((s) => BigInt(s));
-    for (let i = 1; i < ids.length; i++) {
-      expect(ids[i]! < ids[i - 1]!).toBe(true);
-    }
-  });
+      expect(seen).toHaveLength(250);
+      expect(new Set(seen).size).toBe(250); // every id distinct — no duplicates
+      // …and strictly descending, which is what makes the cursor sound.
+      const ids = seen.map((s) => BigInt(s));
+      for (let i = 1; i < ids.length; i++) {
+        expect(ids[i]! < ids[i - 1]!).toBe(true);
+      }
+    },
+  );
 
   gatedIt(
     'CONCURRENT INSERTS during the walk never skip or duplicate a pre-existing row',
@@ -166,13 +169,16 @@ describe('keyset pagination on the BigInt PK', () => {
     expect(page.nextCursor).toBeNull();
   });
 
-  gatedIt('BigInt ids serialize as STRINGS (JSON.stringify would throw on raw BigInt)', async () => {
-    await seedRows(1);
-    const page = await service.query({});
-    expect(typeof page.data[0]!.id).toBe('string');
-    // The real proof: the response survives serialization.
-    expect(() => JSON.stringify(page)).not.toThrow();
-  });
+  gatedIt(
+    'BigInt ids serialize as STRINGS (JSON.stringify would throw on raw BigInt)',
+    async () => {
+      await seedRows(1);
+      const page = await service.query({});
+      expect(typeof page.data[0]!.id).toBe('string');
+      // The real proof: the response survives serialization.
+      expect(() => JSON.stringify(page)).not.toThrow();
+    },
+  );
 });
 
 // ── The bounded default window ───────────────────────────────────────────────
@@ -247,18 +253,21 @@ describe('filters (all on structured columns)', () => {
     expect(actions).not.toContain('unrelated.action'); // meta is NOT searched
   });
 
-  gatedIt('meta is returned EXACTLY as stored (B2 owns redaction; we do not re-apply it)', async () => {
-    await prisma.auditLog.create({
-      data: {
-        module: 'Payments',
-        action: 'subscription.activated',
-        status: AuditStatus.SUCCESS,
-        meta: { planCode: 'PRO_MONTHLY', count: 3 },
-      },
-    });
-    const page = await service.query({});
-    expect(page.data[0]!.meta).toEqual({ planCode: 'PRO_MONTHLY', count: 3 });
-  });
+  gatedIt(
+    'meta is returned EXACTLY as stored (B2 owns redaction; we do not re-apply it)',
+    async () => {
+      await prisma.auditLog.create({
+        data: {
+          module: 'Payments',
+          action: 'subscription.activated',
+          status: AuditStatus.SUCCESS,
+          meta: { planCode: 'PRO_MONTHLY', count: 3 },
+        },
+      });
+      const page = await service.query({});
+      expect(page.data[0]!.meta).toEqual({ planCode: 'PRO_MONTHLY', count: 3 });
+    },
+  );
 });
 
 // ── The export ───────────────────────────────────────────────────────────────
@@ -319,12 +328,12 @@ describe('export — bounded and self-auditing', () => {
     }
   });
 
-  gatedIt('over the date-range cap → 422 EXPORT_TOO_LARGE (and no rows are materialized)', async () => {
-    await expect(
-      service.export(
-        { from: daysAgo(365).toISOString(), to: new Date().toISOString() },
-        ACTOR,
-      ),
-    ).rejects.toThrow(UnprocessableEntityException);
-  });
+  gatedIt(
+    'over the date-range cap → 422 EXPORT_TOO_LARGE (and no rows are materialized)',
+    async () => {
+      await expect(
+        service.export({ from: daysAgo(365).toISOString(), to: new Date().toISOString() }, ACTOR),
+      ).rejects.toThrow(UnprocessableEntityException);
+    },
+  );
 });

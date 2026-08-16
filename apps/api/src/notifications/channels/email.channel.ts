@@ -52,11 +52,7 @@ export interface EmailAttachment {
  *   - `attachments?: EmailAttachment[]`
  */
 export interface EmailChannel {
-  send(
-    to: string,
-    type: string,
-    payload: Record<string, unknown>,
-  ): Promise<EmailSendResult>;
+  send(to: string, type: string, payload: Record<string, unknown>): Promise<EmailSendResult>;
 }
 
 /**

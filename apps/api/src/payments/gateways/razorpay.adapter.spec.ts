@@ -67,9 +67,7 @@ describe('RazorpayAdapter', () => {
       const bare = new RazorpayAdapter(
         configWith({ RAZORPAY_KEY_ID: 'rzp_test_x', RAZORPAY_KEY_SECRET: 's' }),
       );
-      expect(() => bare.verifyWebhook(Buffer.from('x'), 'sig')).toThrow(
-        /RAZORPAY_WEBHOOK_SECRET/,
-      );
+      expect(() => bare.verifyWebhook(Buffer.from('x'), 'sig')).toThrow(/RAZORPAY_WEBHOOK_SECRET/);
     });
 
     it('parseEvent prefers the x-razorpay-event-id header, falls back to a raw-bytes hash', () => {
@@ -86,19 +84,23 @@ describe('RazorpayAdapter', () => {
   });
 
   describe('live smoke (gated — skipped without real test-mode keys)', () => {
-    liveIt('creates a real test-mode order and returns its order_ id', async () => {
-      const adapter = new RazorpayAdapter(
-        configWith({ RAZORPAY_KEY_ID: keyId, RAZORPAY_KEY_SECRET: keySecret }),
-      );
-      const orderId = `smoke-${Date.now()}`;
-      const ref = await adapter.createOrder({
-        orderId,
-        totalSubunits: 100, // ₹1.00 — the smallest sensible test-mode order
-        currency: 'INR',
-        planName: 'Live Smoke',
-      });
-      expect(ref.gatewayOrderId).toMatch(/^order_/);
-      expect(ref.keyId).toBe(keyId);
-    }, 30_000);
+    liveIt(
+      'creates a real test-mode order and returns its order_ id',
+      async () => {
+        const adapter = new RazorpayAdapter(
+          configWith({ RAZORPAY_KEY_ID: keyId, RAZORPAY_KEY_SECRET: keySecret }),
+        );
+        const orderId = `smoke-${Date.now()}`;
+        const ref = await adapter.createOrder({
+          orderId,
+          totalSubunits: 100, // ₹1.00 — the smallest sensible test-mode order
+          currency: 'INR',
+          planName: 'Live Smoke',
+        });
+        expect(ref.gatewayOrderId).toMatch(/^order_/);
+        expect(ref.keyId).toBe(keyId);
+      },
+      30_000,
+    );
   });
 });

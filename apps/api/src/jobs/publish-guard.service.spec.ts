@@ -12,10 +12,7 @@
  *   - BLOCKED audit row written for every failed protection check (Screen-29 event).
  *   - QUOTA: FREE employer at cap (1 active) → JOB_QUOTA_EXCEEDED.
  */
-import {
-  ForbiddenException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { ForbiddenException, UnprocessableEntityException } from '@nestjs/common';
 import {
   CompanyStatus,
   CompanyType,
@@ -119,7 +116,8 @@ beforeAll(async () => {
 
     const employerService = new EmployerService(
       prismaClient as unknown as PrismaService,
-      null as never, // StorageService not needed for assertApproved
+      null as never, // StorageService not needed for assertApproved,
+      { notify: jest.fn() } as never,
     );
 
     publishGuard = new PublishGuardService(
@@ -291,7 +289,7 @@ describe('PublishGuardService — ordered enforcement gate', () => {
     const body = err!.getResponse() as Record<string, unknown>;
     expect(body.code).toBe('WORKER_PROTECTION_VIOLATION');
     const meta = body.meta as Record<string, unknown>;
-    expect((meta.violations as string[])).toContain('accommodation');
+    expect(meta.violations as string[]).toContain('accommodation');
 
     // BLOCKED audit row must be present
     const blockedRows = await prismaClient.auditLog.findMany({

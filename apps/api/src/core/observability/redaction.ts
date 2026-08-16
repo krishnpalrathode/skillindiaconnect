@@ -105,7 +105,8 @@ export function redactValue(value: unknown, depth = 0, seen = new WeakSet<object
   if (value === null || value === undefined) return value;
 
   if (typeof value === 'string') return redactText(value);
-  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') return value;
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint')
+    return value;
 
   if (value instanceof Date) return value.toISOString();
   if (value instanceof Error) {

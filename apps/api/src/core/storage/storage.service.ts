@@ -106,9 +106,7 @@ export class StorageService {
    * S7-B1: server-side read (embedding the profile photo as a data URI at
    * render time — the template must never make Chromium fetch a live URL).
    */
-  async getObjectBuffer(
-    key: string,
-  ): Promise<{ body: Buffer; contentType: string } | null> {
+  async getObjectBuffer(key: string): Promise<{ body: Buffer; contentType: string } | null> {
     try {
       const response = await this.requireClient().send(
         new GetObjectCommand({ Bucket: this.bucket, Key: key }),

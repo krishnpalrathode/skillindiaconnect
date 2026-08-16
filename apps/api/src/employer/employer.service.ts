@@ -2,13 +2,15 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { Company, CompanyStatus, CompanyType } from '@prisma/client';
+import { Company, CompanyStatus, CompanyType, NotificationType } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { StorageService } from '../core/storage/storage.service';
+import { NotificationService } from '../notifications/notification.service';
 import { RegisterCompanyDto } from './dto/register-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { PresignCertDto, CERT_MAX_BYTES } from './dto/presign-cert.dto';
@@ -39,9 +41,12 @@ export type CompanyResponse = Company & { registrationCertKey: string | null };
 
 @Injectable()
 export class EmployerService {
+  private readonly logger = new Logger(EmployerService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
+    private readonly notifications: NotificationService,
   ) {}
 
   /** Attach the newest certificate key — one indexed lookup, never a join fan-out. */
@@ -109,6 +114,27 @@ export class EmployerService {
       }
       return c;
     });
+
+    /*
+      Acknowledge the registration — AFTER the transaction commits, never inside
+      it. A notification raised inside the tx would be rolled back with the
+      company on a late failure, or worse, would already have been emailed for a
+      registration that no longer exists.
+
+      Swallowed on failure for the same reason the completion alert is: the
+      employer has successfully registered, and a notification outage must not
+      turn that into a 500 that sends them round the form again.
+    */
+    try {
+      await this.notifications.notify(userId, NotificationType.EMPLOYER_REGISTERED, {
+        title: 'Company registration received',
+        body: `We have received the registration for ${company.name} and our team is verifying it.`,
+        data: { companyId: company.id, companyName: company.name },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`employer-registered notify failed for user ${userId}: ${msg}`);
+    }
 
     return company;
   }

@@ -92,7 +92,12 @@ const DEFAULT_CODES: Record<number, string> = {
 function isHttpishError(e: unknown): e is Error & { status?: number; statusCode?: number } {
   if (e === null || typeof e !== 'object') return false;
   const o = e as { status?: unknown; statusCode?: unknown };
-  const s = typeof o.status === 'number' ? o.status : typeof o.statusCode === 'number' ? o.statusCode : null;
+  const s =
+    typeof o.status === 'number'
+      ? o.status
+      : typeof o.statusCode === 'number'
+        ? o.statusCode
+        : null;
   // Only trust a plausible HTTP status — never let an arbitrary numeric field
   // on some unrelated error object choose the response code.
   return s !== null && s >= 400 && s <= 599;
@@ -147,7 +152,10 @@ export class HttpProblemFilter implements ExceptionFilter {
       status = exception.status ?? exception.statusCode ?? HttpStatus.INTERNAL_SERVER_ERROR;
       if (status >= 500) {
         const msg = exception instanceof Error ? exception.message : String(exception);
-        this.logger.error(`Unhandled exception: ${msg}`, exception instanceof Error ? exception.stack : undefined);
+        this.logger.error(
+          `Unhandled exception: ${msg}`,
+          exception instanceof Error ? exception.stack : undefined,
+        );
       } else {
         // A 4xx here is a malformed client request, not an incident. Log it at
         // warn without a stack so real errors stay visible in the noise.

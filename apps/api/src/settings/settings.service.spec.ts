@@ -43,7 +43,11 @@ beforeAll(async () => {
   try {
     [pgContainer, redisContainer] = await Promise.all([
       new GenericContainer('postgres:16-alpine')
-        .withEnvironment({ POSTGRES_USER: 'sic', POSTGRES_PASSWORD: 'sic', POSTGRES_DB: 'sic_test' })
+        .withEnvironment({
+          POSTGRES_USER: 'sic',
+          POSTGRES_PASSWORD: 'sic',
+          POSTGRES_DB: 'sic_test',
+        })
         .withExposedPorts(5432)
         .start(),
       new GenericContainer('redis:7-alpine').withExposedPorts(6379).start(),
@@ -72,7 +76,11 @@ beforeAll(async () => {
       ['jobs.free_max_active_jobs', 1, false],
       ['jobs.allow_local', true, false],
       ['jobs.allow_foreign', true, false],
-      ['candidates.mandatory_documents', ['PASSPORT', 'EXPERIENCE_CERT', 'EDUCATIONAL_CERT'], false],
+      [
+        'candidates.mandatory_documents',
+        ['PASSPORT', 'EXPERIENCE_CERT', 'EDUCATIONAL_CERT'],
+        false,
+      ],
       ['candidates.min_completion_pct', 70, false],
       ['candidates.video_max_minutes', 5, false],
       ['candidates.video_max_mb', 500, false],
@@ -110,7 +118,10 @@ beforeAll(async () => {
       msg.includes('prisma: command not found')
     ) {
       dockerUnavailable = true;
-      console.warn('[settings-integration] Docker or infra unavailable â€” tests will be skipped:', msg);
+      console.warn(
+        '[settings-integration] Docker or infra unavailable â€” tests will be skipped:',
+        msg,
+      );
     } else {
       throw err;
     }
@@ -271,22 +282,14 @@ describe('SettingsService.set â€” type validation', () => {
   it('rejects a number value for a boolean key â†’ 422', async () => {
     if (dockerUnavailable) return;
     await expect(
-      service.set(
-        SETTING_KEYS.REQUIRE_ADMIN_APPROVAL,
-        42 as unknown as boolean,
-        ADMIN_ACTOR,
-      ),
+      service.set(SETTING_KEYS.REQUIRE_ADMIN_APPROVAL, 42 as unknown as boolean, ADMIN_ACTOR),
     ).rejects.toThrow(UnprocessableEntityException);
   });
 
   it('rejects a non-string-array for a string[] key â†’ 422', async () => {
     if (dockerUnavailable) return;
     await expect(
-      service.set(
-        SETTING_KEYS.MANDATORY_DOCUMENTS,
-        [1, 2, 3] as unknown as string[],
-        ADMIN_ACTOR,
-      ),
+      service.set(SETTING_KEYS.MANDATORY_DOCUMENTS, [1, 2, 3] as unknown as string[], ADMIN_ACTOR),
     ).rejects.toThrow(UnprocessableEntityException);
   });
 
@@ -390,9 +393,8 @@ describe('SettingsService.getMany / getAll', () => {
 // â”€â”€â”€ isValidValue type-check helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('isValidValue (unit â€” no containers needed)', () => {
-  const { isValidValue: iv } = jest.requireActual<typeof import('./settings.keys')>(
-    './settings.keys',
-  );
+  const { isValidValue: iv } =
+    jest.requireActual<typeof import('./settings.keys')>('./settings.keys');
 
   it.each<[SettingType, unknown, boolean]>([
     ['boolean', true, true],
@@ -412,4 +414,3 @@ describe('isValidValue (unit â€” no containers needed)', () => {
     expect(iv(type, value)).toBe(expected);
   });
 });
-

@@ -1,5 +1,6 @@
 ﻿import { http, HttpResponse } from 'msw';
 import type { components } from '@skillindiaconnect/shared-types';
+import { MAX_UPLOAD_BYTES } from '@/lib/uploads';
 
 /** Alias so `languagePref` tracks the contract enum instead of a literal union. */
 type CompanySchema = components['schemas']['Company'];
@@ -490,6 +491,13 @@ const candidateMePatch = http.patch(`${BASE}/candidates/me`, async ({ request })
   const body = (await request.json()) as Partial<typeof candidate.profile>;
   Object.assign(candidate.profile, body);
 
+  // Mirror the server's normalisation: an emptied summary is stored as NULL,
+  // not ''. Without this the mock would echo '' and the UI's "has a summary?"
+  // checks would behave differently here than against the real API.
+  if (body.summary !== undefined) {
+    candidate.profile.summary = body.summary?.trim() || null;
+  }
+
   const { pct } = computeCompletion(candidate.profile);
   candidate.profile.completionPct = pct;
 
@@ -660,9 +668,9 @@ const candidateDocumentsPresign = http.post(
     };
 
     const sizeLimits: Record<string, number> = {
-      PASSPORT: 10 * 1024 * 1024,
-      EXPERIENCE_CERT: 5 * 1024 * 1024,
-      EDUCATIONAL_CERT: 5 * 1024 * 1024,
+      PASSPORT: MAX_UPLOAD_BYTES,
+      EXPERIENCE_CERT: MAX_UPLOAD_BYTES,
+      EDUCATIONAL_CERT: MAX_UPLOAD_BYTES,
     };
 
     if (body.sizeBytes > (sizeLimits[body.type] ?? 5 * 1024 * 1024)) {

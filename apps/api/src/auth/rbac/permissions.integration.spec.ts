@@ -236,4 +236,3 @@ describe('PermissionsGuard â€” integration (real Postgres + Redis)', () => 
     await supertest(app.getHttpServer()).get('/__test__/resource').expect(403);
   });
 });
-

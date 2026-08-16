@@ -60,6 +60,7 @@ beforeAll(async () => {
     employerService = new EmployerService(
       prisma as unknown as PrismaService,
       mockStorage as unknown as StorageService,
+      { notify: jest.fn() } as never,
     );
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -91,7 +92,10 @@ beforeEach(async () => {
   await prisma.company.deleteMany();
   await prisma.user.deleteMany();
   jest.clearAllMocks();
-  mockStorage.presignPut.mockResolvedValue({ url: 'https://r2.example/put', expiresInSeconds: 300 });
+  mockStorage.presignPut.mockResolvedValue({
+    url: 'https://r2.example/put',
+    expiresInSeconds: 300,
+  });
   mockStorage.headObject.mockResolvedValue({ sizeBytes: 1024, contentType: 'application/pdf' });
 });
 
@@ -422,6 +426,4 @@ describe('EmployerService â€” integration (real DB)', () => {
     expect(resubmitted.status).toBe(CompanyStatus.PENDING);
     expect(resubmitted.rejectionReason).toBeNull();
   });
-
 });
-

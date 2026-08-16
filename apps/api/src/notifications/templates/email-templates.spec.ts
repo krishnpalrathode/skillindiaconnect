@@ -16,7 +16,10 @@ import { renderEmailLayout, renderEmailText, safeUrl, escapeHtml } from './email
 const WEB = 'https://skillindiaconnect.com';
 const ALL_TYPES = Object.values(NotificationType);
 
-function render(type: NotificationType, over: Partial<Parameters<typeof renderNotificationEmail>[0]> = {}) {
+function render(
+  type: NotificationType,
+  over: Partial<Parameters<typeof renderNotificationEmail>[0]> = {},
+) {
   return renderNotificationEmail({
     type,
     title: 'Something happened',
@@ -163,7 +166,10 @@ describe('the text part mirrors the html', () => {
   });
 
   it('renders an html shell for the same body', () => {
-    const html = renderEmailLayout({ preheader: 'p', heading: 'H', intro: 'i' }, { webAppUrl: WEB });
+    const html = renderEmailLayout(
+      { preheader: 'p', heading: 'H', intro: 'i' },
+      { webAppUrl: WEB },
+    );
     expect(html).toContain('<!doctype html>');
     expect(html).toContain('H');
   });

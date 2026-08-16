@@ -1,17 +1,6 @@
-import {
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import {
-  Application,
-  DocumentType,
-  NotificationType,
-  Prisma,
-  UserRole,
-} from '@prisma/client';
+import { Application, DocumentType, NotificationType, Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { CandidateReadService } from '../candidate/candidate-read.service';
 import { JobsService, JobForApplication } from '../jobs/jobs.service';
@@ -25,10 +14,7 @@ import { ApplyGateService } from './apply-gate.service';
 import { MatchService } from './match/match.service';
 import { ApplyDto } from './dto/apply.dto';
 import { ApplicationResponse, toApplicationResponse } from './application.mapper';
-import {
-  APPLICATION_EVENTS,
-  ApplicationCreatedPayload,
-} from './events/application.events';
+import { APPLICATION_EVENTS, ApplicationCreatedPayload } from './events/application.events';
 
 /**
  * Apply-side in-app receipt type.
@@ -123,10 +109,7 @@ export class ApplyService {
       // Race guarantee: a concurrent double-submit hits the (jobId, candidateId)
       // unique → P2002. Map to the SAME 409 as the gate-2 pre-check so a parallel
       // double-apply is indistinguishable from a sequential one to the client.
-      if (
-        err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === 'P2002'
-      ) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         throw new ConflictException({ code: 'ALREADY_APPLIED' });
       }
       throw err;
@@ -166,9 +149,7 @@ export class ApplyService {
         data: { applicationId: application.id, jobId: job.id },
       });
 
-      const employerUserId = await this.employerService.getPrimaryUserIdForCompany(
-        job.companyId,
-      );
+      const employerUserId = await this.employerService.getPrimaryUserIdForCompany(job.companyId);
       if (employerUserId) {
         await this.notificationService.notifyInApp(employerUserId, APPLY_NOTIFICATION_TYPE, {
           title: 'New applicant',
