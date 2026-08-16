@@ -2508,11 +2508,16 @@
       "home": "Skill India Connect home"
     },
     "hero": {
-      "headline": "<hl>Safe, verified jobs</hl> in India and the Gulf",
+      "headline": "Safe, <hl>Verified Jobs</hl> for Skilled Workers in India and Around the World",
       "subline": "Every job on Skill India Connect must give you a place to stay, health insurance, and transport. We check every employer before their job goes live.",
-      "ctaWorker": "Find Jobs",
-      "ctaEmployer": "Hire Workers",
-      "freeNote": "Free for workers. Always."
+      "ctaWorker": "Find Verified Jobs",
+      "ctaEmployer": "Hire Skilled Talent",
+      "freeNote": "Free for workers. Always.",
+      "badges": {
+        "verified": "Verified Employers",
+        "free": "Free for Workers",
+        "global": "India & Global Opportunities"
+      }
     },
     "trust": {
       "ariaLabel": "Why workers trust us",
@@ -2531,7 +2536,8 @@
       "whatsapp": {
         "title": "Updates on WhatsApp",
         "body": "We message you when your job status changes."
-      }
+      },
+      "heading": "Why Workers Trust Us"
     },
     "howItWorks": {
       "heading": "How it works",
@@ -2620,7 +2626,11 @@
         "construction": "Construction & Civil",
         "electrical": "Electrical & Plumbing",
         "driving": "Drivers & Logistics",
-        "hospitality": "Hospitality & Catering"
+        "hospitality": "Hospitality & Catering",
+        "welding": "Welding & Fabrication",
+        "technician": "Technicians & Mechanics",
+        "healthcare": "Healthcare & Nursing",
+        "team": "Every Skilled Trade"
       },
       "trust": {
         "protection": "Every job includes accommodation, health insurance & transport",
@@ -2628,6 +2638,19 @@
         "verified": "Employers verified before posting"
       },
       "verifiedStrip": "Verified employers only"
+    },
+    "announce": {
+      "ariaLabel": "Our promises",
+      "verified": "100% Verified Employers",
+      "free": "Free for Workers",
+      "global": "Jobs in India & Worldwide"
+    },
+    "stats": {
+      "ariaLabel": "Skill India Connect in numbers",
+      "workers": "Skilled Workers Connected",
+      "employers": "Verified Employers",
+      "placements": "Successful Placements",
+      "countries": "Countries with Job Opportunities"
     }
   },
   "staticPages": {
