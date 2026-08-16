@@ -504,6 +504,11 @@ model Company {
   country            String?
   location           String
   website            String?
+  /// Year the company was founded. NULLABLE on purpose: every company that
+  /// registered before this field existed has no answer, and backfilling a
+  /// guessed year would put a fabricated fact on a profile admins use to
+  /// approve employers. The register DTO requires it for every NEW company.
+  foundedYear        Int?
   employeeRange      String
   languagePref       String[]      @default([])
   description        String?

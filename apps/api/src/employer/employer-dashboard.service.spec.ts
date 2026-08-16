@@ -37,6 +37,8 @@ describe('EmployerDashboardService', () => {
     logoKey: 'companies/company-uuid/logo/x.jpg',
     description: 'Gulf construction firm.',
     website: null,
+    // Null is the REAL shape for a company registered before the field existed.
+    foundedYear: null,
     rejectionReason: null,
     registrationCertKey: null,
     approvedAt: new Date(),

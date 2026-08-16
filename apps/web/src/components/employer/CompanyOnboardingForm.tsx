@@ -59,6 +59,14 @@ const INDUSTRY_OTHER = 'other';
 const INDUSTRY_TYPE_MAX = 100;
 
 /**
+ * Mirrors FOUNDED_YEAR_MIN in the API's founded-year validator. A floor that
+ * rejects the realistic typo (`19`, `202`) rather than a guess at the oldest
+ * company in the world. The ceiling is THIS year, read at render time so the
+ * form does not start rejecting valid years after a New Year rollover.
+ */
+const FOUNDED_YEAR_MIN = 1800;
+
+/**
  * Split a stored `industryType` back into the two controls that produced it.
  *
  * `Company.industryType` is a free-form `String(100)`, not an enum — the picker
@@ -127,6 +135,11 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
   const [country, setCountry] = useState(company?.country ?? '');
   const [location, setLocation] = useState(company?.location ?? '');
   const [website, setWebsite] = useState(company?.website ?? '');
+  // Held as a STRING: a number input's value is a string, and coercing on every
+  // keystroke turns a half-typed "20" into 20 and fights the user's typing.
+  const [foundedYear, setFoundedYear] = useState(
+    company?.foundedYear != null ? String(company.foundedYear) : '',
+  );
   const [employeeRange, setEmployeeRange] = useState<EmployeeRange | ''>(
     company?.employeeRange ?? '',
   );
@@ -170,6 +183,31 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
     // Devanagari and Arabic names pass.
     else if (!/[\p{L}\p{N}]/u.test(trimmedName)) next.name = t('nameNoAlnum');
 
+    if (!registrationNumber.trim()) next.registrationNumber = t('registrationNumberRequired');
+    // The picker itself is now required. "Other" additionally requires its text,
+    // checked below — choosing Other and typing nothing says less than not
+    // choosing at all.
+    if (!industryType) next.industryType = t('industryTypeRequired');
+
+    const trimmedYear = foundedYear.trim();
+    if (!trimmedYear) next.foundedYear = t('foundedYearRequired');
+    else {
+      const year = Number(trimmedYear);
+      const maxYear = new Date().getUTCFullYear();
+      if (!Number.isInteger(year) || year < FOUNDED_YEAR_MIN || year > maxYear) {
+        next.foundedYear = t('foundedYearInvalid', { min: FOUNDED_YEAR_MIN, max: maxYear });
+      }
+    }
+
+    const trimmedWebsite = website.trim();
+    if (!trimmedWebsite) next.website = t('websiteRequired');
+    // Mirrors @IsUrl on the DTO. Checked here so a bad address is pointed at the
+    // field rather than coming back as a 400 the form cannot attribute.
+    else if (!/^https?:\/\/[^\s.]+\.[^\s]{2,}$/i.test(trimmedWebsite))
+      next.website = t('websiteInvalid');
+
+    if (!description.trim()) next.description = t('descriptionRequired');
+
     if (!phoneCode.trim()) next.phoneCode = t('phoneCodeRequired');
     if (!phone.trim()) next.phone = t('phoneRequired');
     if (!country) next.country = t('countryRequired');
@@ -210,10 +248,13 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
           country,
           location: location.trim(),
           employeeRange: employeeRange as EmployeeRange,
-          registrationNumber: registrationNumber.trim() || undefined,
-          industryType: resolvedIndustry || undefined,
-          website: website.trim() || undefined,
-          description: description.trim() || undefined,
+          // Sent unconditionally — validate() has already refused an empty one,
+          // so `|| undefined` here could only ever hide a bug from the server.
+          registrationNumber: registrationNumber.trim(),
+          industryType: resolvedIndustry,
+          foundedYear: Number(foundedYear.trim()),
+          website: website.trim(),
+          description: description.trim(),
           registrationCertKey: certKeyRef.current ?? undefined,
         });
       } else {
@@ -225,10 +266,13 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
           country,
           location: location.trim(),
           employeeRange: employeeRange as EmployeeRange,
-          registrationNumber: registrationNumber.trim() || undefined,
-          industryType: resolvedIndustry || undefined,
-          website: website.trim() || undefined,
-          description: description.trim() || undefined,
+          // Sent unconditionally — validate() has already refused an empty one,
+          // so `|| undefined` here could only ever hide a bug from the server.
+          registrationNumber: registrationNumber.trim(),
+          industryType: resolvedIndustry,
+          foundedYear: Number(foundedYear.trim()),
+          website: website.trim(),
+          description: description.trim(),
           registrationCertKey: certKeyRef.current ?? undefined,
         });
       }
@@ -303,23 +347,51 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
           />
         </Field>
 
-        <Field id="ob-regnum" label={t('registrationNumberLabel')}>
+        <Field
+          id="ob-regnum"
+          label={t('registrationNumberLabel')}
+          error={errors.registrationNumber}
+          required
+        >
           <Input
             id="ob-regnum"
             type="text"
             value={registrationNumber}
             onChange={(e) => setRegistrationNumber(e.target.value)}
             placeholder={t('registrationNumberPlaceholder')}
+            maxLength={100}
+            hasError={!!errors.registrationNumber}
+          />
+        </Field>
+
+        <Field id="ob-founded" label={t('foundedYearLabel')} error={errors.foundedYear} required>
+          <Input
+            id="ob-founded"
+            type="number"
+            inputMode="numeric"
+            min={FOUNDED_YEAR_MIN}
+            max={new Date().getUTCFullYear()}
+            value={foundedYear}
+            onChange={(e) => setFoundedYear(e.target.value)}
+            placeholder={t('foundedYearPlaceholder')}
+            hasError={!!errors.foundedYear}
           />
         </Field>
 
         <div className="flex flex-col gap-3">
-          <Field id="ob-industry" label={t('industryTypeLabel')}>
+          <Field
+            id="ob-industry"
+            label={t('industryTypeLabel')}
+            error={errors.industryType}
+            required
+          >
             <select
               id="ob-industry"
               value={industryType}
+              aria-invalid={!!errors.industryType}
               onChange={(e) => {
                 setIndustryType(e.target.value);
+                setErrors((prev) => ({ ...prev, industryType: '' }));
                 // Moving off Other drops the text with it, so a stale value
                 // cannot be submitted by a picker that no longer shows it.
                 if (e.target.value !== INDUSTRY_OTHER) setIndustryOther('');
@@ -446,7 +518,7 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
           />
         </Field>
 
-        <Field id="ob-website" label={t('websiteLabel')}>
+        <Field id="ob-website" label={t('websiteLabel')} error={errors.website} required>
           <Input
             id="ob-website"
             type="url"
@@ -454,6 +526,8 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
             onChange={(e) => setWebsite(e.target.value)}
             placeholder={t('websitePlaceholder')}
             autoComplete="url"
+            maxLength={300}
+            hasError={!!errors.website}
           />
         </Field>
 
@@ -479,13 +553,21 @@ export function CompanyOnboardingForm({ company }: CompanyOnboardingFormProps) {
           </select>
         </Field>
 
-        <Field id="ob-desc" label={t('descriptionLabel')} className="sm:col-span-2">
+        <Field
+          id="ob-desc"
+          label={t('descriptionLabel')}
+          error={errors.description}
+          required
+          className="sm:col-span-2"
+        >
           <textarea
             id="ob-desc"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder={t('descriptionPlaceholder')}
             rows={3}
+            maxLength={2000}
+            aria-invalid={!!errors.description}
             className="flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 resize-y min-h-[80px]"
           />
         </Field>

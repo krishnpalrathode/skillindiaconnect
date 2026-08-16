@@ -3161,6 +3161,11 @@ export interface components {
             location?: string;
             /** Format: uri */
             website?: string;
+            /**
+             * @description Year the company was founded. NULL only for companies registered before the field existed — it is required for every new registration, and deliberately not backfilled, because a guessed founding year would be indistinguishable from a stated one.
+             * @example 2014
+             */
+            foundedYear?: number | null;
             employeeRange?: components["schemas"]["EmployeeRange"];
             /**
              * @default en
@@ -5943,8 +5948,13 @@ export interface operations {
                     /** @description Must contain at least one letter or digit — a name made only of punctuation/symbols is rejected. */
                     name: string;
                     type: components["schemas"]["CompanyType"];
-                    registrationNumber?: string;
-                    industryType?: string;
+                    registrationNumber: string;
+                    industryType: string;
+                    /**
+                     * @description Year of incorporation. Must not be in the future; the upper bound is the CURRENT year, evaluated per request.
+                     * @example 2014
+                     */
+                    foundedYear: number;
                     /** @example +91 */
                     phoneCode: string;
                     phone: string;
@@ -5953,16 +5963,16 @@ export interface operations {
                     /** @description City or area within `country` */
                     location: string;
                     /** Format: uri */
-                    website?: string;
+                    website: string;
                     employeeRange: components["schemas"]["EmployeeRange"];
                     /**
                      * @default en
                      * @enum {string}
                      */
                     languagePref?: "en" | "hi" | "bn" | "mr" | "te" | "ta" | "gu" | "kn" | "ml" | "pa" | "or" | "as" | "ne" | "tl" | "id" | "si" | "am" | "sw" | "ur" | "fa" | "ps" | "ar";
-                    description?: string;
+                    description: string;
                     /** @description R2 key returned by POST /employers/me/company/documents/presign (which works BEFORE registration) after the direct PUT upload. Ownership- and existence-validated; attached to the new company. */
-                    registrationCertKey?: string;
+                    registrationCertKey: string;
                 };
             };
         };
@@ -6088,6 +6098,11 @@ export interface operations {
                     location?: string;
                     /** Format: uri */
                     website?: string;
+                    /**
+                     * @description Optional here, required on register — PATCH is a PARTIAL update, so an absent key means "leave it alone", not "blank it". Same range rule as register when present.
+                     * @example 2014
+                     */
+                    foundedYear?: number;
                     employeeRange?: components["schemas"]["EmployeeRange"];
                     /** @enum {string} */
                     languagePref?: "en" | "hi" | "bn" | "mr" | "te" | "ta" | "gu" | "kn" | "ml" | "pa" | "or" | "as" | "ne" | "tl" | "id" | "si" | "am" | "sw" | "ur" | "fa" | "ps" | "ar";

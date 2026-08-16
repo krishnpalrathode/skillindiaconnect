@@ -855,6 +855,14 @@ components:
         website:
           type: string
           format: uri
+        foundedYear:
+          type: [integer, 'null']
+          description: >
+            Year the company was founded. NULL only for companies registered
+            before the field existed — it is required for every new
+            registration, and deliberately not backfilled, because a guessed
+            founding year would be indistinguishable from a stated one.
+          example: 2014
         employeeRange:
           $ref: '#/components/schemas/EmployeeRange'
         languagePref:
@@ -4579,7 +4587,27 @@ paths:
           application/json:
             schema:
               type: object
-              required: [name, type, phoneCode, phone, country, location, employeeRange]
+              # Registration submits a COMPLETE profile. Everything the onboarding
+              # form shows is required here too — an employer must not be able to
+              # reach the approval queue with a profile a reviewer cannot assess.
+              # `languagePref` stays optional: it is not on the form and has a
+              # server default.
+              required:
+                [
+                  name,
+                  type,
+                  registrationNumber,
+                  industryType,
+                  foundedYear,
+                  phoneCode,
+                  phone,
+                  country,
+                  location,
+                  website,
+                  employeeRange,
+                  description,
+                  registrationCertKey,
+                ]
               properties:
                 name:
                   type: string
@@ -4593,6 +4621,13 @@ paths:
                   type: string
                 industryType:
                   type: string
+                foundedYear:
+                  type: integer
+                  minimum: 1800
+                  description: >
+                    Year of incorporation. Must not be in the future; the upper
+                    bound is the CURRENT year, evaluated per request.
+                  example: 2014
                 phoneCode:
                   type: string
                   pattern: '^\+[0-9]{1,4}$'
@@ -4730,6 +4765,14 @@ paths:
                 website:
                   type: string
                   format: uri
+                foundedYear:
+                  type: integer
+                  minimum: 1800
+                  description: >
+                    Optional here, required on register — PATCH is a PARTIAL
+                    update, so an absent key means "leave it alone", not "blank
+                    it". Same range rule as register when present.
+                  example: 2014
                 employeeRange:
                   $ref: '#/components/schemas/EmployeeRange'
                 languagePref:

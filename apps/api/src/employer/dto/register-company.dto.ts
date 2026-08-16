@@ -1,12 +1,14 @@
 import {
   IsEnum,
   IsIn,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   IsUrl,
   Matches,
   MaxLength,
+  Validate,
 } from 'class-validator';
 import { CompanyType } from '@prisma/client';
 import { SUPPORTED_LOCALES } from '../../core/locales';
@@ -18,7 +20,21 @@ import {
   PHONE_CODE_MESSAGE,
   PHONE_CODE_PATTERN,
 } from './company-name.validator';
+import { IsFoundedYearConstraint } from './founded-year.validator';
 
+/**
+ * Registration is now a COMPLETE company profile.
+ *
+ * Every field the onboarding form shows is required here, not just in the form.
+ * The previous split — registration number, website and description optional on
+ * the server, "optional" in the UI — meant an employer could reach admin review
+ * with a profile the reviewer could not actually assess, and it let the two
+ * layers disagree about what a valid company is. The UI is a convenience; this
+ * class is the rule.
+ *
+ * `languagePref` stays optional: it is not on the form, it has a server default
+ * ('en'), and it describes a preference rather than a fact about the company.
+ */
 export class RegisterCompanyDto {
   @IsString()
   @IsNotEmpty()
@@ -29,19 +45,25 @@ export class RegisterCompanyDto {
   @IsEnum(CompanyType)
   type!: CompanyType;
 
-  // Optional: not every small employer has a registration number to hand at
-  // sign-up. Admins still see it (or "—") during review, and the uploaded
-  // registration certificate remains the mandatory proof.
-  @IsOptional()
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  registrationNumber?: string;
+  registrationNumber!: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
   industryType!: string;
+
+  /**
+   * Year of incorporation. Validated by a constraint that recomputes "this year"
+   * per request — see founded-year.validator.ts for why a `@Max` constant is
+   * wrong here. `@IsInt` runs first so a string year fails as a type error
+   * rather than reaching the range check.
+   */
+  @IsInt()
+  @Validate(IsFoundedYearConstraint)
+  foundedYear!: number;
 
   @IsString()
   @IsNotEmpty()
@@ -63,10 +85,9 @@ export class RegisterCompanyDto {
   @MaxLength(300)
   location!: string;
 
-  @IsOptional()
   @IsUrl()
   @MaxLength(300)
-  website?: string;
+  website!: string;
 
   @IsString()
   @IsNotEmpty()
@@ -79,16 +100,23 @@ export class RegisterCompanyDto {
   @IsIn(SUPPORTED_LOCALES as unknown as string[])
   languagePref?: string;
 
-  @IsOptional()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(2000)
-  description?: string;
+  description!: string;
 
-  // R2 key from the PRE-registration presign→PUT flow (Screen 14 initial
-  // mode) — validated against the caller's `employer-reg/{userId}/cert/`
-  // prefix and HEAD-checked in register().
-  @IsOptional()
+  /**
+   * R2 key from the PRE-registration presign→PUT flow (Screen 14 initial mode)
+   * — validated against the caller's `employer-reg/{userId}/cert/` prefix and
+   * HEAD-checked in register().
+   *
+   * Required. The certificate has always BEEN the mandatory proof of a real
+   * company — the form has refused to submit without one since S2 — but the
+   * server accepted a registration with no certificate at all, which is the
+   * exact shape of an approval queue filling with unverifiable companies.
+   */
   @IsString()
+  @IsNotEmpty()
   @MaxLength(512)
-  registrationCertKey?: string;
+  registrationCertKey!: string;
 }

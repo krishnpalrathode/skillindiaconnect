@@ -46,6 +46,8 @@ function makeCompany(status: CompanyStatus = CompanyStatus.PENDING) {
     phone: '+91111',
     location: 'Delhi',
     website: null,
+    // Null is the REAL shape for a company registered before the field existed.
+    foundedYear: null,
     employeeRange: '10-50',
     languagePref: [],
     description: null,

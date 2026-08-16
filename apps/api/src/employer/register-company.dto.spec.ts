@@ -3,87 +3,153 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { CompanyType } from '@prisma/client';
 import { RegisterCompanyDto } from './dto/register-company.dto';
+import { FOUNDED_YEAR_MIN } from './dto/founded-year.validator';
 
-/** Fast unit test — the registration-number optionality contract, no container. */
-describe('RegisterCompanyDto validation', () => {
-  const VALID = {
-    name: 'Acme Recruit',
-    type: CompanyType.LOCAL,
-    industryType: 'Construction',
-    phoneCode: '+91',
-    phone: '9876543210',
-    country: 'India',
-    location: 'Mumbai',
-    employeeRange: '50-200',
-  };
+/**
+ * A registration payload with every field the onboarding form collects.
+ *
+ * Kept complete on purpose: each test below removes or corrupts ONE key, so a
+ * failure names the field that broke rather than a pile of unrelated errors.
+ */
+const VALID = {
+  name: 'Acme Recruit',
+  type: CompanyType.LOCAL,
+  registrationNumber: 'REG123',
+  industryType: 'Construction',
+  foundedYear: 2014,
+  phoneCode: '+91',
+  phone: '9876543210',
+  country: 'India',
+  location: 'Mumbai',
+  website: 'https://acme.example',
+  employeeRange: '50-200',
+  description: 'A test employer.',
+  registrationCertKey: 'employer-reg/user-1/cert/reg.pdf',
+};
 
-  async function errorsFor(payload: unknown) {
-    const dto = plainToInstance(RegisterCompanyDto, payload);
-    return validate(dto as object);
-  }
+async function errorsFor(payload: unknown) {
+  const dto = plainToInstance(RegisterCompanyDto, payload);
+  return validate(dto as object);
+}
 
-  function fieldErrors(errors: Awaited<ReturnType<typeof errorsFor>>, property: string) {
-    return errors.filter((e) => e.property === property);
-  }
+function fieldErrors(errors: Awaited<ReturnType<typeof errorsFor>>, property: string) {
+  return errors.filter((e) => e.property === property);
+}
 
-  it('accepts a payload with NO registrationNumber', async () => {
+describe('RegisterCompanyDto — every profile field is required', () => {
+  it('accepts the complete payload', async () => {
     expect(await errorsFor(VALID)).toHaveLength(0);
   });
 
-  it('accepts an explicitly undefined registrationNumber', async () => {
-    expect(await errorsFor({ ...VALID, registrationNumber: undefined })).toHaveLength(0);
+  /**
+   * The rule this file exists to hold.
+   *
+   * Registration number, website and description used to be optional on the
+   * server while the form presented them as ordinary fields, so an employer
+   * could reach the approval queue with a profile a reviewer could not assess.
+   * Each is now required HERE, not only in the UI — a client that skips the form
+   * must not be able to skip the rule.
+   */
+  it.each([
+    'name',
+    'type',
+    'registrationNumber',
+    'industryType',
+    'foundedYear',
+    'phoneCode',
+    'phone',
+    'country',
+    'location',
+    'website',
+    'employeeRange',
+    'description',
+    'registrationCertKey',
+  ])('rejects a payload missing %s', async (field) => {
+    const { [field]: _dropped, ...withoutField } = VALID as Record<string, unknown>;
+    expect(fieldErrors(await errorsFor(withoutField), field)).not.toHaveLength(0);
   });
 
-  it('still accepts a supplied registrationNumber', async () => {
-    expect(await errorsFor({ ...VALID, registrationNumber: 'REG123' })).toHaveLength(0);
-  });
+  it.each(['registrationNumber', 'industryType', 'location', 'description'])(
+    'rejects an empty-string %s — a blank is not an answer',
+    async (field) => {
+      const errors = fieldErrors(await errorsFor({ ...VALID, [field]: '' }), field);
+      expect(errors[0]?.constraints).toHaveProperty('isNotEmpty');
+    },
+  );
 
-  it('rejects an empty-string registrationNumber — omit the field instead', async () => {
-    const errors = fieldErrors(
-      await errorsFor({ ...VALID, registrationNumber: '' }),
-      'registrationNumber',
-    );
-    expect(errors).toHaveLength(1);
-    expect(errors[0]?.constraints).toHaveProperty('isNotEmpty');
-  });
-
-  it('still enforces the 100-char ceiling when one IS supplied', async () => {
+  it('still enforces the 100-char ceiling on registrationNumber', async () => {
     const errors = fieldErrors(
       await errorsFor({ ...VALID, registrationNumber: 'a'.repeat(101) }),
       'registrationNumber',
     );
-    expect(errors).toHaveLength(1);
     expect(errors[0]?.constraints).toHaveProperty('maxLength');
   });
 
-  it('does not make the genuinely required fields optional', async () => {
-    const errors = await errorsFor({ registrationNumber: 'REG123' });
-    const properties = errors.map((e) => e.property);
-    expect(properties).toEqual(
-      expect.arrayContaining([
-        'name',
-        'type',
-        'industryType',
-        'phoneCode',
-        'phone',
-        'country',
-        'location',
-      ]),
+  it('requires website to be a real URL, not just non-empty', async () => {
+    expect(fieldErrors(await errorsFor({ ...VALID, website: 'acme' }), 'website')).not.toHaveLength(
+      0,
     );
+    expect(
+      fieldErrors(await errorsFor({ ...VALID, website: 'https://acme.example' }), 'website'),
+    ).toHaveLength(0);
+  });
+
+  it('leaves languagePref optional — it is not on the form and has a server default', async () => {
+    const { languagePref: _omitted, ...withoutLocale } = { ...VALID, languagePref: 'en' };
+    expect(await errorsFor(withoutLocale)).toHaveLength(0);
   });
 });
 
-describe('RegisterCompanyDto — company name rules', () => {
-  const VALID = {
-    type: CompanyType.LOCAL,
-    industryType: 'Construction',
-    phoneCode: '+91',
-    phone: '9876543210',
-    country: 'India',
-    location: 'Mumbai',
-    employeeRange: '50-200',
-  };
+describe('RegisterCompanyDto — foundedYear', () => {
+  const thisYear = new Date().getUTCFullYear();
 
+  it('accepts a plausible founding year', async () => {
+    expect(fieldErrors(await errorsFor({ ...VALID, foundedYear: 1998 }), 'foundedYear')).toHaveLength(
+      0,
+    );
+  });
+
+  it('accepts the current year — a company founded this year is valid', async () => {
+    expect(
+      fieldErrors(await errorsFor({ ...VALID, foundedYear: thisYear }), 'foundedYear'),
+    ).toHaveLength(0);
+  });
+
+  // The bound is recomputed per request rather than captured at module load, so
+  // this holds on a process still running after New Year. See the validator.
+  it('rejects a year in the future', async () => {
+    expect(
+      fieldErrors(await errorsFor({ ...VALID, foundedYear: thisYear + 1 }), 'foundedYear'),
+    ).not.toHaveLength(0);
+  });
+
+  it(`accepts the ${FOUNDED_YEAR_MIN} floor but rejects the year below it`, async () => {
+    expect(
+      fieldErrors(await errorsFor({ ...VALID, foundedYear: FOUNDED_YEAR_MIN }), 'foundedYear'),
+    ).toHaveLength(0);
+    expect(
+      fieldErrors(await errorsFor({ ...VALID, foundedYear: FOUNDED_YEAR_MIN - 1 }), 'foundedYear'),
+    ).not.toHaveLength(0);
+  });
+
+  // The realistic typo: a truncated or mistyped year, not an ancient company.
+  it.each([0, 19, 202, -2014])('rejects the malformed year %s', async (year) => {
+    expect(
+      fieldErrors(await errorsFor({ ...VALID, foundedYear: year }), 'foundedYear'),
+    ).not.toHaveLength(0);
+  });
+
+  it.each([2014.5, '2014', null, 'nineteen ninety'])(
+    'rejects a non-integer year: %s',
+    async (year) => {
+      expect(
+        fieldErrors(await errorsFor({ ...VALID, foundedYear: year }), 'foundedYear'),
+      ).not.toHaveLength(0);
+    },
+  );
+});
+
+describe('RegisterCompanyDto — company name rules', () => {
   async function nameErrors(name: unknown) {
     const dto = plainToInstance(RegisterCompanyDto, { ...VALID, name });
     return (await validate(dto as object)).filter((e) => e.property === 'name');
@@ -125,16 +191,6 @@ describe('RegisterCompanyDto — company name rules', () => {
 });
 
 describe('RegisterCompanyDto — phoneCode rules', () => {
-  const VALID = {
-    name: 'Acme Recruit',
-    type: CompanyType.LOCAL,
-    industryType: 'Construction',
-    phone: '9876543210',
-    country: 'India',
-    location: 'Mumbai',
-    employeeRange: '50-200',
-  };
-
   async function codeErrors(phoneCode: unknown) {
     const dto = plainToInstance(RegisterCompanyDto, { ...VALID, phoneCode });
     return (await validate(dto as object)).filter((e) => e.property === 'phoneCode');

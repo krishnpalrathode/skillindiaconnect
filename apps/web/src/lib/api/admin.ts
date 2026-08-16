@@ -12,4 +12,3 @@ export type PermissionKey = components['schemas']['PermissionKey'];
 export function getAdminMe(): Promise<AdminMe> {
   return apiFetch<AdminMe>('/admin/me/permissions');
 }
-

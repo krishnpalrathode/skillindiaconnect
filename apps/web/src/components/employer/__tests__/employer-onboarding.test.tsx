@@ -281,6 +281,32 @@ describe('CompanyTypeRadio', () => {
 
 // ─── CompanyOnboardingForm — initial registration ─────────────────────────────
 
+/**
+ * Fill every field the form requires. Registration submits a COMPLETE profile —
+ * registration number, industry, founding year, website and description are all
+ * mandatory — so a submitting test that fills only the old subset is blocked by
+ * validation and never reaches the network.
+ */
+async function fillCompleteProfile(
+  user: ReturnType<typeof userEvent.setup>,
+  overrides: { name?: string } = {},
+) {
+  await user.click(screen.getByRole('radio', { name: /india company/i }));
+  await user.type(
+    screen.getByPlaceholderText(/your company legal name/i),
+    overrides.name ?? 'Test Corp',
+  );
+  await user.type(screen.getByLabelText(/registration number/i), 'DL-2026-00001');
+  await user.selectOptions(screen.getByLabelText(/industry type/i), 'construction');
+  await user.type(screen.getByLabelText(/year founded/i), '2014');
+  await user.type(screen.getByPlaceholderText(/\+91 98765 43210/i), '+911234567890');
+  await user.selectOptions(screen.getByLabelText(/country/i), 'India');
+  await user.type(screen.getByPlaceholderText(/city, state or country/i), 'Delhi');
+  await user.type(screen.getByLabelText(/website/i), 'https://testcorp.example');
+  await user.selectOptions(screen.getByLabelText(/number of employees/i), '1-10');
+  await user.type(screen.getByLabelText(/company description/i), 'We hire skilled trades.');
+}
+
 describe('CompanyOnboardingForm — initial registration', () => {
   beforeEach(() => {
     // Fresh employer with no company
@@ -327,6 +353,99 @@ describe('CompanyOnboardingForm — initial registration', () => {
       expect(screen.getByText(/company phone is required/i)).toBeInTheDocument();
     });
     expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The rule this change introduced: registration number, industry, founding
+   * year, website and description used to be optional, so an employer could
+   * submit a profile an admin could not actually review. They are required now
+   * — in the form AND in the DTO, which is asserted separately in
+   * register-company.dto.spec.ts.
+   */
+  it('blocks submit until the previously-optional fields are filled', async () => {
+    const user = userEvent.setup();
+    mockCertState = {
+      status: 'done',
+      progress: 100,
+      key: 'employer-docs/form-test-employer/cert.pdf',
+      errorMessage: null,
+    };
+
+    render(
+      <WithAll>
+        <CompanyOnboardingForm company={null} />
+      </WithAll>,
+    );
+
+    // The pre-change "valid" submission: only the fields that used to be required.
+    await user.click(screen.getByRole('radio', { name: /india company/i }));
+    await user.type(screen.getByPlaceholderText(/your company legal name/i), 'Partial Co');
+    await user.type(screen.getByPlaceholderText(/\+91 98765 43210/i), '+911234567890');
+    await user.selectOptions(screen.getByLabelText(/country/i), 'India');
+    await user.type(screen.getByPlaceholderText(/city, state or country/i), 'Delhi');
+    await user.selectOptions(screen.getByLabelText(/number of employees/i), '1-10');
+
+    await user.click(screen.getByRole('button', { name: /submit for approval/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/registration number is required/i)).toBeInTheDocument();
+    });
+    expect(screen.getByText(/please select an industry/i)).toBeInTheDocument();
+    expect(screen.getByText(/year founded is required/i)).toBeInTheDocument();
+    expect(screen.getByText(/website is required/i)).toBeInTheDocument();
+    expect(screen.getByText(/company description is required/i)).toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('rejects a founding year in the future', async () => {
+    const user = userEvent.setup();
+    render(
+      <WithAll>
+        <CompanyOnboardingForm company={null} />
+      </WithAll>,
+    );
+
+    await user.type(
+      screen.getByLabelText(/year founded/i),
+      String(new Date().getUTCFullYear() + 1),
+    );
+    await user.click(screen.getByRole('button', { name: /submit for approval/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/enter a four-digit year/i)).toBeInTheDocument();
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('sends the founding year as a NUMBER, not the input string', async () => {
+    const user = userEvent.setup();
+    mockCertState = {
+      status: 'done',
+      progress: 100,
+      key: 'employer-docs/form-test-employer/cert.pdf',
+      errorMessage: null,
+    };
+
+    let captured: Record<string, unknown> = {};
+    server.use(
+      http.post('/api/v1/employers/register', async ({ request }) => {
+        captured = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ data: { id: 'c1', ...captured } }, { status: 201 });
+      }),
+    );
+
+    render(
+      <WithAll>
+        <CompanyOnboardingForm company={null} />
+      </WithAll>,
+    );
+
+    await fillCompleteProfile(user);
+    await user.click(screen.getByRole('button', { name: /submit for approval/i }));
+
+    await waitFor(() => expect(captured.foundedYear).toBe(2014));
+    expect(captured.registrationNumber).toBe('DL-2026-00001');
+    expect(captured.website).toBe('https://testcorp.example');
   });
 
   it('rejects a company name made only of special characters', async () => {
@@ -410,12 +529,9 @@ describe('CompanyOnboardingForm — initial registration', () => {
       </WithAll>,
     );
 
-    await user.click(screen.getByRole('radio', { name: /india company/i }));
-    await user.type(screen.getByPlaceholderText(/your company legal name/i), 'Test Co');
-    await user.type(screen.getByPlaceholderText(/\+91 98765 43210/i), '+919876543210');
-    await user.type(screen.getByPlaceholderText(/city, state or country/i), 'Mumbai');
-    await user.selectOptions(screen.getByLabelText(/country/i), 'India');
-    await user.selectOptions(screen.getByLabelText(/number of employees/i), '11-50');
+    // Everything EXCEPT the certificate, so this test fails for the one reason
+    // it names rather than tripping over an unrelated required field.
+    await fillCompleteProfile(user, { name: 'Test Co' });
 
     await user.click(screen.getByRole('button', { name: /submit for approval/i }));
 
@@ -442,12 +558,7 @@ describe('CompanyOnboardingForm — initial registration', () => {
       </WithAll>,
     );
 
-    await user.click(screen.getByRole('radio', { name: /india company/i }));
-    await user.type(screen.getByPlaceholderText(/your company legal name/i), 'Test Corp');
-    await user.type(screen.getByPlaceholderText(/\+91 98765 43210/i), '+911234567890');
-    await user.type(screen.getByPlaceholderText(/city, state or country/i), 'Delhi');
-    await user.selectOptions(screen.getByLabelText(/country/i), 'India');
-    await user.selectOptions(screen.getByLabelText(/number of employees/i), '1-10');
+    await fillCompleteProfile(user);
 
     await user.click(screen.getByRole('button', { name: /submit for approval/i }));
 
@@ -474,12 +585,7 @@ describe('CompanyOnboardingForm — initial registration', () => {
       </WithAll>,
     );
 
-    await user.click(screen.getByRole('radio', { name: /india company/i }));
-    await user.type(screen.getByPlaceholderText(/your company legal name/i), 'Duplicate Co');
-    await user.type(screen.getByPlaceholderText(/\+91 98765 43210/i), '+911234567890');
-    await user.type(screen.getByPlaceholderText(/city, state or country/i), 'Mumbai');
-    await user.selectOptions(screen.getByLabelText(/country/i), 'India');
-    await user.selectOptions(screen.getByLabelText(/number of employees/i), '1-10');
+    await fillCompleteProfile(user, { name: 'Duplicate Co' });
 
     await user.click(screen.getByRole('button', { name: /submit for approval/i }));
 

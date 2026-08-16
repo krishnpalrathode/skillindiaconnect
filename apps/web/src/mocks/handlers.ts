@@ -1204,14 +1204,40 @@ const employersRegister = http.post(`${BASE}/employers/register`, async ({ reque
     employeeRange: string;
     registrationNumber?: string;
     industryType?: string;
+    foundedYear?: number;
     website?: string;
     languagePref?: string;
     description?: string;
     registrationCertKey?: string;
   };
 
-  if (!body.name || !body.type || !body.phone || !body.location || !body.employeeRange) {
+  // Mirrors RegisterCompanyDto: registration now submits a COMPLETE profile, so
+  // the mock rejects the same payloads the real API does. A mock that is laxer
+  // than the server lets a form ship broken and only fail in production.
+  const missing = [
+    !body.name,
+    !body.type,
+    !body.registrationNumber,
+    !body.industryType,
+    !body.foundedYear,
+    !body.phone,
+    !body.location,
+    !body.website,
+    !body.employeeRange,
+    !body.description,
+  ].some(Boolean);
+  if (missing) {
     return errorResponse(422, 'VALIDATION_ERROR', 'Validation failed', 'Required fields missing.');
+  }
+
+  const thisYear = new Date().getUTCFullYear();
+  if (
+    typeof body.foundedYear !== 'number' ||
+    !Number.isInteger(body.foundedYear) ||
+    body.foundedYear < 1800 ||
+    body.foundedYear > thisYear
+  ) {
+    return errorResponse(422, 'VALIDATION_ERROR', 'Validation failed', 'foundedYear out of range.');
   }
 
   const company = {
@@ -1221,6 +1247,7 @@ const employersRegister = http.post(`${BASE}/employers/register`, async ({ reque
     status: 'PENDING' as const,
     registrationNumber: body.registrationNumber,
     industryType: body.industryType,
+    foundedYear: body.foundedYear ?? null,
     phone: body.phone,
     location: body.location,
     website: body.website,

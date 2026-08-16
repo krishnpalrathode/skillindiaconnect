@@ -111,13 +111,13 @@ export class EmployerService {
     // exists (presign→PUT, then the key arrives here). Validate ownership
     // (the pre-registration prefix is user-scoped) and HEAD the object
     // before opening the transaction.
-    let certHead: { sizeBytes: number; contentType: string } | null = null;
-    if (dto.registrationCertKey) {
-      certHead = await this.assertOwnedUploadedCert(
-        `employer-reg/${userId}/cert/`,
-        dto.registrationCertKey,
-      );
-    }
+    //
+    // No longer conditional: the DTO now requires the key, so a registration
+    // without a certificate is rejected at the edge and never reaches here.
+    const certHead = await this.assertOwnedUploadedCert(
+      `employer-reg/${userId}/cert/`,
+      dto.registrationCertKey,
+    );
 
     const company = await this.prisma.$transaction(async (tx) => {
       const c = await tx.company.create({
@@ -131,6 +131,7 @@ export class EmployerService {
           country: dto.country,
           location: dto.location,
           website: dto.website,
+          foundedYear: dto.foundedYear,
           employeeRange: dto.employeeRange,
           // Contract: single locale string (default 'en'); column is String[].
           languagePref: dto.languagePref ? [dto.languagePref] : ['en'],
@@ -141,17 +142,15 @@ export class EmployerService {
       await tx.employerUser.create({
         data: { userId, companyId: c.id, isPrimary: true },
       });
-      if (dto.registrationCertKey && certHead) {
-        await tx.companyDocument.create({
-          data: {
-            companyId: c.id,
-            r2Key: dto.registrationCertKey,
-            fileName: dto.registrationCertKey.split('/').pop() ?? dto.registrationCertKey,
-            mimeType: certHead.contentType,
-            sizeBytes: certHead.sizeBytes,
-          },
-        });
-      }
+      await tx.companyDocument.create({
+        data: {
+          companyId: c.id,
+          r2Key: dto.registrationCertKey,
+          fileName: dto.registrationCertKey.split('/').pop() ?? dto.registrationCertKey,
+          mimeType: certHead.contentType,
+          sizeBytes: certHead.sizeBytes,
+        },
+      });
       return c;
     });
 
@@ -218,6 +217,7 @@ export class EmployerService {
         ...(dto.country !== undefined && { country: dto.country }),
         ...(dto.location !== undefined && { location: dto.location }),
         ...(dto.website !== undefined && { website: dto.website }),
+        ...(dto.foundedYear !== undefined && { foundedYear: dto.foundedYear }),
         ...(dto.employeeRange !== undefined && { employeeRange: dto.employeeRange }),
         ...(dto.languagePref !== undefined && { languagePref: dto.languagePref }),
         ...(dto.description !== undefined && { description: dto.description }),

@@ -720,7 +720,16 @@
         "bahrain": "Bahrain"
       },
       "phoneCodeSearch": "Search country or code",
-      "phoneCodeEmpty": "No country matches"
+      "phoneCodeEmpty": "No country matches",
+      "foundedYearLabel": "Year founded",
+      "foundedYearPlaceholder": "e.g. 2014",
+      "foundedYearRequired": "Year founded is required",
+      "foundedYearInvalid": "Enter a four-digit year between {min} and {max}",
+      "registrationNumberRequired": "Registration number is required",
+      "industryTypeRequired": "Please select an industry",
+      "websiteRequired": "Website is required",
+      "websiteInvalid": "Enter a full website address, e.g. https://yourcompany.com",
+      "descriptionRequired": "Company description is required"
     },
     "dashboard": {
       "metaTitle": "Employer Dashboard",
