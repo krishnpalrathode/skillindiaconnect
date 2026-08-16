@@ -3235,6 +3235,13 @@ export interface components {
             description?: string;
             /** @description Null unless `employmentType` is CONTRACT. */
             contractDuration?: components["schemas"]["ContractDuration"] | null;
+            /** @description Which version of the job-posting terms this job was posted under. Null for jobs posted before the terms existed — deliberately not backfilled, because stamping a version onto them would fabricate an acceptance that never happened. */
+            termsVersion?: string | null;
+            /**
+             * Format: date-time
+             * @description Server-side timestamp of acceptance, never client-reported.
+             */
+            termsAcceptedAt?: string | null;
             /** Format: uuid */
             categoryId?: string | null;
             /** @description Free-text trade name. Set ONLY when `categoryId` is the `other` category; null/absent for every fixed trade. Required when that category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`). */
@@ -3885,6 +3892,11 @@ export interface components {
             /** @description At least 300 characters — roughly three sentences. Enforced at CREATE (not only at publish) so a thin description is reported against the field while the employer is still on the form. */
             description: string;
             contractDuration?: components["schemas"]["ContractDuration"];
+            /**
+             * @description The VERSION of the job-posting terms the employer accepted. A version, not a boolean: the question in a dispute is what was agreed to, which a bare `true` cannot answer. Must be one of the published versions — any published version is accepted, not only the current one, so a form loaded just before a terms update does not fail on submit. The server stamps it onto the job with its own timestamp.
+             * @example 2026-08-draft-1
+             */
+            acceptedTermsVersion: string;
             /** Format: uuid */
             categoryId?: string;
             /** @description Free-text trade name. Set ONLY when `categoryId` is the `other` category; null/absent for every fixed trade. Required when that category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`). */

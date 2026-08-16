@@ -43,6 +43,9 @@ export interface Job {
   contractPeriodMonths: number | null;
   /** Null unless `employmentType` is CONTRACT. */
   contractDuration: components['schemas']['ContractDuration'] | null;
+  /** Which terms version this job was posted under; null for pre-terms jobs. */
+  termsVersion: string | null;
+  termsAcceptedAt: string | null;
   vacancies: number | null;
   genderPreference: string | null;
   isFeatured: boolean;
@@ -103,6 +106,8 @@ export interface CreateJobBody {
   contractDuration?: components['schemas']['ContractDuration'];
   vacancies?: number;
   genderPreference?: string;
+  /** The VERSION of the job-posting terms accepted. Required by the API. */
+  acceptedTermsVersion: string;
 }
 
 /** Public — active job categories for the post-a-job picker and search filter. */

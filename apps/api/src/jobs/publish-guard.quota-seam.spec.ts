@@ -219,9 +219,13 @@ const gatedIt = (name: string, fn: () => Promise<void>) =>
     await fn();
   });
 
+// GULF: this suite is about the QUOTA gate, so the protection gate before it
+// must pass rather than be skipped — a LOCAL job would bypass check 2 and hide
+// an ordering regression.
 const draftJob = () => ({
   id: uid('job'),
   companyId,
+  market: JobMarket.GULF,
   accommodation: true,
   healthInsurance: true,
   transportation: true,

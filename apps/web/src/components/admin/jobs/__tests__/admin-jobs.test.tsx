@@ -432,6 +432,8 @@ describe('OnBehalfJobForm', () => {
     await user.paste(LONG_DESCRIPTION);
     await user.type(container.querySelector<HTMLInputElement>('#salary-min')!, '2000');
     await user.type(container.querySelector<HTMLInputElement>('#salary-max')!, '2500');
+    // Posting now requires accepting the job-posting terms.
+    await user.click(screen.getByRole('checkbox', { name: /accept these terms/i }));
 
     await user.click(screen.getByRole('button', { name: 'Publish now' }));
 

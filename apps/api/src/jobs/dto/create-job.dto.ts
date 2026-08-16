@@ -16,6 +16,7 @@ import {
 import { ContractDuration, Currency, EmploymentType, JobMarket } from '@prisma/client';
 import { ALL_JOB_COUNTRIES } from '../job-countries';
 import { CATEGORY_OTHER_MAX_LENGTH } from '../../core/job-categories';
+import { JOB_POSTING_TERMS_HISTORY } from '../job-posting-terms';
 
 /**
  * Minimum length of a job description, in characters.
@@ -181,4 +182,19 @@ export class CreateJobDto {
   @IsOptional()
   @IsBoolean()
   isUrgent?: boolean;
+
+  /**
+   * The job-posting terms the employer ticked, BY VERSION.
+   *
+   * Required, and validated against the published versions rather than merely
+   * being a non-empty string — a client sending `"yes"` or an invented version
+   * would otherwise produce a job whose acceptance record points at nothing.
+   *
+   * Accepts any PUBLISHED version, not only the current one: a form loaded five
+   * minutes before a terms update should not fail on submit with an error the
+   * employer cannot act on. JobsService stamps what was actually accepted.
+   */
+  @IsString()
+  @IsIn(JOB_POSTING_TERMS_HISTORY as unknown as string[])
+  acceptedTermsVersion!: string;
 }

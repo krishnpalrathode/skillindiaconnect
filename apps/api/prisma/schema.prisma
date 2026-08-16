@@ -646,6 +646,15 @@ model Job {
   /// "required exactly when employmentType is CONTRACT" pairing is enforced in
   /// JobsService, which is the only place that can see both fields at once.
   contractDuration     ContractDuration?
+  /// WHICH version of the job-posting terms the employer accepted, and when.
+  ///
+  /// The version string is the point. A bare boolean records that someone
+  /// ticked a box but not what the box said, which is exactly the question
+  /// asked in a dispute — so the terms are versioned and the version is stamped
+  /// onto the row. Nullable for jobs posted before the terms existed; the DTO
+  /// requires it for every new job.
+  termsVersion         String?
+  termsAcceptedAt      DateTime?
   vacancies            Int?
   genderPreference     String?
   isFeatured      Boolean   @default(false)

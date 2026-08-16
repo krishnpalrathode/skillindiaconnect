@@ -989,6 +989,17 @@ components:
             - $ref: '#/components/schemas/ContractDuration'
             - type: 'null'
           description: Null unless `employmentType` is CONTRACT.
+        termsVersion:
+          type: [string, 'null']
+          description: >
+            Which version of the job-posting terms this job was posted under.
+            Null for jobs posted before the terms existed — deliberately not
+            backfilled, because stamping a version onto them would fabricate an
+            acceptance that never happened.
+        termsAcceptedAt:
+          type: [string, 'null']
+          format: date-time
+          description: Server-side timestamp of acceptance, never client-reported.
         categoryId:
           type: [string, 'null']
           format: uuid
@@ -2169,6 +2180,7 @@ components:
           accommodation,
           healthInsurance,
           transportation,
+          acceptedTermsVersion,
         ]
       properties:
         title:
@@ -2186,6 +2198,16 @@ components:
             against the field while the employer is still on the form.
         contractDuration:
           $ref: '#/components/schemas/ContractDuration'
+        acceptedTermsVersion:
+          type: string
+          example: 2026-08-draft-1
+          description: >
+            The VERSION of the job-posting terms the employer accepted. A
+            version, not a boolean: the question in a dispute is what was agreed
+            to, which a bare `true` cannot answer. Must be one of the published
+            versions — any published version is accepted, not only the current
+            one, so a form loaded just before a terms update does not fail on
+            submit. The server stamps it onto the job with its own timestamp.
         categoryId:
           type: string
           format: uuid

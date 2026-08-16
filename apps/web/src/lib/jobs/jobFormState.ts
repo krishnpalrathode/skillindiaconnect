@@ -2,6 +2,7 @@ import type { components } from '@skillindiaconnect/shared-types';
 import type { Job, CreateJobBody } from '@/lib/api/jobs-employer';
 import { countriesForMarket } from '@/lib/countries';
 import { CURRENCIES } from '@/lib/currencies';
+import { JOB_POSTING_TERMS_VERSION } from '@/lib/jobs/jobPostingTerms';
 
 type JobMarket = components['schemas']['JobMarket'];
 type GenderPreference = components['schemas']['GenderPreference'];
@@ -42,10 +43,15 @@ export interface JobFormValues {
   salaryCurrency: string;
   salaryMin: string;
   salaryMax: string;
-  // Mandatory locked benefits
-  accommodation: true;
-  healthInsurance: true;
-  transportation: true;
+  /*
+    Worker-protection guarantees. Locked ON for a GULF job — the platform will
+    not publish an overseas posting without them — but ordinary optional toggles
+    for a LOCAL one, where the worker sleeps at home and arranges their own
+    transport. Typed boolean, not literal true, because LOCAL can now say false.
+  */
+  accommodation: boolean;
+  healthInsurance: boolean;
+  transportation: boolean;
   // Optional benefits
   foodAllowance: boolean;
   airTickets: boolean;
@@ -60,6 +66,8 @@ export interface JobFormValues {
   experienceRequiredYears: string;
   vacancies: string;
   genderPreference: GenderPreference;
+  /** Ticked the job-posting terms. Not persisted as a boolean — see formToPayload. */
+  termsAccepted: boolean;
 }
 
 export interface JobFormErrors {
@@ -78,6 +86,7 @@ export interface JobFormErrors {
   hoursPerDay?: string;
   daysPerWeek?: string;
   requirements?: string;
+  termsAccepted?: string;
   [key: string]: string | undefined;
 }
 
@@ -128,6 +137,8 @@ export const DEFAULT_FORM_VALUES: JobFormValues = {
   experienceRequiredYears: '',
   vacancies: '',
   genderPreference: 'ANY',
+  // Never pre-ticked. A pre-accepted consent box is not consent.
+  termsAccepted: false,
 };
 
 /**
@@ -161,6 +172,10 @@ export function validateJobForm(values: JobFormValues, otherCategoryId?: string)
   // server's pairing rule so the employer sees it on the field, not as a 400.
   if (values.employmentType === 'CONTRACT' && !values.contractDuration) {
     errors.contractDuration = 'Select how long the contract runs';
+  }
+
+  if (!values.termsAccepted) {
+    errors.termsAccepted = 'Accept the terms for this posting to continue';
   }
 
   if (!values.salaryCurrency) errors.salaryCurrency = 'Currency is required';
@@ -222,9 +237,12 @@ export function formToPayload(values: JobFormValues, otherCategoryId?: string): 
     ...(values.employmentType === 'CONTRACT' && values.contractDuration
       ? { contractDuration: values.contractDuration }
       : {}),
-    accommodation: true,
-    healthInsurance: true,
-    transportation: true,
+    // Send what the form actually holds. These were hardcoded true, which meant
+    // a LOCAL employer who unticked accommodation still published a job claiming
+    // to provide it — a promise to the worker that nobody had made.
+    accommodation: values.accommodation,
+    healthInsurance: values.healthInsurance,
+    transportation: values.transportation,
     foodAllowance: values.foodAllowance,
     // A single "air tickets" toggle covers both legs.
     airTicketArrival: values.airTickets,
@@ -235,6 +253,12 @@ export function formToPayload(values: JobFormValues, otherCategoryId?: string): 
     overtime: values.overtime,
     ...(vac !== undefined && !isNaN(vac) ? { vacancies: vac } : {}),
     genderPreference: values.genderPreference,
+    /*
+      The VERSION, not the tick. What matters later is which text was agreed to,
+      and a boolean cannot answer that. validateJobForm has already refused an
+      unticked box, so reaching here means the employer accepted this version.
+    */
+    acceptedTermsVersion: JOB_POSTING_TERMS_VERSION,
   };
 }
 
@@ -252,9 +276,11 @@ export function jobToFormValues(job: Job): JobFormValues {
     salaryCurrency: job.currency,
     salaryMin: job.salaryMin != null ? String(job.salaryMin) : '',
     salaryMax: job.salaryMax != null ? String(job.salaryMax) : '',
-    accommodation: true,
-    healthInsurance: true,
-    transportation: true,
+    // Read what the job ACTUALLY stores. Hardcoding true here silently flipped a
+    // LOCAL job's protections back on every time the employer opened Edit.
+    accommodation: job.accommodation ?? true,
+    healthInsurance: job.healthInsurance ?? true,
+    transportation: job.transportation ?? true,
     foodAllowance: job.foodAllowance ?? false,
     airTickets: (job.airTicketArrival ?? false) || (job.airTicketDeparture ?? false),
     otherAllowance: job.otherAllowance ?? '',
@@ -266,6 +292,13 @@ export function jobToFormValues(job: Job): JobFormValues {
       job.experienceRequiredYears != null ? String(job.experienceRequiredYears) : '',
     vacancies: job.vacancies != null ? String(job.vacancies) : '',
     genderPreference: (job.genderPreference as GenderPreference) ?? 'ANY',
+    /*
+      Re-tick required on every save, even when editing a job that already
+      carries an acceptance. The terms are accepted FOR A POSTING, and an edit
+      changes the posting — silently reusing the old tick would record agreement
+      to terms the employer never re-read against the new content.
+    */
+    termsAccepted: false,
   };
 }
 
@@ -300,9 +333,9 @@ export function formToPreview(values: JobFormValues, companyName: string): Previ
     salaryMin: min !== null && !isNaN(min) ? min : null,
     salaryMax: max !== null && !isNaN(max) ? max : null,
     salaryCurrency: values.salaryCurrency,
-    accommodation: true,
-    healthInsurance: true,
-    transportation: true,
+    accommodation: values.accommodation,
+    healthInsurance: values.healthInsurance,
+    transportation: values.transportation,
     companyName,
     createdAt: new Date().toISOString(),
     publishedAt: null,

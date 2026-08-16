@@ -5,6 +5,7 @@ import {
   JOB_DESCRIPTION_MIN,
   defaultCurrencyForMarket,
   formToPayload,
+  formToPreview,
   getCurrenciesForMarket,
   validateJobForm,
   type JobFormValues,
@@ -154,5 +155,52 @@ describe('CONTRACT_DURATIONS', () => {
 
   it('gives every band human copy', () => {
     for (const d of CONTRACT_DURATIONS) expect(d.label).toMatch(/month|year/);
+  });
+});
+
+describe('worker protections follow the market', () => {
+  /**
+   * The three guarantees are for workers who EMIGRATE for the job. A domestic
+   * role has no such dependency, so they became opt-in there — and the payload
+   * has to carry what the employer actually said, not a hardcoded true.
+   */
+  it('sends the real values, not a hardcoded true', () => {
+    const payload = formToPayload(
+      completeValues({
+        market: 'LOCAL',
+        country: 'India',
+        accommodation: false,
+        healthInsurance: false,
+        transportation: false,
+      }),
+    );
+    expect(payload.accommodation).toBe(false);
+    expect(payload.healthInsurance).toBe(false);
+    expect(payload.transportation).toBe(false);
+  });
+
+  it('still carries them through when an employer does offer them', () => {
+    const payload = formToPayload(
+      completeValues({
+        market: 'LOCAL',
+        country: 'India',
+        accommodation: true,
+        healthInsurance: false,
+        transportation: true,
+      }),
+    );
+    expect(payload.accommodation).toBe(true);
+    expect(payload.healthInsurance).toBe(false);
+    expect(payload.transportation).toBe(true);
+  });
+
+  // The live preview must not show three permanent green chips for a job that
+  // provides none of them — the preview is what the employer trusts.
+  it('the preview reflects the real state', () => {
+    const preview = formToPreview(
+      completeValues({ market: 'LOCAL', country: 'India', accommodation: false }),
+      'Acme',
+    );
+    expect(preview.accommodation).toBe(false);
   });
 });

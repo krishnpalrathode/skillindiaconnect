@@ -194,9 +194,15 @@ async function createApprovedCompany(userIdSuffix: string): Promise<{
   return { userId: user.id, companyId: company.id };
 }
 
+/**
+ * Defaults to GULF because that is the market the worker-protection rules apply
+ * to — a LOCAL job skips them entirely, so a fixture that defaulted to LOCAL
+ * would make every rule test pass for the wrong reason.
+ */
 function makeMinimalJob(
   companyId: string,
   overrides: Partial<{
+    market: JobMarket;
     accommodation: boolean;
     healthInsurance: boolean;
     transportation: boolean;
@@ -205,6 +211,7 @@ function makeMinimalJob(
   return {
     id: `job-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     companyId,
+    market: JobMarket.GULF,
     accommodation: true,
     healthInsurance: true,
     transportation: true,
@@ -336,6 +343,52 @@ describe('PublishGuardService — ordered enforcement gate', () => {
       await prismaClient.setting.update({ where: { key }, data: { value: true } });
       await redis.del(`settings:${key}`);
     }
+  });
+
+  /**
+   * MARKET-SCOPED: the three worker-protection guarantees are for workers who
+   * EMIGRATE for the job. A domestic Indian role has no such dependency — the
+   * worker sleeps at home — so requiring them there blocked ordinary local
+   * employers from publishing at all.
+   *
+   * The Settings switches are left ON here deliberately: the point is that the
+   * MARKET decides who the rules apply to, not that the rules were disabled.
+   */
+  it('MARKET: a LOCAL job publishes with all three protections false, rules still ON', async () => {
+    if (dockerUnavailable) return;
+
+    const { userId, companyId } = await createApprovedCompany('prot-local');
+    const job = makeMinimalJob(companyId, {
+      market: JobMarket.LOCAL,
+      accommodation: false,
+      healthInsurance: false,
+      transportation: false,
+    });
+
+    await expect(
+      publishGuard.assertPublishable(job, { id: companyId }, userId, UserRole.EMPLOYER),
+    ).resolves.toBeUndefined();
+  });
+
+  it('MARKET: the SAME job as GULF is still blocked — the rules did not go away', async () => {
+    if (dockerUnavailable) return;
+
+    const { userId, companyId } = await createApprovedCompany('prot-gulf-still');
+    const job = makeMinimalJob(companyId, {
+      market: JobMarket.GULF,
+      accommodation: false,
+      healthInsurance: false,
+      transportation: false,
+    });
+
+    await expect(
+      publishGuard.assertPublishable(job, { id: companyId }, userId, UserRole.EMPLOYER),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'WORKER_PROTECTION_VIOLATION',
+        meta: { violations: ['accommodation', 'healthInsurance', 'transportation'] },
+      },
+    });
   });
 
   // ── 3. Quota ──────────────────────────────────────────────────────────────

@@ -1567,6 +1567,7 @@ const postJobs = http.post(`${BASE}/employers/me/jobs`, async ({ request }) => {
     transportation: boolean;
     employmentType?: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT';
     contractDuration?: components['schemas']['ContractDuration'];
+    acceptedTermsVersion?: string;
   };
 
   if (!body.title || !body.market || !body.location) {
@@ -1581,6 +1582,16 @@ const postJobs = http.post(`${BASE}/employers/me/jobs`, async ({ request }) => {
       'VALIDATION_ERROR',
       'Validation failed',
       'description must be at least 300 characters.',
+    );
+  }
+
+  // Mirrors CreateJobDto: a job cannot be posted without accepting the terms.
+  if (!body.acceptedTermsVersion) {
+    return errorResponse(
+      400,
+      'VALIDATION_ERROR',
+      'Validation failed',
+      'acceptedTermsVersion is required.',
     );
   }
 
@@ -1615,6 +1626,8 @@ const postJobs = http.post(`${BASE}/employers/me/jobs`, async ({ request }) => {
     categoryOther: body.categoryOther ?? null,
     employmentType: body.employmentType ?? 'FULL_TIME',
     contractDuration: body.contractDuration ?? null,
+    termsVersion: body.acceptedTermsVersion,
+    termsAcceptedAt: new Date().toISOString(),
     salaryMin: body.salaryMin ?? null,
     salaryMax: body.salaryMax ?? null,
     // Store both keys so public (salaryCurrency) and employer (currency) reads agree.
@@ -1713,11 +1726,15 @@ const publishJob = http.post(`${BASE}/employers/me/jobs/:id/publish`, ({ request
     );
   }
 
-  // Rule 2: worker protection
+  // Rule 2: worker protection — GULF only — the protections exist for workers who emigrate for the job.
+  // Mirrors PublishGuardService; a mock laxer or stricter than the server hides
+  // exactly the bug this rule change could introduce.
   const violations: string[] = [];
-  if (!job.accommodation) violations.push('accommodation');
-  if (!job.healthInsurance) violations.push('healthInsurance');
-  if (!job.transportation) violations.push('transportation');
+  if (job.market === 'GULF') {
+    if (!job.accommodation) violations.push('accommodation');
+    if (!job.healthInsurance) violations.push('healthInsurance');
+    if (!job.transportation) violations.push('transportation');
+  }
   if (violations.length > 0) {
     return errorResponse(
       422,
@@ -1803,10 +1820,15 @@ const resumeJob = http.post(`${BASE}/employers/me/jobs/:id/resume`, ({ request, 
     );
   }
 
+  // GULF only — the protections exist for workers who emigrate for the job.
+  // Mirrors PublishGuardService; a mock laxer or stricter than the server hides
+  // exactly the bug this rule change could introduce.
   const violations: string[] = [];
-  if (!job.accommodation) violations.push('accommodation');
-  if (!job.healthInsurance) violations.push('healthInsurance');
-  if (!job.transportation) violations.push('transportation');
+  if (job.market === 'GULF') {
+    if (!job.accommodation) violations.push('accommodation');
+    if (!job.healthInsurance) violations.push('healthInsurance');
+    if (!job.transportation) violations.push('transportation');
+  }
   if (violations.length > 0) {
     return errorResponse(
       422,

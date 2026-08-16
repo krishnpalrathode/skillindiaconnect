@@ -36,6 +36,7 @@ import { JobLifecycleService } from './job-lifecycle.service';
 import { PublishGuardService } from './publish-guard.service';
 import { ApplicationsAggregateService } from '../applications/applications-aggregate.service';
 import { CreateJobDto } from './dto/create-job.dto';
+import { JOB_POSTING_TERMS_VERSION } from './job-posting-terms';
 
 // My-Jobs applicant counts come from the aggregate; a stub returns empty counts —
 // the count values are covered in the applications aggregate spec, not here.
@@ -217,6 +218,7 @@ function baseDto(): CreateJobDto {
     hoursPerDay: 8,
     daysPerWeek: 6,
     overtime: false,
+    acceptedTermsVersion: JOB_POSTING_TERMS_VERSION,
   };
 }
 

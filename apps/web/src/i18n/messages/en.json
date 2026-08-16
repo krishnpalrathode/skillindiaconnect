@@ -1234,7 +1234,8 @@
       "airTickets": "Air Tickets (Arrival & Departure)",
       "otherAllowance": "Other Allowance",
       "otherAllowancePlaceholder": "e.g. Uniform provided, annual bonus…",
-      "optional": "Optional"
+      "optional": "Optional",
+      "protectionsLocalLabel": "Worker benefits (optional for India jobs)"
     },
     "requirements": {
       "heading": "Requirements",

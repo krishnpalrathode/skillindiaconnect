@@ -199,6 +199,11 @@ export class JobsService {
         overtimeRateSubunits: dto.overtimeRateSubunits,
         contractPeriodMonths: dto.contractPeriodMonths,
         contractDuration,
+        // Stamped from the DTO, timestamped HERE. The acceptance time is the
+        // server's, not the client's — a self-reported timestamp is the one
+        // field an employer would have reason to move.
+        termsVersion: dto.acceptedTermsVersion,
+        termsAcceptedAt: new Date(),
         vacancies: dto.vacancies,
         genderPreference: dto.genderPreference,
         isFeatured: dto.isFeatured ?? false,

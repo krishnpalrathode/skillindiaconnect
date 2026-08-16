@@ -14,6 +14,7 @@ import { WorkConditionsSection } from './WorkConditionsSection';
 import { RichTextField } from './RichTextField';
 import { RequirementsField } from './RequirementsField';
 import { PublishErrorHandler } from './PublishErrorHandler';
+import { TermsAcceptance } from './TermsAcceptance';
 import { countriesForMarket } from '@/lib/countries';
 import {
   DEFAULT_FORM_VALUES,
@@ -98,6 +99,21 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
           // on INR regardless of where the job actually is.
           next.salaryCurrency = defaultCurrencyForMarket(partial.market);
           next.country = partial.market === 'LOCAL' ? 'India' : '';
+
+          /*
+            Worker protections follow the market.
+
+            GULF locks all three ON — the platform refuses to publish an overseas
+            posting without them. LOCAL resets them to OFF, deliberately: they
+            are opt-IN for a domestic job. Carrying the Gulf defaults across
+            would have a local employer publish a job claiming free housing and
+            transport purely because they started on the other tab, which is a
+            promise to the worker that nobody actually made.
+          */
+          const gulf = partial.market === 'GULF';
+          next.accommodation = gulf;
+          next.healthInsurance = gulf;
+          next.transportation = gulf;
         }
         onValuesChange?.(next);
         return next;
@@ -444,6 +460,13 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
         values={values}
         errors={errors}
         onChange={(p) => patch(p as Partial<JobFormValues>)}
+      />
+
+      {/* ── 7. Terms for this posting ─────────────────────────────────────────── */}
+      <TermsAcceptance
+        accepted={values.termsAccepted}
+        onChange={(next) => patch({ termsAccepted: next })}
+        error={errors.termsAccepted}
       />
 
       {/* ── Publish error banner ──────────────────────────────────────────────── */}

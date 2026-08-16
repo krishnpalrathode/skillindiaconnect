@@ -478,6 +478,8 @@ async function fillRequiredJobFields(user: ReturnType<typeof userEvent.setup>) {
   await user.paste(LONG_DESCRIPTION);
   await user.type(screen.getByLabelText(/minimum salary/i), '1500');
   await user.type(screen.getByLabelText(/maximum salary/i), '2000');
+  // Posting now requires accepting the job-posting terms.
+  await user.click(screen.getByRole('checkbox', { name: /accept these terms/i }));
 }
 
 describe('JobForm — Save as Draft calls POST /jobs', () => {

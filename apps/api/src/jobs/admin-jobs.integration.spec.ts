@@ -74,6 +74,7 @@ import { JobLifecycleService } from './job-lifecycle.service';
 import { PublishGuardService } from './publish-guard.service';
 import { AdminJobsController } from './admin-jobs.controller';
 import { AdminJobsService } from './admin-jobs.service';
+import { JOB_POSTING_TERMS_VERSION } from './job-posting-terms';
 
 jest.setTimeout(240_000);
 
@@ -172,6 +173,9 @@ async function mkJob(
       market: JobMarket.GULF,
       location: 'Dubai',
       description: JOB_DESCRIPTION,
+      // Columns, not the DTO field — this bypasses the API and writes the row.
+      termsVersion: JOB_POSTING_TERMS_VERSION,
+      termsAcceptedAt: new Date(),
       categoryId,
       salaryMin: 100,
       salaryMax: 200,
@@ -604,6 +608,7 @@ describe('POST /admin/jobs (on-behalf)', () => {
     country: 'Qatar',
     location: 'Doha',
     description: JOB_DESCRIPTION,
+    acceptedTermsVersion: JOB_POSTING_TERMS_VERSION,
     categoryId,
     requirements: [],
     salaryMin: 100,
