@@ -24,10 +24,7 @@ import { Throttle } from '@nestjs/throttler';
 import { RATE_LIMITS } from '../core/config/rate-limits';
 import { UserRole } from '@prisma/client';
 import { Public } from '../auth/decorators/public.decorator';
-import {
-  OptionalAuth,
-  CurrentUserOptional,
-} from '../auth/decorators/optional-auth.decorator';
+import { OptionalAuth, CurrentUserOptional } from '../auth/decorators/optional-auth.decorator';
 import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user.decorator';
 import { JobsSearchService } from './jobs-search.service';
 import { SavedJobsService } from './saved-jobs.service';
@@ -94,10 +91,7 @@ export class JobsSearchController {
    */
   @Post(':id/save')
   @HttpCode(HttpStatus.OK)
-  async save(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async save(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: CurrentUserPayload) {
     await this.savedJobsService.save(user.userId, user.role as UserRole, id);
     return { data: { saved: true } };
   }
@@ -107,10 +101,7 @@ export class JobsSearchController {
    */
   @Delete(':id/save')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async unsave(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async unsave(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: CurrentUserPayload) {
     await this.savedJobsService.unsave(user.userId, user.role as UserRole, id);
   }
 }

@@ -3,6 +3,7 @@
 import React, { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { formatMonthYear } from '@/lib/format/date';
+import { MAX_UPLOAD_BYTES } from '@/lib/uploads';
 import {
   MapPin,
   Calendar,
@@ -24,7 +25,7 @@ import { getResume, generateResume, getResumeStatus, getResumeDownloadUrl } from
 import { presignPhoto, confirmPhoto, uploadToPresignedUrl } from '@/lib/api/candidate';
 
 const PHOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
+const PHOTO_MAX_BYTES = MAX_UPLOAD_BYTES;
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type CompletionResult = components['schemas']['CompletionResult'];

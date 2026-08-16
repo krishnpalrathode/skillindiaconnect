@@ -36,6 +36,7 @@ import { JobLifecycleService } from './job-lifecycle.service';
 import { PublishGuardService } from './publish-guard.service';
 import { ApplicationsAggregateService } from '../applications/applications-aggregate.service';
 import { CreateJobDto } from './dto/create-job.dto';
+import { JOB_POSTING_TERMS_VERSION } from './job-posting-terms';
 
 // My-Jobs applicant counts come from the aggregate; a stub returns empty counts —
 // the count values are covered in the applications aggregate spec, not here.
@@ -136,7 +137,11 @@ beforeAll(async () => {
     const prismaSvc = prismaClient as unknown as PrismaService;
     eventEmitter = new EventEmitter2();
     const auditService = new AuditService(prismaSvc);
-    const employerService = new EmployerService(prismaSvc, null as never);
+    const employerService = new EmployerService(
+      prismaSvc,
+      null as never,
+      { notify: jest.fn() } as never,
+    );
 
     // Mock SettingsService (Redis-free)
     const mockSettingsService = {
@@ -213,6 +218,7 @@ function baseDto(): CreateJobDto {
     hoursPerDay: 8,
     daysPerWeek: 6,
     overtime: false,
+    acceptedTermsVersion: JOB_POSTING_TERMS_VERSION,
   };
 }
 
@@ -268,9 +274,9 @@ describe('JobsService', () => {
 
       // baseDto is LOCAL/India; a GCC country is invalid for a LOCAL job.
       const dto = { ...baseDto(), country: 'Qatar' };
-      await expect(
-        service.create(dto, EMPLOYER_USER_ID, UserRole.EMPLOYER),
-      ).rejects.toMatchObject({ response: { code: 'COUNTRY_MARKET_MISMATCH' } });
+      await expect(service.create(dto, EMPLOYER_USER_ID, UserRole.EMPLOYER)).rejects.toMatchObject({
+        response: { code: 'COUNTRY_MARKET_MISMATCH' },
+      });
     });
   });
 
@@ -291,7 +297,7 @@ describe('JobsService', () => {
     // SEC-001 (S8-H2): was `.toThrow(ForbiddenException)`. A 403 here confirmed
     // the job existed, making this endpoint a cross-tenant enumeration oracle.
     // Ownership failure is now indistinguishable from a nonexistent job.
-    it('throws 404 when employer tries to update another company\'s job', async () => {
+    it("throws 404 when employer tries to update another company's job", async () => {
       if (dockerUnavailable) return;
 
       const job = await service.create(baseDto(), EMPLOYER_USER_ID, UserRole.EMPLOYER);
@@ -335,7 +341,7 @@ describe('JobsService', () => {
     });
 
     // SEC-001 (S8-H2): was 403 — see the update case above.
-    it('throws 404 when employer publishes another company\'s job', async () => {
+    it("throws 404 when employer publishes another company's job", async () => {
       if (dockerUnavailable) return;
 
       const job = await service.create(baseDto(), EMPLOYER_USER_ID, UserRole.EMPLOYER);
@@ -348,20 +354,35 @@ describe('JobsService', () => {
       if (dockerUnavailable) return;
 
       const mockGuard = {
-        assertPublishable: jest.fn().mockRejectedValue(
-          new UnprocessableEntityException({ code: 'WORKER_PROTECTION_VIOLATION' }),
-        ),
+        assertPublishable: jest
+          .fn()
+          .mockRejectedValue(
+            new UnprocessableEntityException({ code: 'WORKER_PROTECTION_VIOLATION' }),
+          ),
       } as unknown as PublishGuardService;
 
       const prismaSvc = prismaClient as unknown as PrismaService;
       const em = new EventEmitter2();
       const audit = new AuditService(prismaSvc);
-      const employer = new EmployerService(prismaSvc, null as never);
+      const employer = new EmployerService(
+        prismaSvc,
+        null as never,
+        { notify: jest.fn() } as never,
+      );
       const mockSettings = {
         get: jest.fn().mockResolvedValue(false),
       } as unknown as SettingsService;
       const lifecycle = new JobLifecycleService(prismaSvc, audit, em);
-      const guardedService = new JobsService(prismaSvc, employer, mockSettings, audit, mockGuard, lifecycle, em, mockAggregate);
+      const guardedService = new JobsService(
+        prismaSvc,
+        employer,
+        mockSettings,
+        audit,
+        mockGuard,
+        lifecycle,
+        em,
+        mockAggregate,
+      );
 
       const job = await guardedService.create(baseDto(), EMPLOYER_USER_ID, UserRole.EMPLOYER);
       await expect(
@@ -386,7 +407,7 @@ describe('JobsService', () => {
     });
 
     // SEC-001 (S8-H2): was 403 — see the update case above.
-    it('throws 404 when duplicating another company\'s job', async () => {
+    it("throws 404 when duplicating another company's job", async () => {
       if (dockerUnavailable) return;
 
       const job = await service.create(baseDto(), EMPLOYER_USER_ID, UserRole.EMPLOYER);
@@ -397,13 +418,17 @@ describe('JobsService', () => {
   });
 
   describe('list', () => {
-    it('returns only the employer\'s own jobs', async () => {
+    it("returns only the employer's own jobs", async () => {
       if (dockerUnavailable) return;
 
       await service.create(baseDto(), EMPLOYER_USER_ID, UserRole.EMPLOYER);
       await service.create(baseDto(), OTHER_EMPLOYER_USER_ID, UserRole.EMPLOYER);
 
-      const result = await service.list(EMPLOYER_USER_ID, { page: 1, pageSize: 20, sort: 'createdAt:desc' });
+      const result = await service.list(EMPLOYER_USER_ID, {
+        page: 1,
+        pageSize: 20,
+        sort: 'createdAt:desc',
+      });
       expect(result.data).toHaveLength(1);
       expect(result.meta.total).toBe(1);
     });
@@ -417,7 +442,9 @@ describe('JobsService', () => {
       const j1 = await service.create(baseDto(), EMPLOYER_USER_ID, UserRole.EMPLOYER);
       const j2 = await service.create(baseDto(), EMPLOYER_USER_ID, UserRole.EMPLOYER);
 
-      const link = await prismaClient.employerUser.findUnique({ where: { userId: EMPLOYER_USER_ID } });
+      const link = await prismaClient.employerUser.findUnique({
+        where: { userId: EMPLOYER_USER_ID },
+      });
       const companyId = link!.companyId;
 
       // Force both to ACTIVE status for the test

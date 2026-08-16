@@ -10,7 +10,14 @@
  * applyScopedBodyParsers, the same global prefix + URI versioning — so the
  * paths the middleware is scoped to are the paths Nest actually serves.
  */
-import { Body, Controller, INestApplication, Post, RequestMethod, VersioningType } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  INestApplication,
+  Post,
+  RequestMethod,
+  VersioningType,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import supertest from 'supertest';
 import { WebhookController } from './webhook.controller';

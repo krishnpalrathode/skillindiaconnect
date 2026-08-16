@@ -16,11 +16,13 @@ import { JOB_EVENTS } from './jobs.events';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-function makeJob(overrides: Partial<{
-  id: string;
-  companyId: string;
-  status: JobStatus;
-}> = {}) {
+function makeJob(
+  overrides: Partial<{
+    id: string;
+    companyId: string;
+    status: JobStatus;
+  }> = {},
+) {
   return {
     id: 'job-1',
     companyId: 'co-1',
@@ -124,9 +126,9 @@ describe('JobLifecycleService — state machine', () => {
 
     it('throws 409 ILLEGAL_JOB_TRANSITION for PAUSED → PAUSED', async () => {
       prismaMock.job.findUnique.mockResolvedValue(makeJob({ status: JobStatus.PAUSED }));
-      await expect(
-        service.pause('job-1', 'co-1', 'user-1', UserRole.EMPLOYER),
-      ).rejects.toThrow(ConflictException);
+      await expect(service.pause('job-1', 'co-1', 'user-1', UserRole.EMPLOYER)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('throws 404 when job not found', async () => {
@@ -138,9 +140,9 @@ describe('JobLifecycleService — state machine', () => {
 
     it('throws 404 when companyId does not match', async () => {
       prismaMock.job.findUnique.mockResolvedValue(makeJob({ companyId: 'other-co' }));
-      await expect(
-        service.pause('job-1', 'co-1', 'user-1', UserRole.EMPLOYER),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.pause('job-1', 'co-1', 'user-1', UserRole.EMPLOYER)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -158,9 +160,9 @@ describe('JobLifecycleService — state machine', () => {
 
     it('throws 409 for ACTIVE → ACTIVE (cannot resume already-active)', async () => {
       prismaMock.job.findUnique.mockResolvedValue(makeJob({ status: JobStatus.ACTIVE }));
-      await expect(
-        service.resume('job-1', 'co-1', 'user-1', UserRole.EMPLOYER),
-      ).rejects.toThrow(ConflictException);
+      await expect(service.resume('job-1', 'co-1', 'user-1', UserRole.EMPLOYER)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -191,9 +193,9 @@ describe('JobLifecycleService — state machine', () => {
 
     it('throws 409 for ARCHIVED → ARCHIVED', async () => {
       prismaMock.job.findUnique.mockResolvedValue(makeJob({ status: JobStatus.ARCHIVED }));
-      await expect(
-        service.archive('job-1', 'co-1', 'user-1', UserRole.EMPLOYER),
-      ).rejects.toThrow(ConflictException);
+      await expect(service.archive('job-1', 'co-1', 'user-1', UserRole.EMPLOYER)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -206,9 +208,7 @@ describe('JobLifecycleService — state machine', () => {
         { id: 'job-b', companyId: 'co-2' },
       ];
       // First batch returns 2 jobs, second returns 0 (done)
-      prismaMock.job.findMany
-        .mockResolvedValueOnce(overdueJobs)
-        .mockResolvedValueOnce([]);
+      prismaMock.job.findMany.mockResolvedValueOnce(overdueJobs).mockResolvedValueOnce([]);
       prismaMock.job.updateMany.mockResolvedValue({ count: 2 });
 
       const count = await service.batchAutoArchive(prismaMock as unknown as PrismaService);

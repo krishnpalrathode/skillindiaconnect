@@ -34,7 +34,10 @@ export function resolvePaging(
   maxPageSize: number = MAX_PAGE_SIZE,
 ): { page: number; pageSize: number; skip: number; take: number } {
   const p = Math.max(1, Math.floor(page ?? 1) || 1);
-  const size = Math.min(maxPageSize, Math.max(1, Math.floor(pageSize ?? DEFAULT_PAGE_SIZE) || DEFAULT_PAGE_SIZE));
+  const size = Math.min(
+    maxPageSize,
+    Math.max(1, Math.floor(pageSize ?? DEFAULT_PAGE_SIZE) || DEFAULT_PAGE_SIZE),
+  );
   return { page: p, pageSize: size, skip: (p - 1) * size, take: size };
 }
 

@@ -67,7 +67,9 @@ export class ApplicationsAggregateService {
         where: {
           jobId: { in: jobIds },
           status: ApplicationStatus.SELECTED,
-          timeline: { some: { toStatus: ApplicationStatus.SELECTED, createdAt: { gte: monthStart } } },
+          timeline: {
+            some: { toStatus: ApplicationStatus.SELECTED, createdAt: { gte: monthStart } },
+          },
         },
       }),
     ]);
@@ -90,16 +92,16 @@ export class ApplicationsAggregateService {
     });
 
     const [names, jobs] = await Promise.all([
-      this.candidateRead.getNamesByIds(
-        [...new Set(rows.map((a) => a.candidateId).filter((x): x is string => !!x))],
-      ),
+      this.candidateRead.getNamesByIds([
+        ...new Set(rows.map((a) => a.candidateId).filter((x): x is string => !!x)),
+      ]),
       this.jobsService.getJobSubsets([...new Set(rows.map((a) => a.jobId))]),
     ]);
 
     return rows.map((a) => ({
       applicationId: a.id,
       candidateId: a.candidateId,
-      candidateName: a.candidateId ? names.get(a.candidateId) ?? null : null,
+      candidateName: a.candidateId ? (names.get(a.candidateId) ?? null) : null,
       jobId: a.jobId,
       jobTitle: jobs.get(a.jobId)?.title ?? null,
       status: a.status,
@@ -147,7 +149,9 @@ export class ApplicationsAggregateService {
    * page (never N queries for N rows). Jobs absent from the result have zero counts.
    */
   async countsPerJob(jobIds: string[]): Promise<Map<string, PerJobCounts>> {
-    const result = new Map<string, PerJobCounts>(jobIds.map((id) => [id, { applications: 0, shortlisted: 0 }]));
+    const result = new Map<string, PerJobCounts>(
+      jobIds.map((id) => [id, { applications: 0, shortlisted: 0 }]),
+    );
     if (jobIds.length === 0) return result;
 
     const grouped = await this.prisma.application.groupBy({
@@ -164,4 +168,118 @@ export class ApplicationsAggregateService {
     }
     return result;
   }
+
+  // ── Admin analytics reads (Screen 22) ───────────────────────────────────────
+  //
+  // The dashboard needs history, and this platform keeps no snapshot table. It
+  // does not need one: `createdAt` on applications and on the timeline rows IS
+  // the history, so every series below is derived from rows that already exist.
+  // That is why these are date-bucketed GROUP BYs rather than a nightly job.
+
+  /** Applications per day by status — feeds the growth + stacked status charts. */
+  async dailyStatusSeries(from: Date, to: Date): Promise<DailyStatusRow[]> {
+    return this.prisma.$queryRaw<DailyStatusRow[]>`
+      SELECT to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS date,
+             COUNT(*)::int                                              AS total,
+             COUNT(*) FILTER (WHERE status = 'PENDING')::int            AS pending,
+             COUNT(*) FILTER (WHERE status = 'SHORTLISTED')::int        AS shortlisted,
+             COUNT(*) FILTER (WHERE status = 'SELECTED')::int           AS selected,
+             COUNT(*) FILTER (WHERE status = 'REJECTED')::int           AS rejected
+      FROM applications
+      WHERE "createdAt" >= ${from} AND "createdAt" < ${to}
+      GROUP BY 1 ORDER BY 1`;
+  }
+
+  /** Total applications and hires in a window — the KPI deltas. */
+  async windowTotals(from: Date, to: Date): Promise<{ applications: number; hires: number }> {
+    const rows = await this.prisma.$queryRaw<Array<{ applications: number; hires: number }>>`
+      SELECT COUNT(*)::int AS applications,
+             COUNT(*) FILTER (WHERE status = 'SELECTED')::int AS hires
+      FROM applications
+      WHERE "createdAt" >= ${from} AND "createdAt" < ${to}`;
+    return rows[0] ?? { applications: 0, hires: 0 };
+  }
+
+  /**
+   * The funnel cohort: of the applications CREATED in this window, how many ever
+   * reached each stage.
+   *
+   * "EVER REACHED", not "is currently in". Counting current status makes the
+   * funnel non-monotonic — an application that went PENDING→SHORTLISTED→SELECTED
+   * stops being counted as shortlisted, so `selected` can exceed `shortlisted`
+   * and the conversion rate reads above 100%. That is exactly what the first
+   * version of this dashboard showed (109.4%). A funnel stage is a milestone the
+   * application passed through, so it is read from `application_timeline`, which
+   * is the only record of what an application HAS BEEN.
+   *
+   * The current status still counts as reached: an application sitting in
+   * SHORTLISTED right now reached SHORTLISTED even if its timeline row predates
+   * the window.
+   */
+  async funnelCohort(from: Date, to: Date): Promise<FunnelCohort> {
+    const rows = await this.prisma.$queryRaw<Array<FunnelCohort>>`
+      SELECT COUNT(*)::int AS applied,
+             COUNT(*) FILTER (
+               WHERE a.status IN ('SHORTLISTED', 'SELECTED')
+                  OR EXISTS (SELECT 1 FROM application_timeline t
+                             WHERE t."applicationId" = a.id AND t."toStatus" = 'SHORTLISTED')
+             )::int AS shortlisted,
+             COUNT(*) FILTER (
+               WHERE a.status = 'SELECTED'
+                  OR EXISTS (SELECT 1 FROM application_timeline t
+                             WHERE t."applicationId" = a.id AND t."toStatus" = 'SELECTED')
+             )::int AS selected
+      FROM applications a
+      WHERE a."createdAt" >= ${from} AND a."createdAt" < ${to}`;
+    return rows[0] ?? { applied: 0, shortlisted: 0, selected: 0 };
+  }
+
+  /**
+   * Median days between status transitions, from the timeline rows.
+   *
+   * MEDIAN, not mean: a single application left open for months drags an average
+   * far away from what a typical candidate experiences, and "average time to
+   * hire" is read as a typical case.
+   *
+   * NOTE the stages are PENDING→SHORTLISTED→SELECTED. There is no Interview step
+   * because ApplicationStatus has no such value — the funnel cannot invent one.
+   */
+  async stageDurations(from: Date, to: Date): Promise<StageDurationRow[]> {
+    return this.prisma.$queryRaw<StageDurationRow[]>`
+      SELECT t."fromStatus"::text AS "fromStatus",
+             t."toStatus"::text   AS "toStatus",
+             COUNT(*)::int        AS transitions,
+             ROUND(
+               (percentile_cont(0.5) WITHIN GROUP (
+                 ORDER BY EXTRACT(EPOCH FROM (t."createdAt" - a."createdAt")) / 86400.0
+               ))::numeric, 1
+             )::float8 AS "medianDays"
+      FROM application_timeline t
+      JOIN applications a ON a.id = t."applicationId"
+      WHERE t."fromStatus" IS NOT NULL
+        AND t."createdAt" >= ${from} AND t."createdAt" < ${to}
+      GROUP BY 1, 2`;
+  }
+}
+
+export interface DailyStatusRow {
+  date: string;
+  total: number;
+  pending: number;
+  shortlisted: number;
+  selected: number;
+  rejected: number;
+}
+
+export interface FunnelCohort {
+  applied: number;
+  shortlisted: number;
+  selected: number;
+}
+
+export interface StageDurationRow {
+  fromStatus: string;
+  toStatus: string;
+  transitions: number;
+  medianDays: number;
 }

@@ -34,3 +34,26 @@ export function updateSetting(key: string, value: unknown): Promise<Setting[]> {
     body: JSON.stringify({ updates: [{ key, value }] }),
   });
 }
+
+// ─── Plan pricing (Payments tab) ──────────────────────────────────────────────
+
+export type AdminPlan = components['schemas']['AdminPlan'];
+
+/** RBAC: settings.view. Every plan, inactive included, cheapest first. */
+export function getAdminPlans(): Promise<AdminPlan[]> {
+  return apiFetch<AdminPlan[]>('/admin/plans');
+}
+
+/**
+ * RBAC: settings.manage. `priceSubunits` is PAISE — the caller converts from
+ * rupees once, at the input, so no float ever reaches the money path.
+ *
+ * Takes effect on the next checkout; past orders and invoices keep the amounts
+ * they were billed at.
+ */
+export function updatePlanPrice(code: string, priceSubunits: number): Promise<AdminPlan> {
+  return apiFetch<AdminPlan>(`/admin/plans/${encodeURIComponent(code)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ priceSubunits }),
+  });
+}

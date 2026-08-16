@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SettingRow } from './SettingRow';
 import { CoreRuleCell } from './CoreRuleCell';
+import { PlanPricingPanel } from './PlanPricingPanel';
 import { cn } from '@/lib/utils';
 
 /**
@@ -135,6 +136,12 @@ export function SettingsTabs() {
             <SettingRow key={setting.key} setting={setting} onSave={saveOne} />
           ),
         )}
+
+        {/* Plan prices live under Payments beside the GST rate: both decide what
+            an employer is charged. They are NOT `Setting` rows — prices are their
+            own table with their own endpoint and their own money rules — so the
+            panel mounts here rather than being forced into the key/value list. */}
+        {activeTab === 'payments' && <PlanPricingPanel />}
       </div>
     </div>
   );

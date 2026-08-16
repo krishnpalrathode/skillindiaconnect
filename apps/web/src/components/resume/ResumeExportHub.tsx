@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/toast';
 import { canExportResume, RESUME_MIN_COMPLETION_PCT } from '@/lib/resume/completionGate';
 import { getResume, type ResumeInfo } from '@/lib/api/resume';
 import { ResumePreview } from './ResumePreview';
+import { ResumeSummaryCard } from './ResumeSummaryCard';
 import { DownloadResumeButton } from './DownloadResumeButton';
 import { ResumeSettingsPanel } from './ResumeSettingsPanel';
 import { TemplateGallery } from './TemplateGallery';
@@ -71,6 +72,13 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
     });
   }, []);
   const [loading, setLoading] = useState(true);
+  /**
+   * The saved summary, held here rather than read from `profile` on every
+   * render: the preview below must show the new intro the moment it saves, and
+   * the `profile` prop is fetched once by the route/stepper above and never
+   * refetched. Seeded from the prop, then owned by the last successful save.
+   */
+  const [summary, setSummary] = useState<string | null>(profile.summary ?? null);
 
   const completionPct = completion?.pct ?? profile.completionPct ?? 0;
 
@@ -166,9 +174,13 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
         </p>
       </section>
 
+      {/* The intro the candidate writes, ABOVE the preview: it is an input, and
+          the preview immediately below is where they see the result of it. */}
+      <ResumeSummaryCard value={summary} onSaved={setSummary} />
+
       {/* Live preview (prominent) — reflects the current Resume Settings. */}
       {settings ? (
-        <ResumePreview profile={profile} settings={settings} />
+        <ResumePreview profile={{ ...profile, summary }} settings={settings} />
       ) : (
         <p className="text-sm text-neutral-600">{t('previewUnavailable')}</p>
       )}

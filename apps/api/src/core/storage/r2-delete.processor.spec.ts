@@ -37,9 +37,7 @@ describe('R2DeleteProcessor', () => {
 
   it('deletes the object named in the job', async () => {
     await expect(processor.process(makeJob())).resolves.toEqual({ deleted: true });
-    expect(storage.deleteObject).toHaveBeenCalledWith(
-      'candidates/cand-1/PASSPORT/uuid-scan.pdf',
-    );
+    expect(storage.deleteObject).toHaveBeenCalledWith('candidates/cand-1/PASSPORT/uuid-scan.pdf');
   });
 
   it('PROPAGATES a storage failure so BullMQ retries', async () => {

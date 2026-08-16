@@ -196,4 +196,3 @@ describe('AccountService.requestDeletion', () => {
     expect(profile!.fullName).toBe('Test User');
   });
 });
-

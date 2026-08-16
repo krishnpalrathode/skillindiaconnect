@@ -7,11 +7,7 @@
  * recognise degrades to CLASSIC instead of failing a render.
  */
 import { ResumeTemplate } from '@prisma/client';
-import {
-  DEFAULT_TEMPLATE,
-  TEMPLATE_REGISTRY,
-  selectTemplate,
-} from './registry';
+import { DEFAULT_TEMPLATE, TEMPLATE_REGISTRY, selectTemplate } from './registry';
 import { renderClassic } from './classic.template';
 
 describe('TEMPLATE_REGISTRY', () => {

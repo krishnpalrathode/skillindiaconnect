@@ -1,10 +1,4 @@
-import {
-  IsBoolean,
-  IsEmail,
-  IsOptional,
-  IsString,
-  MaxLength,
-} from 'class-validator';
+import { IsBoolean, IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
 
 /**
  * DTO for creating a contact person.

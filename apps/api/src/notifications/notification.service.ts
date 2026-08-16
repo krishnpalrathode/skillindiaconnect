@@ -13,10 +13,7 @@ import {
   NOTIFICATION_JOB_BACKOFF_MS,
   readTemplateVars,
 } from './notification.types';
-import {
-  ListNotificationsDto,
-  FILTER_BUCKETS,
-} from './dto/list-notifications.dto';
+import { ListNotificationsDto, FILTER_BUCKETS } from './dto/list-notifications.dto';
 import { MarkReadDto } from './dto/mark-read.dto';
 import { NotificationDto, toNotificationDto } from './notification.mapper';
 import { isWhatsappDeliverable } from './whatsapp-deliverability';
@@ -149,7 +146,11 @@ export class NotificationService {
    * The in-app receipt is written too, so the send is visible in the feed.
    * The worker consumes the same job the matrix path produces — one send path.
    */
-  async enqueueEmail(userId: string, type: NotificationType, payload: NotifyPayload): Promise<void> {
+  async enqueueEmail(
+    userId: string,
+    type: NotificationType,
+    payload: NotifyPayload,
+  ): Promise<void> {
     await this.notifyInApp(userId, type, payload);
     await this.notificationQueue.add(
       JOB_NAMES.SEND_NOTIFICATION,
@@ -225,10 +226,7 @@ export class NotificationService {
    * Called by the Meta webhook controller (S5) when a status callback arrives.
    * For the mock, call this directly in tests to simulate the SENT→DELIVERED transition.
    */
-  async updateWhatsAppDeliveryStatus(
-    waMessageId: string,
-    status: DeliveryStatus,
-  ): Promise<void> {
+  async updateWhatsAppDeliveryStatus(waMessageId: string, status: DeliveryStatus): Promise<void> {
     await this.prisma.whatsappMessage.updateMany({
       where: { waMessageId },
       data: { status, statusUpdatedAt: new Date() },

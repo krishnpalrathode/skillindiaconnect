@@ -19,10 +19,7 @@ export const GULF_JOB_COUNTRIES = [
   'Bahrain',
 ] as const;
 
-export const ALL_JOB_COUNTRIES: readonly string[] = [
-  ...LOCAL_JOB_COUNTRIES,
-  ...GULF_JOB_COUNTRIES,
-];
+export const ALL_JOB_COUNTRIES: readonly string[] = [...LOCAL_JOB_COUNTRIES, ...GULF_JOB_COUNTRIES];
 
 export function countriesForMarket(market: JobMarket): readonly string[] {
   return market === JobMarket.LOCAL ? LOCAL_JOB_COUNTRIES : GULF_JOB_COUNTRIES;

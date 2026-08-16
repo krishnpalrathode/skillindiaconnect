@@ -8,6 +8,7 @@ import { Plus } from 'lucide-react';
 import { AdminJobsTable } from '@/components/admin/jobs/AdminJobsTable';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ADMIN_PAGE_SHELL } from '@/lib/page-shell';
 
 /** Jobs moderation — list + the PENDING_REVIEW queue. Replaces the S6a-F1 placeholder. */
 export default function AdminJobsPage() {
@@ -16,7 +17,7 @@ export default function AdminJobsPage() {
   const locale = params?.locale ?? 'en';
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={ADMIN_PAGE_SHELL}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900">{t('title')}</h1>

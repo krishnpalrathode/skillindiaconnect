@@ -10,6 +10,7 @@ import { CandidateDocument, DocumentType } from '@prisma/client';
 import { Queue } from 'bullmq';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../core/prisma/prisma.service';
+import { assessPassportValidity, PASSPORT_MIN_VALIDITY_DAYS } from './passport-validity';
 import { StorageService } from '../core/storage/storage.service';
 import { QUEUE_NAMES, JOB_NAMES, R2_DELETE_JOB_OPTS } from '../queue/queue.constants';
 import { CANDIDATE_EVENTS, CandidateChangedPayload } from './events/candidate.events';
@@ -86,15 +87,39 @@ export class DocumentService {
     if (!limits.mimes.includes(head.contentType)) {
       throw new UnprocessableEntityException({ code: 'INVALID_FILE_TYPE' });
     }
-    // Passport requires a future expiry date.
+    /*
+      Passport requires an expiry date with at least the minimum validity left.
+
+      The two failures are kept SEPARATE because the candidate's next action
+      differs. A malformed or past date is a data-entry problem — retype it.
+      A real date under the six-month floor is a document problem: no amount of
+      retyping fixes it, they have to renew the passport. Collapsing both into
+      INVALID_PASSPORT_EXPIRY would send someone with a genuinely short-dated
+      passport back to correct a date that was already correct.
+    */
     let expiryDate: Date | null = null;
     if (docType === PASSPORT_DOC_TYPE) {
       if (!dto.expiryDate) {
         throw new UnprocessableEntityException({ code: 'INVALID_PASSPORT_EXPIRY' });
       }
       const expiry = new Date(dto.expiryDate);
-      if (isNaN(expiry.getTime()) || expiry <= new Date()) {
+      if (isNaN(expiry.getTime())) {
         throw new UnprocessableEntityException({ code: 'INVALID_PASSPORT_EXPIRY' });
+      }
+      const validity = assessPassportValidity(expiry);
+      if (validity.status === 'expired') {
+        throw new UnprocessableEntityException({ code: 'INVALID_PASSPORT_EXPIRY' });
+      }
+      if (validity.status === 'below_minimum') {
+        throw new UnprocessableEntityException({
+          code: 'PASSPORT_EXPIRES_TOO_SOON',
+          // The numbers travel so the UI can say "expires in 84 days; Gulf
+          // employers need 180" rather than restating a rule it might drift from.
+          meta: {
+            minValidityDays: PASSPORT_MIN_VALIDITY_DAYS,
+            daysRemaining: validity.daysRemaining,
+          },
+        });
       }
       expiryDate = expiry;
     }

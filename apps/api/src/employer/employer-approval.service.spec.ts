@@ -28,6 +28,8 @@ function makeCompany(overrides: Partial<Company> = {}): Company {
     phone: '+91111',
     location: 'Delhi',
     website: null,
+    // Null is the REAL shape for a company registered before the field existed.
+    foundedYear: null,
     employeeRange: '10-50',
     languagePref: [],
     description: null,
@@ -84,10 +86,13 @@ describe('EmployerApprovalService — state machine (unit)', () => {
 
     expect(result.status).toBe(CompanyStatus.APPROVED);
     expect(auditMock.log).toHaveBeenCalledTimes(1);
-    expect(emitterMock.emit).toHaveBeenCalledWith(EMPLOYER_EVENTS.APPROVED, expect.objectContaining({
-      companyId: 'comp-1',
-      userId: 'user-1',
-    }));
+    expect(emitterMock.emit).toHaveBeenCalledWith(
+      EMPLOYER_EVENTS.APPROVED,
+      expect.objectContaining({
+        companyId: 'comp-1',
+        userId: 'user-1',
+      }),
+    );
   });
 
   // ── PENDING → REJECTED ───────────────────────────────────────────────────
@@ -98,9 +103,12 @@ describe('EmployerApprovalService — state machine (unit)', () => {
 
     expect(result.status).toBe(CompanyStatus.REJECTED);
     expect(auditMock.log).toHaveBeenCalledTimes(1);
-    expect(emitterMock.emit).toHaveBeenCalledWith(EMPLOYER_EVENTS.REJECTED, expect.objectContaining({
-      reason: 'Docs invalid',
-    }));
+    expect(emitterMock.emit).toHaveBeenCalledWith(
+      EMPLOYER_EVENTS.REJECTED,
+      expect.objectContaining({
+        reason: 'Docs invalid',
+      }),
+    );
   });
 
   it('reject: missing reason → 422 REJECTION_REASON_REQUIRED', async () => {
@@ -134,9 +142,12 @@ describe('EmployerApprovalService — state machine (unit)', () => {
 
     expect(result.status).toBe(CompanyStatus.SUSPENDED);
     expect(auditMock.log).toHaveBeenCalledTimes(1);
-    expect(emitterMock.emit).toHaveBeenCalledWith(EMPLOYER_EVENTS.SUSPENDED, expect.objectContaining({
-      companyId: 'comp-1',
-    }));
+    expect(emitterMock.emit).toHaveBeenCalledWith(
+      EMPLOYER_EVENTS.SUSPENDED,
+      expect.objectContaining({
+        companyId: 'comp-1',
+      }),
+    );
   });
 
   it('suspend on PENDING company → 409 ILLEGAL_EMPLOYER_TRANSITION', async () => {
@@ -154,9 +165,12 @@ describe('EmployerApprovalService — state machine (unit)', () => {
 
     expect(result.status).toBe(CompanyStatus.APPROVED);
     expect(auditMock.log).toHaveBeenCalledTimes(1);
-    expect(emitterMock.emit).toHaveBeenCalledWith(EMPLOYER_EVENTS.REACTIVATED, expect.objectContaining({
-      companyId: 'comp-1',
-    }));
+    expect(emitterMock.emit).toHaveBeenCalledWith(
+      EMPLOYER_EVENTS.REACTIVATED,
+      expect.objectContaining({
+        companyId: 'comp-1',
+      }),
+    );
   });
 
   it('reactivate on PENDING company → 409 ILLEGAL_EMPLOYER_TRANSITION', async () => {
@@ -189,19 +203,40 @@ describe('EmployerApprovalService — state machine (unit)', () => {
     const cases: Array<[CompanyStatus, () => Promise<Company>]> = [
       [
         CompanyStatus.PENDING,
-        () => makeService(makeCompany({ status: CompanyStatus.PENDING })).approve('comp-1', ADMIN_ID, ADMIN_ROLE),
+        () =>
+          makeService(makeCompany({ status: CompanyStatus.PENDING })).approve(
+            'comp-1',
+            ADMIN_ID,
+            ADMIN_ROLE,
+          ),
       ],
       [
         CompanyStatus.PENDING,
-        () => makeService(makeCompany({ status: CompanyStatus.PENDING })).reject('comp-1', 'reason', ADMIN_ID, ADMIN_ROLE),
+        () =>
+          makeService(makeCompany({ status: CompanyStatus.PENDING })).reject(
+            'comp-1',
+            'reason',
+            ADMIN_ID,
+            ADMIN_ROLE,
+          ),
       ],
       [
         CompanyStatus.APPROVED,
-        () => makeService(makeCompany({ status: CompanyStatus.APPROVED })).suspend('comp-1', ADMIN_ID, ADMIN_ROLE),
+        () =>
+          makeService(makeCompany({ status: CompanyStatus.APPROVED })).suspend(
+            'comp-1',
+            ADMIN_ID,
+            ADMIN_ROLE,
+          ),
       ],
       [
         CompanyStatus.SUSPENDED,
-        () => makeService(makeCompany({ status: CompanyStatus.SUSPENDED })).reactivate('comp-1', ADMIN_ID, ADMIN_ROLE),
+        () =>
+          makeService(makeCompany({ status: CompanyStatus.SUSPENDED })).reactivate(
+            'comp-1',
+            ADMIN_ID,
+            ADMIN_ROLE,
+          ),
       ],
     ];
 

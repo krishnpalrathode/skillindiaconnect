@@ -267,7 +267,10 @@ async function mkFullCandidate(opts?: {
       docsRequiredCount: 1,
       passportValidAtApply: true,
       timeline: {
-        create: [{ toStatus: ApplicationStatus.PENDING }, { fromStatus: ApplicationStatus.PENDING, toStatus: ApplicationStatus.SHORTLISTED }],
+        create: [
+          { toStatus: ApplicationStatus.PENDING },
+          { fromStatus: ApplicationStatus.PENDING, toStatus: ApplicationStatus.SHORTLISTED },
+        ],
       },
     },
   });
@@ -317,7 +320,11 @@ beforeAll(async () => {
   try {
     [pg, redisContainer] = await Promise.all([
       new GenericContainer('postgres:16-alpine')
-        .withEnvironment({ POSTGRES_USER: 'sic', POSTGRES_PASSWORD: 'sic', POSTGRES_DB: 'sic_test' })
+        .withEnvironment({
+          POSTGRES_USER: 'sic',
+          POSTGRES_PASSWORD: 'sic',
+          POSTGRES_DB: 'sic_test',
+        })
         .withExposedPorts(5432)
         .start(),
       new GenericContainer('redis:7-alpine').withExposedPorts(6379).start(),
@@ -377,13 +384,48 @@ beforeAll(async () => {
     // candidates.delete (the purge 403 proof); MODERATOR lacks candidates.view.
     await prisma.rolePermission.createMany({
       data: [
-        { role: UserRole.SUPER_ADMIN, permissionKey: Permission.CANDIDATES_VIEW, enabled: true, isLocked: false },
-        { role: UserRole.SUPER_ADMIN, permissionKey: Permission.CANDIDATES_EDIT, enabled: true, isLocked: false },
-        { role: UserRole.SUPER_ADMIN, permissionKey: Permission.CANDIDATES_DELETE, enabled: true, isLocked: true },
-        { role: UserRole.ADMIN, permissionKey: Permission.CANDIDATES_VIEW, enabled: true, isLocked: false },
-        { role: UserRole.ADMIN, permissionKey: Permission.CANDIDATES_EDIT, enabled: true, isLocked: false },
-        { role: UserRole.ADMIN, permissionKey: Permission.CANDIDATES_DELETE, enabled: false, isLocked: true },
-        { role: UserRole.MODERATOR, permissionKey: Permission.CANDIDATES_VIEW, enabled: false, isLocked: false },
+        {
+          role: UserRole.SUPER_ADMIN,
+          permissionKey: Permission.CANDIDATES_VIEW,
+          enabled: true,
+          isLocked: false,
+        },
+        {
+          role: UserRole.SUPER_ADMIN,
+          permissionKey: Permission.CANDIDATES_EDIT,
+          enabled: true,
+          isLocked: false,
+        },
+        {
+          role: UserRole.SUPER_ADMIN,
+          permissionKey: Permission.CANDIDATES_DELETE,
+          enabled: true,
+          isLocked: true,
+        },
+        {
+          role: UserRole.ADMIN,
+          permissionKey: Permission.CANDIDATES_VIEW,
+          enabled: true,
+          isLocked: false,
+        },
+        {
+          role: UserRole.ADMIN,
+          permissionKey: Permission.CANDIDATES_EDIT,
+          enabled: true,
+          isLocked: false,
+        },
+        {
+          role: UserRole.ADMIN,
+          permissionKey: Permission.CANDIDATES_DELETE,
+          enabled: false,
+          isLocked: true,
+        },
+        {
+          role: UserRole.MODERATOR,
+          permissionKey: Permission.CANDIDATES_VIEW,
+          enabled: false,
+          isLocked: false,
+        },
       ],
     });
 
@@ -497,7 +539,9 @@ describe('purgeUser — full anonymization, proven by absence', () => {
     expect(profile.completionPct).toBe(0);
 
     // Child rows: GONE (passport numbers, employers, skills, resume settings).
-    expect(await prisma.candidateDocument.count({ where: { candidateId: fx.candidateId } })).toBe(0);
+    expect(await prisma.candidateDocument.count({ where: { candidateId: fx.candidateId } })).toBe(
+      0,
+    );
     expect(await prisma.workExperience.count({ where: { candidateId: fx.candidateId } })).toBe(0);
     expect(await prisma.candidateSkill.count({ where: { candidateId: fx.candidateId } })).toBe(0);
     expect(await prisma.candidateResume.count({ where: { candidateId: fx.candidateId } })).toBe(0);
@@ -657,12 +701,17 @@ describe('purgeUser — processing-time guards', () => {
     const fx = await mkFullCandidate({ status: UserStatus.ACTIVE, deletionDueAt: null });
     const result = await runPurge(fx.userId);
     expect(result.outcome).toBe('skipped_not_pending');
-    expect(await prisma.candidateDocument.count({ where: { candidateId: fx.candidateId } })).toBe(1);
+    expect(await prisma.candidateDocument.count({ where: { candidateId: fx.candidateId } })).toBe(
+      1,
+    );
   });
 
   it('the ADMIN trigger is exempt from due-ness and audits trigger+reason', async () => {
     if (dockerUnavailable) return;
-    const fx = await mkFullCandidate({ status: UserStatus.PENDING_DELETION, deletionDueAt: FUTURE });
+    const fx = await mkFullCandidate({
+      status: UserStatus.PENDING_DELETION,
+      deletionDueAt: FUTURE,
+    });
     const result = await runPurge(fx.userId, 'admin', {
       reason: 'DPDP erasure request #42',
       actorUserId: ACTOR_ID['SUPER_ADMIN'],
@@ -714,7 +763,11 @@ describe('admin candidate endpoints — RBAC, guards, and key-free reads', () =>
 
   it('suspend: reason mandatory (400 VALIDATION_ERROR); then SUSPENDED + audited + hidden from employers', async () => {
     if (dockerUnavailable) return;
-    const invalid = await post(`/admin/candidates/${fx.candidateId}/suspend`, UserRole.ADMIN, {}).expect(400);
+    const invalid = await post(
+      `/admin/candidates/${fx.candidateId}/suspend`,
+      UserRole.ADMIN,
+      {},
+    ).expect(400);
     expect(invalid.body.code).toBe('VALIDATION_ERROR');
 
     const res = await post(`/admin/candidates/${fx.candidateId}/suspend`, UserRole.ADMIN, {
@@ -749,9 +802,15 @@ describe('admin candidate endpoints — RBAC, guards, and key-free reads', () =>
     }).expect(409);
     expect(dup.body.code).toBe('CANDIDATE_NOT_ACTIVE');
 
-    const back = await post(`/admin/candidates/${fx.candidateId}/reactivate`, UserRole.ADMIN).expect(200);
+    const back = await post(
+      `/admin/candidates/${fx.candidateId}/reactivate`,
+      UserRole.ADMIN,
+    ).expect(200);
     expect(back.body.data.status).toBe('ACTIVE');
-    const again = await post(`/admin/candidates/${fx.candidateId}/reactivate`, UserRole.ADMIN).expect(409);
+    const again = await post(
+      `/admin/candidates/${fx.candidateId}/reactivate`,
+      UserRole.ADMIN,
+    ).expect(409);
     expect(again.body.code).toBe('CANDIDATE_NOT_SUSPENDED');
   });
 
@@ -766,10 +825,14 @@ describe('admin candidate endpoints — RBAC, guards, and key-free reads', () =>
   it('purge: confirm !== true or empty reason → 422 PURGE_NOT_CONFIRMED (nothing enqueued)', async () => {
     if (dockerUnavailable) return;
     purgeQueueAdd.mockClear();
-    const noConfirm = await post(`/admin/candidates/${fx.candidateId}/purge`, UserRole.SUPER_ADMIN, {
-      reason: 'valid reason',
-      confirm: false,
-    }).expect(422);
+    const noConfirm = await post(
+      `/admin/candidates/${fx.candidateId}/purge`,
+      UserRole.SUPER_ADMIN,
+      {
+        reason: 'valid reason',
+        confirm: false,
+      },
+    ).expect(422);
     expect(noConfirm.body.code).toBe('PURGE_NOT_CONFIRMED');
 
     const noReason = await post(`/admin/candidates/${fx.candidateId}/purge`, UserRole.SUPER_ADMIN, {
@@ -831,7 +894,9 @@ describe('admin candidate endpoints — RBAC, guards, and key-free reads', () =>
 
   it('reactivating a purged tombstone → 409 CANDIDATE_PURGED (irreversible)', async () => {
     if (dockerUnavailable) return;
-    const res = await post(`/admin/candidates/${fx.candidateId}/reactivate`, UserRole.ADMIN).expect(409);
+    const res = await post(`/admin/candidates/${fx.candidateId}/reactivate`, UserRole.ADMIN).expect(
+      409,
+    );
     expect(res.body.code).toBe('CANDIDATE_PURGED');
   });
 });

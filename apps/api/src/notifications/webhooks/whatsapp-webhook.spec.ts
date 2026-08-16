@@ -34,7 +34,9 @@ function sign(raw: string, secret = APP_SECRET): string {
 
 function statusPayload(id: string, status: string, errors?: unknown[]): string {
   return JSON.stringify({
-    entry: [{ changes: [{ value: { statuses: [{ id, status, ...(errors ? { errors } : {}) }] } }] }],
+    entry: [
+      { changes: [{ value: { statuses: [{ id, status, ...(errors ? { errors } : {}) }] } }] },
+    ],
   });
 }
 
@@ -254,7 +256,14 @@ describe('WhatsApp delivery webhook', () => {
         entry: [
           {
             changes: [
-              { value: { statuses: [{ id: 'a', status: 'sent' }, { id: 'b', status: 'read' }] } },
+              {
+                value: {
+                  statuses: [
+                    { id: 'a', status: 'sent' },
+                    { id: 'b', status: 'read' },
+                  ],
+                },
+              },
             ],
           },
         ],
@@ -290,14 +299,22 @@ describe('WhatsApp delivery webhook', () => {
       await service.applyStatuses([{ waMessageId: WAMID, status: DeliveryStatus.FAILED }]);
       const eligible = updateMany.mock.calls[0]?.[0]?.where.status.in;
       expect(eligible).toEqual(
-        expect.arrayContaining([DeliveryStatus.SENT, DeliveryStatus.DELIVERED, DeliveryStatus.READ]),
+        expect.arrayContaining([
+          DeliveryStatus.SENT,
+          DeliveryStatus.DELIVERED,
+          DeliveryStatus.READ,
+        ]),
       );
     });
 
     it('REPLAY: the same callback twice leaves one row in one state', async () => {
       updateMany.mockResolvedValueOnce({ count: 1 }).mockResolvedValueOnce({ count: 0 });
-      const first = await service.applyStatuses([{ waMessageId: WAMID, status: DeliveryStatus.READ }]);
-      const second = await service.applyStatuses([{ waMessageId: WAMID, status: DeliveryStatus.READ }]);
+      const first = await service.applyStatuses([
+        { waMessageId: WAMID, status: DeliveryStatus.READ },
+      ]);
+      const second = await service.applyStatuses([
+        { waMessageId: WAMID, status: DeliveryStatus.READ },
+      ]);
       expect(first.applied).toBe(1);
       expect(second.applied).toBe(0);
       expect(second.ignored).toBe(1);
@@ -318,9 +335,7 @@ describe('WhatsApp delivery webhook', () => {
     });
 
     it('one bad row does not abandon the rest of the batch', async () => {
-      updateMany
-        .mockRejectedValueOnce(new Error('db blip'))
-        .mockResolvedValueOnce({ count: 1 });
+      updateMany.mockRejectedValueOnce(new Error('db blip')).mockResolvedValueOnce({ count: 1 });
       const result = await service.applyStatuses([
         { waMessageId: 'a', status: DeliveryStatus.SENT },
         { waMessageId: 'b', status: DeliveryStatus.SENT },
@@ -342,7 +357,9 @@ describe('WhatsApp delivery webhook', () => {
     });
 
     it('an inbound-message payload returns 200 and writes nothing', async () => {
-      const raw = JSON.stringify({ entry: [{ changes: [{ value: { messages: [{ id: 'x' }] } }] }] });
+      const raw = JSON.stringify({
+        entry: [{ changes: [{ value: { messages: [{ id: 'x' }] } }] }],
+      });
       await expect(controller.receive(req(raw, sign(raw)))).resolves.toEqual({ received: true });
       expect(updateMany).not.toHaveBeenCalled();
     });

@@ -23,7 +23,10 @@ export type ResumeDeliveryChannel = 'WHATSAPP' | 'EMAIL_FALLBACK' | 'EMAIL';
  * Content-Disposition header at the provider.
  */
 export function buildResumeFilename(name: string): string {
-  const safe = name.replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '-');
+  const safe = name
+    .replace(/[^a-zA-Z0-9 ]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
   return safe ? `${safe}-Resume.pdf` : 'Resume.pdf';
 }
 

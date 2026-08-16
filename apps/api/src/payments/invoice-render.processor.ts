@@ -105,11 +105,10 @@ export class InvoiceRenderProcessor extends WorkerHost {
     // sweep a fresh id while still deduping within the day.
     const day = new Date().toISOString().slice(0, 10);
     for (const invoiceId of ids) {
-      await this.queue.add(
-        JOB_NAMES.RENDER_INVOICE,
-        { invoiceId } satisfies RenderInvoiceJobData,
-        { jobId: `render-invoice-${invoiceId}-${day}`, ...INVOICE_RENDER_JOB_OPTS },
-      );
+      await this.queue.add(JOB_NAMES.RENDER_INVOICE, { invoiceId } satisfies RenderInvoiceJobData, {
+        jobId: `render-invoice-${invoiceId}-${day}`,
+        ...INVOICE_RENDER_JOB_OPTS,
+      });
     }
     this.logger.log(`invoice backfill sweep enqueued ${ids.length} render(s)`);
     return { enqueued: ids.length };

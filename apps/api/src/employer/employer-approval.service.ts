@@ -33,11 +33,7 @@ export class EmployerApprovalService {
     private readonly events: EventEmitter2,
   ) {}
 
-  async approve(
-    companyId: string,
-    adminUserId: string,
-    adminRole: UserRole,
-  ): Promise<Company> {
+  async approve(companyId: string, adminUserId: string, adminRole: UserRole): Promise<Company> {
     const company = await this.loadAndAssertTransition(companyId, CompanyStatus.APPROVED);
 
     const updated = await this.prisma.company.update({
@@ -119,11 +115,7 @@ export class EmployerApprovalService {
     return updated;
   }
 
-  async suspend(
-    companyId: string,
-    adminUserId: string,
-    adminRole: UserRole,
-  ): Promise<Company> {
+  async suspend(companyId: string, adminUserId: string, adminRole: UserRole): Promise<Company> {
     const company = await this.loadAndAssertTransition(companyId, CompanyStatus.SUSPENDED);
 
     const updated = await this.prisma.company.update({
@@ -159,14 +151,14 @@ export class EmployerApprovalService {
     return updated;
   }
 
-  async reactivate(
-    companyId: string,
-    adminUserId: string,
-    adminRole: UserRole,
-  ): Promise<Company> {
+  async reactivate(companyId: string, adminUserId: string, adminRole: UserRole): Promise<Company> {
     // Reactivate is SUSPENDED→APPROVED only. Must load the company and assert
     // the current status is SUSPENDED before checking the general transition table.
-    const company = await this.loadAndAssertFromStatus(companyId, CompanyStatus.SUSPENDED, CompanyStatus.APPROVED);
+    const company = await this.loadAndAssertFromStatus(
+      companyId,
+      CompanyStatus.SUSPENDED,
+      CompanyStatus.APPROVED,
+    );
 
     const updated = await this.prisma.company.update({
       where: { id: companyId },

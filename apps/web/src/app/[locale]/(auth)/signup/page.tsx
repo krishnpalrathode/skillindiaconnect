@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { GoogleButton } from '@/components/auth/GoogleButton';
 import { SignupForm } from '@/components/auth/SignupForm';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -11,7 +11,22 @@ import { useAuth } from '@/lib/auth/auth-context';
 export default function SignupPage() {
   const t = useTranslations('auth');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
+
+  /*
+    Where the visitor was headed before they hit the auth wall — set by the
+    Apply buttons on the public job listings.
+
+    Used ONLY to hand back to the sign-in link below, NOT to redirect after
+    signup. A brand-new candidate cannot apply to anything yet: applying
+    requires a completed profile and mandatory documents, so sending them
+    straight to a job would land them on a button that refuses them, which is a
+    worse first experience than the onboarding they actually need. Onboarding
+    stays the destination; the parameter only survives the trip to sign-in for
+    the people who turn out to have an account already.
+  */
+  const next = searchParams.get('next');
   // Prevents the "already authenticated" guard from firing after a successful
   // signup on this very page. signup() sets the user in context which re-renders
   // SignupPage — without this ref the guard would race and redirect to /dashboard
@@ -63,7 +78,7 @@ export default function SignupPage() {
       <p className="text-center text-sm text-neutral-600">
         {t('hasAccount')}{' '}
         <Link
-          href="/login"
+          href={next ? `/login?next=${encodeURIComponent(next)}` : '/login'}
           className="font-semibold text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
         >
           {t('loginLink')}

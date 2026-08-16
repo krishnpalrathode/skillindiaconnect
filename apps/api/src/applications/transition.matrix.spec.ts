@@ -45,7 +45,9 @@ describe('transition.matrix — employer', () => {
   });
 
   it('PENDING allows skip-to-SELECTED', () => {
-    expect(isLegalTransition('EMPLOYER', ApplicationStatus.PENDING, ApplicationStatus.SELECTED)).toBe(true);
+    expect(
+      isLegalTransition('EMPLOYER', ApplicationStatus.PENDING, ApplicationStatus.SELECTED),
+    ).toBe(true);
   });
 });
 
@@ -67,9 +69,15 @@ describe('transition.matrix — admin', () => {
   });
 
   it('allows every backward/corrective move', () => {
-    expect(isLegalTransition('ADMIN', ApplicationStatus.SELECTED, ApplicationStatus.REJECTED)).toBe(true);
-    expect(isLegalTransition('ADMIN', ApplicationStatus.REJECTED, ApplicationStatus.SELECTED)).toBe(true);
-    expect(isLegalTransition('ADMIN', ApplicationStatus.SELECTED, ApplicationStatus.PENDING)).toBe(true);
+    expect(isLegalTransition('ADMIN', ApplicationStatus.SELECTED, ApplicationStatus.REJECTED)).toBe(
+      true,
+    );
+    expect(isLegalTransition('ADMIN', ApplicationStatus.REJECTED, ApplicationStatus.SELECTED)).toBe(
+      true,
+    );
+    expect(isLegalTransition('ADMIN', ApplicationStatus.SELECTED, ApplicationStatus.PENDING)).toBe(
+      true,
+    );
   });
 });
 
@@ -79,7 +87,11 @@ describe('allowedTransitions returns the exact set surfaced in ILLEGAL_TRANSITIO
   });
   it('admin exposes the 3 non-self states', () => {
     expect(allowedTransitions('ADMIN', ApplicationStatus.PENDING).sort()).toEqual(
-      [ApplicationStatus.SHORTLISTED, ApplicationStatus.SELECTED, ApplicationStatus.REJECTED].sort(),
+      [
+        ApplicationStatus.SHORTLISTED,
+        ApplicationStatus.SELECTED,
+        ApplicationStatus.REJECTED,
+      ].sort(),
     );
   });
 });

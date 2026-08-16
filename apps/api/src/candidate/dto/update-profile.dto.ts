@@ -10,6 +10,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import { SUMMARY_MAX_LENGTH } from '../candidate.constants';
 import { MaritalStatus } from '@prisma/client';
 
 export class UpdateProfileDto {
@@ -60,4 +61,14 @@ export class UpdateProfileDto {
   @IsInt()
   @Min(0)
   noticePeriod?: number;
+
+  /**
+   * Resume intro. Trimmed-empty is allowed and means "remove it" — a candidate
+   * clearing the box must be able to take it off their resume, which a
+   * required-non-empty rule would prevent.
+   */
+  @IsOptional()
+  @IsString()
+  @MaxLength(SUMMARY_MAX_LENGTH)
+  summary?: string;
 }

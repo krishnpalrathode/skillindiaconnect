@@ -8,6 +8,7 @@ import {
   factRows,
   pageFrame,
   safePhotoSrc,
+  summaryText,
   stickyFooterFrame,
 } from './shared';
 
@@ -104,6 +105,7 @@ function experienceSection(view: ResumeViewDto): string {
 
 export function renderCompact(view: ResumeViewDto): string {
   const src = safePhotoSrc(view);
+  const summary = summaryText(view);
   const photo = src ? `<img class="photo" src="${src}" alt="" />` : '';
   const video = view.hasVideo
     ? `<section><h2>Video Portfolio</h2><p>A video introduction is available on Skill India Connect.</p></section>`
@@ -147,6 +149,7 @@ export function renderCompact(view: ResumeViewDto): string {
   ul.exp .co { color: #4b5563; }
   ul.exp .meta { font-size: 8.5pt; color: #9ca3af; margin-top: 0.5mm; }
   footer { font-size: 8pt; color: #9ca3af; border-top: 1pt solid #e5e7eb; padding-top: 2mm; }
+  .summary { font-size: 9.5pt; line-height: 1.45; color: #374151; margin-bottom: 5mm; }
 </style>
 </head>
 <body>
@@ -157,6 +160,8 @@ export function renderCompact(view: ResumeViewDto): string {
       ${view.jobCategory ? `<p class="headline">${esc(view.jobCategory)}</p>` : ''}
     </div>
   </header>
+
+  ${summary ? `<p class="summary">${summary}</p>` : ''}
 
   <main class="cols">
     <aside class="side">

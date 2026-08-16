@@ -21,12 +21,12 @@ import { AutoArchiveProcessor } from './auto-archive.processor';
  */
 @Module({
   imports: [
-    QueueModule,  // BullMQ connection + AUTO_ARCHIVE queue registration
+    QueueModule, // BullMQ connection + AUTO_ARCHIVE queue registration
   ],
   providers: [
-    JobLifecycleService,      // batchAutoArchive logic used by the processor
-    JobsCron,                  // @Cron → enqueue
-    AutoArchiveProcessor,      // BullMQ processor → archive
+    JobLifecycleService, // batchAutoArchive logic used by the processor
+    JobsCron, // @Cron → enqueue
+    AutoArchiveProcessor, // BullMQ processor → archive
   ],
 })
 export class JobsWorkerModule {}

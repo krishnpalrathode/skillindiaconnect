@@ -40,6 +40,13 @@ export interface ResumePreviewModel {
   religion?: string;
   /** ABSENT when `showPassportNumber` is off (default off) or no passport on file. */
   passportNumber?: string;
+  /**
+   * The candidate's own intro, shown at the TOP. Not toggle-governed — they
+   * wrote it for the resume, so writing it IS the opt-in. Null when empty, and
+   * the preview omits the block entirely rather than leaving a gap, matching
+   * what every PDF template does with it.
+   */
+  summary?: string | null;
   dob?: string | null;
   maritalStatus?: string | null;
   nationality?: string | null;
@@ -83,6 +90,7 @@ export function buildResumePreview(
   const model: ResumePreviewModel = {
     fullName: profile.fullName ?? '',
     email: profile.email ?? '',
+    summary: profile.summary?.trim() || null,
     dob: profile.dob ?? null,
     maritalStatus: profile.maritalStatus ?? null,
     nationality: profile.nationality ?? null,

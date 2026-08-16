@@ -6,7 +6,14 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { JobMarket, JobStatus, Prisma, UserRole } from '@prisma/client';
+import {
+  ContractDuration,
+  EmploymentType,
+  JobMarket,
+  JobStatus,
+  Prisma,
+  UserRole,
+} from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { EmployerService } from '../employer/employer.service';
 import { ApplicationsAggregateService } from '../applications/applications-aggregate.service';
@@ -161,6 +168,7 @@ export class JobsService {
     }
 
     const categoryOther = await this.resolveCategoryOther(dto.categoryId, dto.categoryOther);
+    const contractDuration = resolveContractDuration(dto.employmentType, dto.contractDuration);
 
     return this.prisma.job.create({
       data: {
@@ -190,6 +198,12 @@ export class JobsService {
         overtime: dto.overtime,
         overtimeRateSubunits: dto.overtimeRateSubunits,
         contractPeriodMonths: dto.contractPeriodMonths,
+        contractDuration,
+        // Stamped from the DTO, timestamped HERE. The acceptance time is the
+        // server's, not the client's — a self-reported timestamp is the one
+        // field an employer would have reason to move.
+        termsVersion: dto.acceptedTermsVersion,
+        termsAcceptedAt: new Date(),
         vacancies: dto.vacancies,
         genderPreference: dto.genderPreference,
         isFeatured: dto.isFeatured ?? false,
@@ -204,6 +218,9 @@ export class JobsService {
 
   /**
    * Pairs `categoryId` with `categoryOther` and returns what should be stored.
+   *
+   * (See `resolveContractDuration` at the foot of this file for the sibling
+   * employmentType/contractDuration pairing — same shape, no DB read needed.)
    *
    * Both directions are errors, and both are worth catching: free text with a
    * real trade selected means the UI sent a stale draft value that would then
@@ -275,9 +292,10 @@ export class JobsService {
     const where = {
       companyId: company.id,
       ...(dto.status !== undefined && { status: dto.status }),
-      ...(dto.search !== undefined && dto.search.length > 0 && {
-        title: { contains: dto.search, mode: 'insensitive' as const },
-      }),
+      ...(dto.search !== undefined &&
+        dto.search.length > 0 && {
+          title: { contains: dto.search, mode: 'insensitive' as const },
+        }),
     };
 
     const page = dto.page ?? 1;
@@ -350,10 +368,24 @@ export class JobsService {
       ? await this.resolveCategoryOther(dto.categoryId ?? job.categoryId, dto.categoryOther)
       : undefined;
 
+    /*
+      Re-pair employment type and contract duration whenever EITHER moves, for
+      the same reason as the category pair above: the rule is about the MERGED
+      job, not the patch. Switching a CONTRACT job to FULL_TIME without sending
+      a duration must clear the stored band — resolveContractDuration returns
+      null for that case, and the spread below writes it — while switching TO
+      CONTRACT without a duration is refused rather than silently left blank.
+    */
+    const contractTouched = dto.employmentType !== undefined || dto.contractDuration !== undefined;
+    const contractDuration = contractTouched
+      ? resolveContractDuration(dto.employmentType ?? job.employmentType, dto.contractDuration)
+      : undefined;
+
     const updated = await this.prisma.job.update({
       where: { id: jobId },
       data: {
         ...(categoryTouched && { categoryOther }),
+        ...(contractTouched && { contractDuration }),
         ...(dto.title !== undefined && { title: dto.title }),
         ...(dto.employmentType !== undefined && { employmentType: dto.employmentType }),
         ...(dto.market !== undefined && { market: dto.market }),
@@ -428,9 +460,7 @@ export class JobsService {
     );
     const autoArchiveDays = await this.settingsService.get(SETTING_KEYS.AUTO_ARCHIVE_DAYS);
 
-    const targetStatus = requireAdminApproval
-      ? JobStatus.PENDING_REVIEW
-      : JobStatus.ACTIVE;
+    const targetStatus = requireAdminApproval ? JobStatus.PENDING_REVIEW : JobStatus.ACTIVE;
 
     const now = new Date();
     const autoArchiveAt =
@@ -662,7 +692,13 @@ export class JobsService {
     return new Map(
       rows.map((j) => [
         j.id,
-        { id: j.id, title: j.title, companyName: j.company.name, location: j.location, market: j.market },
+        {
+          id: j.id,
+          title: j.title,
+          companyName: j.company.name,
+          location: j.location,
+          market: j.market,
+        },
       ]),
     );
   }
@@ -690,6 +726,49 @@ export class JobsService {
       counts[row.status] = row._count._all;
     }
     return counts;
+  }
+
+  // ── Admin analytics reads (Screen 22) ───────────────────────────────────────
+
+  /** Jobs created / published per day — the job-performance chart. */
+  async dailyJobSeries(from: Date, to: Date): Promise<JobSeriesRow[]> {
+    return this.prisma.$queryRaw<JobSeriesRow[]>`
+      SELECT to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS date,
+             COUNT(*)::int AS created,
+             COUNT(*) FILTER (WHERE "publishedAt" IS NOT NULL)::int AS published,
+             COUNT(*) FILTER (WHERE status = 'ARCHIVED')::int AS archived
+      FROM jobs
+      WHERE "createdAt" >= ${from} AND "createdAt" < ${to}
+      GROUP BY 1 ORDER BY 1`;
+  }
+
+  /** Active-job count created in a window — the KPI delta. */
+  async countCreatedBetween(from: Date, to: Date): Promise<number> {
+    return this.prisma.job.count({ where: { createdAt: { gte: from, lt: to } } });
+  }
+
+  /**
+   * Best-performing ACTIVE jobs by application volume.
+   *
+   * `views` is deliberately ABSENT: nothing records a job view, so the column in
+   * the reference design would have been a fabricated number. Conversion here is
+   * hires ÷ applications, both of which are real rows.
+   */
+  async topPerformingJobs(limit = 5): Promise<TopJobRow[]> {
+    return this.prisma.$queryRaw<TopJobRow[]>`
+      SELECT j.title,
+             c.name AS "employerName",
+             j.status::text AS status,
+             COUNT(a.id)::int AS applications,
+             COUNT(a.id) FILTER (WHERE a.status = 'SHORTLISTED')::int AS shortlisted,
+             COUNT(a.id) FILTER (WHERE a.status = 'SELECTED')::int AS hires
+      FROM jobs j
+      JOIN companies c ON c.id = j."companyId"
+      LEFT JOIN applications a ON a."jobId" = j.id
+      WHERE j.status = 'ACTIVE'
+      GROUP BY j.id, j.title, c.name, j.status
+      ORDER BY applications DESC, j.title ASC
+      LIMIT ${limit}`;
   }
 
   /** All job ids for a company (S4-B3 aggregates scope applications by these). */
@@ -766,10 +845,7 @@ export class JobsService {
    * Pause all ACTIVE jobs for a company (used by the employer.suspended event handler).
    * Reactivation does NOT auto-resume — the employer must manually resume each job.
    */
-  async pauseAllActiveJobsForCompany(
-    companyId: string,
-    reason: string,
-  ): Promise<void> {
+  async pauseAllActiveJobsForCompany(companyId: string, reason: string): Promise<void> {
     const jobs = await this.prisma.job.findMany({
       where: { companyId, status: JobStatus.ACTIVE },
       select: { id: true },
@@ -803,4 +879,56 @@ export class JobsService {
       this.eventEmitter.emit(JOB_EVENTS.PAUSED, payload);
     }
   }
+}
+
+export interface JobSeriesRow {
+  date: string;
+  created: number;
+  published: number;
+  archived: number;
+}
+
+export interface TopJobRow {
+  title: string;
+  employerName: string;
+  status: string;
+  applications: number;
+  shortlisted: number;
+  hires: number;
+}
+
+/**
+ * Pairs `employmentType` with `contractDuration` and returns what to store.
+ *
+ * Both directions are errors. A CONTRACT job with no duration is the whole
+ * reason candidates ask "how long is this for?" before applying; a duration on a
+ * full-time job is a value the form cannot show and nobody can correct, which
+ * would then leak into the job card as a term that does not exist.
+ *
+ * Returns `null` rather than `undefined` for the non-contract case so that
+ * switching an existing CONTRACT job to FULL_TIME CLEARS the stale duration —
+ * `undefined` would leave the old band on the row, silently attached to a job
+ * that is no longer a contract.
+ */
+export function resolveContractDuration(
+  employmentType: EmploymentType,
+  contractDuration: ContractDuration | undefined,
+): ContractDuration | null {
+  if (employmentType === EmploymentType.CONTRACT) {
+    if (!contractDuration) {
+      throw new BadRequestException({
+        code: 'CONTRACT_DURATION_REQUIRED',
+        detail: 'A contract job must state how long the contract runs.',
+      });
+    }
+    return contractDuration;
+  }
+
+  if (contractDuration) {
+    throw new BadRequestException({
+      code: 'CONTRACT_DURATION_NOT_APPLICABLE',
+      detail: 'Contract duration applies only to contract roles.',
+    });
+  }
+  return null;
 }

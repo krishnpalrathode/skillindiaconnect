@@ -8,11 +8,7 @@
  * candidateId in saved_jobs refers to CandidateProfile.id (not User.id).
  * We do a lightweight lookup of the profile id here to map from the JWT userId.
  */
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { JobStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 

@@ -5,6 +5,7 @@ import { Hero } from '@/components/landing/Hero';
 import { TrustStrip } from '@/components/landing/TrustStrip';
 import { AnnouncementBar } from '@/components/landing/AnnouncementBar';
 import { StatsBand } from '@/components/landing/StatsBand';
+import { RecentJobs } from '@/components/landing/RecentJobs';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { WorkerProtection } from '@/components/landing/WorkerProtection';
 import { ForEmployers } from '@/components/landing/ForEmployers';
@@ -49,6 +50,16 @@ export default async function HomePage({ params }: Props) {
         <Hero locale={locale} />
         <StatsBand />
         <TrustStrip />
+        {/*
+          Jobs come BEFORE "how it works".
+
+          Someone who wants a job wants jobs. Making them read a three-step
+          process diagram first asks for patience from the visitor least likely
+          to spend any — and the strongest argument this page can make is simply
+          that the listings are real and recent. The explainer still earns its
+          place; it just answers the second question, not the first.
+        */}
+        <RecentJobs locale={locale} />
         <HowItWorks locale={locale} />
         <WorkerProtection />
         <ForEmployers locale={locale} />

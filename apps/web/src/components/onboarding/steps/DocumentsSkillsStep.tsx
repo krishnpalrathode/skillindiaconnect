@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Info, FileText, Sparkles, MapPin } from 'lucide-react';
+import { Info, FileText, Sparkles, MapPin, AlertTriangle } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,11 @@ import { FileUpload } from '@/components/upload/FileUpload';
 import { SkillChips } from '@/components/onboarding/SkillChips';
 import { patchCandidateProfile } from '@/lib/api/candidate';
 import type { PatchCandidateBody } from '@/lib/api/candidate';
+import {
+  assessPassportValidity,
+  earliestAcceptableExpiry,
+  PASSPORT_MIN_VALIDITY_DAYS,
+} from '@/lib/passport-validity';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type CandidateSkill = components['schemas']['CandidateSkill'];
@@ -61,10 +66,29 @@ export function DocumentsSkillsStep({
   const hasPassport = (profile.documents ?? []).some((d) => d.type === 'PASSPORT');
   const hasSkills = (profile.skills?.length ?? 0) > 0;
 
-  // Passport expiry must be in the future — a back-dated (already-expired)
-  // passport can't be used to apply. YYYY-MM-DD strings compare chronologically.
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const passportExpiryIsPast = passportExpiry !== '' && passportExpiry < todayIso;
+  /*
+    Passport validity, assessed as the candidate types.
+
+    Three outcomes, not two. "In the future" is no longer enough: every GCC state
+    refuses a work visa on a passport with under six months left, so a valid-but-
+    short passport is blocked here rather than at the visa stage, and a passport
+    with under a year is flagged while renewal is still unhurried. The server
+    enforces the same rule — this is the early, in-context half.
+  */
+  const passportValidity = assessPassportValidity(passportExpiry || null);
+  const passportBlocked = passportExpiry !== '' && passportValidity.blocks;
+  const passportWarning = passportValidity.status === 'expiring_soon';
+  const minExpiryIso = earliestAcceptableExpiry();
+
+  const passportExpiryError =
+    passportValidity.status === 'expired'
+      ? t('passportExpiryPast')
+      : passportValidity.status === 'below_minimum'
+        ? t('passportExpiryTooSoon', {
+            days: PASSPORT_MIN_VALIDITY_DAYS,
+            months: Math.round(PASSPORT_MIN_VALIDITY_DAYS / 30),
+          })
+        : undefined;
 
   const handleSkillsChange = (skills: CandidateSkill[]) => {
     onProfileUpdate({ ...profile, skills });
@@ -177,23 +201,58 @@ export function DocumentsSkillsStep({
               id="ds-passport-expiry"
               label={t('passportExpiryLabel')}
               required
-              error={passportExpiryIsPast ? t('passportExpiryPast') : undefined}
+              error={passportExpiryError}
+              hint={!passportExpiryError ? t('passportExpiryRule') : undefined}
             >
               <Input
                 type="date"
                 value={passportExpiry}
-                min={todayIso}
+                // The native picker greys out anything under the floor, so the
+                // rule is visible before a date is even chosen.
+                min={minExpiryIso}
+                aria-invalid={!!passportExpiryError}
                 onChange={(e) => setPassportExpiry(e.target.value)}
                 className="h-12 rounded-xl"
               />
             </Field>
+
+            {/*
+              Warning, not an error: this passport is accepted today. It is
+              surfaced because renewing an Indian passport takes weeks to months,
+              and a candidate who first hears about it at the six-month gate has
+              already lost the time they needed.
+            */}
+            {passportWarning && (
+              <div
+                role="status"
+                className="flex items-start gap-2.5 rounded-xl border border-warning-fg/25 bg-warning-bg/50 p-3"
+              >
+                <AlertTriangle
+                  className="mt-0.5 size-4 shrink-0 text-warning-fg"
+                  aria-hidden="true"
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-neutral-900">
+                    {t('passportExpiryWarnTitle', { days: passportValidity.daysRemaining ?? 0 })}
+                  </p>
+                  <p className="mt-0.5 text-xs text-neutral-700">
+                    {t('passportExpiryWarnBody', {
+                      months: Math.round(PASSPORT_MIN_VALIDITY_DAYS / 30),
+                    })}
+                  </p>
+                </div>
+              </div>
+            )}
             <FileUpload
               docType="PASSPORT"
               accept=".pdf,image/jpeg,image/png"
-              maxMb={10}
               label={t('passportLabel')}
               hint={passportExpiry ? t('passportHint') : t('passportExpiryRequired')}
               expiryDate={passportExpiry || undefined}
+              // Blocked while the date fails the rule: the server would refuse the
+              // confirm, so letting the file upload first wastes the candidate's
+              // data and time for a guaranteed rejection.
+              disabled={passportBlocked}
               onDone={() => {
                 onProfileUpdate({
                   ...profile,
@@ -217,14 +276,12 @@ export function DocumentsSkillsStep({
         <FileUpload
           docType="EXPERIENCE_CERT"
           accept=".pdf,image/jpeg,image/png"
-          maxMb={5}
           label={t('experienceCertLabel')}
           hint={t('experienceCertHint')}
         />
         <FileUpload
           docType="EDUCATIONAL_CERT"
           accept=".pdf,image/jpeg,image/png"
-          maxMb={5}
           label={t('educationalCertLabel')}
           hint={t('educationalCertHint')}
         />
@@ -271,12 +328,12 @@ export function DocumentsSkillsStep({
         </Button>
         <Button
           type="button"
-          variant="primary"
+          variant="brand"
           size="md"
           loading={saving}
           disabled={!canAdvance}
           onClick={handleNext}
-          className="rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] px-8 shadow-md transition-all hover:shadow-lg"
+          className="rounded-xl px-8 shadow-md transition-all hover:shadow-lg"
         >
           {tNav('next')}
         </Button>

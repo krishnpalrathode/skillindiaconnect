@@ -30,7 +30,10 @@ export class InvoiceService {
    * infra (or a fast-follow): the legally-required artifact is the numbered
    * row; the printable document is presentation.
    */
-  async createForOrder(tx: Prisma.TransactionClient, orderId: string): Promise<{
+  async createForOrder(
+    tx: Prisma.TransactionClient,
+    orderId: string,
+  ): Promise<{
     id: string;
     number: string;
   }> {

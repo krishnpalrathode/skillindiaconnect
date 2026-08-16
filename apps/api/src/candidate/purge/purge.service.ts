@@ -174,11 +174,7 @@ export class PurgeService {
       }
     }
 
-    const counts = await this.anonymizeInTransaction(
-      user.id,
-      user.candidateProfile,
-      now,
-    );
+    const counts = await this.anonymizeInTransaction(user.id, user.candidateProfile, now);
     await input.onDbCommitted?.(counts);
 
     counts.objectsDestroyed = await this.destroyObjects(input.capturedKeys);

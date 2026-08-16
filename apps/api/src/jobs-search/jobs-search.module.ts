@@ -26,11 +26,6 @@ import { SavedJobsService } from './saved-jobs.service';
 @Module({
   imports: [RedisModule],
   controllers: [JobsSearchController, JobCategoriesController],
-  providers: [
-    JobsSearchService,
-    SearchCacheService,
-    SearchCacheSubscriber,
-    SavedJobsService,
-  ],
+  providers: [JobsSearchService, SearchCacheService, SearchCacheSubscriber, SavedJobsService],
 })
 export class JobsSearchModule {}

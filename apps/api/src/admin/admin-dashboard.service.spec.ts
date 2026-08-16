@@ -187,11 +187,7 @@ beforeAll(async () => {
     const now = new Date();
     await mkInvoicedOrder(1_000, new Date(now.getFullYear(), now.getMonth(), 1), plan.id);
     await mkInvoicedOrder(2_500, now, plan.id);
-    await mkInvoicedOrder(
-      9_999,
-      new Date(now.getFullYear(), now.getMonth() - 1, 15),
-      plan.id,
-    );
+    await mkInvoicedOrder(9_999, new Date(now.getFullYear(), now.getMonth() - 1, 15), plan.id);
 
     // countByStatus / countsPlatformWide / countCandidates touch ONLY `prisma` —
     // the other collaborators are irrelevant to the aggregates under test, so
@@ -200,7 +196,7 @@ beforeAll(async () => {
     const settingsStub = { get: async () => 1 } as unknown as SettingsService;
     service = new AdminDashboardService(
       new CandidateReadService(prismaSvc),
-      new EmployerService(prismaSvc, null as never),
+      new EmployerService(prismaSvc, null as never, { notify: jest.fn() } as never),
       new JobsService(
         prismaSvc,
         null as never,
@@ -258,14 +254,17 @@ describe('AdminDashboardService', () => {
     });
   });
 
-  gatedIt('candidate count is the contract INTEGER: non-purged profiles (PENDING_DELETION still counted)', async () => {
-    const d = await service.getDashboard();
-    // The contract's counts.candidates is a NUMBER — the web dashboard renders
-    // it directly, so an object here is a rendering crash (caught live in the
-    // S6 happy-path pass). PENDING_DELETION profiles still count (not purged
-    // yet); a purged tombstone would not.
-    expect(d.counts.candidates).toBe(5); // 3 seeded + 2 applicants
-  });
+  gatedIt(
+    'candidate count is the contract INTEGER: non-purged profiles (PENDING_DELETION still counted)',
+    async () => {
+      const d = await service.getDashboard();
+      // The contract's counts.candidates is a NUMBER — the web dashboard renders
+      // it directly, so an object here is a rendering crash (caught live in the
+      // S6 happy-path pass). PENDING_DELETION profiles still count (not purged
+      // yet); a purged tombstone would not.
+      expect(d.counts.candidates).toBe(5); // 3 seeded + 2 applicants
+    },
+  );
 
   gatedIt('revenue sums THIS month only — last month is excluded (the boundary case)', async () => {
     const d = await service.getDashboard();
@@ -273,75 +272,79 @@ describe('AdminDashboardService', () => {
     expect(d.currency).toBe('INR');
   });
 
-  gatedIt('the two work-queue depths are derived from the count maps (no extra queries)', async () => {
-    const d = await service.getDashboard();
-    expect(d.pendingEmployerReviews).toBe(2);
-    expect(d.pendingJobReviews).toBe(1);
-    // Derived, not re-queried: they equal the corresponding map entries exactly.
-    expect(d.pendingEmployerReviews).toBe(d.counts.employers['PENDING']);
-    expect(d.pendingJobReviews).toBe(d.counts.jobs['PENDING_REVIEW']);
-  });
-
   gatedIt(
-    'NO N+1: the SQL statement count is FIXED and does not grow with the data',
+    'the two work-queue depths are derived from the count maps (no extra queries)',
     async () => {
-      // The real proof — count the statements Prisma actually issues, twice, with
-      // very different amounts of data. Every figure is a GROUP BY / aggregate
-      // executed IN Postgres, so nothing is computed per-row and the count cannot
-      // move. If someone later replaces a groupBy with a loop, this fails.
-      const logging = new PrismaClient({
-        datasources: { db: { url: dbUrl } },
-        log: [{ emit: 'event', level: 'query' }],
-      });
-      await logging.$connect();
-
-      let statements = 0;
-      (logging as unknown as { $on: (e: 'query', cb: () => void) => void }).$on(
-        'query',
-        () => {
-          statements++;
-        },
-      );
-
-      const svc = new AdminDashboardService(
-        new CandidateReadService(logging as unknown as PrismaService),
-        new EmployerService(logging as unknown as PrismaService, null as never),
-        new JobsService(
-          logging as unknown as PrismaService,
-          null as never,
-          null as never,
-          null as never,
-          null as never,
-          null as never,
-          null as never,
-          null as never,
-        ),
-        new ApplicationsAggregateService(
-          logging as unknown as PrismaService,
-          null as never,
-          null as never,
-        ),
-        new SubscriptionReadService(logging as unknown as PrismaService, {
-          get: async () => 1,
-        } as unknown as SettingsService),
-      );
-
-      statements = 0;
-      await svc.getDashboard();
-      const withSmallData = statements;
-
-      // Grow the data by an order of magnitude.
-      for (let i = 0; i < 30; i++) await mkJob(JobStatus.ACTIVE);
-
-      statements = 0;
-      await svc.getDashboard();
-      const withMoreData = statements;
-
-      expect(withSmallData).toBeGreaterThan(0);
-      // THE assertion: identical statement count despite 30x more jobs.
-      expect(withMoreData).toBe(withSmallData);
-
-      await logging.$disconnect();
+      const d = await service.getDashboard();
+      expect(d.pendingEmployerReviews).toBe(2);
+      expect(d.pendingJobReviews).toBe(1);
+      // Derived, not re-queried: they equal the corresponding map entries exactly.
+      expect(d.pendingEmployerReviews).toBe(d.counts.employers['PENDING']);
+      expect(d.pendingJobReviews).toBe(d.counts.jobs['PENDING_REVIEW']);
     },
   );
+
+  gatedIt('NO N+1: the SQL statement count is FIXED and does not grow with the data', async () => {
+    // The real proof — count the statements Prisma actually issues, twice, with
+    // very different amounts of data. Every figure is a GROUP BY / aggregate
+    // executed IN Postgres, so nothing is computed per-row and the count cannot
+    // move. If someone later replaces a groupBy with a loop, this fails.
+    const logging = new PrismaClient({
+      datasources: { db: { url: dbUrl } },
+      log: [{ emit: 'event', level: 'query' }],
+    });
+    await logging.$connect();
+
+    let statements = 0;
+    (logging as unknown as { $on: (e: 'query', cb: () => void) => void }).$on('query', () => {
+      statements++;
+    });
+
+    const svc = new AdminDashboardService(
+      new CandidateReadService(logging as unknown as PrismaService),
+      new EmployerService(
+        logging as unknown as PrismaService,
+        null as never,
+        { notify: jest.fn() } as never,
+      ),
+      new JobsService(
+        logging as unknown as PrismaService,
+        null as never,
+        null as never,
+        null as never,
+        null as never,
+        null as never,
+        null as never,
+        null as never,
+      ),
+      new ApplicationsAggregateService(
+        logging as unknown as PrismaService,
+        null as never,
+        null as never,
+      ),
+      new SubscriptionReadService(
+        logging as unknown as PrismaService,
+        {
+          get: async () => 1,
+        } as unknown as SettingsService,
+      ),
+    );
+
+    statements = 0;
+    await svc.getDashboard();
+    const withSmallData = statements;
+
+    // Grow the data by an order of magnitude.
+    for (let i = 0; i < 30; i++) await mkJob(JobStatus.ACTIVE);
+
+    statements = 0;
+    await svc.getDashboard();
+    const withMoreData = statements;
+
+    expect(withSmallData).toBeGreaterThan(0);
+    // THE assertion: identical statement count despite 30x more jobs.
+    expect(withMoreData).toBe(withSmallData);
+
+    await logging.$disconnect();
+  });
 });

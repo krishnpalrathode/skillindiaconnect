@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../auth/rbac/require-permissions.decorator';
 import { Permission } from '../auth/rbac/permission.constants';
@@ -52,10 +45,7 @@ export class AdminEmployerController {
 
   @Post(':id/approve')
   @RequirePermissions(Permission.EMPLOYERS_APPROVE_REJECT)
-  async approve(
-    @Param('id') id: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async approve(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload) {
     const company = await this.approvalService.approve(id, user.userId, user.role);
     return { data: company };
   }
@@ -73,20 +63,14 @@ export class AdminEmployerController {
 
   @Post(':id/suspend')
   @RequirePermissions(Permission.EMPLOYERS_SUSPEND)
-  async suspend(
-    @Param('id') id: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async suspend(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload) {
     const company = await this.approvalService.suspend(id, user.userId, user.role);
     return { data: company };
   }
 
   @Post(':id/reactivate')
   @RequirePermissions(Permission.EMPLOYERS_APPROVE_REJECT)
-  async reactivate(
-    @Param('id') id: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async reactivate(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload) {
     const company = await this.approvalService.reactivate(id, user.userId, user.role);
     return { data: company };
   }

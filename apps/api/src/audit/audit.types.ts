@@ -26,6 +26,8 @@ export type AuditModuleName = (typeof AUDIT_MODULES)[keyof typeof AUDIT_MODULES]
 export const AUDIT_ACTIONS = {
   // Settings (S2-B1)
   SETTINGS_UPDATE: 'settings.update',
+  // Plan pricing — money path, so the before/after pair is in the meta.
+  PLAN_PRICE_UPDATED: 'plan.price_updated',
   // Candidate documents (S1-3)
   DOCUMENT_CHANGED: 'document.changed',
   // Account (S1-3)

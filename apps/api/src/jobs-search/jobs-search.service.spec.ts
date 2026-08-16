@@ -208,9 +208,7 @@ async function createJob(opts: {
       isUrgent: opts.isUrgent ?? false,
       publishedAt: status === JobStatus.ACTIVE ? (opts.publishedAt ?? now) : null,
       autoArchiveAt:
-        status === JobStatus.ACTIVE
-          ? new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)
-          : null,
+        status === JobStatus.ACTIVE ? new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000) : null,
     },
   });
 }
@@ -218,7 +216,6 @@ async function createJob(opts: {
 // ─────── Tests ────────────────────────────────────────────────────────────────
 
 describe('JobsSearchService (integration)', () => {
-
   // ── 1. Only ACTIVE jobs ─────────────────────────────────────────────────────
 
   it('returns only ACTIVE jobs — DRAFT/PAUSED/ARCHIVED are hidden', async () => {
@@ -315,8 +312,18 @@ describe('JobsSearchService (integration)', () => {
   it('salary range filter narrows results', async () => {
     if (dockerUnavailable) return;
 
-    await createJob({ title: 'High Salary', salaryMin: 100000, salaryMax: 150000, currency: Currency.AED });
-    await createJob({ title: 'Low Salary', salaryMin: 10000, salaryMax: 20000, currency: Currency.AED });
+    await createJob({
+      title: 'High Salary',
+      salaryMin: 100000,
+      salaryMax: 150000,
+      currency: Currency.AED,
+    });
+    await createJob({
+      title: 'Low Salary',
+      salaryMin: 10000,
+      salaryMax: 20000,
+      currency: Currency.AED,
+    });
 
     // salaryMax >= 90000 (overlap: only "High Salary" qualifies)
     const result = await searchService.search({ salaryMin: 90000, currency: Currency.AED });
@@ -421,7 +428,9 @@ describe('JobsSearchService (integration)', () => {
     const paused = await createJob({ title: 'Paused', status: JobStatus.PAUSED });
 
     await expect(searchService.getDetail(paused.id)).rejects.toThrow(NotFoundException);
-    await expect(searchService.getDetail('00000000-0000-0000-0000-000000000000')).rejects.toThrow(NotFoundException);
+    await expect(searchService.getDetail('00000000-0000-0000-0000-000000000000')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   // ── 11. Similar jobs ────────────────────────────────────────────────────────
@@ -432,12 +441,17 @@ describe('JobsSearchService (integration)', () => {
     const main = await createJob({ title: 'Main Electrician', market: JobMarket.GULF });
     const simCat = await createJob({ title: 'Similar by Category', market: JobMarket.LOCAL });
     const simMkt = await createJob({ title: 'Similar by Market', categoryId: CATEGORY_ID });
-    await createJob({ title: 'Unrelated', status: JobStatus.ACTIVE, market: JobMarket.LOCAL,
-      categoryId: await prismaClient.jobCategory.upsert({
-        where: { id: 'other-cat-2' },
-        create: { id: 'other-cat-2', slug: 'unrelated-cat', nameEn: 'Unrelated' },
-        update: {},
-      }).then((c) => c.id),
+    await createJob({
+      title: 'Unrelated',
+      status: JobStatus.ACTIVE,
+      market: JobMarket.LOCAL,
+      categoryId: await prismaClient.jobCategory
+        .upsert({
+          where: { id: 'other-cat-2' },
+          create: { id: 'other-cat-2', slug: 'unrelated-cat', nameEn: 'Unrelated' },
+          update: {},
+        })
+        .then((c) => c.id),
     });
 
     const detail = await searchService.getDetail(main.id);

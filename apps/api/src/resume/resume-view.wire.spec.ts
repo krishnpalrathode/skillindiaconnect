@@ -20,6 +20,7 @@ const FATHER = 'Ramesh Kumar';
 const source: ResumeSource = {
   id: 'cand-1',
   fullName: 'Suresh Kumar',
+  summary: null,
   fatherName: FATHER,
   dob: new Date('1992-04-11'),
   phone: PHONE,
@@ -46,9 +47,7 @@ const source: ResumeSource = {
     },
   ],
   skills: [{ id: 'sk-1', name: 'Panel Installation' }],
-  documents: [
-    { type: 'PASSPORT', expiryDate: new Date('2031-01-01'), documentNumber: PASSPORT },
-  ],
+  documents: [{ type: 'PASSPORT', expiryDate: new Date('2031-01-01'), documentNumber: PASSPORT }],
 };
 
 function roundTrip(settings: Parameters<typeof toResumeView>[1]) {
@@ -58,6 +57,44 @@ function roundTrip(settings: Parameters<typeof toResumeView>[1]) {
 }
 
 describe('stored → wire resume view', () => {
+  /**
+   * THE COMPLETENESS GATE.
+   *
+   * `toWireResumeView` copies field by field, by hand, so a field added to the
+   * render view reaches the PDF and then silently stops at this mapper — the
+   * preview screen shows a resume missing something the actual PDF contains.
+   * That is exactly how `summary` shipped rendered-but-invisible: every other
+   * test here passed, because each one names the fields it cares about and this
+   * mapper was the only place nobody was looking.
+   *
+   * So: walk the STORED keys and require each to cross, rather than listing
+   * them. The exclusions are the render-side details that deliberately stop
+   * here, named individually so dropping a fifth field is a decision someone
+   * writes down rather than an omission nobody notices.
+   */
+  it('carries EVERY stored field across — nothing is silently left behind', () => {
+    const { stored, wire } = roundTrip({
+      ...RESUME_SETTINGS_DEFAULTS,
+      showPhone: true,
+      showReligion: true,
+      showFatherName: true,
+      showPassportNumber: true,
+    });
+
+    const RENDER_ONLY = new Set([
+      'photoKey', //  replaced by the signed photoUrl
+      'hasVideo', //  drives a PDF section; no client uses it
+    ]);
+
+    for (const key of Object.keys(stored)) {
+      if (RENDER_ONLY.has(key)) {
+        expect(key in wire).toBe(false);
+        continue;
+      }
+      expect(Object.keys(wire)).toContain(key);
+    }
+  });
+
   it('ALL TOGGLES ON: every opt-in field survives the round trip', () => {
     const { wire } = roundTrip({
       ...RESUME_SETTINGS_DEFAULTS,

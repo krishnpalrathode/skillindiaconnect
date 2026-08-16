@@ -1,11 +1,8 @@
-import {
-  ConflictException,
-  Injectable,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { DocumentType } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { CandidateApplyInputs } from '../candidate/candidate-read.service';
+import { assessPassportValidity, PASSPORT_MIN_VALIDITY_DAYS } from '../candidate/passport-validity';
 import { JobForApplication } from '../jobs/jobs.service';
 
 export interface ApplyGateSettings {
@@ -90,10 +87,24 @@ export class ApplyGateService {
         meta: { reason: 'missing' },
       });
     }
-    if (passport.expiryDate === null || passport.expiryDate.getTime() <= Date.now()) {
+    /*
+      Re-checked here and not merely at upload, because validity DECAYS. A
+      passport uploaded with seven months left drops under the six-month floor
+      six weeks later with nobody touching anything, and the apply gate is the
+      last point before an employer commits to a candidate whose visa will be
+      refused. `reason` distinguishes the two so the UI can say "renew your
+      passport" rather than "your passport has expired" to someone holding a
+      passport that is still perfectly valid for travel.
+    */
+    const validity = assessPassportValidity(passport.expiryDate);
+    if (validity.blocks) {
       throw new UnprocessableEntityException({
         code: 'PASSPORT_INVALID',
-        meta: { reason: 'expired' },
+        meta: {
+          reason: validity.status === 'below_minimum' ? 'below_minimum' : 'expired',
+          minValidityDays: PASSPORT_MIN_VALIDITY_DAYS,
+          daysRemaining: validity.daysRemaining,
+        },
       });
     }
 

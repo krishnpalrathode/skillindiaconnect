@@ -23,7 +23,12 @@ import { CheckoutService, CheckoutSessionDto } from './checkout.service';
 
 describe('BillingController (HTTP)', () => {
   let app: INestApplication;
-  let checkoutMock: { checkout: jest.Mock; getPlans: jest.Mock; getSubscription: jest.Mock; getOrder: jest.Mock };
+  let checkoutMock: {
+    checkout: jest.Mock;
+    getPlans: jest.Mock;
+    getSubscription: jest.Mock;
+    getOrder: jest.Mock;
+  };
   // Mutable per-test identity injected where JwtAuthGuard would put it.
   let currentUser: CurrentUserPayload;
 
@@ -51,12 +56,10 @@ describe('BillingController (HTTP)', () => {
     }).compile();
 
     app = moduleRef.createNestApplication();
-    app.use(
-      (req: { user?: CurrentUserPayload }, _res: unknown, next: () => void) => {
-        req.user = currentUser;
-        next();
-      },
-    );
+    app.use((req: { user?: CurrentUserPayload }, _res: unknown, next: () => void) => {
+      req.user = currentUser;
+      next();
+    });
     // Mirror main.api.ts EXACTLY: the global whitelist pipe strips unknown
     // fields BEFORE route pipes — the environment that hid the smuggled-field
     // pass-through until the live check caught it.
@@ -70,8 +73,7 @@ describe('BillingController (HTTP)', () => {
     await app.init();
   });
 
-  afterAll(async () =>
-    app.close());
+  afterAll(async () => app.close());
 
   beforeEach(() => {
     jest.clearAllMocks();

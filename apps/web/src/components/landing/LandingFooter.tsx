@@ -72,11 +72,21 @@ export function LandingFooter() {
 
   const columns = [
     {
+      // EXPLORE is what the product DOES; COMPANY is who we are and the legal
+      // terms. "About" sat here and was the odd one out — it describes the
+      // organisation, not a thing a visitor can go and use.
       heading: t('explore'),
       links: [
-        { label: t('about'), href: `/${locale}/about` },
         { label: t('findJobs'), href: `/${locale}/signup` },
         { label: t('hireWorkers'), href: `/${locale}/signup?role=employer` },
+        /*
+          Points at the builder itself rather than at /signup like the two links
+          above. A signed-in candidate lands straight on it; a signed-out visitor
+          is sent to login by the (app) guard. Sending everyone to /signup would
+          make the label a lie for the people most likely to click it — the ones
+          who already have a profile to build a resume from.
+        */
+        { label: t('resumeBuilder'), href: `/${locale}/resume` },
       ],
     },
     {
@@ -85,6 +95,7 @@ export function LandingFooter() {
       // every landing screen, and repeating them in the footer duplicated the
       // primary call to action in the least prominent place on the page.
       links: [
+        { label: t('about'), href: `/${locale}/about` },
         { label: t('privacy'), href: `/${locale}/privacy` },
         { label: t('terms'), href: `/${locale}/terms` },
       ],

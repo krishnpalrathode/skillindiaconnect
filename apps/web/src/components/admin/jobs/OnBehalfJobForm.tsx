@@ -12,6 +12,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/toast';
 import { BenefitsSection } from '@/components/employer/jobform/BenefitsSection';
 import { CompensationSection } from '@/components/employer/jobform/CompensationSection';
+import { TermsAcceptance } from '@/components/employer/jobform/TermsAcceptance';
 import { WorkConditionsSection } from '@/components/employer/jobform/WorkConditionsSection';
 import { RichTextField } from '@/components/employer/jobform/RichTextField';
 import { RequirementsField } from '@/components/employer/jobform/RequirementsField';
@@ -40,9 +41,9 @@ import { GateFailureExplainer } from './GateFailureExplainer';
  * flag.
  *
  * Two things hold by construction:
- *  - the worker-protection benefits are LOCKED ON (BenefitsSection renders
- *    them locked; formToPayload hardcodes them true) — an admin gets no
- *    bypass, same policy, same UI treatment;
+ *  - the worker-protection benefits follow the MARKET, exactly as they do for
+ *    an employer (BenefitsSection locks them for a GULF posting and offers them
+ *    as opt-in for a LOCAL one) — an admin gets no bypass either way;
  *  - publishing runs the SAME gate ladder against the TARGET employer, so the
  *    same GateFailureExplainer renders the failures. A gate failure leaves an
  *    honest DRAFT behind (stated in the UI). Save-as-draft always works.
@@ -372,6 +373,17 @@ export function OnBehalfJobForm() {
         values={values}
         errors={errors}
         onChange={(p) => patch(p as Partial<JobFormValues>)}
+      />
+
+      {/*
+        The admin accepts the posting terms too. Posting on an employer's behalf
+        does not exempt the posting from them — and an admin-created job with no
+        acceptance record would be the one job nobody could answer for.
+      */}
+      <TermsAcceptance
+        accepted={values.termsAccepted}
+        onChange={(next) => patch({ termsAccepted: next })}
+        error={errors.termsAccepted}
       />
 
       {/* ── The gate failures — the SAME explainer as the review screen ────── */}

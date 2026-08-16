@@ -1,5 +1,6 @@
 ﻿import { http, HttpResponse } from 'msw';
 import type { components } from '@skillindiaconnect/shared-types';
+import { MAX_UPLOAD_BYTES } from '@/lib/uploads';
 
 /** Alias so `languagePref` tracks the contract enum instead of a literal union. */
 type CompanySchema = components['schemas']['Company'];
@@ -490,6 +491,13 @@ const candidateMePatch = http.patch(`${BASE}/candidates/me`, async ({ request })
   const body = (await request.json()) as Partial<typeof candidate.profile>;
   Object.assign(candidate.profile, body);
 
+  // Mirror the server's normalisation: an emptied summary is stored as NULL,
+  // not ''. Without this the mock would echo '' and the UI's "has a summary?"
+  // checks would behave differently here than against the real API.
+  if (body.summary !== undefined) {
+    candidate.profile.summary = body.summary?.trim() || null;
+  }
+
   const { pct } = computeCompletion(candidate.profile);
   candidate.profile.completionPct = pct;
 
@@ -660,9 +668,9 @@ const candidateDocumentsPresign = http.post(
     };
 
     const sizeLimits: Record<string, number> = {
-      PASSPORT: 10 * 1024 * 1024,
-      EXPERIENCE_CERT: 5 * 1024 * 1024,
-      EDUCATIONAL_CERT: 5 * 1024 * 1024,
+      PASSPORT: MAX_UPLOAD_BYTES,
+      EXPERIENCE_CERT: MAX_UPLOAD_BYTES,
+      EDUCATIONAL_CERT: MAX_UPLOAD_BYTES,
     };
 
     if (body.sizeBytes > (sizeLimits[body.type] ?? 5 * 1024 * 1024)) {
@@ -1196,14 +1204,40 @@ const employersRegister = http.post(`${BASE}/employers/register`, async ({ reque
     employeeRange: string;
     registrationNumber?: string;
     industryType?: string;
+    foundedYear?: number;
     website?: string;
     languagePref?: string;
     description?: string;
     registrationCertKey?: string;
   };
 
-  if (!body.name || !body.type || !body.phone || !body.location || !body.employeeRange) {
+  // Mirrors RegisterCompanyDto: registration now submits a COMPLETE profile, so
+  // the mock rejects the same payloads the real API does. A mock that is laxer
+  // than the server lets a form ship broken and only fail in production.
+  const missing = [
+    !body.name,
+    !body.type,
+    !body.registrationNumber,
+    !body.industryType,
+    !body.foundedYear,
+    !body.phone,
+    !body.location,
+    !body.website,
+    !body.employeeRange,
+    !body.description,
+  ].some(Boolean);
+  if (missing) {
     return errorResponse(422, 'VALIDATION_ERROR', 'Validation failed', 'Required fields missing.');
+  }
+
+  const thisYear = new Date().getUTCFullYear();
+  if (
+    typeof body.foundedYear !== 'number' ||
+    !Number.isInteger(body.foundedYear) ||
+    body.foundedYear < 1800 ||
+    body.foundedYear > thisYear
+  ) {
+    return errorResponse(422, 'VALIDATION_ERROR', 'Validation failed', 'foundedYear out of range.');
   }
 
   const company = {
@@ -1213,6 +1247,7 @@ const employersRegister = http.post(`${BASE}/employers/register`, async ({ reque
     status: 'PENDING' as const,
     registrationNumber: body.registrationNumber,
     industryType: body.industryType,
+    foundedYear: body.foundedYear ?? null,
     phone: body.phone,
     location: body.location,
     website: body.website,
@@ -1530,10 +1565,52 @@ const postJobs = http.post(`${BASE}/employers/me/jobs`, async ({ request }) => {
     accommodation: boolean;
     healthInsurance: boolean;
     transportation: boolean;
+    employmentType?: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT';
+    contractDuration?: components['schemas']['ContractDuration'];
+    acceptedTermsVersion?: string;
   };
 
   if (!body.title || !body.market || !body.location) {
     return errorResponse(422, 'VALIDATION_ERROR', 'Validation failed', 'Required fields missing.');
+  }
+
+  // Mirrors JOB_DESCRIPTION_MIN in the API. A mock laxer than the server lets a
+  // form ship broken and only fail in production.
+  if (!body.description || body.description.trim().length < 300) {
+    return errorResponse(
+      400,
+      'VALIDATION_ERROR',
+      'Validation failed',
+      'description must be at least 300 characters.',
+    );
+  }
+
+  // Mirrors CreateJobDto: a job cannot be posted without accepting the terms.
+  if (!body.acceptedTermsVersion) {
+    return errorResponse(
+      400,
+      'VALIDATION_ERROR',
+      'Validation failed',
+      'acceptedTermsVersion is required.',
+    );
+  }
+
+  // The employmentType/contractDuration pairing, both directions.
+  if (body.employmentType === 'CONTRACT' && !body.contractDuration) {
+    return errorResponse(
+      400,
+      'CONTRACT_DURATION_REQUIRED',
+      'Contract duration required',
+      'A contract job must state how long the contract runs.',
+    );
+  }
+  if (body.employmentType !== 'CONTRACT' && body.contractDuration) {
+    return errorResponse(
+      400,
+      'CONTRACT_DURATION_NOT_APPLICABLE',
+      'Contract duration not applicable',
+      'Contract duration applies only to contract roles.',
+    );
   }
 
   const currency = body.currency ?? body.salaryCurrency ?? 'AED';
@@ -1547,6 +1624,10 @@ const postJobs = http.post(`${BASE}/employers/me/jobs`, async ({ request }) => {
     description: body.description,
     categoryId: body.categoryId ?? null,
     categoryOther: body.categoryOther ?? null,
+    employmentType: body.employmentType ?? 'FULL_TIME',
+    contractDuration: body.contractDuration ?? null,
+    termsVersion: body.acceptedTermsVersion,
+    termsAcceptedAt: new Date().toISOString(),
     salaryMin: body.salaryMin ?? null,
     salaryMax: body.salaryMax ?? null,
     // Store both keys so public (salaryCurrency) and employer (currency) reads agree.
@@ -1645,11 +1726,15 @@ const publishJob = http.post(`${BASE}/employers/me/jobs/:id/publish`, ({ request
     );
   }
 
-  // Rule 2: worker protection
+  // Rule 2: worker protection — GULF only — the protections exist for workers who emigrate for the job.
+  // Mirrors PublishGuardService; a mock laxer or stricter than the server hides
+  // exactly the bug this rule change could introduce.
   const violations: string[] = [];
-  if (!job.accommodation) violations.push('accommodation');
-  if (!job.healthInsurance) violations.push('healthInsurance');
-  if (!job.transportation) violations.push('transportation');
+  if (job.market === 'GULF') {
+    if (!job.accommodation) violations.push('accommodation');
+    if (!job.healthInsurance) violations.push('healthInsurance');
+    if (!job.transportation) violations.push('transportation');
+  }
   if (violations.length > 0) {
     return errorResponse(
       422,
@@ -1735,10 +1820,15 @@ const resumeJob = http.post(`${BASE}/employers/me/jobs/:id/resume`, ({ request, 
     );
   }
 
+  // GULF only — the protections exist for workers who emigrate for the job.
+  // Mirrors PublishGuardService; a mock laxer or stricter than the server hides
+  // exactly the bug this rule change could introduce.
   const violations: string[] = [];
-  if (!job.accommodation) violations.push('accommodation');
-  if (!job.healthInsurance) violations.push('healthInsurance');
-  if (!job.transportation) violations.push('transportation');
+  if (job.market === 'GULF') {
+    if (!job.accommodation) violations.push('accommodation');
+    if (!job.healthInsurance) violations.push('healthInsurance');
+    if (!job.transportation) violations.push('transportation');
+  }
   if (violations.length > 0) {
     return errorResponse(
       422,
@@ -3455,6 +3545,226 @@ const adminDashboard = http.get(`${BASE}/admin/dashboard`, ({ request }) => {
   });
 });
 
+/**
+ * GET /admin/analytics — the dashboard's charts, derived from the SAME mock db
+ * the rest of the console reads, so the numbers agree with the list screens.
+ *
+ * The shape matters more than the volume here: every series is ZERO-FILLED to
+ * one point per day (a gap would let a UI bug hide behind missing data), and the
+ * funnel is monotonic, because the UI asserts a conversion can never exceed 100%.
+ */
+const adminAnalytics = http.get(`${BASE}/admin/analytics`, ({ request }) => {
+  const gate = requirePermission(request, 'reports.view');
+  if (gate.error) return gate.error;
+
+  const raw = Number(new URL(request.url).searchParams.get('days') ?? 30);
+  // Clamped, never rejected — same rule as the server.
+  const days = Number.isFinite(raw) ? Math.min(365, Math.max(1, Math.floor(raw))) : 30;
+
+  const startOfUtcDay = (offset: number) => {
+    const n = new Date();
+    return new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + offset));
+  };
+  const to = startOfUtcDay(1);
+  const from = startOfUtcDay(1 - days);
+  const inWindow = (iso: string | null | undefined) => {
+    if (!iso) return false;
+    const t = new Date(iso).getTime();
+    return t >= from.getTime() && t < to.getTime();
+  };
+  const dayKey = (iso: string) => new Date(iso).toISOString().slice(0, 10);
+
+  const dates: string[] = [];
+  for (let i = 0; i < days; i += 1) {
+    const d = new Date(from.getTime());
+    d.setUTCDate(d.getUTCDate() + i);
+    dates.push(d.toISOString().slice(0, 10));
+  }
+
+  /** Bucket rows onto the full date axis, filling every empty day with zeros. */
+  const series = <T>(rows: T[], at: (r: T) => string, fields: Record<string, (r: T) => number>) =>
+    dates.map((date) => {
+      const todays = rows.filter((r) => inWindow(at(r)) && dayKey(at(r)) === date);
+      const point: Record<string, string | number> = { date };
+      for (const [key, get] of Object.entries(fields)) {
+        point[key] = todays.reduce((sum, r) => sum + get(r), 0);
+      }
+      return point;
+    });
+
+  const candidates = [...db.candidates.values()].filter(
+    (c) => !db.candidateLifecycle.get(c.profile.id)?.purgedAt,
+  );
+  const employers = [...db.employers.values()];
+  const jobs = [...db.jobs.values()];
+  const applications = [...db.applications.values()];
+
+  const kpi = (value: number, previous: number, spark: number[] = []) => ({
+    value,
+    previous,
+    deltaPct: previous > 0 ? Math.round(((value - previous) / previous) * 1000) / 10 : null,
+    spark,
+  });
+
+  const candidateGrowth = series(candidates, (c) => c.profile.createdAt ?? '', {
+    registrations: () => 1,
+    verified: (c) => (c.profile.phoneVerifiedAt ? 1 : 0),
+    active: (c) => (c.profile.profileVisible ? 1 : 0),
+  });
+  const employerGrowth = series(employers, (e) => e.createdAt, {
+    registered: () => 1,
+    approved: (e) => (e.status === 'APPROVED' ? 1 : 0),
+  });
+  const jobActivity = series(jobs, (j) => j.createdAt, {
+    created: () => 1,
+    published: (j) => (j.publishedAt ? 1 : 0),
+    archived: (j) => (j.status === 'ARCHIVED' ? 1 : 0),
+  });
+  const applicationTrend = series(applications, (a) => a.appliedAt, {
+    total: () => 1,
+    pending: (a) => (a.status === 'PENDING' ? 1 : 0),
+    shortlisted: (a) => (a.status === 'SHORTLISTED' ? 1 : 0),
+    selected: (a) => (a.status === 'SELECTED' ? 1 : 0),
+    rejected: (a) => (a.status === 'REJECTED' ? 1 : 0),
+  });
+
+  const windowApps = applications.filter((a) => inWindow(a.appliedAt));
+  // Cohort counts: "ever reached", so the funnel cannot climb back up.
+  const applied = windowApps.length;
+  const shortlisted = windowApps.filter((a) =>
+    ['SHORTLISTED', 'SELECTED'].includes(a.status),
+  ).length;
+  const selected = windowApps.filter((a) => a.status === 'SELECTED').length;
+  const pct = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 1000) / 10 : 0);
+
+  const countBy = <T extends string>(items: T[]) =>
+    items.reduce<Record<string, number>>((acc, k) => ({ ...acc, [k]: (acc[k] ?? 0) + 1 }), {});
+  const toRows = (counts: Record<string, number>) =>
+    Object.entries(counts).map(([status, count]) => ({ status, count }));
+
+  const perJob = (jobId: string, status?: string) =>
+    applications.filter((a) => a.jobId === jobId && (!status || a.status === status)).length;
+
+  const revenue = [...db.orders.values()]
+    .filter((o) => o.status === 'PAID' && inWindow(o.createdAt))
+    .reduce((sum, o) => sum + o.totalSubunits, 0);
+
+  return HttpResponse.json({
+    data: {
+      range: { from: from.toISOString(), to: to.toISOString(), days },
+      kpis: {
+        candidates: kpi(
+          candidates.filter((c) => inWindow(c.profile.createdAt ?? '')).length,
+          0,
+          candidateGrowth.map((p) => Number(p.registrations)),
+        ),
+        employers: kpi(
+          employers.filter((e) => inWindow(e.createdAt)).length,
+          0,
+          employerGrowth.map((p) => Number(p.registered)),
+        ),
+        jobs: kpi(
+          jobs.filter((j) => inWindow(j.createdAt)).length,
+          0,
+          jobActivity.map((p) => Number(p.created)),
+        ),
+        applications: kpi(
+          applied,
+          0,
+          applicationTrend.map((p) => Number(p.total)),
+        ),
+        hires: kpi(
+          selected,
+          0,
+          applicationTrend.map((p) => Number(p.selected)),
+        ),
+      },
+      revenue: kpi(revenue, 0),
+      currency: 'INR',
+      candidateGrowth,
+      employerGrowth,
+      jobActivity,
+      applicationTrend,
+      funnel: [
+        { stage: 'applied', count: applied, pctOfTop: 100, conversionFromPrev: null },
+        {
+          stage: 'shortlisted',
+          count: shortlisted,
+          pctOfTop: pct(shortlisted, applied),
+          conversionFromPrev: pct(shortlisted, applied),
+        },
+        {
+          stage: 'selected',
+          count: selected,
+          pctOfTop: pct(selected, applied),
+          conversionFromPrev: pct(selected, shortlisted),
+        },
+      ],
+      applicationStatus: toRows(countBy(applications.map((a) => a.status))),
+      topJobs: jobs
+        .filter((j) => j.status === 'ACTIVE')
+        .map((j) => ({
+          title: j.title,
+          employerName: db.employers.get(j.companyId)?.name ?? '—',
+          status: j.status,
+          applications: perJob(j.id),
+          shortlisted: perJob(j.id, 'SHORTLISTED'),
+          hires: perJob(j.id, 'SELECTED'),
+        }))
+        .sort((a, b) => b.applications - a.applications)
+        .slice(0, 5),
+      topEmployers: employers
+        .filter((e) => e.status === 'APPROVED')
+        .map((e) => {
+          const companyJobs = jobs.filter((j) => j.companyId === e.id);
+          const apps = companyJobs.reduce((sum, j) => sum + perJob(j.id), 0);
+          const hires = companyJobs.reduce((sum, j) => sum + perJob(j.id, 'SELECTED'), 0);
+          return {
+            name: e.name,
+            activeJobs: companyJobs.filter((j) => j.status === 'ACTIVE').length,
+            applications: apps,
+            hires,
+            successRate: pct(hires, apps),
+          };
+        })
+        .sort((a, b) => b.applications - a.applications)
+        .slice(0, 5),
+      topSkills: [
+        { name: 'Arc Welding', count: 3 },
+        { name: 'Scaffolding', count: 2 },
+        { name: 'First Aid', count: 1 },
+      ],
+      demographics: {
+        experience: [
+          { label: '0-2 years', count: 1 },
+          { label: '2-5 years', count: 1 },
+          { label: '5-10 years', count: 1 },
+        ],
+        age: [
+          { label: '26-35', count: 2 },
+          { label: 'Not given', count: 1 },
+        ],
+      },
+      employerStatus: toRows(countBy(employers.map((e) => e.status))),
+      jobStatus: toRows(countBy(jobs.map((j) => j.status))),
+      efficiency: {
+        daysToShortlist: 3,
+        daysToHire: 7,
+        hireRate: pct(selected, applied),
+        applicationsPerJob:
+          jobs.length > 0 ? Math.round((applications.length / jobs.length) * 10) / 10 : 0,
+      },
+      needsAttention: {
+        pendingEmployerReviews: employers.filter((e) => e.status === 'PENDING').length,
+        pendingJobReviews: jobs.filter((j) => j.status === 'PENDING_REVIEW').length,
+        pendingApplications: applications.filter((a) => a.status === 'PENDING').length,
+        incompleteProfiles: 1,
+        completionThreshold: 70,
+      },
+    },
+  });
+});
+
 // ── Screen 27: the RBAC matrix ───────────────────────────────────────────────
 
 const adminGetRolesMatrix = http.get(`${BASE}/admin/roles/matrix`, ({ request }) => {
@@ -4532,6 +4842,7 @@ export const handlers = [
   // S6: Admin console (RBAC-accurate — each enforces its PermissionKey)
   adminMePermissions,
   adminDashboard,
+  adminAnalytics,
   adminGetLogs,
   adminExportLogs,
   adminGetRolesMatrix,

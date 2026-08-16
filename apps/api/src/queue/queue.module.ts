@@ -41,8 +41,8 @@ const FINISHED_JOB_RETENTION = {
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         connection: {
-           url: config.get<string>('REDIS_URL'),
-           maxRetriesPerRequest: null,
+          url: config.get<string>('REDIS_URL'),
+          maxRetriesPerRequest: null,
         },
         // Per-call opts (attempts, backoff, jobId) merge OVER these — every
         // existing producer keeps its own retry policy unchanged.

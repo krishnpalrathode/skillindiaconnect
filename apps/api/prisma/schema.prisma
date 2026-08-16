@@ -48,6 +48,19 @@ enum EmploymentType {
   CONTRACT
 }
 
+/// Length of a CONTRACT engagement, as a BAND rather than an exact figure.
+///
+/// Bands, not a month count, because that is what an employer actually knows at
+/// posting time — "roughly six months to a year" is honest, while storing `9`
+/// invents a precision nobody stated. The bands are contiguous and
+/// non-overlapping so a reader can tell two jobs apart without arithmetic.
+enum ContractDuration {
+  MONTHS_1_6
+  MONTHS_6_12
+  YEARS_1_2
+  YEARS_2_5
+}
+
 enum JobStatus {
   DRAFT
   PENDING_REVIEW
@@ -163,6 +176,14 @@ enum NotificationType {
   // S7-B2: "your resume PDF is ready" — fired when a generation flips READY so
   // a candidate who navigated away mid-render still learns it finished.
   RESUME_READY
+  /// Sent ONCE, the first time a candidate's profile reaches the apply
+  /// threshold — the moment they can actually start applying. Confirms the
+  /// onboarding they just finished actually landed.
+  CANDIDATE_PROFILE_COMPLETE
+  /// Sent when an employer finishes company registration. Acknowledges receipt
+  /// and sets the expectation of review; EMPLOYER_APPROVED is the later,
+  /// separate "you are live" message.
+  EMPLOYER_REGISTERED
   /// Emailed password-reset link. SECURITY mail, not a notification: it is
   /// email-only (no in-app row — the recipient cannot sign in to read one, and
   /// a feed entry announcing a reset would leak the event to a session that may
@@ -320,6 +341,12 @@ model CandidateProfile {
   currentLocation String?
   nationality     String?
   noticePeriod    Int?
+  /// Candidate-written intro shown at the TOP of the resume, above personal
+  /// details. Their own words about themselves — the one part of the document
+  /// the structured fields cannot express. Capped at 500 characters because a
+  /// resume summary that runs longer stops being a summary and starts pushing
+  /// the work history onto a second page.
+  summary         String?        @db.VarChar(500)
   salaryExpectationMin      Int?
   salaryExpectationMax      Int?
   salaryExpectationCurrency Currency?
@@ -490,6 +517,11 @@ model Company {
   country            String?
   location           String
   website            String?
+  /// Year the company was founded. NULLABLE on purpose: every company that
+  /// registered before this field existed has no answer, and backfilling a
+  /// guessed year would put a fabricated fact on a profile admins use to
+  /// approve employers. The register DTO requires it for every NEW company.
+  foundedYear        Int?
   employeeRange      String
   languagePref       String[]      @default([])
   description        String?
@@ -605,7 +637,24 @@ model Job {
   daysPerWeek          Int
   overtime             Boolean @default(false)
   overtimeRateSubunits Int?
+  /// DEPRECATED in favour of `contractDuration`. An exact month count was never
+  /// collected by any form and is null on every row; it stays only because it is
+  /// already in the public contract. Do not write it from new code.
   contractPeriodMonths Int?
+  /// How long a CONTRACT role runs, as the BAND the employer actually chose.
+  /// Nullable because it is meaningless for full-time and part-time roles — the
+  /// "required exactly when employmentType is CONTRACT" pairing is enforced in
+  /// JobsService, which is the only place that can see both fields at once.
+  contractDuration     ContractDuration?
+  /// WHICH version of the job-posting terms the employer accepted, and when.
+  ///
+  /// The version string is the point. A bare boolean records that someone
+  /// ticked a box but not what the box said, which is exactly the question
+  /// asked in a dispute — so the terms are versioned and the version is stamped
+  /// onto the row. Nullable for jobs posted before the terms existed; the DTO
+  /// requires it for every new job.
+  termsVersion         String?
+  termsAcceptedAt      DateTime?
   vacancies            Int?
   genderPreference     String?
   isFeatured      Boolean   @default(false)

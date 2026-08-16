@@ -2,13 +2,15 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { Company, CompanyStatus, CompanyType } from '@prisma/client';
+import { Company, CompanyStatus, CompanyType, NotificationType } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { StorageService } from '../core/storage/storage.service';
+import { NotificationService } from '../notifications/notification.service';
 import { RegisterCompanyDto } from './dto/register-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { PresignCertDto, CERT_MAX_BYTES } from './dto/presign-cert.dto';
@@ -39,10 +41,53 @@ export type CompanyResponse = Company & { registrationCertKey: string | null };
 
 @Injectable()
 export class EmployerService {
+  private readonly logger = new Logger(EmployerService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
+    private readonly notifications: NotificationService,
   ) {}
+
+  // ── Admin analytics reads (Screen 22) ───────────────────────────────────────
+
+  /** Companies registered per day — the employer growth series. */
+  async dailyEmployerSeries(from: Date, to: Date): Promise<EmployerSeriesRow[]> {
+    return this.prisma.$queryRaw<EmployerSeriesRow[]>`
+      SELECT to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS date,
+             COUNT(*)::int AS registered,
+             COUNT(*) FILTER (WHERE status = 'APPROVED')::int AS approved
+      FROM companies
+      WHERE "createdAt" >= ${from} AND "createdAt" < ${to}
+      GROUP BY 1 ORDER BY 1`;
+  }
+
+  /** Companies created in a window — the KPI delta. */
+  async countCreatedBetween(from: Date, to: Date): Promise<number> {
+    return this.prisma.company.count({ where: { createdAt: { gte: from, lt: to } } });
+  }
+
+  /**
+   * Employer leaderboard — active jobs, applications received, hires made.
+   *
+   * ONE query with two LEFT JOINs rather than a per-company walk. Success rate is
+   * hires ÷ applications; a company with no applications yet reports 0 rather
+   * than dividing by zero.
+   */
+  async leaderboard(limit = 5): Promise<EmployerLeaderboardRow[]> {
+    return this.prisma.$queryRaw<EmployerLeaderboardRow[]>`
+      SELECT c.name,
+             COUNT(DISTINCT j.id) FILTER (WHERE j.status = 'ACTIVE')::int AS "activeJobs",
+             COUNT(a.id)::int AS applications,
+             COUNT(a.id) FILTER (WHERE a.status = 'SELECTED')::int AS hires
+      FROM companies c
+      LEFT JOIN jobs j ON j."companyId" = c.id
+      LEFT JOIN applications a ON a."jobId" = j.id
+      WHERE c.status = 'APPROVED'
+      GROUP BY c.id, c.name
+      ORDER BY applications DESC, "activeJobs" DESC, c.name ASC
+      LIMIT ${limit}`;
+  }
 
   /** Attach the newest certificate key — one indexed lookup, never a join fan-out. */
   private async withCertKey(company: Company): Promise<CompanyResponse> {
@@ -66,13 +111,13 @@ export class EmployerService {
     // exists (presign→PUT, then the key arrives here). Validate ownership
     // (the pre-registration prefix is user-scoped) and HEAD the object
     // before opening the transaction.
-    let certHead: { sizeBytes: number; contentType: string } | null = null;
-    if (dto.registrationCertKey) {
-      certHead = await this.assertOwnedUploadedCert(
-        `employer-reg/${userId}/cert/`,
-        dto.registrationCertKey,
-      );
-    }
+    //
+    // No longer conditional: the DTO now requires the key, so a registration
+    // without a certificate is rejected at the edge and never reaches here.
+    const certHead = await this.assertOwnedUploadedCert(
+      `employer-reg/${userId}/cert/`,
+      dto.registrationCertKey,
+    );
 
     const company = await this.prisma.$transaction(async (tx) => {
       const c = await tx.company.create({
@@ -86,6 +131,7 @@ export class EmployerService {
           country: dto.country,
           location: dto.location,
           website: dto.website,
+          foundedYear: dto.foundedYear,
           employeeRange: dto.employeeRange,
           // Contract: single locale string (default 'en'); column is String[].
           languagePref: dto.languagePref ? [dto.languagePref] : ['en'],
@@ -96,19 +142,38 @@ export class EmployerService {
       await tx.employerUser.create({
         data: { userId, companyId: c.id, isPrimary: true },
       });
-      if (dto.registrationCertKey && certHead) {
-        await tx.companyDocument.create({
-          data: {
-            companyId: c.id,
-            r2Key: dto.registrationCertKey,
-            fileName: dto.registrationCertKey.split('/').pop() ?? dto.registrationCertKey,
-            mimeType: certHead.contentType,
-            sizeBytes: certHead.sizeBytes,
-          },
-        });
-      }
+      await tx.companyDocument.create({
+        data: {
+          companyId: c.id,
+          r2Key: dto.registrationCertKey,
+          fileName: dto.registrationCertKey.split('/').pop() ?? dto.registrationCertKey,
+          mimeType: certHead.contentType,
+          sizeBytes: certHead.sizeBytes,
+        },
+      });
       return c;
     });
+
+    /*
+      Acknowledge the registration — AFTER the transaction commits, never inside
+      it. A notification raised inside the tx would be rolled back with the
+      company on a late failure, or worse, would already have been emailed for a
+      registration that no longer exists.
+
+      Swallowed on failure for the same reason the completion alert is: the
+      employer has successfully registered, and a notification outage must not
+      turn that into a 500 that sends them round the form again.
+    */
+    try {
+      await this.notifications.notify(userId, NotificationType.EMPLOYER_REGISTERED, {
+        title: 'Company registration received',
+        body: `We have received the registration for ${company.name} and our team is verifying it.`,
+        data: { companyId: company.id, companyName: company.name },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`employer-registered notify failed for user ${userId}: ${msg}`);
+    }
 
     return company;
   }
@@ -152,6 +217,7 @@ export class EmployerService {
         ...(dto.country !== undefined && { country: dto.country }),
         ...(dto.location !== undefined && { location: dto.location }),
         ...(dto.website !== undefined && { website: dto.website }),
+        ...(dto.foundedYear !== undefined && { foundedYear: dto.foundedYear }),
         ...(dto.employeeRange !== undefined && { employeeRange: dto.employeeRange }),
         ...(dto.languagePref !== undefined && { languagePref: dto.languagePref }),
         ...(dto.description !== undefined && { description: dto.description }),
@@ -368,4 +434,17 @@ export class EmployerService {
       },
     };
   }
+}
+
+export interface EmployerSeriesRow {
+  date: string;
+  registered: number;
+  approved: number;
+}
+
+export interface EmployerLeaderboardRow {
+  name: string;
+  activeJobs: number;
+  applications: number;
+  hires: number;
 }

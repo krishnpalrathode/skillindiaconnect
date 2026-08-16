@@ -44,10 +44,7 @@ export const REDACTED_EMAIL = 'redacted@deleted.invalid';
  * users — anonymized IN PLACE. `status` stays PENDING_DELETION (the contract's
  * UserStatus enum has no PURGED value); `purgedAt` is the terminal marker.
  */
-export function userAnonymizedFields(
-  userId: string,
-  now: Date,
-): Prisma.UserUncheckedUpdateInput {
+export function userAnonymizedFields(userId: string, now: Date): Prisma.UserUncheckedUpdateInput {
   return {
     email: purgedEmail(userId),
     passwordHash: null, // no credential survives; login is impossible
@@ -74,6 +71,15 @@ export const USER_KEPT_FIELDS: Record<string, string> = {
  */
 export const CANDIDATE_PROFILE_ANONYMIZED_FIELDS = {
   fullName: PURGED_FULL_NAME,
+  /*
+    Free text the candidate wrote about themselves — the highest-density PII
+    column on the table, not the lowest. A one-paragraph intro routinely names
+    their employer, their city, their trade and sometimes their family, none of
+    which the structured columns beside it would still be holding after a purge.
+    Erasing every typed field while leaving the paragraph that repeats them is
+    the exact failure this map exists to prevent.
+  */
+  summary: null,
   fatherName: null,
   dob: null,
   phone: null,
@@ -101,6 +107,22 @@ export const CANDIDATE_PROFILE_ANONYMIZED_FIELDS = {
   videoDurationSec: null,
   videoSizeBytes: null,
   videoUploadedAt: null,
+  /*
+    A send timestamp, erased like every other timestamp on this table
+    (phoneVerifiedAt, videoUploadedAt) — after a purge there is no one left to
+    have been alerted, and a tombstone that still records when we messaged this
+    person is exactly the residue erasure is supposed to remove.
+
+    It is also the once-only guard for the match alert, so nulling it nominally
+    re-arms that alert. It cannot fire: the guard is only consulted when
+    completion crosses the threshold, and `completionPct` above is set to 0 on a
+    profile nobody can log into or edit again.
+
+    NB this column pre-dates the classification map and was never classified —
+    the schema-walking spec above had been failing on it before the `summary`
+    column landed, which is how it surfaced.
+  */
+  matchAlertSentAt: null,
 } satisfies Prisma.CandidateProfileUncheckedUpdateInput;
 
 /** candidate_profiles — fields that survive, and why. */

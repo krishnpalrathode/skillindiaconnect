@@ -135,7 +135,14 @@ beforeAll(async () => {
         jobCategoryId: CATEGORY_ID,
         experiences: {
           create: [
-            { type: ExperienceType.FOREIGN, country: 'UAE', companyName: 'X', role: 'Mason', years: 5, months: 0 },
+            {
+              type: ExperienceType.FOREIGN,
+              country: 'UAE',
+              companyName: 'X',
+              role: 'Mason',
+              years: 5,
+              months: 0,
+            },
           ],
         },
         documents: {
@@ -164,7 +171,11 @@ beforeAll(async () => {
     // ── Wire the service with real deps + Redis-free stubs ──────────────────
     const prismaSvc = prismaClient as unknown as PrismaService;
     const candidateRead = new CandidateReadService(prismaSvc);
-    const employerService = new EmployerService(prismaSvc, null as never);
+    const employerService = new EmployerService(
+      prismaSvc,
+      null as never,
+      { notify: jest.fn() } as never,
+    );
     const applyGate = new ApplyGateService(prismaSvc);
     const matchService = new MatchService();
     const auditService = new AuditService(prismaSvc);
@@ -257,38 +268,50 @@ function gatedIt(name: string, fn: () => Promise<void>): void {
 }
 
 describe('ApplyService (integration)', () => {
-  gatedIt('happy path — creates one PENDING row with DB-assigned AP-YYYY-N + snapshot + breakdown', async () => {
-    const res = await service.apply(CANDIDATE_USER_ID, jobId, { coverLetter: 'Hire me' }, UserRole.CANDIDATE);
+  gatedIt(
+    'happy path — creates one PENDING row with DB-assigned AP-YYYY-N + snapshot + breakdown',
+    async () => {
+      const res = await service.apply(
+        CANDIDATE_USER_ID,
+        jobId,
+        { coverLetter: 'Hire me' },
+        UserRole.CANDIDATE,
+      );
 
-    expect(res.status).toBe('PENDING');
-    expect(res.humanId).toMatch(/^AP-\d{4}-\d+$/);
-    expect(res.coverLetter).toBe('Hire me');
-    expect(res.docsCompleteCount).toBe(2);
-    expect(res.docsRequiredCount).toBe(2);
-    expect(res.passportValidAtApply).toBe(true);
+      expect(res.status).toBe('PENDING');
+      expect(res.humanId).toMatch(/^AP-\d{4}-\d+$/);
+      expect(res.coverLetter).toBe('Hire me');
+      expect(res.docsCompleteCount).toBe(2);
+      expect(res.docsRequiredCount).toBe(2);
+      expect(res.passportValidAtApply).toBe(true);
 
-    // Exact snapshot: category 40 (match) + exp 30 (5y ≥ 3 req) + foreign 20 (GULF) + docs 10 = 100
-    expect(res.matchScore).toBe(100);
-    expect(res.matchBreakdown).toEqual({
-      category: { score: 40, max: 40 },
-      experienceYears: { raw: 5, clamped: 5, score: 30, max: 30 },
-      foreignExperience: { score: 20, max: 20 },
-      documents: { score: 10, max: 10 },
-    });
-    // overrideReason is admin-context-only — must be absent from the candidate response.
-    expect('overrideReason' in res).toBe(false);
+      // Exact snapshot: category 40 (match) + exp 30 (5y ≥ 3 req) + foreign 20 (GULF) + docs 10 = 100
+      expect(res.matchScore).toBe(100);
+      expect(res.matchBreakdown).toEqual({
+        category: { score: 40, max: 40 },
+        experienceYears: { raw: 5, clamped: 5, score: 30, max: 30 },
+        foreignExperience: { score: 20, max: 20 },
+        documents: { score: 10, max: 10 },
+      });
+      // overrideReason is admin-context-only — must be absent from the candidate response.
+      expect('overrideReason' in res).toBe(false);
 
-    const rows = await prismaClient.application.findMany();
-    expect(rows).toHaveLength(1);
-    expect(rows[0]!.humanId).toBe(res.humanId);
-    expect(rows[0]!.status).toBe('PENDING');
-  });
+      const rows = await prismaClient.application.findMany();
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.humanId).toBe(res.humanId);
+      expect(rows[0]!.status).toBe('PENDING');
+    },
+  );
 
   gatedIt('creates BOTH in-app receipts and NO whatsapp/email rows', async () => {
     await service.apply(CANDIDATE_USER_ID, jobId, {}, UserRole.CANDIDATE);
 
-    const candidateNotifs = await prismaClient.notification.count({ where: { userId: CANDIDATE_USER_ID } });
-    const employerNotifs = await prismaClient.notification.count({ where: { userId: EMPLOYER_USER_ID } });
+    const candidateNotifs = await prismaClient.notification.count({
+      where: { userId: CANDIDATE_USER_ID },
+    });
+    const employerNotifs = await prismaClient.notification.count({
+      where: { userId: EMPLOYER_USER_ID },
+    });
     expect(candidateNotifs).toBe(1);
     expect(employerNotifs).toBe(1);
 
@@ -299,7 +322,9 @@ describe('ApplyService (integration)', () => {
 
   gatedIt('writes an audit row for application.created (ids-only meta)', async () => {
     const res = await service.apply(CANDIDATE_USER_ID, jobId, {}, UserRole.CANDIDATE);
-    const audits = await prismaClient.auditLog.findMany({ where: { action: 'application.created' } });
+    const audits = await prismaClient.auditLog.findMany({
+      where: { action: 'application.created' },
+    });
     expect(audits).toHaveLength(1);
     expect(audits[0]!.targetId).toBe(res.id);
     expect(audits[0]!.module).toBe('Applications');
@@ -307,27 +332,35 @@ describe('ApplyService (integration)', () => {
 
   gatedIt('unknown job → 404 JOB_NOT_FOUND', async () => {
     await expect(
-      service.apply(CANDIDATE_USER_ID, '00000000-0000-0000-0000-000000000000', {}, UserRole.CANDIDATE),
+      service.apply(
+        CANDIDATE_USER_ID,
+        '00000000-0000-0000-0000-000000000000',
+        {},
+        UserRole.CANDIDATE,
+      ),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  gatedIt('concurrent double-apply → exactly ONE row, one success + one 409 ALREADY_APPLIED (P2002)', async () => {
-    const results = await Promise.allSettled([
-      service.apply(CANDIDATE_USER_ID, jobId, {}, UserRole.CANDIDATE),
-      service.apply(CANDIDATE_USER_ID, jobId, {}, UserRole.CANDIDATE),
-    ]);
+  gatedIt(
+    'concurrent double-apply → exactly ONE row, one success + one 409 ALREADY_APPLIED (P2002)',
+    async () => {
+      const results = await Promise.allSettled([
+        service.apply(CANDIDATE_USER_ID, jobId, {}, UserRole.CANDIDATE),
+        service.apply(CANDIDATE_USER_ID, jobId, {}, UserRole.CANDIDATE),
+      ]);
 
-    const fulfilled = results.filter((r) => r.status === 'fulfilled');
-    const rejected = results.filter((r) => r.status === 'rejected') as PromiseRejectedResult[];
+      const fulfilled = results.filter((r) => r.status === 'fulfilled');
+      const rejected = results.filter((r) => r.status === 'rejected') as PromiseRejectedResult[];
 
-    expect(fulfilled).toHaveLength(1);
-    expect(rejected).toHaveLength(1);
-    expect(rejected[0]!.reason).toBeInstanceOf(ConflictException);
-    expect((rejected[0]!.reason as ConflictException).getResponse()).toMatchObject({
-      code: 'ALREADY_APPLIED',
-    });
+      expect(fulfilled).toHaveLength(1);
+      expect(rejected).toHaveLength(1);
+      expect(rejected[0]!.reason).toBeInstanceOf(ConflictException);
+      expect((rejected[0]!.reason as ConflictException).getResponse()).toMatchObject({
+        code: 'ALREADY_APPLIED',
+      });
 
-    // The unique constraint is the guarantee — exactly one row exists.
-    expect(await prismaClient.application.count()).toBe(1);
-  });
+      // The unique constraint is the guarantee — exactly one row exists.
+      expect(await prismaClient.application.count()).toBe(1);
+    },
+  );
 });

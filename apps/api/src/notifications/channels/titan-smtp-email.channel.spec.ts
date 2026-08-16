@@ -79,7 +79,9 @@ describe('TitanSmtpEmailChannel', () => {
 
   it('an explicit payload.from OVERRIDES the config sender', async () => {
     const ch = new StreamTitan(configStub());
-    await ch.send('worker@example.com', 'PASSPORT_EXPIRY', { from: 'alerts@skillindiaconnect.com' });
+    await ch.send('worker@example.com', 'PASSPORT_EXPIRY', {
+      from: 'alerts@skillindiaconnect.com',
+    });
     expect(ch.lastMail?.from).toBe('alerts@skillindiaconnect.com');
   });
 

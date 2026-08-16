@@ -1,7 +1,5 @@
 import { Application } from '@prisma/client';
-import {
-  CandidateEmployerViewDto,
-} from '../../employer/mappers/candidate-employer-view.mapper';
+import { CandidateEmployerViewDto } from '../../employer/mappers/candidate-employer-view.mapper';
 import { MatchBreakdown } from '../match/match.compute';
 
 /**

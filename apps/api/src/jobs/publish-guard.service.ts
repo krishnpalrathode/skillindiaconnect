@@ -1,6 +1,6 @@
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Company, Job, JobStatus, UserRole } from '@prisma/client';
+import { Company, Job, JobMarket, JobStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { EmployerService } from '../employer/employer.service';
 import { SettingsService } from '../settings/settings.service';
@@ -15,7 +15,7 @@ import { JOB_EVENTS, JobPublishBlockedPayload } from './jobs.events';
  *
  * Runs in LOCKED order, fail-fast:
  *   1. Approved employer  (403 EMPLOYER_NOT_APPROVED)
- *   2. Worker-protection rules read from Settings  (422 WORKER_PROTECTION_VIOLATION + BLOCKED audit)
+ *   2. Worker-protection rules read from Settings — GULF JOBS ONLY  (422 WORKER_PROTECTION_VIOLATION + BLOCKED audit)
  *   3. Quota  (422 JOB_QUOTA_EXCEEDED)
  *
  * A not-approved employer never reaches checks 2 or 3 — order is enforced, not merely documented.
@@ -40,7 +40,7 @@ export class PublishGuardService {
   async assertPublishable(
     job: Pick<
       Job,
-      'id' | 'companyId' | 'accommodation' | 'healthInsurance' | 'transportation'
+      'id' | 'companyId' | 'market' | 'accommodation' | 'healthInsurance' | 'transportation'
     >,
     company: Pick<Company, 'id'>,
     actorUserId: string,
@@ -53,17 +53,27 @@ export class PublishGuardService {
     // ── 2. Worker-protection rules (read from Settings — never hardcoded) ─────
     // Cache DEL on Settings write guarantees the next read sees the updated value
     // immediately. Do NOT cache these results inside this module.
-    const [accommodationRequired, healthInsuranceRequired, transportationRequired] =
-      await Promise.all([
-        this.settingsService.get(SETTING_KEYS.ACCOMMODATION_REQUIRED),
-        this.settingsService.get(SETTING_KEYS.HEALTH_INSURANCE_REQUIRED),
-        this.settingsService.get(SETTING_KEYS.TRANSPORTATION_REQUIRED),
-      ]);
-
+    //
+    // GULF ONLY. These three exist for workers who EMIGRATE for the job: someone
+    // flying to Doha cannot arrange their own housing, insurance or transport
+    // from India, so the offer has to carry them. A domestic role — a mason
+    // hired in Mumbai who sleeps at home — has no such dependency, and forcing
+    // the guarantees there simply blocked ordinary Indian employers from
+    // publishing at all. The Settings switches still master the rules; the
+    // market decides who they apply TO.
     const failedRules: string[] = [];
-    if (accommodationRequired && !job.accommodation) failedRules.push('accommodation');
-    if (healthInsuranceRequired && !job.healthInsurance) failedRules.push('healthInsurance');
-    if (transportationRequired && !job.transportation) failedRules.push('transportation');
+    if (job.market === JobMarket.GULF) {
+      const [accommodationRequired, healthInsuranceRequired, transportationRequired] =
+        await Promise.all([
+          this.settingsService.get(SETTING_KEYS.ACCOMMODATION_REQUIRED),
+          this.settingsService.get(SETTING_KEYS.HEALTH_INSURANCE_REQUIRED),
+          this.settingsService.get(SETTING_KEYS.TRANSPORTATION_REQUIRED),
+        ]);
+
+      if (accommodationRequired && !job.accommodation) failedRules.push('accommodation');
+      if (healthInsuranceRequired && !job.healthInsurance) failedRules.push('healthInsurance');
+      if (transportationRequired && !job.transportation) failedRules.push('transportation');
+    }
 
     if (failedRules.length > 0) {
       // Write the BLOCKED audit row (Screen-29's "job creation blocked" event).

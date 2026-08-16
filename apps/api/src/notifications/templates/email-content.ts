@@ -109,6 +109,12 @@ function subjectFor(input: EmailContentInput): string {
       return 'Your resume PDF is ready';
     case NotificationType.PASSWORD_RESET:
       return 'Reset your Skill India Connect password';
+    case NotificationType.CANDIDATE_PROFILE_COMPLETE:
+      // Says what CHANGED for them, not what they did. "Profile complete" is a
+      // status; "you can now apply" is the reason the status matters.
+      return 'Your profile is ready — you can now apply';
+    case NotificationType.EMPLOYER_REGISTERED:
+      return company ? `${company} is registered — under review` : 'Your company is under review';
     default:
       return input.title;
   }
@@ -159,6 +165,12 @@ function ctaFor(input: EmailContentInput): { label: string; url: string } | unde
     case NotificationType.RESUME_SENT:
     case NotificationType.RESUME_READY:
       return make('Open resume builder', '/resume');
+    case NotificationType.CANDIDATE_PROFILE_COMPLETE:
+      // Straight to the jobs they just became eligible for — the point of the
+      // email is the capability, so the button is the capability.
+      return make('Browse jobs', '/jobs');
+    case NotificationType.EMPLOYER_REGISTERED:
+      return make('Go to dashboard', '/employer/dashboard');
     case NotificationType.PASSWORD_RESET: {
       // The one type whose destination is single-use and caller-supplied.
       const reset = str(d['resetUrl']);
@@ -232,6 +244,22 @@ function paragraphsFor(input: EmailContentInput): string[] {
         'A complete profile ranks higher with employers and unlocks your downloadable resume.',
       );
       break;
+    case NotificationType.CANDIDATE_PROFILE_COMPLETE:
+      extra.push(
+        'Employers can now find you in search, and you can apply to any job that matches your trade.',
+      );
+      extra.push(
+        'Keep your documents current — an expired passport stops an application at the visa stage, and we will remind you well before that happens.',
+      );
+      break;
+    case NotificationType.EMPLOYER_REGISTERED:
+      extra.push(
+        'Our team is verifying your company details. Verification usually takes up to 24 hours, and we will email you the moment it is done.',
+      );
+      extra.push(
+        'You can finish setting up your profile in the meantime — posting a job unlocks as soon as you are approved.',
+      );
+      break;
     default:
       break;
   }
@@ -249,6 +277,11 @@ function noteFor(input: EmailContentInput): string | undefined {
       return `${BRAND.name} never asks you to pay for a job offer, a visa, or a ticket. If anyone asks you for money, do not pay — report it to us.`;
     case NotificationType.EMPLOYER_SUSPENDED:
       return 'Your job posts are hidden from candidates while the account is suspended. Contact support if you believe this is a mistake.';
+    case NotificationType.CANDIDATE_PROFILE_COMPLETE:
+      // The same anti-fraud line the offer and resume mails carry. This is the
+      // first email many candidates receive, so it is the first chance to set
+      // the expectation that nobody on this platform ever asks them for money.
+      return `${BRAND.name} is free for workers. We never ask you to pay for a profile, an application, or a job offer — if anyone asks you for money, do not pay.`;
     default:
       return undefined;
   }

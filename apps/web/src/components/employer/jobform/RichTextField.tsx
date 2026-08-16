@@ -3,6 +3,7 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
+import { JOB_DESCRIPTION_MIN } from '@/lib/jobs/jobFormState';
 
 const MAX_CHARS = 3000;
 
@@ -19,6 +20,15 @@ export function RichTextField({ id, value, onChange, error, className }: RichTex
   const errorId = error ? `${id}-error` : undefined;
   const countId = `${id}-count`;
   const remaining = MAX_CHARS - value.length;
+  /*
+    Below the floor, the counter counts UP to the minimum instead of down from
+    the ceiling. A writer 40 characters into a 300-character requirement is not
+    helped by "2,960 left" — the number that matters to them is how much more
+    they owe, and it is the same number the validation message will quote.
+  */
+  const typed = value.trim().length;
+  const belowMinimum = typed < JOB_DESCRIPTION_MIN;
+  const stillNeeded = JOB_DESCRIPTION_MIN - typed;
 
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
@@ -49,12 +59,14 @@ export function RichTextField({ id, value, onChange, error, className }: RichTex
           id={countId}
           className={cn(
             'ms-auto text-xs',
-            remaining < 100 ? 'text-warning-fg' : 'text-neutral-600',
+            belowMinimum || remaining < 100 ? 'text-warning-fg' : 'text-neutral-600',
           )}
           aria-live="polite"
           aria-atomic="true"
         >
-          {remaining} {t('charsLeft')}
+          {belowMinimum
+            ? t('charsToMinimum', { count: stillNeeded, min: JOB_DESCRIPTION_MIN })
+            : `${remaining} ${t('charsLeft')}`}
         </p>
       </div>
     </div>

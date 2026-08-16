@@ -214,7 +214,8 @@
       "explore": "Jelajahi",
       "followUs": "Ikuti kami",
       "callUs": "Hubungi kami",
-      "visitUs": "Kantor kami"
+      "visitUs": "Kantor kami",
+      "resumeBuilder": "Pembuat Resume"
     },
     "carousel": {
       "label": "Pekerja terampil di Skill India Connect",
@@ -238,6 +239,14 @@
         "verified": "Pemberi kerja diverifikasi sebelum memasang lowongan"
       },
       "verifiedStrip": "Hanya pemberi kerja terverifikasi"
+    },
+    "recentJobs": {
+      "heading": "Lowongan terbaru minggu ini",
+      "subheading": "Lowongan nyata dari perusahaan terverifikasi di Teluk dan seluruh India. Bebas dilihat — akun hanya diperlukan untuk melamar.",
+      "apply": "Lamar sekarang",
+      "browseAll": "Lihat semua lowongan",
+      "noFee": "Anda tidak pernah membayar biaya apa pun — tidak kepada kami, tidak kepada perusahaan mana pun.",
+      "ctaPrimary": "Buat profil gratis"
     },
     "announce": {
       "ariaLabel": "Janji kami",

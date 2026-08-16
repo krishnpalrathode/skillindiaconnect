@@ -26,3 +26,20 @@ export const PAGE_SHELL =
  * tabs. The Dashboard is the reference.
  */
 export const EMPLOYER_PAGE_SHELL = 'mx-auto flex w-full max-w-6xl flex-col gap-6 lg:gap-7';
+
+/**
+ * The admin console's page container — the SAME string as EMPLOYER_PAGE_SHELL,
+ * exported under its own name so admin pages read as intentional rather than
+ * borrowing the employer's constant.
+ *
+ * Admin pages previously had no container at all: they rendered straight into
+ * the padded `<main>`, so content ran edge-to-edge on a wide monitor while every
+ * employer and candidate screen sat in a centred column. Moving between consoles
+ * moved the content edge, which is the exact drift the other two constants exist
+ * to prevent.
+ *
+ * Deliberately not a new, wider value: page-shell's whole point is that there is
+ * one width. If an admin table genuinely needs more room, widen it on that table
+ * INSIDE the shell rather than giving the console a fourth frame.
+ */
+export const ADMIN_PAGE_SHELL = EMPLOYER_PAGE_SHELL;

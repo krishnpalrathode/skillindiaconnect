@@ -212,7 +212,12 @@ export class ActivationService {
         targetType: 'Subscription',
         targetId: subscriptionId,
         status: AuditStatus.SUCCESS,
-        meta: { companyId: order.companyId, planCode: order.plan.code, orderId, invoiceId: invoice.id },
+        meta: {
+          companyId: order.companyId,
+          planCode: order.plan.code,
+          orderId,
+          invoiceId: invoice.id,
+        },
       });
 
       return {

@@ -1,9 +1,5 @@
 import { JobMarket } from '@prisma/client';
-import {
-  EXPERIENCE_YEARS_CLAMP,
-  MATCH_SCORE_MAX,
-  MATCH_WEIGHTS,
-} from './match.constants';
+import { EXPERIENCE_YEARS_CLAMP, MATCH_SCORE_MAX, MATCH_WEIGHTS } from './match.constants';
 
 /**
  * Pure inputs to the match engine. NO database access, NO Prisma types beyond the
@@ -55,8 +51,7 @@ export interface MatchResult {
 export function compute(input: MatchComputeInput): MatchResult {
   // ── Category ──────────────────────────────────────────────────────────────
   const categoryScore =
-    input.candidateCategoryId !== null &&
-    input.candidateCategoryId === input.jobCategoryId
+    input.candidateCategoryId !== null && input.candidateCategoryId === input.jobCategoryId
       ? MATCH_WEIGHTS.category
       : 0;
 
@@ -84,8 +79,7 @@ export function compute(input: MatchComputeInput): MatchResult {
   const documentsScore =
     input.docsRequiredCount > 0
       ? Math.round(
-          MATCH_WEIGHTS.documents *
-            Math.min(input.docsPresentCount / input.docsRequiredCount, 1),
+          MATCH_WEIGHTS.documents * Math.min(input.docsPresentCount / input.docsRequiredCount, 1),
         )
       : MATCH_WEIGHTS.documents; // nothing required → requirement trivially met
 

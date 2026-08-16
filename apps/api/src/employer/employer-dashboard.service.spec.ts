@@ -37,6 +37,8 @@ describe('EmployerDashboardService', () => {
     logoKey: 'companies/company-uuid/logo/x.jpg',
     description: 'Gulf construction firm.',
     website: null,
+    // Null is the REAL shape for a company registered before the field existed.
+    foundedYear: null,
     rejectionReason: null,
     registrationCertKey: null,
     approvedAt: new Date(),
@@ -160,7 +162,7 @@ describe('EmployerDashboardService', () => {
 
   it('profileChecklist reflects current company state (hasLogo, hasDescription, hasSecondContact)', async () => {
     const result = await service.getDashboard('user-1');
-    expect(result.profileChecklist.hasLogo).toBe(true);        // logoKey is set
+    expect(result.profileChecklist.hasLogo).toBe(true); // logoKey is set
     expect(result.profileChecklist.hasDescription).toBe(true); // description is set
     expect(result.profileChecklist.hasHiringPreferences).toBe(true); // prefs row exists
     expect(result.profileChecklist.hasSecondContact).toBe(true); // 2 contacts
@@ -168,9 +170,10 @@ describe('EmployerDashboardService', () => {
   });
 
   it('profileChecklist.hint fires when logo is missing', async () => {
-    mockEmployerService.getCompanyForEmployerUser.mockResolvedValue(
-      { ...fakeCompany, logoKey: null },
-    );
+    mockEmployerService.getCompanyForEmployerUser.mockResolvedValue({
+      ...fakeCompany,
+      logoKey: null,
+    });
     const result = await service.getDashboard('user-1');
     expect(result.profileChecklist.hasLogo).toBe(false);
     expect(result.profileChecklist.hint).toMatch(/logo/i);

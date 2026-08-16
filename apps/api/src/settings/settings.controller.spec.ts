@@ -5,7 +5,12 @@ import { SettingsController } from './settings.controller';
 import { SETTING_KEYS } from './settings.keys';
 import { SettingsService } from './settings.service';
 
-const SUPER_ADMIN_USER = { userId: 'super-1', role: UserRole.SUPER_ADMIN, jti: 'j1', exp: 9_999_999_999 };
+const SUPER_ADMIN_USER = {
+  userId: 'super-1',
+  role: UserRole.SUPER_ADMIN,
+  jti: 'j1',
+  exp: 9_999_999_999,
+};
 const ADMIN_USER = { userId: 'admin-1', role: UserRole.ADMIN, jti: 'j2', exp: 9_999_999_999 };
 
 function makeSetting(key: string, value: unknown): Setting {
@@ -31,9 +36,9 @@ describe('SettingsController', () => {
   beforeEach(async () => {
     serviceMock = {
       getAll: jest.fn().mockResolvedValue(SEED_SETTINGS),
-      set: jest.fn().mockImplementation(async (_keyDef, value, _actor) =>
-        makeSetting(_keyDef.key, value),
-      ),
+      set: jest
+        .fn()
+        .mockImplementation(async (_keyDef, value, _actor) => makeSetting(_keyDef.key, value)),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -87,10 +92,7 @@ describe('SettingsController', () => {
 
     it('unknown key → 422 SETTING_KEY_UNKNOWN, no writes', async () => {
       await expect(
-        controller.batchUpdate(
-          { updates: [{ key: 'does.not.exist', value: true }] },
-          ADMIN_USER,
-        ),
+        controller.batchUpdate({ updates: [{ key: 'does.not.exist', value: true }] }, ADMIN_USER),
       ).rejects.toThrow(UnprocessableEntityException);
       expect(serviceMock.set).not.toHaveBeenCalled();
     });

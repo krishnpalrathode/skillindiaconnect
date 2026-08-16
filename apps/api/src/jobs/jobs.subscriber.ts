@@ -21,10 +21,7 @@ export class JobsSubscriber {
   @OnEvent(EMPLOYER_EVENTS.SUSPENDED)
   async onEmployerSuspended(payload: EmployerSuspendedPayload): Promise<void> {
     try {
-      await this.jobsService.pauseAllActiveJobsForCompany(
-        payload.companyId,
-        'employer_suspended',
-      );
+      await this.jobsService.pauseAllActiveJobsForCompany(payload.companyId, 'employer_suspended');
     } catch (err: unknown) {
       // Never let the subscriber throw — it would crash the event emitter's error path.
       this.logger.error(

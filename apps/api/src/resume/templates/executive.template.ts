@@ -8,6 +8,7 @@ import {
   factRows,
   pageFrame,
   safePhotoSrc,
+  summaryText,
   stickyFooterFrame,
 } from './shared';
 
@@ -106,6 +107,7 @@ function documentsSection(view: ResumeViewDto): string {
 
 export function renderExecutive(view: ResumeViewDto): string {
   const src = safePhotoSrc(view);
+  const summary = summaryText(view);
   const photo = src ? `<img class="photo" src="${src}" alt="" />` : '';
   const video = view.hasVideo
     ? `<section><h2>Video Portfolio</h2><p>A video introduction is available on Skill India Connect.</p></section>`
@@ -180,6 +182,7 @@ export function renderExecutive(view: ResumeViewDto): string {
   footer {
     padding: 3mm 16mm 8mm; font-size: 8pt; color: #9aa5b1;
   }
+  .summary { font-size: 10.5pt; line-height: 1.6; color: #33415a; margin-bottom: 7mm; }
 </style>
 </head>
 <body>
@@ -193,6 +196,10 @@ export function renderExecutive(view: ResumeViewDto): string {
   </header>
 
   <main>
+    ${/* Inside <main>, unlike the other templates: the page margin is 0 here and
+          every block supplies its own side padding, so a summary outside <main>
+          would sit flush against the paper edge. */ ''}
+    ${summary ? `<p class="summary">${summary}</p>` : ''}
     ${detailsSection(view)}
     ${experienceSection(view)}
     ${skillsSection(view)}

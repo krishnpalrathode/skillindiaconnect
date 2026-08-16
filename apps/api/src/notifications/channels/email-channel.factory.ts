@@ -55,7 +55,7 @@ export function createEmailChannelProvider(): Provider {
             "EMAIL_PROVIDER='ses' — the SES adapter is not implemented yet. " +
               'Adding it requires NO interface or caller change: create ' +
               'SesEmailChannel implementing EmailChannel (see email.channel.ts), ' +
-              "return it from a 'case \"ses\"' here, and wire its SNS bounce " +
+              'return it from a \'case "ses"\' here, and wire its SNS bounce ' +
               'stream to the BounceHandler seam (see bounce-handler.port.ts).',
           );
         default:

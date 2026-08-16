@@ -446,6 +446,20 @@ describe('MyJobsTable', () => {
 
 // Fills every field the form now requires (title, category, location, salary).
 // Hours/day + days/week already default to 8/6, so they pass validation.
+/**
+ * A description that clears the 300-character minimum (JOB_DESCRIPTION_MIN).
+ *
+ * Pasted rather than typed: user.type() sends one keystroke at a time, and 300+
+ * of those in jsdom turns a fast test into a slow one for no extra coverage.
+ */
+const LONG_DESCRIPTION = [
+  'We need an experienced worker for a long-term project on a busy commercial',
+  'site. The role covers day-to-day installation, maintenance and finishing work',
+  'to the standards set by the site supervisor. Accommodation, health insurance',
+  'and transport to site are provided. Overtime is available and paid at the',
+  'standard rate. Applicants should bring their own basic hand tools.',
+].join(' ');
+
 async function fillRequiredJobFields(user: ReturnType<typeof userEvent.setup>) {
   await user.clear(screen.getByLabelText(/job title/i));
   await user.type(screen.getByLabelText(/job title/i), 'Test Welder');
@@ -459,12 +473,13 @@ async function fillRequiredJobFields(user: ReturnType<typeof userEvent.setup>) {
   await user.clear(screen.getByLabelText(/location/i));
   await user.type(screen.getByLabelText(/location/i), 'Dubai, UAE');
   // Description textarea is labelled by placeholder only.
-  await user.type(
-    screen.getByPlaceholderText(/describe the position/i),
-    'We need an experienced worker for a long-term project.',
-  );
+  const descriptionField = screen.getByPlaceholderText(/describe the position/i);
+  await user.click(descriptionField);
+  await user.paste(LONG_DESCRIPTION);
   await user.type(screen.getByLabelText(/minimum salary/i), '1500');
   await user.type(screen.getByLabelText(/maximum salary/i), '2000');
+  // Posting now requires accepting the job-posting terms.
+  await user.click(screen.getByRole('checkbox', { name: /accept these terms/i }));
 }
 
 describe('JobForm — Save as Draft calls POST /jobs', () => {

@@ -13,6 +13,15 @@ export interface EmployerSubscription {
   activeJobsLimit: number;
 }
 
+/**
+ * Registration submits a COMPLETE profile — every field below except
+ * `languagePref` is required by the API, so the type requires them too.
+ *
+ * They were optional here while the server also treated them as optional, which
+ * let the form send a half-filled company into the approval queue. Making them
+ * required in the TYPE means a caller that forgets one fails to compile rather
+ * than failing at runtime with a 400 it cannot attribute to a field.
+ */
 export interface RegisterCompanyBody {
   name: string;
   type: CompanyType;
@@ -23,12 +32,14 @@ export interface RegisterCompanyBody {
   /** City or area within `country`. */
   location: string;
   employeeRange: EmployeeRange;
-  registrationNumber?: string;
-  industryType?: string;
-  website?: string;
+  registrationNumber: string;
+  industryType: string;
+  /** Year of incorporation. Not in the future; see the API's founded-year rule. */
+  foundedYear: number;
+  website: string;
   /** Derived from the contract so it widens with the `languagePref` enum. */
   languagePref?: Company['languagePref'];
-  description?: string;
+  description: string;
   registrationCertKey?: string;
 }
 

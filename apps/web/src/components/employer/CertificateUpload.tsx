@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/toast';
 import { useEmployerCertUpload } from '@/lib/employer/useEmployerCertUpload';
+import { MAX_UPLOAD_MB } from '@/lib/uploads';
 
 interface CertificateUploadProps {
   /**
@@ -22,7 +23,7 @@ interface CertificateUploadProps {
   className?: string;
 }
 
-const MAX_MB = 10;
+const MAX_MB = MAX_UPLOAD_MB;
 
 /**
  * Employer registration certificate upload widget.

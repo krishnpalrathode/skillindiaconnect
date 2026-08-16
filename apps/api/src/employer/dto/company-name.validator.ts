@@ -11,8 +11,7 @@
 export const COMPANY_NAME_HAS_ALNUM = /[\p{L}\p{N}]/u;
 
 /** Shared so register and update report the identical message. */
-export const COMPANY_NAME_MESSAGE =
-  'name must contain at least one letter or number';
+export const COMPANY_NAME_MESSAGE = 'name must contain at least one letter or number';
 
 /** Longest company name accepted. Real names run past 20 — "Gulf Star Contracting LLC" is 25. */
 export const COMPANY_NAME_MAX = 100;

@@ -145,7 +145,11 @@ const auditCount = (action: string) => prisma.auditLog.count({ where: { action }
 beforeAll(async () => {
   try {
     pg = await new GenericContainer('postgres:16-alpine')
-      .withEnvironment({ POSTGRES_USER: 'sic', POSTGRES_PASSWORD: 'sic', POSTGRES_DB: 'sic_webhooks' })
+      .withEnvironment({
+        POSTGRES_USER: 'sic',
+        POSTGRES_PASSWORD: 'sic',
+        POSTGRES_DB: 'sic_webhooks',
+      })
       .withExposedPorts(5432)
       .start();
     const url = `postgresql://sic:sic@localhost:${pg.getMappedPort(5432)}/sic_webhooks`;
@@ -160,11 +164,23 @@ beforeAll(async () => {
 
     proMonthlyId = (
       await prisma.plan.create({
-        data: { code: 'PRO_MONTHLY', name: 'Pro Monthly', priceSubunits: 299_900, period: PlanPeriod.MONTHLY, features: [] },
+        data: {
+          code: 'PRO_MONTHLY',
+          name: 'Pro Monthly',
+          priceSubunits: 299_900,
+          period: PlanPeriod.MONTHLY,
+          features: [],
+        },
       })
     ).id;
     await prisma.plan.create({
-      data: { code: 'PRO_YEARLY', name: 'Pro Yearly', priceSubunits: 2_499_900, period: PlanPeriod.YEARLY, features: [] },
+      data: {
+        code: 'PRO_YEARLY',
+        name: 'Pro Yearly',
+        priceSubunits: 2_499_900,
+        period: PlanPeriod.YEARLY,
+        features: [],
+      },
     });
     companyId = (
       await prisma.company.create({
@@ -246,46 +262,52 @@ beforeEach(() => {
 // ── Valid activations, both gateways ─────────────────────────────────────────
 
 describe('valid signed success events', () => {
-  gatedIt('razorpay: 200 → PAID + ACTIVE sub + sequential invoice + payments row + notification + audits', async () => {
-    const { id: orderId } = await mkOrder();
-    const payId = uid('pay');
-    const body = rzpBody('payment.captured', { orderId, paymentId: payId });
+  gatedIt(
+    'razorpay: 200 → PAID + ACTIVE sub + sequential invoice + payments row + notification + audits',
+    async () => {
+      const { id: orderId } = await mkOrder();
+      const payId = uid('pay');
+      const body = rzpBody('payment.captured', { orderId, paymentId: payId });
 
-    await service.process('razorpay', body, rzpHeaders(body, uid('evt')));
+      await service.process('razorpay', body, rzpHeaders(body, uid('evt')));
 
-    const order = await prisma.order.findUniqueOrThrow({
-      where: { id: orderId },
-      include: { subscription: true, invoice: true, payments: true },
-    });
-    expect(order.status).toBe(OrderStatus.PAID);
-    expect(order.subscription?.status).toBe(SubscriptionStatus.ACTIVE);
-    expect(order.invoice?.number).toMatch(/^SIC-\d{4}-\d{5}$/);
-    expect(order.invoice?.pdfKey).toBeNull(); // rendering deferred to S7
-    expect(order.payments).toHaveLength(1);
-    expect(order.payments[0]!.gatewayPaymentId).toBe(payId);
-    expect(notifySpy).toHaveBeenCalledWith(
-      'wh-emp-user-1',
-      'SUBSCRIPTION_PURCHASED',
-      expect.objectContaining({ title: expect.any(String) }),
-    );
-    expect(await auditCount('payment.captured')).toBeGreaterThanOrEqual(1);
-    expect(await auditCount('subscription.activated')).toBeGreaterThanOrEqual(1);
-  });
+      const order = await prisma.order.findUniqueOrThrow({
+        where: { id: orderId },
+        include: { subscription: true, invoice: true, payments: true },
+      });
+      expect(order.status).toBe(OrderStatus.PAID);
+      expect(order.subscription?.status).toBe(SubscriptionStatus.ACTIVE);
+      expect(order.invoice?.number).toMatch(/^SIC-\d{4}-\d{5}$/);
+      expect(order.invoice?.pdfKey).toBeNull(); // rendering deferred to S7
+      expect(order.payments).toHaveLength(1);
+      expect(order.payments[0]!.gatewayPaymentId).toBe(payId);
+      expect(notifySpy).toHaveBeenCalledWith(
+        'wh-emp-user-1',
+        'SUBSCRIPTION_PURCHASED',
+        expect.objectContaining({ title: expect.any(String) }),
+      );
+      expect(await auditCount('payment.captured')).toBeGreaterThanOrEqual(1);
+      expect(await auditCount('subscription.activated')).toBeGreaterThanOrEqual(1);
+    },
+  );
 
-  gatedIt('stripe: checkout.session.completed via constructEvent-verified signature activates identically', async () => {
-    const { id: orderId } = await mkOrder({ gateway: Gateway.STRIPE });
-    const body = stripeBody('checkout.session.completed', { eventId: uid('evt'), orderId });
+  gatedIt(
+    'stripe: checkout.session.completed via constructEvent-verified signature activates identically',
+    async () => {
+      const { id: orderId } = await mkOrder({ gateway: Gateway.STRIPE });
+      const body = stripeBody('checkout.session.completed', { eventId: uid('evt'), orderId });
 
-    await service.process('stripe', body, stripeHeaders(body));
+      await service.process('stripe', body, stripeHeaders(body));
 
-    const order = await prisma.order.findUniqueOrThrow({
-      where: { id: orderId },
-      include: { subscription: true, invoice: true },
-    });
-    expect(order.status).toBe(OrderStatus.PAID);
-    expect(order.subscription?.status).toBe(SubscriptionStatus.ACTIVE);
-    expect(order.invoice).not.toBeNull();
-  });
+      const order = await prisma.order.findUniqueOrThrow({
+        where: { id: orderId },
+        include: { subscription: true, invoice: true },
+      });
+      expect(order.status).toBe(OrderStatus.PAID);
+      expect(order.subscription?.status).toBe(SubscriptionStatus.ACTIVE);
+      expect(order.invoice).not.toBeNull();
+    },
+  );
 });
 
 // ── Signature failure ─────────────────────────────────────────────────────────
@@ -337,102 +359,112 @@ describe('signature failure — verify BEFORE parse', () => {
 // ── Replay + duplicates + concurrency ────────────────────────────────────────
 
 describe('dedupe, duplicates, and concurrency', () => {
-  gatedIt('the identical event twice → one activation, one invoice, webhook.duplicate audit', async () => {
-    const { id: orderId } = await mkOrder();
-    const eventId = uid('evt');
-    const body = rzpBody('payment.captured', { orderId });
-    const headers = rzpHeaders(body, eventId);
+  gatedIt(
+    'the identical event twice → one activation, one invoice, webhook.duplicate audit',
+    async () => {
+      const { id: orderId } = await mkOrder();
+      const eventId = uid('evt');
+      const body = rzpBody('payment.captured', { orderId });
+      const headers = rzpHeaders(body, eventId);
 
-    await service.process('razorpay', body, headers);
-    const dupesBefore = await auditCount('webhook.duplicate');
-    await service.process('razorpay', body, headers); // the replay — resolves 200-path
+      await service.process('razorpay', body, headers);
+      const dupesBefore = await auditCount('webhook.duplicate');
+      await service.process('razorpay', body, headers); // the replay — resolves 200-path
 
-    expect(await auditCount('webhook.duplicate')).toBe(dupesBefore + 1);
-    expect(await prisma.invoice.count({ where: { orderId } })).toBe(1);
-    expect(await prisma.subscription.count({ where: { orderId } })).toBe(1);
-    expect(
-      await prisma.webhookEvent.count({ where: { provider: 'razorpay', eventId } }),
-    ).toBe(1);
-  });
+      expect(await auditCount('webhook.duplicate')).toBe(dupesBefore + 1);
+      expect(await prisma.invoice.count({ where: { orderId } })).toBe(1);
+      expect(await prisma.subscription.count({ where: { orderId } })).toBe(1);
+      expect(await prisma.webhookEvent.count({ where: { provider: 'razorpay', eventId } })).toBe(1);
+    },
+  );
 
-  gatedIt('two DISTINCT success events for one order → one activation, one invoice (state re-check under lock)', async () => {
-    const { id: orderId } = await mkOrder();
-    const b1 = rzpBody('payment.captured', { orderId });
-    const b2 = rzpBody('order.paid', { orderId });
+  gatedIt(
+    'two DISTINCT success events for one order → one activation, one invoice (state re-check under lock)',
+    async () => {
+      const { id: orderId } = await mkOrder();
+      const b1 = rzpBody('payment.captured', { orderId });
+      const b2 = rzpBody('order.paid', { orderId });
 
-    await service.process('razorpay', b1, rzpHeaders(b1, uid('evt')));
-    await service.process('razorpay', b2, rzpHeaders(b2, uid('evt')));
+      await service.process('razorpay', b1, rzpHeaders(b1, uid('evt')));
+      await service.process('razorpay', b2, rzpHeaders(b2, uid('evt')));
 
-    expect(await prisma.invoice.count({ where: { orderId } })).toBe(1);
-    expect(await auditCount('webhook.noop')).toBeGreaterThanOrEqual(1);
-  });
+      expect(await prisma.invoice.count({ where: { orderId } })).toBe(1);
+      expect(await auditCount('webhook.noop')).toBeGreaterThanOrEqual(1);
+    },
+  );
 
-  gatedIt('CONCURRENT delivery: two parallel success posts → exactly one PAID transition, one sub, one invoice', async () => {
-    const { id: orderId } = await mkOrder();
-    const b1 = rzpBody('payment.captured', { orderId });
-    const b2 = rzpBody('payment.captured', { orderId, paymentId: uid('pay') });
+  gatedIt(
+    'CONCURRENT delivery: two parallel success posts → exactly one PAID transition, one sub, one invoice',
+    async () => {
+      const { id: orderId } = await mkOrder();
+      const b1 = rzpBody('payment.captured', { orderId });
+      const b2 = rzpBody('payment.captured', { orderId, paymentId: uid('pay') });
 
-    await Promise.all([
-      service.process('razorpay', b1, rzpHeaders(b1, uid('evt'))),
-      service.process('razorpay', b2, rzpHeaders(b2, uid('evt'))),
-    ]);
+      await Promise.all([
+        service.process('razorpay', b1, rzpHeaders(b1, uid('evt'))),
+        service.process('razorpay', b2, rzpHeaders(b2, uid('evt'))),
+      ]);
 
-    expect(await prisma.invoice.count({ where: { orderId } })).toBe(1); // FOR UPDATE proven
-    expect(await prisma.subscription.count({ where: { orderId } })).toBe(1);
-    expect(
-      (await prisma.order.findUniqueOrThrow({ where: { id: orderId } })).status,
-    ).toBe(OrderStatus.PAID);
-  });
+      expect(await prisma.invoice.count({ where: { orderId } })).toBe(1); // FOR UPDATE proven
+      expect(await prisma.subscription.count({ where: { orderId } })).toBe(1);
+      expect((await prisma.order.findUniqueOrThrow({ where: { id: orderId } })).status).toBe(
+        OrderStatus.PAID,
+      );
+    },
+  );
 
-  gatedIt('invoice sequence under concurrency: N parallel activations → N distinct sequential numbers', async () => {
-    // Fresh companies so the renewal path doesn't serialize them onto one sub.
-    const orders = await Promise.all(
-      [0, 1, 2].map(async () => {
-        const c = await prisma.company.create({
-          data: {
-            name: uid('SeqCo'),
-            type: CompanyType.FOREIGN,
-            status: CompanyStatus.APPROVED,
-            registrationNumber: uid('SEQ'),
-            industryType: 'Construction',
-            phone: '+91100',
-            location: 'Dubai',
-            employeeRange: '10-50',
-          },
-        });
-        return prisma.order.create({
-          data: {
-            companyId: c.id,
-            planId: proMonthlyId,
-            gateway: Gateway.RAZORPAY,
-            amountSubunits: 299_900,
-            gstSubunits: 0,
-            totalSubunits: 299_900,
-            currency: 'INR',
-            status: OrderStatus.CREATED,
-            gatewayOrderId: uid('gwo'),
-          },
-        });
-      }),
-    );
+  gatedIt(
+    'invoice sequence under concurrency: N parallel activations → N distinct sequential numbers',
+    async () => {
+      // Fresh companies so the renewal path doesn't serialize them onto one sub.
+      const orders = await Promise.all(
+        [0, 1, 2].map(async () => {
+          const c = await prisma.company.create({
+            data: {
+              name: uid('SeqCo'),
+              type: CompanyType.FOREIGN,
+              status: CompanyStatus.APPROVED,
+              registrationNumber: uid('SEQ'),
+              industryType: 'Construction',
+              phone: '+91100',
+              location: 'Dubai',
+              employeeRange: '10-50',
+            },
+          });
+          return prisma.order.create({
+            data: {
+              companyId: c.id,
+              planId: proMonthlyId,
+              gateway: Gateway.RAZORPAY,
+              amountSubunits: 299_900,
+              gstSubunits: 0,
+              totalSubunits: 299_900,
+              currency: 'INR',
+              status: OrderStatus.CREATED,
+              gatewayOrderId: uid('gwo'),
+            },
+          });
+        }),
+      );
 
-    await Promise.all(
-      orders.map((o) => {
-        const b = rzpBody('payment.captured', { orderId: o.id });
-        return service.process('razorpay', b, rzpHeaders(b, uid('evt')));
-      }),
-    );
+      await Promise.all(
+        orders.map((o) => {
+          const b = rzpBody('payment.captured', { orderId: o.id });
+          return service.process('razorpay', b, rzpHeaders(b, uid('evt')));
+        }),
+      );
 
-    const invoices = await prisma.invoice.findMany({
-      where: { orderId: { in: orders.map((o) => o.id) } },
-    });
-    expect(invoices).toHaveLength(3);
-    const nums = invoices.map((i) => Number(i.number.split('-')[2])).sort((a, b) => a - b);
-    expect(new Set(nums).size).toBe(3); // the sequence never hands out a collision
-    // Consecutive within this burst (no rollbacks ran between them); gaps
-    // from rolled-back transactions elsewhere are inherent to sequences.
-    expect(nums[2]! - nums[0]!).toBe(2);
-  });
+      const invoices = await prisma.invoice.findMany({
+        where: { orderId: { in: orders.map((o) => o.id) } },
+      });
+      expect(invoices).toHaveLength(3);
+      const nums = invoices.map((i) => Number(i.number.split('-')[2])).sort((a, b) => a - b);
+      expect(new Set(nums).size).toBe(3); // the sequence never hands out a collision
+      // Consecutive within this burst (no rollbacks ran between them); gaps
+      // from rolled-back transactions elsewhere are inherent to sequences.
+      expect(nums[2]! - nums[0]!).toBe(2);
+    },
+  );
 });
 
 // ── Out-of-order + refunds ───────────────────────────────────────────────────
@@ -452,28 +484,31 @@ describe('out-of-order reconciliation (state, never sequence)', () => {
     expect(await auditCount('webhook.stale_ignored')).toBeGreaterThanOrEqual(1);
   });
 
-  gatedIt('failure on CREATED marks FAILED; a success arriving AFTER (late capture) ACTIVATES — the money is real', async () => {
-    const { id: orderId } = await mkOrder();
-    const fail = rzpBody('payment.failed', { orderId });
-    await service.process('razorpay', fail, rzpHeaders(fail, uid('evt')));
-    expect((await prisma.order.findUniqueOrThrow({ where: { id: orderId } })).status).toBe(
-      OrderStatus.FAILED,
-    );
+  gatedIt(
+    'failure on CREATED marks FAILED; a success arriving AFTER (late capture) ACTIVATES — the money is real',
+    async () => {
+      const { id: orderId } = await mkOrder();
+      const fail = rzpBody('payment.failed', { orderId });
+      await service.process('razorpay', fail, rzpHeaders(fail, uid('evt')));
+      expect((await prisma.order.findUniqueOrThrow({ where: { id: orderId } })).status).toBe(
+        OrderStatus.FAILED,
+      );
 
-    const late = rzpBody('payment.captured', { orderId });
-    await service.process('razorpay', late, rzpHeaders(late, uid('evt')));
+      const late = rzpBody('payment.captured', { orderId });
+      await service.process('razorpay', late, rzpHeaders(late, uid('evt')));
 
-    const order = await prisma.order.findUniqueOrThrow({
-      where: { id: orderId },
-      include: { invoice: true },
-    });
-    expect(order.status).toBe(OrderStatus.PAID); // the stated late-capture choice
-    expect(order.invoice).not.toBeNull();
-    const captured = await prisma.auditLog.findFirst({
-      where: { action: 'payment.captured', targetId: orderId },
-    });
-    expect((captured?.meta as { lateCapture?: boolean })?.lateCapture).toBe(true); // flagged for ops
-  });
+      const order = await prisma.order.findUniqueOrThrow({
+        where: { id: orderId },
+        include: { invoice: true },
+      });
+      expect(order.status).toBe(OrderStatus.PAID); // the stated late-capture choice
+      expect(order.invoice).not.toBeNull();
+      const captured = await prisma.auditLog.findFirst({
+        where: { action: 'payment.captured', targetId: orderId },
+      });
+      expect((captured?.meta as { lateCapture?: boolean })?.lateCapture).toBe(true); // flagged for ops
+    },
+  );
 
   gatedIt('refund on PAID → REFUNDED + audit (no clawback beyond the flag at MVP)', async () => {
     const { id: orderId } = await mkOrder();
@@ -483,7 +518,9 @@ describe('out-of-order reconciliation (state, never sequence)', () => {
     const refund = Buffer.from(
       JSON.stringify({
         event: 'refund.processed',
-        payload: { refund: { entity: { id: uid('rfnd'), payment_id: uid('pay'), notes: { orderId } } } },
+        payload: {
+          refund: { entity: { id: uid('rfnd'), payment_id: uid('pay'), notes: { orderId } } },
+        },
       }),
     );
     await service.process('razorpay', refund, rzpHeaders(refund, uid('evt')));
@@ -501,37 +538,43 @@ describe('out-of-order reconciliation (state, never sequence)', () => {
 // ── Unknown order + renewal extension ────────────────────────────────────────
 
 describe('unknown orders and renewal', () => {
-  gatedIt('signed event for no matching order → resolves (200 path) + unknown_order audit — no existence leak', async () => {
-    const body = rzpBody('payment.captured', {
-      orderId: '00000000-0000-4000-8000-00000000dead',
-      gatewayOrderId: uid('ghost'),
-    });
-    await expect(
-      service.process('razorpay', body, rzpHeaders(body, uid('evt'))),
-    ).resolves.toBeUndefined();
-    expect(await auditCount('webhook.unknown_order')).toBeGreaterThanOrEqual(1);
-  });
+  gatedIt(
+    'signed event for no matching order → resolves (200 path) + unknown_order audit — no existence leak',
+    async () => {
+      const body = rzpBody('payment.captured', {
+        orderId: '00000000-0000-4000-8000-00000000dead',
+        gatewayOrderId: uid('ghost'),
+      });
+      await expect(
+        service.process('razorpay', body, rzpHeaders(body, uid('evt'))),
+      ).resolves.toBeUndefined();
+      expect(await auditCount('webhook.unknown_order')).toBeGreaterThanOrEqual(1);
+    },
+  );
 
-  gatedIt('renewal: activating a second order for an ACTIVE sub EXTENDS from current expiry, not from now', async () => {
-    // First activation → a fresh 30-day term.
-    const first = await mkOrder();
-    const b1 = rzpBody('payment.captured', { orderId: first.id });
-    await service.process('razorpay', b1, rzpHeaders(b1, uid('evt')));
-    const sub1 = await prisma.subscription.findUniqueOrThrow({ where: { orderId: first.id } });
-    const firstExpiry = sub1.expiresAt!.getTime();
+  gatedIt(
+    'renewal: activating a second order for an ACTIVE sub EXTENDS from current expiry, not from now',
+    async () => {
+      // First activation → a fresh 30-day term.
+      const first = await mkOrder();
+      const b1 = rzpBody('payment.captured', { orderId: first.id });
+      await service.process('razorpay', b1, rzpHeaders(b1, uid('evt')));
+      const sub1 = await prisma.subscription.findUniqueOrThrow({ where: { orderId: first.id } });
+      const firstExpiry = sub1.expiresAt!.getTime();
 
-    // Renewal (same plan, same company) → same row, expiry = FIRST EXPIRY + 30d.
-    const second = await mkOrder();
-    const b2 = rzpBody('payment.captured', { orderId: second.id });
-    await service.process('razorpay', b2, rzpHeaders(b2, uid('evt')));
+      // Renewal (same plan, same company) → same row, expiry = FIRST EXPIRY + 30d.
+      const second = await mkOrder();
+      const b2 = rzpBody('payment.captured', { orderId: second.id });
+      await service.process('razorpay', b2, rzpHeaders(b2, uid('evt')));
 
-    const renewed = await prisma.subscription.findUniqueOrThrow({ where: { id: sub1.id } });
-    expect(renewed.orderId).toBe(second.id); // the row points at the latest paying order
-    expect(renewed.status).toBe(SubscriptionStatus.ACTIVE);
-    expect(renewed.graceEndsAt).toBeNull();
-    // Extended from the CURRENT expiry (paid time never lost) — not from now.
-    expect(renewed.expiresAt!.getTime()).toBe(firstExpiry + 30 * DAY_MS);
-    // Still ONE subscription row for the company (extension, not stacking).
-    expect(await prisma.subscription.count({ where: { companyId } })).toBe(1);
-  });
+      const renewed = await prisma.subscription.findUniqueOrThrow({ where: { id: sub1.id } });
+      expect(renewed.orderId).toBe(second.id); // the row points at the latest paying order
+      expect(renewed.status).toBe(SubscriptionStatus.ACTIVE);
+      expect(renewed.graceEndsAt).toBeNull();
+      // Extended from the CURRENT expiry (paid time never lost) — not from now.
+      expect(renewed.expiresAt!.getTime()).toBe(firstExpiry + 30 * DAY_MS);
+      // Still ONE subscription row for the company (extension, not stacking).
+      expect(await prisma.subscription.count({ where: { companyId } })).toBe(1);
+    },
+  );
 });

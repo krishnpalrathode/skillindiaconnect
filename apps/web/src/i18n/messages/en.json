@@ -105,6 +105,13 @@
       "retry": "Try again",
       "timeoutTitle": "Taking longer than expected",
       "timeoutBody": "Your resume is still being prepared. Please try again in a moment."
+    },
+    "summary": {
+      "title": "About you",
+      "hint": "A short intro in your own words. It appears at the top of your resume, above your details.",
+      "placeholder": "Example: Electrician with 6 years on residential and commercial sites in Kerala and Dubai. Comfortable with wiring, panel work and site safety. Looking for Gulf projects.",
+      "counter": "{used}/{max}",
+      "save": "Save"
     }
   },
   "common": {
@@ -470,7 +477,9 @@
       "resendIn": "Resend in {seconds}s",
       "photoUploadError": "We couldn't upload your photo. Please try again.",
       "photoUploading": "Uploading your photo…",
-      "phoneCodeLabel": "Country code"
+      "phoneCodeLabel": "Country code",
+      "phoneCodeSearch": "Search country or code",
+      "phoneCodeEmpty": "No country matches"
     },
     "experience": {
       "title": "Work experience",
@@ -518,7 +527,11 @@
         "PENDING": "Pending review",
         "VERIFIED": "Verified",
         "REJECTED": "Rejected"
-      }
+      },
+      "passportExpiryRule": "Your passport must be valid for at least 6 more months.",
+      "passportExpiryTooSoon": "Gulf employers need at least {months} months of passport validity. Please renew your passport, then upload it here.",
+      "passportExpiryWarnTitle": "Your passport expires in {days} days",
+      "passportExpiryWarnBody": "You can continue for now, but you will not be able to apply for jobs once it drops below {months} months. Renewal can take several weeks — start early."
     },
     "preview": {
       "title": "Preview & Export",
@@ -546,7 +559,8 @@
       "errUploadIncomplete": "The upload didn't finish. Please try again.",
       "dropzoneHint": "Drag & drop or click to select",
       "maxSize": "Max {size} MB",
-      "errPassportExpiry": "Your passport expiry date must be a future date. Correct the date above, then upload again."
+      "errPassportExpiry": "Your passport expiry date must be a future date. Correct the date above, then upload again.",
+      "errPassportTooSoon": "This passport expires too soon for a Gulf work visa. Renew it first, then upload the new one."
     },
     "nav": {
       "back": "Back",
@@ -649,6 +663,10 @@
       "registrationNumberPlaceholder": "e.g. U12345MH2020PTC000000",
       "industryTypeLabel": "Industry type",
       "industryTypePlaceholder": "Select industry",
+      "industryOtherLabel": "Your industry",
+      "industryOtherPlaceholder": "e.g. Marine logistics",
+      "industryOtherRequired": "Please enter your industry",
+      "industryOtherTooLong": "Industry cannot be longer than {max} characters",
       "phoneLabel": "Company phone",
       "phonePlaceholder": "+91 98765 43210",
       "phoneRequired": "Company phone is required",
@@ -700,7 +718,18 @@
         "kuwait": "Kuwait",
         "oman": "Oman",
         "bahrain": "Bahrain"
-      }
+      },
+      "phoneCodeSearch": "Search country or code",
+      "phoneCodeEmpty": "No country matches",
+      "foundedYearLabel": "Year founded",
+      "foundedYearPlaceholder": "e.g. 2014",
+      "foundedYearRequired": "Year founded is required",
+      "foundedYearInvalid": "Enter a four-digit year between {min} and {max}",
+      "registrationNumberRequired": "Registration number is required",
+      "industryTypeRequired": "Please select an industry",
+      "websiteRequired": "Website is required",
+      "websiteInvalid": "Enter a full website address, e.g. https://yourcompany.com",
+      "descriptionRequired": "Company description is required"
     },
     "dashboard": {
       "metaTitle": "Employer Dashboard",
@@ -1175,7 +1204,8 @@
       "heading": "Job Description",
       "subtitle": "Describe the role, responsibilities, and ideal candidate.",
       "placeholder": "Describe the position, day-to-day responsibilities, and what makes this a great opportunity…",
-      "charsLeft": "characters remaining"
+      "charsLeft": "characters remaining",
+      "charsToMinimum": "{count, plural, one {# more character} other {# more characters}} to reach the {min} minimum"
     },
     "compensation": {
       "heading": "Compensation",
@@ -1204,7 +1234,8 @@
       "airTickets": "Air Tickets (Arrival & Departure)",
       "otherAllowance": "Other Allowance",
       "otherAllowancePlaceholder": "e.g. Uniform provided, annual bonus…",
-      "optional": "Optional"
+      "optional": "Optional",
+      "protectionsLocalLabel": "Worker benefits (optional for India jobs)"
     },
     "requirements": {
       "heading": "Requirements",
@@ -1909,6 +1940,25 @@
             "description": "Route foreign-company checkout through Stripe instead of Razorpay International."
           }
         }
+      },
+      "plans": {
+        "heading": "Subscription plans",
+        "subheading": "Applies to the next checkout. Past invoices and current subscriptions are unchanged.",
+        "save": "Save",
+        "savedNote": "Price updated. New checkouts use it immediately.",
+        "saveFailed": "Couldn't save the price. Please try again.",
+        "loadFailed": "Couldn't load plans.",
+        "retry": "Try again",
+        "invalid": "Enter an amount like 2999 or 2999.00.",
+        "inactive": "Off sale",
+        "freeLocked": "The Free plan stays at zero — pricing it would put Free on the paid upgrade path.",
+        "unlimitedJobs": "Unlimited jobs",
+        "maxJobs": "{count, plural, one {# active job} other {# active jobs}}",
+        "period": {
+          "MONTHLY": "Billed monthly",
+          "YEARLY": "Billed yearly",
+          "none": "No billing period"
+        }
       }
     },
     "logs": {
@@ -2275,6 +2325,7 @@
           "match": "Match",
           "applied": "Applied"
         },
+        "matchValue": "{score}%",
         "detailAria": "Open application {id}",
         "deletedUser": "Deleted user",
         "status": {
@@ -2396,20 +2447,171 @@
     },
     "dashboard": {
       "title": "Dashboard",
-      "queuesHeading": "Waiting for you",
-      "kpisHeading": "Platform overview",
-      "pendingEmployerReviews": "Employers awaiting review",
-      "pendingJobReviews": "Jobs awaiting review",
-      "queueEmpty": "Nothing waiting",
-      "candidates": "Candidates",
-      "employers": "Employers",
-      "jobs": "Jobs",
-      "revenueThisMonth": "Revenue this month",
-      "employersByStatus": "Employers by status",
-      "jobsByStatus": "Jobs by status",
-      "applicationsByStatus": "Applications by status",
       "loadFailed": "Couldn't load the dashboard.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "subtitle": "Live platform activity for the selected range.",
+      "analytics": {
+        "rangeLabel": "Date range",
+        "range": {
+          "d7": "Last 7 days",
+          "d30": "Last 30 days",
+          "d90": "Last 90 days",
+          "d365": "Last 12 months",
+          "other": "{days} days"
+        },
+        "previousPeriod": "{days, plural, =365 {previous 12 months} other {previous # days}}",
+        "loadFailed": "Couldn't load the analytics.",
+        "retry": "Try again",
+        "kpi": {
+          "heading": "Executive summary",
+          "candidates": "New candidates",
+          "employers": "New employers",
+          "jobs": "Jobs posted",
+          "applications": "Applications",
+          "hires": "Hires",
+          "revenue": "Revenue invoiced",
+          "new": "New",
+          "none": "None",
+          "noneInPeriod": "none in the {period}",
+          "emptyBoth": "in this range or the {period}",
+          "vsPrevious": "vs {period} ({value})"
+        },
+        "attention": {
+          "heading": "Needs attention",
+          "employers": "Employers awaiting review",
+          "jobs": "Jobs awaiting review",
+          "applications": "Applications still pending",
+          "profiles": "Profiles below {threshold}% complete",
+          "clear": "Clear",
+          "nothingWaiting": "Nothing waiting"
+        },
+        "chart": {
+          "showTable": "Show data table",
+          "showChart": "Show chart",
+          "hoverLine": "Hover the chart for a daily breakdown",
+          "hoverColumn": "Hover a column for that day's split",
+          "lineAria": "Line chart: {series}",
+          "columnsAria": "Stacked columns: {series}",
+          "noData": "No data in this range.",
+          "date": "Date"
+        },
+        "candidateGrowth": {
+          "title": "Candidate growth",
+          "subtitle": "Registrations per day, and how many of them are phone-verified and visible",
+          "registered": "Registered",
+          "verified": "Verified",
+          "active": "Visible & available"
+        },
+        "funnel": {
+          "title": "Hiring funnel",
+          "subtitle": "Of applications submitted in the last {days} days",
+          "note": "Cohort-based: a stage counts every application that EVER reached it, read from the status timeline. There is no interview stage because the application state machine has none.",
+          "empty": "No applications in this range.",
+          "applied": "Applied",
+          "shortlisted": "Shortlisted",
+          "selected": "Selected",
+          "continueLabel": "continue",
+          "shareOfApplications": "{pct} of applications",
+          "stage": "Stage",
+          "count": "Count",
+          "pctOfApplied": "% of applied",
+          "fromPrevious": "From previous"
+        },
+        "applicationTrend": {
+          "title": "Application volume by status",
+          "subtitle": "Applications submitted each day, split by the status they hold now",
+          "pending": "Pending",
+          "shortlisted": "Shortlisted",
+          "selected": "Selected",
+          "rejected": "Rejected"
+        },
+        "jobActivity": {
+          "title": "Job activity",
+          "subtitle": "Jobs created each day, and how many went on to publish",
+          "created": "Created",
+          "published": "Published",
+          "archived": "Archived"
+        },
+        "employerGrowth": {
+          "title": "Employer growth",
+          "subtitle": "Companies registered each day, and how many are approved",
+          "registered": "Registered",
+          "approved": "Approved"
+        },
+        "efficiency": {
+          "title": "Hiring efficiency",
+          "subtitle": "Medians, not averages — one application left open for months would drag an average away from what a typical candidate experiences.",
+          "daysToShortlist": "Median days to shortlist",
+          "daysToShortlistHint": "From applying to being shortlisted",
+          "daysToHire": "Median days to hire",
+          "daysToHireHint": "From shortlisted to selected",
+          "hireRate": "Hire rate",
+          "hireRateHint": "Hires ÷ applications in this range",
+          "applicationsPerJob": "Applications per job",
+          "applicationsPerJobHint": "Applications ÷ jobs posted in this range"
+        },
+        "breakdown": {
+          "allTime": "All time, across the platform",
+          "applicationsTitle": "Applications by status",
+          "employersTitle": "Employers by status",
+          "jobsTitle": "Jobs by status",
+          "status": "Status",
+          "applications": "Applications",
+          "employers": "Employers",
+          "jobs": "Jobs"
+        },
+        "skills": {
+          "title": "Most common candidate skills",
+          "subtitle": "Skills candidates HAVE — this is supply, not employer demand",
+          "note": "Job postings don't carry structured skill requirements, so this cannot be compared against demand. Reading it as 'in-demand skills' would invert its meaning.",
+          "skill": "Skill",
+          "candidates": "Candidates"
+        },
+        "experience": {
+          "title": "Experience distribution",
+          "subtitle": "Total years across all recorded work history",
+          "band": "Band"
+        },
+        "age": {
+          "title": "Age distribution",
+          "subtitle": "Derived from date of birth",
+          "note": "Profiles with no date of birth are shown as 'Not given' rather than dropped, so this total still reconciles with the candidate count."
+        },
+        "topEmployers": {
+          "title": "Top employers",
+          "subtitle": "Approved companies, ranked by applications received",
+          "note": "Success rate is hires ÷ applications received — a company with no applications yet shows 0%, not a blank.",
+          "empty": "No approved employers yet.",
+          "company": "Company",
+          "activeJobs": "Active jobs",
+          "applications": "Applications",
+          "hires": "Hires",
+          "success": "Success"
+        },
+        "topJobs": {
+          "title": "Top performing jobs",
+          "subtitle": "Active jobs, ranked by applications received",
+          "note": "There is no view count: nothing on the platform records a job view, so a view-to-application conversion cannot be computed.",
+          "empty": "No active jobs yet.",
+          "job": "Job",
+          "employer": "Employer",
+          "applied": "Applied",
+          "shortlisted": "Shortlisted",
+          "hires": "Hires"
+        },
+        "gaps": {
+          "title": "What this dashboard can't tell you yet",
+          "subtitle": "These need a schema change first. They are listed rather than approximated, because an estimate here would be indistinguishable from a measurement.",
+          "viewsTitle": "Job views and view-to-apply conversion",
+          "viewsWhy": "Nothing on the platform records a job view.",
+          "educationTitle": "Education distribution",
+          "educationWhy": "Candidate profiles have no education field.",
+          "mapTitle": "Candidates by state (map)",
+          "mapWhy": "Location is free text, not a state reference — a map would be a guess at spelling.",
+          "funnelTitle": "Interview stage and withdrawals in the funnel",
+          "funnelWhy": "The application state machine is Pending → Shortlisted → Selected/Rejected. There is no interview or withdrawn status to count."
+        }
+      }
     }
   },
   "billing": {
@@ -2614,7 +2816,8 @@
       "explore": "Explore",
       "followUs": "Follow us",
       "callUs": "Call us",
-      "visitUs": "Our office"
+      "visitUs": "Our office",
+      "resumeBuilder": "Resume Builder"
     },
     "carousel": {
       "label": "Skilled workers on Skill India Connect",
@@ -2638,6 +2841,14 @@
         "verified": "Employers verified before posting"
       },
       "verifiedStrip": "Verified employers only"
+    },
+    "recentJobs": {
+      "heading": "Latest jobs, posted this week",
+      "subheading": "Real openings from verified employers in the Gulf and across India. Browse freely — you only need an account to apply.",
+      "apply": "Apply now",
+      "browseAll": "See all jobs",
+      "noFee": "You never pay a fee. Not to us, not to any employer on this platform.",
+      "ctaPrimary": "Create your free profile"
     },
     "announce": {
       "ariaLabel": "Our promises",

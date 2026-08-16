@@ -97,9 +97,7 @@ describe('compute (pure scoring function)', () => {
 
   it('noticePeriod set does NOT change pct', () => {
     const without = compute(baseInput({ profile: { ...emptyProfile, noticePeriod: undefined } }));
-    const withNotice = compute(
-      baseInput({ profile: { ...emptyProfile, noticePeriod: 30 } }),
-    );
+    const withNotice = compute(baseInput({ profile: { ...emptyProfile, noticePeriod: 30 } }));
     expect(withNotice.pct).toBe(without.pct);
   });
 
@@ -406,7 +404,11 @@ describe('CompletionService â€” integration (real DB)', () => {
 
       csPrisma = new PrismaClient({ datasources: { db: { url } } });
       await csPrisma.$connect();
-      csService = new CompletionService(csPrisma as unknown as PrismaService, { add: jest.fn() } as unknown as Queue);
+      csService = new CompletionService(
+        csPrisma as unknown as PrismaService,
+        { add: jest.fn() } as unknown as Queue,
+        { notify: jest.fn() } as never,
+      );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (
@@ -608,4 +610,3 @@ describe('CompletionService â€” integration (real DB)', () => {
     expect(docSection?.pct).toBe(0);
   });
 });
-

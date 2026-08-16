@@ -20,13 +20,15 @@ export function AdminHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const { requestLogout } = useLogoutConfirm();
   const { role } = useAdmin();
 
+  // Sticky + translucent, matching EmployerHeader: the two consoles should share
+  // one header treatment rather than each inventing its own.
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-neutral-200 bg-white px-4 sm:px-6">
+    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-neutral-200/70 bg-white/90 px-4 shadow-sm backdrop-blur-md sm:px-6">
       <button
         type="button"
         onClick={onMenuClick}
         aria-label={t('nav.toggle')}
-        className="flex size-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 lg:hidden"
+        className="flex size-11 items-center justify-center rounded-xl text-neutral-600 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 lg:hidden"
       >
         <Menu className="size-5" aria-hidden="true" />
       </button>
@@ -43,7 +45,7 @@ export function AdminHeader({ onMenuClick }: { onMenuClick?: () => void }) {
         <button
           type="button"
           onClick={() => requestLogout()}
-          className="flex min-h-[44px] items-center gap-2 rounded-lg px-3 text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+          className="flex min-h-[44px] items-center gap-2 rounded-xl px-3 text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >
           <LogOut className="size-4" aria-hidden="true" />
           <span className="hidden sm:inline">{t('logout')}</span>

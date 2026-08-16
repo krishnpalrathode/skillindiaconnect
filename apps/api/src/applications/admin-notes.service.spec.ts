@@ -98,9 +98,10 @@ describe('AdminNotesService — internal-only records', () => {
       await expect(service.remove('app-2', 'note-1', AUTHOR)).rejects.toMatchObject({
         response: { code: 'NOTE_NOT_FOUND' },
       });
-      expect(
-        (prisma.applicationNote.findFirst as jest.Mock).mock.calls[0][0].where,
-      ).toEqual({ id: 'note-1', applicationId: 'app-2' });
+      expect((prisma.applicationNote.findFirst as jest.Mock).mock.calls[0][0].where).toEqual({
+        id: 'note-1',
+        applicationId: 'app-2',
+      });
     });
   });
 });

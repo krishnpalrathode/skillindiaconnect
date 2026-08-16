@@ -36,6 +36,8 @@ export interface ResumeViewDto {
   currentLocation: string | null;
   languages: string[];
   jobCategory: string | null;
+  /** Candidate-written intro, rendered above personal details. */
+  summary: string | null;
   experiences: {
     id: string;
     type: string;
@@ -99,6 +101,9 @@ export function toResumeView(
     currentLocation: source.currentLocation,
     languages: source.languages,
     jobCategory: source.jobCategory?.nameEn ?? null,
+    // Trimmed here so a whitespace-only value never renders an empty block in
+    // the PDF — the templates test truthiness, not length.
+    summary: source.summary?.trim() || null,
     experiences: source.experiences.map((e) => ({
       id: e.id,
       type: e.type,

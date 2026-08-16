@@ -39,7 +39,13 @@ export interface Job {
   daysPerWeek: number;
   overtime: boolean;
   overtimeRateSubunits: number | null;
+  /** @deprecated Never collected by any form; use `contractDuration`. */
   contractPeriodMonths: number | null;
+  /** Null unless `employmentType` is CONTRACT. */
+  contractDuration: components['schemas']['ContractDuration'] | null;
+  /** Which terms version this job was posted under; null for pre-terms jobs. */
+  termsVersion: string | null;
+  termsAcceptedAt: string | null;
   vacancies: number | null;
   genderPreference: string | null;
   isFeatured: boolean;
@@ -90,8 +96,18 @@ export interface CreateJobBody {
   hoursPerDay: number;
   daysPerWeek: number;
   overtime: boolean;
+  /**
+   * Send ONLY with `employmentType: 'CONTRACT'`.
+   *
+   * Required for a contract role (400 `CONTRACT_DURATION_REQUIRED`) and rejected
+   * for any other type (400 `CONTRACT_DURATION_NOT_APPLICABLE`) — the server
+   * pairs the two fields, so an omitted key is the correct shape here, not a gap.
+   */
+  contractDuration?: components['schemas']['ContractDuration'];
   vacancies?: number;
   genderPreference?: string;
+  /** The VERSION of the job-posting terms accepted. Required by the API. */
+  acceptedTermsVersion: string;
 }
 
 /** Public — active job categories for the post-a-job picker and search filter. */

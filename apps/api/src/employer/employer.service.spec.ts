@@ -60,6 +60,7 @@ beforeAll(async () => {
     employerService = new EmployerService(
       prisma as unknown as PrismaService,
       mockStorage as unknown as StorageService,
+      { notify: jest.fn() } as never,
     );
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -91,7 +92,10 @@ beforeEach(async () => {
   await prisma.company.deleteMany();
   await prisma.user.deleteMany();
   jest.clearAllMocks();
-  mockStorage.presignPut.mockResolvedValue({ url: 'https://r2.example/put', expiresInSeconds: 300 });
+  mockStorage.presignPut.mockResolvedValue({
+    url: 'https://r2.example/put',
+    expiresInSeconds: 300,
+  });
   mockStorage.headObject.mockResolvedValue({ sizeBytes: 1024, contentType: 'application/pdf' });
 });
 
@@ -111,6 +115,8 @@ const BASE_DTO = {
   name: 'Acme Recruit',
   type: CompanyType.LOCAL,
   registrationNumber: 'REG123',
+  foundedYear: 2014,
+  website: 'https://acme.example',
   industryType: 'Construction',
   phoneCode: '+91',
   phone: '9876543210',
@@ -121,6 +127,17 @@ const BASE_DTO = {
   description: 'A test employer.',
 };
 
+/**
+ * A complete registration payload. Every field is required by the DTO now, and
+ * `registrationCertKey` must sit under the CALLER's own prefix — ownership is
+ * checked against `employer-reg/{userId}/cert/` — so the key cannot live in a
+ * shared constant. Hence a factory rather than an object.
+ */
+const dtoFor = (userId: string) => ({
+  ...BASE_DTO,
+  registrationCertKey: `employer-reg/${userId}/cert/reg.pdf`,
+});
+
 // â”€â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('EmployerService â€” integration (real DB)', () => {
@@ -130,7 +147,7 @@ describe('EmployerService â€” integration (real DB)', () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
 
-    const company = await employerService.register(user.id, BASE_DTO);
+    const company = await employerService.register(user.id, dtoFor(user.id));
 
     expect(company.id).toBeTruthy();
     expect(company.status).toBe(CompanyStatus.PENDING);
@@ -148,7 +165,7 @@ describe('EmployerService â€” integration (real DB)', () => {
     const user = await makeEmployerUser();
 
     const company = await employerService.register(user.id, {
-      ...BASE_DTO,
+      ...dtoFor(user.id),
       phoneCode: '+971',
       phone: '501234567',
       country: 'United Arab Emirates',
@@ -162,42 +179,68 @@ describe('EmployerService â€” integration (real DB)', () => {
     expect(row!.phone).toBe('501234567');
   });
 
-  it('register: registrationNumber is OPTIONAL â€” omitting it stores null', async () => {
+  /*
+    Replaces the old "registrationNumber is OPTIONAL" test. That contract was
+    deliberately inverted: registration number, website, description and the
+    certificate are now REQUIRED for every new company, so there is no longer a
+    valid registration that omits one. The rejection itself is asserted at the
+    validation layer (register-company.dto.spec.ts) — this service test pins the
+    other half: the values actually reach the row.
+  */
+  it('register: persists the full profile, including the founding year', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
 
-    const { registrationNumber, ...withoutRegNumber } = BASE_DTO;
-    // Guard the fixture: this test is meaningless if BASE_DTO ever stops
-    // carrying a registration number for us to drop.
-    expect(registrationNumber).toBeTruthy();
+    const company = await employerService.register(user.id, dtoFor(user.id));
 
-    const company = await employerService.register(user.id, withoutRegNumber);
-
-    expect(company.id).toBeTruthy();
-    expect(company.status).toBe(CompanyStatus.PENDING);
-    expect(company.registrationNumber).toBeNull();
-
-    // The row really is null in the DB, not just absent from the return value.
     const row = await prisma.company.findUnique({ where: { id: company.id } });
-    expect(row!.registrationNumber).toBeNull();
+    expect(row!.registrationNumber).toBe('REG123');
+    expect(row!.website).toBe('https://acme.example');
+    expect(row!.description).toBe('A test employer.');
+    expect(row!.foundedYear).toBe(2014);
+  });
+
+  it('register: the certificate becomes a company_documents row', async () => {
+    if (dockerUnavailable) return;
+    const user = await makeEmployerUser();
+
+    const company = await employerService.register(user.id, dtoFor(user.id));
+
+    const docs = await prisma.companyDocument.findMany({ where: { companyId: company.id } });
+    expect(docs).toHaveLength(1);
+    expect(docs[0]!.r2Key).toBe(`employer-reg/${user.id}/cert/reg.pdf`);
+  });
+
+  // Ownership is prefix-checked: one employer must not be able to attach
+  // another's uploaded certificate to their own company.
+  it('register: a certificate key under ANOTHER user prefix is rejected', async () => {
+    if (dockerUnavailable) return;
+    const user = await makeEmployerUser();
+
+    await expect(
+      employerService.register(user.id, {
+        ...dtoFor(user.id),
+        registrationCertKey: 'employer-reg/someone-else/cert/reg.pdf',
+      }),
+    ).rejects.toThrow(ForbiddenException);
   });
 
   it('register: second register for the same employer user â†’ 409 COMPANY_EXISTS', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
-    await employerService.register(user.id, BASE_DTO);
+    await employerService.register(user.id, dtoFor(user.id));
 
     await expect(
-      employerService.register(user.id, { ...BASE_DTO, registrationNumber: 'REG456' }),
+      employerService.register(user.id, { ...dtoFor(user.id), registrationNumber: 'REG456' }),
     ).rejects.toThrow(ConflictException);
   });
 
   it('register: does NOT create a second company row on duplicate', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
-    await employerService.register(user.id, BASE_DTO);
+    await employerService.register(user.id, dtoFor(user.id));
     try {
-      await employerService.register(user.id, BASE_DTO);
+      await employerService.register(user.id, dtoFor(user.id));
     } catch {
       // expected
     }
@@ -210,7 +253,7 @@ describe('EmployerService â€” integration (real DB)', () => {
   it('getCompanyForEmployerUser: returns the company for a linked employer user', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
-    const created = await employerService.register(user.id, BASE_DTO);
+    const created = await employerService.register(user.id, dtoFor(user.id));
 
     const found = await employerService.getCompanyForEmployerUser(user.id);
     expect(found.id).toBe(created.id);
@@ -229,7 +272,7 @@ describe('EmployerService â€” integration (real DB)', () => {
   it('presignCert: returns uploadUrl + key scoped to company', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
-    const company = await employerService.register(user.id, BASE_DTO);
+    const company = await employerService.register(user.id, dtoFor(user.id));
 
     const result = await employerService.presignCert(user.id, {
       fileName: 'cert.pdf',
@@ -262,7 +305,7 @@ describe('EmployerService â€” integration (real DB)', () => {
     const key = `employer-reg/${user.id}/cert/abc-cert.pdf`;
 
     const company = await employerService.register(user.id, {
-      ...BASE_DTO,
+      ...dtoFor(user.id),
       registrationCertKey: key,
     });
 
@@ -280,7 +323,7 @@ describe('EmployerService â€” integration (real DB)', () => {
 
     await expect(
       employerService.register(user.id, {
-        ...BASE_DTO,
+        ...dtoFor(user.id),
         registrationCertKey: 'employer-reg/someone-else/cert/abc-cert.pdf',
       }),
     ).rejects.toThrow(ForbiddenException);
@@ -294,7 +337,7 @@ describe('EmployerService â€” integration (real DB)', () => {
 
     await expect(
       employerService.register(user.id, {
-        ...BASE_DTO,
+        ...dtoFor(user.id),
         registrationCertKey: `employer-reg/${user.id}/cert/abc-cert.pdf`,
       }),
     ).rejects.toThrow(UnprocessableEntityException);
@@ -304,7 +347,7 @@ describe('EmployerService â€” integration (real DB)', () => {
   it('confirmCert: HEAD-validates and creates a company_documents row', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
-    const company = await employerService.register(user.id, BASE_DTO);
+    const company = await employerService.register(user.id, dtoFor(user.id));
 
     const key = `companies/${company.id}/cert/abc-cert.pdf`;
     const doc = await employerService.confirmCert(user.id, { key });
@@ -317,7 +360,7 @@ describe('EmployerService â€” integration (real DB)', () => {
   it('confirmCert: key belonging to a different company â†’ 403 KEY_NOT_OWNED', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
-    await employerService.register(user.id, BASE_DTO);
+    await employerService.register(user.id, dtoFor(user.id));
 
     await expect(
       employerService.confirmCert(user.id, { key: 'companies/other-id/cert/fake.pdf' }),
@@ -327,7 +370,7 @@ describe('EmployerService â€” integration (real DB)', () => {
   it('confirmCert: object not found in R2 â†’ 422 UPLOAD_NOT_FOUND', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
-    const company = await employerService.register(user.id, BASE_DTO);
+    const company = await employerService.register(user.id, dtoFor(user.id));
     mockStorage.headObject.mockResolvedValueOnce(null);
 
     await expect(
@@ -340,14 +383,14 @@ describe('EmployerService â€” integration (real DB)', () => {
   it('assertApproved: PENDING â†’ throws 403 EMPLOYER_NOT_APPROVED', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
-    const company = await employerService.register(user.id, BASE_DTO);
+    const company = await employerService.register(user.id, dtoFor(user.id));
     await expect(employerService.assertApproved(company.id)).rejects.toThrow(ForbiddenException);
   });
 
   it('assertApproved: APPROVED â†’ resolves without throwing', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
-    const company = await employerService.register(user.id, BASE_DTO);
+    const company = await employerService.register(user.id, dtoFor(user.id));
     await prisma.company.update({
       where: { id: company.id },
       data: { status: CompanyStatus.APPROVED, approvedAt: new Date() },
@@ -358,7 +401,7 @@ describe('EmployerService â€” integration (real DB)', () => {
   it('assertApproved: REJECTED â†’ throws 403', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
-    const company = await employerService.register(user.id, BASE_DTO);
+    const company = await employerService.register(user.id, dtoFor(user.id));
     await prisma.company.update({
       where: { id: company.id },
       data: { status: CompanyStatus.REJECTED, rejectionReason: 'Invalid docs' },
@@ -369,7 +412,7 @@ describe('EmployerService â€” integration (real DB)', () => {
   it('assertApproved: SUSPENDED â†’ throws 403', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
-    const company = await employerService.register(user.id, BASE_DTO);
+    const company = await employerService.register(user.id, dtoFor(user.id));
     await prisma.company.update({
       where: { id: company.id },
       data: { status: CompanyStatus.SUSPENDED, suspendedAt: new Date() },
@@ -382,7 +425,7 @@ describe('EmployerService â€” integration (real DB)', () => {
   it('getCompanyType: returns LOCAL for a LOCAL company', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
-    const company = await employerService.register(user.id, BASE_DTO);
+    const company = await employerService.register(user.id, dtoFor(user.id));
     const type = await employerService.getCompanyType(company.id);
     expect(type).toBe(CompanyType.LOCAL);
   });
@@ -391,7 +434,7 @@ describe('EmployerService â€” integration (real DB)', () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
     const company = await employerService.register(user.id, {
-      ...BASE_DTO,
+      ...dtoFor(user.id),
       type: CompanyType.FOREIGN,
     });
     const type = await employerService.getCompanyType(company.id);
@@ -403,7 +446,7 @@ describe('EmployerService â€” integration (real DB)', () => {
   it('updateCompany: modifies editable fields and persists them', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
-    await employerService.register(user.id, BASE_DTO);
+    await employerService.register(user.id, dtoFor(user.id));
 
     const updated = await employerService.updateCompany(user.id, { phone: '+919999999999' });
     expect(updated.phone).toBe('+919999999999');
@@ -412,7 +455,7 @@ describe('EmployerService â€” integration (real DB)', () => {
   it('updateCompany on REJECTED company: transitions back to PENDING and clears reason', async () => {
     if (dockerUnavailable) return;
     const user = await makeEmployerUser();
-    const company = await employerService.register(user.id, BASE_DTO);
+    const company = await employerService.register(user.id, dtoFor(user.id));
     await prisma.company.update({
       where: { id: company.id },
       data: { status: CompanyStatus.REJECTED, rejectionReason: 'Bad docs' },
@@ -422,6 +465,4 @@ describe('EmployerService â€” integration (real DB)', () => {
     expect(resubmitted.status).toBe(CompanyStatus.PENDING);
     expect(resubmitted.rejectionReason).toBeNull();
   });
-
 });
-

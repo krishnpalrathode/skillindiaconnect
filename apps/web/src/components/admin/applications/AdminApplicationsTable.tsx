@@ -248,7 +248,12 @@ export function AdminApplicationsTable() {
                       )}
                     </div>
                   </td>
-                  <td className="p-3 text-neutral-600">{a.matchScore}</td>
+                  {/* The score is a PERCENTAGE — a bare "80" in a column headed
+                      "Match" reads as a count or a rank. `tabular-nums` keeps the
+                      digits aligned down the column now that they carry a suffix. */}
+                  <td className="p-3 tabular-nums text-neutral-600">
+                    {t('matchValue', { score: a.matchScore })}
+                  </td>
                   <td className="p-3 text-neutral-600">{formatDate(a.appliedAt, locale)}</td>
                 </tr>
               ))}

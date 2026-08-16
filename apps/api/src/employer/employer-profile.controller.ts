@@ -47,10 +47,7 @@ export class EmployerProfileController {
 
   @Post('me/profile/contacts')
   @HttpCode(HttpStatus.CREATED)
-  async createContact(
-    @CurrentUser() user: CurrentUserPayload,
-    @Body() dto: CreateContactDto,
-  ) {
+  async createContact(@CurrentUser() user: CurrentUserPayload, @Body() dto: CreateContactDto) {
     this.assertEmployerRole(user.role);
     return { data: await this.profileService.createContact(user.userId, dto) };
   }
@@ -82,10 +79,7 @@ export class EmployerProfileController {
   // ── POST /employers/me/profile/logo/presign ──────────────────────────────
 
   @Post('me/profile/logo/presign')
-  async presignLogo(
-    @CurrentUser() user: CurrentUserPayload,
-    @Body() dto: PresignLogoDto,
-  ) {
+  async presignLogo(@CurrentUser() user: CurrentUserPayload, @Body() dto: PresignLogoDto) {
     this.assertEmployerRole(user.role);
     return { data: await this.profileService.presignLogo(user.userId, dto) };
   }
@@ -93,10 +87,7 @@ export class EmployerProfileController {
   // ── POST /employers/me/profile/logo/confirm ──────────────────────────────
 
   @Post('me/profile/logo/confirm')
-  async confirmLogo(
-    @CurrentUser() user: CurrentUserPayload,
-    @Body() dto: ConfirmLogoDto,
-  ) {
+  async confirmLogo(@CurrentUser() user: CurrentUserPayload, @Body() dto: ConfirmLogoDto) {
     this.assertEmployerRole(user.role);
     // Contract: the response is the UPDATED EmployerProfile — the web replaces
     // its entire profile state with it (never an ack object).

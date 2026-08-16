@@ -50,6 +50,7 @@ export interface CandidateSelfDto {
   currentLocation: string | null;
   nationality: string | null;
   noticePeriod: number | null;
+  summary: string | null;
   // Salary / availability settings
   salaryExpectationMin: number | null;
   salaryExpectationMax: number | null;
@@ -120,6 +121,7 @@ export function toSelf(
     currentLocation: profile.currentLocation,
     nationality: profile.nationality,
     noticePeriod: profile.noticePeriod,
+    summary: profile.summary,
     salaryExpectationMin: profile.salaryExpectationMin,
     salaryExpectationMax: profile.salaryExpectationMax,
     salaryExpectationCurrency: profile.salaryExpectationCurrency,

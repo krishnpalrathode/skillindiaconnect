@@ -75,9 +75,11 @@ function fakePort(): PaymentGatewayPort & { createOrder: jest.Mock } {
 // Mutable settings the tests flip (gst rate + the stripe routing flag).
 const settingsState = { gstRatePct: 18, stripeEnabled: false };
 const settingsStub = {
-  get: jest.fn().mockImplementation(async (def: { key: string }) =>
-    def.key === 'payments.gst_rate_pct' ? settingsState.gstRatePct : settingsState.stripeEnabled,
-  ),
+  get: jest
+    .fn()
+    .mockImplementation(async (def: { key: string }) =>
+      def.key === 'payments.gst_rate_pct' ? settingsState.gstRatePct : settingsState.stripeEnabled,
+    ),
 } as unknown as SettingsService;
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -97,7 +99,11 @@ const auditLog = jest.fn().mockResolvedValue(undefined);
 beforeAll(async () => {
   try {
     pg = await new GenericContainer('postgres:16-alpine')
-      .withEnvironment({ POSTGRES_USER: 'sic', POSTGRES_PASSWORD: 'sic', POSTGRES_DB: 'sic_checkout' })
+      .withEnvironment({
+        POSTGRES_USER: 'sic',
+        POSTGRES_PASSWORD: 'sic',
+        POSTGRES_DB: 'sic_checkout',
+      })
       .withExposedPorts(5432)
       .start();
 
@@ -137,12 +143,9 @@ beforeAll(async () => {
         },
       });
     localCompanyId = (await mkCompany('Local Co', CompanyType.LOCAL, CompanyStatus.APPROVED)).id;
-    foreignCompanyId = (
-      await mkCompany('Foreign Co', CompanyType.FOREIGN, CompanyStatus.APPROVED)
-    ).id;
-    pendingCompanyId = (
-      await mkCompany('Pending Co', CompanyType.LOCAL, CompanyStatus.PENDING)
-    ).id;
+    foreignCompanyId = (await mkCompany('Foreign Co', CompanyType.FOREIGN, CompanyStatus.APPROVED))
+      .id;
+    pendingCompanyId = (await mkCompany('Pending Co', CompanyType.LOCAL, CompanyStatus.PENDING)).id;
   } catch {
     dockerUnavailable = true;
     // eslint-disable-next-line no-console
@@ -239,7 +242,12 @@ describe('checkout — money + routing (server-derived, sealed)', () => {
   });
 
   gatedIt('FOREIGN: zero-rated (gst EXPLICITLY 0) via razorpay-intl by default', async () => {
-    const session = await service.checkout(FOREIGN_USER, 'PRO_MONTHLY', undefined, UserRole.EMPLOYER);
+    const session = await service.checkout(
+      FOREIGN_USER,
+      'PRO_MONTHLY',
+      undefined,
+      UserRole.EMPLOYER,
+    );
 
     expect(session.gateway).toBe(Gateway.RAZORPAY);
     expect(session.gstSubunits).toBe(0); // zero-rated export — present, not absent
@@ -255,19 +263,32 @@ describe('checkout — money + routing (server-derived, sealed)', () => {
     );
   });
 
-  gatedIt('FOREIGN + stripe flag ON → the stripe block ONLY; flag OFF next call → razorpay again', async () => {
-    settingsState.stripeEnabled = true;
-    const stripeSession = await service.checkout(FOREIGN_USER, 'PRO_MONTHLY', undefined, UserRole.EMPLOYER);
-    expect(stripeSession.gateway).toBe(Gateway.STRIPE);
-    expect(stripeSession.stripe?.redirectUrl).toContain('stripe.com');
-    expect(stripeSession.razorpay).toBeUndefined();
-    expect(stripePort.createOrder).toHaveBeenCalledTimes(1);
-    expect(razorpayPort.createOrder).not.toHaveBeenCalled();
+  gatedIt(
+    'FOREIGN + stripe flag ON → the stripe block ONLY; flag OFF next call → razorpay again',
+    async () => {
+      settingsState.stripeEnabled = true;
+      const stripeSession = await service.checkout(
+        FOREIGN_USER,
+        'PRO_MONTHLY',
+        undefined,
+        UserRole.EMPLOYER,
+      );
+      expect(stripeSession.gateway).toBe(Gateway.STRIPE);
+      expect(stripeSession.stripe?.redirectUrl).toContain('stripe.com');
+      expect(stripeSession.razorpay).toBeUndefined();
+      expect(stripePort.createOrder).toHaveBeenCalledTimes(1);
+      expect(razorpayPort.createOrder).not.toHaveBeenCalled();
 
-    settingsState.stripeEnabled = false;
-    const rzpSession = await service.checkout(FOREIGN_USER, 'PRO_YEARLY', undefined, UserRole.EMPLOYER);
-    expect(rzpSession.gateway).toBe(Gateway.RAZORPAY);
-  });
+      settingsState.stripeEnabled = false;
+      const rzpSession = await service.checkout(
+        FOREIGN_USER,
+        'PRO_YEARLY',
+        undefined,
+        UserRole.EMPLOYER,
+      );
+      expect(rzpSession.gateway).toBe(Gateway.RAZORPAY);
+    },
+  );
 });
 
 // ── Idempotency ───────────────────────────────────────────────────────────────
@@ -307,108 +328,136 @@ describe('checkout — error ladder', () => {
     expect(await prisma.order.count()).toBe(0);
   });
 
-  gatedIt('FREE → 422 PLAN_NOT_PURCHASABLE; inactive plan → same; unknown code → same', async () => {
-    for (const code of ['FREE', 'LEGACY_PLAN', 'NO_SUCH_PLAN']) {
+  gatedIt(
+    'FREE → 422 PLAN_NOT_PURCHASABLE; inactive plan → same; unknown code → same',
+    async () => {
+      for (const code of ['FREE', 'LEGACY_PLAN', 'NO_SUCH_PLAN']) {
+        await expect(
+          service.checkout(LOCAL_USER, code, undefined, UserRole.EMPLOYER),
+        ).rejects.toMatchObject({ response: { code: 'PLAN_NOT_PURCHASABLE' } });
+      }
+      expect(await prisma.order.count()).toBe(0);
+    },
+  );
+
+  gatedIt(
+    'ACTIVE same plan OUTSIDE the renewal window → 409 SUBSCRIPTION_ALREADY_ACTIVE',
+    async () => {
+      await prisma.subscription.create({
+        data: {
+          companyId: localCompanyId,
+          planId: proMonthlyId,
+          status: 'ACTIVE',
+          startsAt: new Date(Date.now() - 10 * DAY_MS),
+          // Expiry comfortably beyond the window → not renewable yet.
+          expiresAt: new Date(Date.now() + (RENEWAL_WINDOW_DAYS + 13) * DAY_MS),
+        },
+      });
       await expect(
-        service.checkout(LOCAL_USER, code, undefined, UserRole.EMPLOYER),
-      ).rejects.toMatchObject({ response: { code: 'PLAN_NOT_PURCHASABLE' } });
-    }
-    expect(await prisma.order.count()).toBe(0);
-  });
+        service.checkout(LOCAL_USER, 'PRO_MONTHLY', undefined, UserRole.EMPLOYER),
+      ).rejects.toMatchObject({ response: { code: 'SUBSCRIPTION_ALREADY_ACTIVE' } });
+    },
+  );
 
-  gatedIt('ACTIVE same plan OUTSIDE the renewal window → 409 SUBSCRIPTION_ALREADY_ACTIVE', async () => {
-    await prisma.subscription.create({
-      data: {
-        companyId: localCompanyId,
-        planId: proMonthlyId,
-        status: 'ACTIVE',
-        startsAt: new Date(Date.now() - 10 * DAY_MS),
-        // Expiry comfortably beyond the window → not renewable yet.
-        expiresAt: new Date(Date.now() + (RENEWAL_WINDOW_DAYS + 13) * DAY_MS),
-      },
-    });
-    await expect(
-      service.checkout(LOCAL_USER, 'PRO_MONTHLY', undefined, UserRole.EMPLOYER),
-    ).rejects.toMatchObject({ response: { code: 'SUBSCRIPTION_ALREADY_ACTIVE' } });
-  });
+  gatedIt(
+    'ACTIVE same plan INSIDE the window (≤7d) → renewal ALLOWED (extends the term)',
+    async () => {
+      await prisma.subscription.create({
+        data: {
+          companyId: localCompanyId,
+          planId: proMonthlyId,
+          status: 'ACTIVE',
+          startsAt: new Date(Date.now() - 27 * DAY_MS),
+          expiresAt: new Date(Date.now() + 3 * DAY_MS), // inside RENEWAL_WINDOW_DAYS
+        },
+      });
+      const session = await service.checkout(
+        LOCAL_USER,
+        'PRO_MONTHLY',
+        undefined,
+        UserRole.EMPLOYER,
+      );
+      expect(session.orderId).toBeDefined();
+    },
+  );
 
-  gatedIt('ACTIVE same plan INSIDE the window (≤7d) → renewal ALLOWED (extends the term)', async () => {
-    await prisma.subscription.create({
-      data: {
-        companyId: localCompanyId,
-        planId: proMonthlyId,
-        status: 'ACTIVE',
-        startsAt: new Date(Date.now() - 27 * DAY_MS),
-        expiresAt: new Date(Date.now() + 3 * DAY_MS), // inside RENEWAL_WINDOW_DAYS
-      },
-    });
-    const session = await service.checkout(LOCAL_USER, 'PRO_MONTHLY', undefined, UserRole.EMPLOYER);
-    expect(session.orderId).toBeDefined();
-  });
+  gatedIt(
+    'GRACE same plan → renewal ALLOWED; a DIFFERENT plan (upgrade) → always allowed',
+    async () => {
+      await prisma.subscription.create({
+        data: {
+          companyId: localCompanyId,
+          planId: proMonthlyId,
+          status: 'GRACE',
+          startsAt: new Date(Date.now() - 33 * DAY_MS),
+          expiresAt: new Date(Date.now() - 3 * DAY_MS),
+          graceEndsAt: new Date(Date.now() + 4 * DAY_MS),
+        },
+      });
+      await expect(
+        service.checkout(LOCAL_USER, 'PRO_MONTHLY', undefined, UserRole.EMPLOYER),
+      ).resolves.toBeDefined();
 
-  gatedIt('GRACE same plan → renewal ALLOWED; a DIFFERENT plan (upgrade) → always allowed', async () => {
-    await prisma.subscription.create({
-      data: {
-        companyId: localCompanyId,
-        planId: proMonthlyId,
-        status: 'GRACE',
-        startsAt: new Date(Date.now() - 33 * DAY_MS),
-        expiresAt: new Date(Date.now() - 3 * DAY_MS),
-        graceEndsAt: new Date(Date.now() + 4 * DAY_MS),
-      },
-    });
-    await expect(
-      service.checkout(LOCAL_USER, 'PRO_MONTHLY', undefined, UserRole.EMPLOYER),
-    ).resolves.toBeDefined();
-
-    // Different-plan upgrade even while a far-from-expiry ACTIVE sub exists:
-    await prisma.subscription.deleteMany({});
-    await prisma.order.deleteMany({});
-    await prisma.subscription.create({
-      data: {
-        companyId: localCompanyId,
-        planId: proMonthlyId,
-        status: 'ACTIVE',
-        startsAt: new Date(),
-        expiresAt: new Date(Date.now() + 25 * DAY_MS),
-      },
-    });
-    await expect(
-      service.checkout(LOCAL_USER, 'PRO_YEARLY', undefined, UserRole.EMPLOYER),
-    ).resolves.toBeDefined();
-  });
+      // Different-plan upgrade even while a far-from-expiry ACTIVE sub exists:
+      await prisma.subscription.deleteMany({});
+      await prisma.order.deleteMany({});
+      await prisma.subscription.create({
+        data: {
+          companyId: localCompanyId,
+          planId: proMonthlyId,
+          status: 'ACTIVE',
+          startsAt: new Date(),
+          expiresAt: new Date(Date.now() + 25 * DAY_MS),
+        },
+      });
+      await expect(
+        service.checkout(LOCAL_USER, 'PRO_YEARLY', undefined, UserRole.EMPLOYER),
+      ).resolves.toBeDefined();
+    },
+  );
 });
 
 // ── Adapter failure ───────────────────────────────────────────────────────────
 
 describe('checkout — adapter failure semantics', () => {
-  gatedIt('gateway failure → order FAILED + 502 GATEWAY_ERROR + audited; key NOT consumed → same-key retry succeeds', async () => {
-    razorpayPort.createOrder.mockRejectedValueOnce(new Error('razorpay 5xx'));
+  gatedIt(
+    'gateway failure → order FAILED + 502 GATEWAY_ERROR + audited; key NOT consumed → same-key retry succeeds',
+    async () => {
+      razorpayPort.createOrder.mockRejectedValueOnce(new Error('razorpay 5xx'));
 
-    await expect(
-      service.checkout(LOCAL_USER, 'PRO_MONTHLY', 'key-retry', UserRole.EMPLOYER),
-    ).rejects.toMatchObject({ response: { code: 'GATEWAY_ERROR' } });
+      await expect(
+        service.checkout(LOCAL_USER, 'PRO_MONTHLY', 'key-retry', UserRole.EMPLOYER),
+      ).rejects.toMatchObject({ response: { code: 'GATEWAY_ERROR' } });
 
-    const failed = await prisma.order.findMany({});
-    expect(failed).toHaveLength(1);
-    expect(failed[0]!.status).toBe(OrderStatus.FAILED);
-    expect(auditLog).toHaveBeenCalledWith(
-      expect.objectContaining({ action: 'checkout.failed' }),
-    );
+      const failed = await prisma.order.findMany({});
+      expect(failed).toHaveLength(1);
+      expect(failed[0]!.status).toBe(OrderStatus.FAILED);
+      expect(auditLog).toHaveBeenCalledWith(expect.objectContaining({ action: 'checkout.failed' }));
 
-    // The idempotency key was NOT consumed (we cache only on success) — the
-    // SAME key retries into a fresh, successful order.
-    const retry = await service.checkout(LOCAL_USER, 'PRO_MONTHLY', 'key-retry', UserRole.EMPLOYER);
-    expect(retry.razorpay).toBeDefined();
-    const orders = await prisma.order.findMany({ orderBy: { createdAt: 'asc' } });
-    expect(orders).toHaveLength(2);
-    expect(orders[1]!.status).toBe(OrderStatus.CREATED);
+      // The idempotency key was NOT consumed (we cache only on success) — the
+      // SAME key retries into a fresh, successful order.
+      const retry = await service.checkout(
+        LOCAL_USER,
+        'PRO_MONTHLY',
+        'key-retry',
+        UserRole.EMPLOYER,
+      );
+      expect(retry.razorpay).toBeDefined();
+      const orders = await prisma.order.findMany({ orderBy: { createdAt: 'asc' } });
+      expect(orders).toHaveLength(2);
+      expect(orders[1]!.status).toBe(OrderStatus.CREATED);
 
-    // …and NOW the key is consumed: a third call replays the retry's session.
-    const replay = await service.checkout(LOCAL_USER, 'PRO_MONTHLY', 'key-retry', UserRole.EMPLOYER);
-    expect(JSON.stringify(replay)).toBe(JSON.stringify(retry));
-    expect(await prisma.order.count()).toBe(2);
-  });
+      // …and NOW the key is consumed: a third call replays the retry's session.
+      const replay = await service.checkout(
+        LOCAL_USER,
+        'PRO_MONTHLY',
+        'key-retry',
+        UserRole.EMPLOYER,
+      );
+      expect(JSON.stringify(replay)).toBe(JSON.stringify(retry));
+      expect(await prisma.order.count()).toBe(2);
+    },
+  );
 });
 
 // ── Reads ─────────────────────────────────────────────────────────────────────
@@ -425,23 +474,26 @@ describe('reads', () => {
     expect(sub.plan.gstRatePct).toBe(18); // the display hint rides along
   });
 
-  gatedIt('getSubscription GRACE → graceEndsAt + daysRemaining from grace end + renewable', async () => {
-    await prisma.subscription.create({
-      data: {
-        companyId: foreignCompanyId,
-        planId: proMonthlyId,
-        status: 'GRACE',
-        startsAt: new Date(Date.now() - 33 * DAY_MS),
-        expiresAt: new Date(Date.now() - 3 * DAY_MS),
-        graceEndsAt: new Date(Date.now() + 4 * DAY_MS),
-      },
-    });
-    const sub = await service.getSubscription(FOREIGN_USER);
-    expect(sub.status).toBe('GRACE');
-    expect(sub.graceEndsAt).not.toBeNull();
-    expect(sub.daysRemaining).toBe(4);
-    expect(sub.renewable).toBe(true);
-  });
+  gatedIt(
+    'getSubscription GRACE → graceEndsAt + daysRemaining from grace end + renewable',
+    async () => {
+      await prisma.subscription.create({
+        data: {
+          companyId: foreignCompanyId,
+          planId: proMonthlyId,
+          status: 'GRACE',
+          startsAt: new Date(Date.now() - 33 * DAY_MS),
+          expiresAt: new Date(Date.now() - 3 * DAY_MS),
+          graceEndsAt: new Date(Date.now() + 4 * DAY_MS),
+        },
+      });
+      const sub = await service.getSubscription(FOREIGN_USER);
+      expect(sub.status).toBe('GRACE');
+      expect(sub.graceEndsAt).not.toBeNull();
+      expect(sub.daysRemaining).toBe(4);
+      expect(sub.renewable).toBe(true);
+    },
+  );
 
   gatedIt('getPlans → active plans only, price-ascending, with the gstRatePct hint', async () => {
     const plans = await service.getPlans();
@@ -451,25 +503,33 @@ describe('reads', () => {
     expect(plans.every((p) => Number.isSafeInteger(p.priceSubunits))).toBe(true);
   });
 
-  gatedIt('getOrder: another company\'s order → the SAME 404 as nonexistent; own order polls CREATED forever', async () => {
-    const session = await service.checkout(LOCAL_USER, 'PRO_MONTHLY', undefined, UserRole.EMPLOYER);
+  gatedIt(
+    "getOrder: another company's order → the SAME 404 as nonexistent; own order polls CREATED forever",
+    async () => {
+      const session = await service.checkout(
+        LOCAL_USER,
+        'PRO_MONTHLY',
+        undefined,
+        UserRole.EMPLOYER,
+      );
 
-    // Cross-company probe (FOREIGN_USER polling LOCAL's order) → 404.
-    await expect(service.getOrder(FOREIGN_USER, session.orderId)).rejects.toMatchObject({
-      response: { code: 'NOT_FOUND' },
-    });
-    // Nonexistent id → the same code (indistinguishable).
-    await expect(
-      service.getOrder(LOCAL_USER, '00000000-0000-4000-8000-000000000000'),
-    ).rejects.toMatchObject({ response: { code: 'NOT_FOUND' } });
+      // Cross-company probe (FOREIGN_USER polling LOCAL's order) → 404.
+      await expect(service.getOrder(FOREIGN_USER, session.orderId)).rejects.toMatchObject({
+        response: { code: 'NOT_FOUND' },
+      });
+      // Nonexistent id → the same code (indistinguishable).
+      await expect(
+        service.getOrder(LOCAL_USER, '00000000-0000-4000-8000-000000000000'),
+      ).rejects.toMatchObject({ response: { code: 'NOT_FOUND' } });
 
-    // The eternal-CREATED poll: nothing in B1 can flip an order — two polls,
-    // still CREATED, activation fields null (B2's webhook is the only flipper).
-    for (let i = 0; i < 2; i++) {
-      const order = await service.getOrder(LOCAL_USER, session.orderId);
-      expect(order.status).toBe(OrderStatus.CREATED);
-      expect(order.subscriptionActivatedAt).toBeNull();
-      expect(order.invoiceId).toBeNull();
-    }
-  });
+      // The eternal-CREATED poll: nothing in B1 can flip an order — two polls,
+      // still CREATED, activation fields null (B2's webhook is the only flipper).
+      for (let i = 0; i < 2; i++) {
+        const order = await service.getOrder(LOCAL_USER, session.orderId);
+        expect(order.status).toBe(OrderStatus.CREATED);
+        expect(order.subscriptionActivatedAt).toBeNull();
+        expect(order.invoiceId).toBeNull();
+      }
+    },
+  );
 });

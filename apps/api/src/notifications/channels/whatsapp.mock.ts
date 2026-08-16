@@ -1,10 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import type {
-  WhatsappChannel,
-  WhatsappSendResult,
-  WhatsappTemplateSend,
-} from './whatsapp.channel';
+import type { WhatsappChannel, WhatsappSendResult, WhatsappTemplateSend } from './whatsapp.channel';
 
 // Numbers ending with '0000' simulate a phone not registered on WhatsApp.
 const NOT_ON_WHATSAPP_SUFFIX = '0000';

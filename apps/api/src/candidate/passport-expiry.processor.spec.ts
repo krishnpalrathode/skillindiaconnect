@@ -20,6 +20,7 @@ import { JOB_NAMES } from '../queue/queue.constants';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { NotificationService } from '../notifications/notification.service';
 import { AuditService } from '../audit/audit.service';
+import { REMINDER_WINDOWS } from './passport-expiry.constants';
 
 jest.setTimeout(180_000);
 
@@ -71,10 +72,16 @@ describe('PassportExpiryProcessor — unit (mocked)', () => {
     expect(mockNotify).not.toHaveBeenCalled();
   });
 
-  it('returns zero counts when no passports fall in any window', async () => {
+  it('returns zero counts for EVERY configured window when nothing is expiring', async () => {
     mockPrisma.candidateDocument.findMany.mockResolvedValue([]);
     const result = await processor.process(makeJob());
-    expect(result).toEqual({ window60: 0, window30: 0, window7: 0, window0: 0 });
+    /*
+      Derived from REMINDER_WINDOWS rather than hard-coded, so adding a window
+      (365 and 180 arrived with the six-month apply gate) does not fail a test
+      that was only ever asserting "one counter per window, all zero".
+    */
+    const expected = Object.fromEntries(REMINDER_WINDOWS.map((w) => [`window${w}`, 0]));
+    expect(result).toEqual(expected);
   });
 
   it('calls notify for each document without an existing notification', async () => {
@@ -96,9 +103,7 @@ describe('PassportExpiryProcessor — unit (mocked)', () => {
             gt.getTime() <= expiryDate.getTime() &&
             expiryDate.getTime() <= lte.getTime()
           ) {
-            return Promise.resolve([
-              { id: docId, expiryDate, candidate: { userId: 'user-1' } },
-            ]);
+            return Promise.resolve([{ id: docId, expiryDate, candidate: { userId: 'user-1' } }]);
           }
         }
         return Promise.resolve([]);
@@ -127,9 +132,7 @@ describe('PassportExpiryProcessor — unit (mocked)', () => {
         if (filter && 'gt' in filter && 'lte' in filter) {
           const { gt, lte } = filter as { gt?: Date; lte?: Date };
           if (gt && lte && gt.getTime() <= expiryDate.getTime()) {
-            return Promise.resolve([
-              { id: 'doc-1', expiryDate, candidate: { userId: 'user-2' } },
-            ]);
+            return Promise.resolve([{ id: 'doc-1', expiryDate, candidate: { userId: 'user-2' } }]);
           }
         }
         return Promise.resolve([]);

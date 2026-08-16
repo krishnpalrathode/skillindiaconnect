@@ -185,7 +185,16 @@ export default function LoginPage() {
           <p className="text-center text-sm text-neutral-600">
             {t('noAccount')}{' '}
             <Link
-              href="/signup"
+              /*
+                Carry `next` across to signup.
+
+                Most people arriving here with a `next` came from an Apply
+                button on a public job and have no account yet — so this link,
+                not the form above it, is the one they actually need. Dropping
+                the parameter here threw away the job they clicked at the exact
+                moment they agreed to register for it.
+              */
+              href={next ? `/signup?next=${encodeURIComponent(next)}` : '/signup'}
               className="font-semibold text-[#0F3D91] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 rounded"
             >
               {t('signupLink')}

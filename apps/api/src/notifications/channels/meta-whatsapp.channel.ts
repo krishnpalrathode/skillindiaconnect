@@ -125,7 +125,10 @@ export class MetaWhatsappChannel implements WhatsappChannel {
       headerComponent = {
         type: 'header',
         parameters: [
-          { type: 'document', document: { id: uploaded.mediaId, filename: send.document.filename } },
+          {
+            type: 'document',
+            document: { id: uploaded.mediaId, filename: send.document.filename },
+          },
         ],
       };
     }

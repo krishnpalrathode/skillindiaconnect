@@ -9,7 +9,17 @@ import type { JobFormValues } from '@/lib/jobs/jobFormState';
 interface BenefitsSectionProps {
   values: JobFormValues;
   onChange: (
-    patch: Partial<Pick<JobFormValues, 'foodAllowance' | 'airTickets' | 'otherAllowance'>>,
+    patch: Partial<
+      Pick<
+        JobFormValues,
+        | 'foodAllowance'
+        | 'airTickets'
+        | 'otherAllowance'
+        | 'accommodation'
+        | 'healthInsurance'
+        | 'transportation'
+      >
+    >,
   ) => void;
 }
 
@@ -99,6 +109,17 @@ function OptionalToggle({
 export function BenefitsSection({ values, onChange }: BenefitsSectionProps) {
   const t = useTranslations('jobform.benefits');
 
+  /*
+    The three worker protections are LOCKED ON for an overseas posting and
+    ordinary opt-in toggles for a domestic one.
+
+    A worker flying to Doha cannot arrange housing, insurance or transport from
+    India, so the offer has to carry them and the platform refuses to publish
+    without them. A mason hired in Mumbai sleeps at home — requiring the same
+    guarantees there stopped ordinary Indian employers posting at all.
+  */
+  const isOverseas = values.market === 'GULF';
+
   return (
     <section aria-labelledby="benefits-heading" className="flex flex-col gap-4">
       <div className="flex items-start gap-3 border-b border-neutral-100 pb-3">
@@ -116,28 +137,58 @@ export function BenefitsSection({ values, onChange }: BenefitsSectionProps) {
         </div>
       </div>
 
-      {/* Policy banner */}
-      <div
-        role="note"
-        className="flex items-start gap-3 rounded-xl border border-[#0F3D91]/15 bg-gradient-to-br from-[#E8F0FE]/70 to-white p-4 shadow-sm"
-      >
-        <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#0F3D91] text-white">
-          <ShieldCheck className="size-5" aria-hidden="true" />
-        </span>
-        <div>
-          <p className="text-sm font-semibold text-neutral-900">{t('policyTitle')}</p>
-          <p className="mt-0.5 text-xs text-neutral-600">{t('policyBody')}</p>
+      {/* Policy banner — only where the policy actually bites. */}
+      {isOverseas && (
+        <div
+          role="note"
+          className="flex items-start gap-3 rounded-xl border border-[#0F3D91]/15 bg-gradient-to-br from-[#E8F0FE]/70 to-white p-4 shadow-sm"
+        >
+          <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#0F3D91] text-white">
+            <ShieldCheck className="size-5" aria-hidden="true" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-neutral-900">{t('policyTitle')}</p>
+            <p className="mt-0.5 text-xs text-neutral-600">{t('policyBody')}</p>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Mandatory locked benefits */}
+      {/* Worker protections: locked for overseas, opt-in for domestic. */}
       <div className="flex flex-col gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600">
-          {t('mandatoryLabel')}
+          {isOverseas ? t('mandatoryLabel') : t('protectionsLocalLabel')}
         </p>
-        <LockedToggle label={t('accommodation')} description={t('accommodationHint')} />
-        <LockedToggle label={t('healthInsurance')} description={t('healthInsuranceHint')} />
-        <LockedToggle label={t('transportation')} description={t('transportationHint')} />
+        {isOverseas ? (
+          <>
+            <LockedToggle label={t('accommodation')} description={t('accommodationHint')} />
+            <LockedToggle label={t('healthInsurance')} description={t('healthInsuranceHint')} />
+            <LockedToggle label={t('transportation')} description={t('transportationHint')} />
+          </>
+        ) : (
+          <>
+            <OptionalToggle
+              id="benefit-accommodation"
+              label={t('accommodation')}
+              description={t('accommodationHint')}
+              checked={values.accommodation}
+              onToggle={() => onChange({ accommodation: !values.accommodation })}
+            />
+            <OptionalToggle
+              id="benefit-health-insurance"
+              label={t('healthInsurance')}
+              description={t('healthInsuranceHint')}
+              checked={values.healthInsurance}
+              onToggle={() => onChange({ healthInsurance: !values.healthInsurance })}
+            />
+            <OptionalToggle
+              id="benefit-transportation"
+              label={t('transportation')}
+              description={t('transportationHint')}
+              checked={values.transportation}
+              onToggle={() => onChange({ transportation: !values.transportation })}
+            />
+          </>
+        )}
       </div>
 
       {/* Optional benefits */}

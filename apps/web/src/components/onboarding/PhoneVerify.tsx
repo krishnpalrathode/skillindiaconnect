@@ -11,13 +11,8 @@ import { OtpEntry } from '@/components/auth/OtpEntry';
 import { postOtpSend, postOtpVerify } from '@/lib/api/candidate';
 import { ApiRequestError } from '@/lib/api/client';
 import { Ltr } from '@/components/common/Ltr';
-import {
-  COUNTRIES,
-  DEFAULT_COUNTRY,
-  flagEmoji,
-  splitE164,
-  type CountryOption,
-} from '@/lib/countries';
+import { CountryCodeSelect } from '@/components/common/CountryCodeSelect';
+import { DEFAULT_DIAL_OPTION, splitDialCode, type DialCodeOption } from '@/lib/dial-codes';
 
 const RESEND_COOLDOWN_SEC = 60;
 
@@ -65,8 +60,8 @@ export function PhoneVerify({
     input shows a number the candidate recognises — not their own number with an
     unfamiliar prefix glued to the front.
   */
-  const parsed = initialPhone ? splitE164(initialPhone) : null;
-  const [country, setCountry] = useState<CountryOption>(parsed?.country ?? DEFAULT_COUNTRY);
+  const parsed = initialPhone ? splitDialCode(initialPhone) : null;
+  const [country, setCountry] = useState<DialCodeOption>(parsed?.country ?? DEFAULT_DIAL_OPTION);
   const [phone, setPhone] = useState(parsed?.national ?? initialPhone.replace(/\D/g, ''));
   const phoneDigits = phone.replace(/\D/g, '');
   const e164 = toE164(phone, country.dialCode);
@@ -232,23 +227,24 @@ export function PhoneVerify({
               <label htmlFor="onboarding-phone-code" className="sr-only">
                 {t('phoneCodeLabel')}
               </label>
-              <select
-                id="onboarding-phone-code"
-                value={country.iso}
-                onChange={(e) =>
-                  setCountry(COUNTRIES.find((c) => c.iso === e.target.value) ?? DEFAULT_COUNTRY)
-                }
-                disabled={loading}
-                // `dir=ltr` — a dial code is always read left-to-right, even in Arabic.
-                dir="ltr"
-                className="h-full shrink-0 border-e border-neutral-200 bg-neutral-50/70 ps-3 pe-2 text-sm font-medium text-neutral-800 outline-none focus-visible:outline-none"
-              >
-                {COUNTRIES.map((c) => (
-                  <option key={c.iso} value={c.iso}>
-                    {flagEmoji(c.iso)} {c.dialCode}
-                  </option>
-                ))}
-              </select>
+              {/*
+                Every country, not the seven recruit markets. A candidate signing
+                up may still be abroad on a previous posting, and their WhatsApp
+                number — the one the OTP has to reach — is whatever SIM they hold,
+                not the corridor they intend to work in.
+              */}
+              <div className="w-[7.5rem] shrink-0 border-e border-neutral-200 bg-neutral-50/70">
+                <CountryCodeSelect
+                  id="onboarding-phone-code"
+                  compact
+                  value={country.iso}
+                  disabled={loading}
+                  searchLabel={t('phoneCodeSearch')}
+                  emptyLabel={t('phoneCodeEmpty')}
+                  onChange={(picked) => setCountry(picked)}
+                  className="[&>button]:h-12 [&>button]:rounded-none [&>button]:border-0 [&>button]:bg-transparent [&>button]:shadow-none"
+                />
+              </div>
               <Input
                 id="onboarding-phone"
                 type="tel"

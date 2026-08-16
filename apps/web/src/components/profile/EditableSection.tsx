@@ -111,11 +111,11 @@ export function EditableSection({
               </Button>
               <Button
                 type="button"
-                variant="primary"
+                variant="brand"
                 size="sm"
                 loading={saving}
                 onClick={handleSave}
-                className="min-h-10 rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] px-5 shadow-sm transition-all hover:shadow-md"
+                className="min-h-10 rounded-xl px-5 shadow-sm transition-all hover:shadow-md"
               >
                 {t('save')}
               </Button>

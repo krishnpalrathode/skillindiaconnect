@@ -12,6 +12,8 @@ import { ActivationService } from './activation.service';
 import { PaymentEventsHandler } from './webhooks/handlers/payment-events.handler';
 import { WebhookService } from './webhooks/webhook.service';
 import { WebhookController } from './webhooks/webhook.controller';
+import { AdminPlansController } from './admin-plans.controller';
+import { AdminPlansService } from './admin-plans.service';
 
 /**
  * Payments (S5-B1): plans/subscription reads, checkout with server-side
@@ -31,7 +33,7 @@ import { WebhookController } from './webhooks/webhook.controller';
   // QueueModule (S7-B1): ActivationService enqueues RENDER_INVOICE post-commit
   // — the API only ever produces onto the queue; the worker's Chromium renders.
   imports: [EmployerModule, SettingsModule, NotificationModule, GatewaysModule, QueueModule],
-  controllers: [BillingController, WebhookController],
+  controllers: [BillingController, WebhookController, AdminPlansController],
   providers: [
     RoutingService,
     CheckoutService,
@@ -39,6 +41,7 @@ import { WebhookController } from './webhooks/webhook.controller';
     ActivationService,
     PaymentEventsHandler,
     WebhookService,
+    AdminPlansService,
   ],
   // Exported for S5-B3 (quota rewiring reads the subscription through this
   // module's public service, never the tables directly — Rule 4).

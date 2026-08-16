@@ -16,6 +16,8 @@ import {
 
 /** Counts of notifications sent per window in a single run. */
 export interface WindowCounts {
+  window365?: number;
+  window180?: number;
   window60?: number;
   window30?: number;
   window7?: number;
@@ -29,6 +31,12 @@ function addDays(date: Date, days: number): Date {
 /** Returns the Prisma DateTimeNullableFilter for passports in this window's expiry band. */
 function windowFilter(window: ReminderWindow, now: Date) {
   switch (window) {
+    // Each band is exclusive of the next one down, so a passport falls in
+    // exactly one window per run and nobody is messaged twice in a day.
+    case 365:
+      return { gt: addDays(now, 180), lte: addDays(now, 365) };
+    case 180:
+      return { gt: addDays(now, 60), lte: addDays(now, 180) };
     case 60:
       return { gt: addDays(now, 30), lte: addDays(now, 60) };
     case 30:
@@ -134,18 +142,14 @@ export class PassportExpiryProcessor extends WorkerHost {
         if (await this.isDuplicate(userId, expiryDateStr, window)) continue;
 
         const daysRemaining = daysUntilExpiry(expiryDate, now);
-        await this.notificationService.notify(
-          userId,
-          NotificationType.PASSPORT_EXPIRY,
-          {
-            title: 'Passport Expiry Reminder',
-            body:
-              daysRemaining <= 0
-                ? 'Your passport has expired. Please renew it to stay eligible for applications.'
-                : `Your passport expires in ${daysRemaining} day${daysRemaining === 1 ? '' : 's'}. Please renew it soon.`,
-            data: { expiryDate: expiryDateStr, daysRemaining, window },
-          },
-        );
+        await this.notificationService.notify(userId, NotificationType.PASSPORT_EXPIRY, {
+          title: 'Passport Expiry Reminder',
+          body:
+            daysRemaining <= 0
+              ? 'Your passport has expired. Please renew it to stay eligible for applications.'
+              : `Your passport expires in ${daysRemaining} day${daysRemaining === 1 ? '' : 's'}. Please renew it soon.`,
+          data: { expiryDate: expiryDateStr, daysRemaining, window },
+        });
 
         notified++;
       }

@@ -68,7 +68,7 @@ describe('template locale (the 132001 regression)', () => {
       return Promise.resolve(res(200, { messages: [{ id: 'wamid.X' }] }));
     });
     await new MetaWhatsappChannel(makeConfig(overrides)).sendOtp(PHONE, '123456', 'LOGIN');
-    return ((body['template'] as { language: { code: string } }).language.code);
+    return (body['template'] as { language: { code: string } }).language.code;
   }
 
   it('defaults to en_US — NOT the bare `en` that 404d in production', async () => {
@@ -138,7 +138,9 @@ describe('template mapping — the literal approved names', () => {
   it('THROWS on an unmapped key rather than sending the key as a name', () => {
     // processor:55 does `whatsappTemplate ?? type`, so an unmapped whatsapp-tier
     // entry would hand us a NotificationType enum name.
-    expect(() => resolveMetaTemplate('APPLICATION_SHORTLISTED')).toThrow(/no approved meta template/i);
+    expect(() => resolveMetaTemplate('APPLICATION_SHORTLISTED')).toThrow(
+      /no approved meta template/i,
+    );
   });
 
   it('startup validation passes for the CURRENT matrix', () => {
@@ -277,7 +279,10 @@ describe('successful sends', () => {
       bodyParams: ['Suresh Kumar', 'Senior Electrician', 'Gulf Wiring LLC'],
     });
 
-    const template = body['template'] as { name: string; components: { parameters: { text: string }[] }[] };
+    const template = body['template'] as {
+      name: string;
+      components: { parameters: { text: string }[] }[];
+    };
     expect(template.name).toBe('job_selected');
     // Positional: Meta's parameters are ordered, and a swapped pair reads
     // plausibly while being false.
@@ -291,7 +296,9 @@ describe('successful sends', () => {
   it('refuses a param-count mismatch BEFORE calling Meta', async () => {
     stubFetch(() => Promise.resolve(res(200, OK_BODY)));
     const result = await channel().sendTemplate(PHONE, 'wa.selected', { bodyParams: ['only one'] });
-    expect(result).toEqual(expect.objectContaining({ ok: false, errorCode: 'TEMPLATE_PARAM_MISMATCH' }));
+    expect(result).toEqual(
+      expect.objectContaining({ ok: false, errorCode: 'TEMPLATE_PARAM_MISMATCH' }),
+    );
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 

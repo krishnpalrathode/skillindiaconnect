@@ -11,4 +11,4 @@ export class AccountController {
   async requestDeletion(@CurrentUser() user: CurrentUserPayload) {
     return { data: await this.accountService.requestDeletion(user.userId) };
   }
-} 
+}

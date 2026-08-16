@@ -80,6 +80,15 @@ export function ResumePreview({ profile, settings }: ResumePreviewProps) {
         </header>
 
         <div className="flex flex-col gap-5 p-6">
+          {/* The intro, above everything — the one place the candidate speaks in
+              their own words, so it leads the document exactly as it does in
+              each PDF template. Absent, not empty, when unwritten. */}
+          {v.summary && (
+            <p className="border-s-[3px] border-[#0F3D91] ps-3 text-sm leading-relaxed text-neutral-700">
+              {v.summary}
+            </p>
+          )}
+
           {/* Personal details — each row self-omits when absent. */}
           {(hasIdentity || v.fatherName || v.religion || v.passportNumber) && (
             <dl className="flex flex-col gap-1.5">

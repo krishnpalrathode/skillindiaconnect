@@ -112,7 +112,10 @@ export class ResumeService {
    * raced past the row check, they would enqueue the SAME job id, and BullMQ
    * would keep one.
    */
-  async generate(candidateId: string, trigger: ResumeTrigger = ResumeTrigger.DOWNLOAD): Promise<{
+  async generate(
+    candidateId: string,
+    trigger: ResumeTrigger = ResumeTrigger.DOWNLOAD,
+  ): Promise<{
     generationId: string;
     status: ResumeGenerationStatus;
   }> {

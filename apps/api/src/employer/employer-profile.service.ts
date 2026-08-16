@@ -64,7 +64,7 @@ export function computeChecklist(
   contacts: ContactPerson[],
 ): ProfileChecklist {
   const hasLogo = !!company.logoKey;
-  const hasDescription = !!(company.description?.trim());
+  const hasDescription = !!company.description?.trim();
   const hasHiringPreferences = !!prefs;
   const hasSecondContact = contacts.length >= 2;
 
@@ -87,11 +87,8 @@ export function computeChecklist(
 function toHiringPrefsShape(prefs: HiringPreference): HiringPreferencesShape {
   return {
     preferredCategories: prefs.categories.length ? prefs.categories : undefined,
-    preferredNationalities: prefs.countriesHiredFrom.length
-      ? prefs.countriesHiredFrom
-      : undefined,
-    minExperience:
-      prefs.preferredExp != null ? parseInt(prefs.preferredExp, 10) : undefined,
+    preferredNationalities: prefs.countriesHiredFrom.length ? prefs.countriesHiredFrom : undefined,
+    minExperience: prefs.preferredExp != null ? parseInt(prefs.preferredExp, 10) : undefined,
   };
 }
 
@@ -371,10 +368,7 @@ export class EmployerProfileService {
    * Throws 404 (not 403) when the contact belongs to a different company —
    * indistinguishable from nonexistent, prevents existence probing.
    */
-  private async assertContactOwnership(
-    contactId: string,
-    companyId: string,
-  ): Promise<void> {
+  private async assertContactOwnership(contactId: string, companyId: string): Promise<void> {
     const contact = await this.prisma.contactPerson.findUnique({ where: { id: contactId } });
     if (!contact || contact.companyId !== companyId) {
       throw new NotFoundException({ code: 'CONTACT_NOT_FOUND' });

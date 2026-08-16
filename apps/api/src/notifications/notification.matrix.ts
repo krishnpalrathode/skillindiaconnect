@@ -180,6 +180,23 @@ export const NOTIFICATION_MATRIX: Record<NotificationType, MatrixEntry> = {
     whatsapp: false,
     email: false,
   },
+  // ── Setup confirmations ──────────────────────────────────────────────────────
+  // In-app AND email, no WhatsApp. Email because this is the receipt for work the
+  // person just finished and may want to find again days later; a feed row alone
+  // is gone the moment they close the tab. Not WhatsApp: the template tier is
+  // reserved for things that need reaching someone away from the app — an offer,
+  // a document, an expiring passport — and spending it on "you're set up" is how
+  // a channel workers currently trust becomes one they mute.
+  CANDIDATE_PROFILE_COMPLETE: {
+    inApp: true,
+    whatsapp: false,
+    email: true,
+  },
+  EMPLOYER_REGISTERED: {
+    inApp: true,
+    whatsapp: false,
+    email: true,
+  },
   // ── Account security ─────────────────────────────────────────────────────────
   // EMAIL ONLY, and deliberately so. No in-app row: the recipient cannot sign in
   // to read one, and writing "a password reset was requested" into the feed

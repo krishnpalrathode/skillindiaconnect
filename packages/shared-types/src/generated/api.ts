@@ -439,9 +439,9 @@ export interface paths {
          * @description Issues a short-lived presigned PUT URL for direct R2 upload.
          *
          *     **Accepted types and size limits:**
-         *     - `PASSPORT`: 10 MB max; image/jpeg, image/png, application/pdf
-         *     - `EXPERIENCE_CERT`: 5 MB max; application/pdf
-         *     - `EDUCATIONAL_CERT`: 5 MB max; application/pdf
+         *     - `PASSPORT`: 2 MB max; image/jpeg, image/png, application/pdf
+         *     - `EXPERIENCE_CERT`: 2 MB max; application/pdf, image/jpeg, image/png
+         *     - `EDUCATIONAL_CERT`: 2 MB max; application/pdf, image/jpeg, image/png
          *
          *     `WORKING_VIDEO` is Phase 2 only — not accepted at MVP.
          */
@@ -481,7 +481,7 @@ export interface paths {
         /**
          * Get a presigned R2 upload URL for the profile photo
          * @description Issues a short-lived presigned PUT URL for the candidate's avatar image.
-         *     Accepted: image/jpeg, image/png, image/webp — 5 MB max. The declared
+         *     Accepted: image/jpeg, image/png, image/webp — 2 MB max. The declared
          *     mime/size are a first-line check; the authoritative gate is the HEAD
          *     re-validation in confirm.
          */
@@ -882,7 +882,7 @@ export interface paths {
          *     registration certificate. After upload, call
          *     `POST /employers/me/company/documents/confirm` with the returned `key`.
          *
-         *     Accepted: application/pdf, image/jpeg, image/png. Max 10 MB.
+         *     Accepted: application/pdf, image/jpeg, image/png. Max 2 MB.
          */
         post: operations["postEmployersMeCompanyDocumentsPresign"];
         delete?: never;
@@ -1552,6 +1552,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List subscription plans with prices (admin)
+         * @description **RBAC: `settings.view`.** Every plan including inactive ones — `isActive=false` is the kill switch, and a plan the console cannot show is one it cannot turn back on. Rendered inside Screen 28's Payments tab beside the GST rate.
+         */
+        get: operations["getAdminPlans"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/plans/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update a plan's price (admin)
+         * @description **RBAC: `settings.manage`.** Sets the price in INTEGER SUBUNITS (paise).
+         *
+         *     Takes effect on the NEXT checkout — `CheckoutService` reads the price at
+         *     order-creation time. It does NOT touch history: orders and invoices
+         *     snapshot their own amounts at purchase, so nobody's past charge changes.
+         *     Existing subscriptions run to their `expiresAt` and pay the new price on
+         *     their next purchase.
+         *
+         *     Two structural rules, both 422:
+         *     `FREE_PLAN_NOT_PRICEABLE` — the zero-priced plan must stay at zero;
+         *     pricing it would make Free purchasable.
+         *     `PAID_PLAN_NEEDS_PRICE` — a paid plan cannot be set to zero; that would
+         *     silently remove it from sale. Deactivate it instead.
+         */
+        patch: operations["patchAdminPlanPrice"];
+        trace?: never;
+    };
     "/admin/settings": {
         parameters: {
             query?: never;
@@ -1983,6 +2035,32 @@ export interface paths {
          *     existing tables; nothing here is an honest-zero placeholder.
          */
         get: operations["getAdminDashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin dashboard analytics (S22)
+         * @description **RBAC: `reports.view`** — the same reading surface as
+         *     `/admin/dashboard`, sliced by time.
+         *
+         *     Every series is zero-filled to one point per day, so a quiet week draws
+         *     as a flat line rather than a straight slope between two distant dates.
+         *     `days` out of range is CLAMPED (1–365), not rejected: an odd query
+         *     string should not 400 an admin out of their own overview.
+         */
+        get: operations["getAdminAnalytics"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2833,6 +2911,8 @@ export interface components {
             nationality?: string;
             /** @description Notice period in days */
             noticePeriod?: number;
+            /** @description Candidate-written intro rendered at the top of the resume. Self context only — never serialized to employer or admin views. */
+            summary?: string | null;
             /** @description Server-computed, single-source profile completion percentage */
             completionPct?: number;
             /** @default true */
@@ -3028,6 +3108,8 @@ export interface components {
             maritalStatus?: string | null;
             nationality?: string | null;
             currentLocation?: string | null;
+            /** @description The candidate's own intro, rendered at the TOP of the resume above the personal details. Null when they have not written one — every template omits the block entirely rather than leaving a gap. */
+            summary?: string | null;
             languages?: string[];
             /** @description Display name of the candidate's job category. */
             jobCategory?: string | null;
@@ -3079,6 +3161,11 @@ export interface components {
             location?: string;
             /** Format: uri */
             website?: string;
+            /**
+             * @description Year the company was founded. NULL only for companies registered before the field existed — it is required for every new registration, and deliberately not backfilled, because a guessed founding year would be indistinguishable from a stated one.
+             * @example 2014
+             */
+            foundedYear?: number | null;
             employeeRange?: components["schemas"]["EmployeeRange"];
             /**
              * @default en
@@ -3144,7 +3231,17 @@ export interface components {
             status: components["schemas"]["JobStatus"];
             market: components["schemas"]["JobMarket"];
             location: string;
+            /** @description At least 300 characters — roughly three sentences. Enforced on create AND update, so an edit cannot whittle a description back below the bar it originally had to clear. */
             description?: string;
+            /** @description Null unless `employmentType` is CONTRACT. */
+            contractDuration?: components["schemas"]["ContractDuration"] | null;
+            /** @description Which version of the job-posting terms this job was posted under. Null for jobs posted before the terms existed — deliberately not backfilled, because stamping a version onto them would fabricate an acceptance that never happened. */
+            termsVersion?: string | null;
+            /**
+             * Format: date-time
+             * @description Server-side timestamp of acceptance, never client-reported.
+             */
+            termsAcceptedAt?: string | null;
             /** Format: uuid */
             categoryId?: string | null;
             /** @description Free-text trade name. Set ONLY when `categoryId` is the `other` category; null/absent for every fixed trade. Required when that category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`). */
@@ -3243,6 +3340,26 @@ export interface components {
             relatedEntityType?: "job" | "application";
             /** Format: date-time */
             createdAt: string;
+        };
+        /** @description A subscription plan as the admin console edits it. Distinct from the employer-facing plan DTO: this one carries `isActive` and `priceEditable`, which are operator concerns and never shown to a buyer. */
+        AdminPlan: {
+            /** @example PRO_MONTHLY */
+            code: string;
+            /** @example Pro Monthly */
+            name: string;
+            /**
+             * @description Price in paise. 299900 = 2,999.00.
+             * @example 299900
+             */
+            priceSubunits: number;
+            /** @enum {string|null} */
+            period: "MONTHLY" | "YEARLY" | null;
+            /** @description Null means unlimited. */
+            maxActiveJobs: number | null;
+            /** @description False takes the plan off sale without deleting it. */
+            isActive: boolean;
+            /** @description False for the zero-priced Free plan, whose price is structural — checkout uses `priceSubunits === 0` to decide purchasability, so it must stay at zero. The console disables the input rather than letting an admin discover the rule through a 422. */
+            priceEditable: boolean;
         };
         /**
          * @description Platform configuration setting — EXACTLY the persisted row, no
@@ -3772,7 +3889,14 @@ export interface components {
             title: string;
             market: components["schemas"]["JobMarket"];
             location: string;
-            description?: string;
+            /** @description At least 300 characters — roughly three sentences. Enforced at CREATE (not only at publish) so a thin description is reported against the field while the employer is still on the form. */
+            description: string;
+            contractDuration?: components["schemas"]["ContractDuration"];
+            /**
+             * @description The VERSION of the job-posting terms the employer accepted. A version, not a boolean: the question in a dispute is what was agreed to, which a bare `true` cannot answer. Must be one of the published versions — any published version is accepted, not only the current one, so a form loaded just before a terms update does not fail on submit. The server stamps it onto the job with its own timestamp.
+             * @example 2026-08-draft-1
+             */
+            acceptedTermsVersion: string;
             /** Format: uuid */
             categoryId?: string;
             /** @description Free-text trade name. Set ONLY when `categoryId` is the `other` category; null/absent for every fixed trade. Required when that category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`). */
@@ -3919,6 +4043,155 @@ export interface components {
             pendingEmployerReviews: number;
             /** @description Jobs in PENDING_REVIEW — the Screen-26 work queue depth. */
             pendingJobReviews: number;
+        };
+        /**
+         * @description One KPI tile. `deltaPct` is NULL when the previous window was zero —
+         *     growth from nothing has no rate, and the UI renders "New" rather than a
+         *     fabricated percentage. `spark` has exactly one point per day of the
+         *     window (zero-filled), so it is safe to index alongside the series.
+         */
+        AnalyticsKpi: {
+            value: number;
+            previous: number;
+            deltaPct: number | null;
+            spark: number[];
+        };
+        /**
+         * @description One day of a series. `date` is `YYYY-MM-DD` (UTC). Every other key is a
+         *     series name whose value is that day's count. Days with no rows are
+         *     present with explicit zeros — never omitted.
+         */
+        AnalyticsSeriesPoint: {
+            date: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * @description A COHORT stage — of the applications created in the window, how many EVER
+         *     reached this stage (read from application_timeline, not current status,
+         *     so the funnel cannot go back up). Stages are applied → shortlisted →
+         *     selected; there is no interview or withdrawn stage because
+         *     ApplicationStatus has no such value.
+         */
+        AnalyticsFunnelStage: {
+            /** @enum {string} */
+            stage: "applied" | "shortlisted" | "selected";
+            count: number;
+            pctOfTop: number;
+            conversionFromPrev: number | null;
+        };
+        AnalyticsBucket: {
+            label: string;
+            count: number;
+        };
+        /**
+         * @description The admin dashboard's charts, for a trailing window of `days` (default
+         *     30, clamped 1–365). Every figure is a live aggregate over existing rows —
+         *     there is no snapshot table, because `createdAt` plus `application_timeline`
+         *     already ARE the history.
+         *
+         *     DELIBERATE OMISSIONS, so the UI does not invent them: no job VIEW counts
+         *     (nothing records a job view), no education distribution (no such field),
+         *     no state-level geography (candidates carry free-text `currentLocation`
+         *     only), and no interview/withdrawn funnel stage.
+         */
+        AdminAnalytics: {
+            range: {
+                /** Format: date-time */
+                from: string;
+                /**
+                 * Format: date-time
+                 * @description EXCLUSIVE upper bound.
+                 */
+                to: string;
+                days: number;
+            };
+            kpis: {
+                candidates: components["schemas"]["AnalyticsKpi"];
+                employers: components["schemas"]["AnalyticsKpi"];
+                jobs: components["schemas"]["AnalyticsKpi"];
+                applications: components["schemas"]["AnalyticsKpi"];
+                hires: components["schemas"]["AnalyticsKpi"];
+            };
+            /**
+             * @description Revenue INVOICED in the window, in INTEGER SUBUNITS — keyed on the
+             *     invoice's `issuedAt`, because the invoice is the financial record of
+             *     truth. `spark` is deliberately empty: invoices are sparse and lumpy,
+             *     so a mostly-zero daily line would say less than the figure does.
+             *     The client formats it; the server never emits a formatted amount.
+             */
+            revenue: components["schemas"]["AnalyticsKpi"];
+            /** @example INR */
+            currency: string;
+            /** @description Keys per point — registrations, verified, active. */
+            candidateGrowth: components["schemas"]["AnalyticsSeriesPoint"][];
+            /** @description Keys per point — registered, approved. */
+            employerGrowth: components["schemas"]["AnalyticsSeriesPoint"][];
+            /** @description Keys per point — created, published, archived. */
+            jobActivity: components["schemas"]["AnalyticsSeriesPoint"][];
+            /** @description Keys per point — total, pending, shortlisted, selected, rejected. */
+            applicationTrend: components["schemas"]["AnalyticsSeriesPoint"][];
+            funnel: components["schemas"]["AnalyticsFunnelStage"][];
+            applicationStatus: {
+                status: string;
+                count: number;
+            }[];
+            topJobs: {
+                title: string;
+                employerName: string;
+                status: string;
+                applications: number;
+                shortlisted: number;
+                hires: number;
+            }[];
+            topEmployers: {
+                name: string;
+                activeJobs: number;
+                applications: number;
+                hires: number;
+                successRate: number;
+            }[];
+            /**
+             * @description Skills candidates HOLD (supply), not skills employers ask for —
+             *     job requirements are not a structured field. Labelled as supply in
+             *     the UI so the two are never conflated.
+             */
+            topSkills: {
+                name: string;
+                count: number;
+            }[];
+            demographics: {
+                experience: components["schemas"]["AnalyticsBucket"][];
+                /** @description Profiles without a dob land in an explicit "Not given" bucket. */
+                age: components["schemas"]["AnalyticsBucket"][];
+            };
+            employerStatus: {
+                status: string;
+                count: number;
+            }[];
+            jobStatus: {
+                status: string;
+                count: number;
+            }[];
+            /**
+             * @description MEDIAN days, not mean — one application left open for months would
+             *     drag an average away from the typical candidate's experience. NULL
+             *     when the window contains no such transition.
+             */
+            efficiency: {
+                daysToShortlist: number | null;
+                daysToHire: number | null;
+                hireRate: number;
+                applicationsPerJob: number;
+            };
+            needsAttention: {
+                pendingEmployerReviews: number;
+                pendingJobReviews: number;
+                pendingApplications: number;
+                incompleteProfiles: number;
+                /** @description The candidates.min_completion_pct setting the count was taken against. */
+                completionThreshold: number;
+            };
         };
         /**
          * @description One cell of the Screen-27 matrix. `locked = true` means IMMUTABLE — the
@@ -4087,8 +4360,17 @@ export interface components {
             airTicketArrival?: boolean;
             airTicketDeparture?: boolean;
             otherAllowance?: string | null;
+            /**
+             * @deprecated
+             * @description DEPRECATED — never collected by any form and null on every row. Use `contractDuration`, which stores the band the employer actually chose.
+             */
             contractPeriodMonths?: number | null;
         };
+        /**
+         * @description How long a CONTRACT role runs, as a BAND. Bands rather than a month count because that is what an employer knows at posting time — storing an exact figure would invent precision nobody stated. Required exactly when `employmentType` is CONTRACT (400 `CONTRACT_DURATION_REQUIRED`), and rejected for any other employment type (400 `CONTRACT_DURATION_NOT_APPLICABLE`).
+         * @enum {string}
+         */
+        ContractDuration: "MONTHS_1_6" | "MONTHS_6_12" | "YEARS_1_2" | "YEARS_2_5";
         AdminApplicationRow: components["schemas"]["Application"] & {
             candidateName?: string | null;
             jobTitle?: string | null;
@@ -4794,6 +5076,8 @@ export interface operations {
                     currentLocation?: string;
                     nationality?: string;
                     noticePeriod?: number;
+                    /** @description Candidate-written intro rendered at the TOP of the resume. Send an empty string to clear it. */
+                    summary?: string;
                 };
             };
         };
@@ -5690,8 +5974,13 @@ export interface operations {
                     /** @description Must contain at least one letter or digit — a name made only of punctuation/symbols is rejected. */
                     name: string;
                     type: components["schemas"]["CompanyType"];
-                    registrationNumber?: string;
-                    industryType?: string;
+                    registrationNumber: string;
+                    industryType: string;
+                    /**
+                     * @description Year of incorporation. Must not be in the future; the upper bound is the CURRENT year, evaluated per request.
+                     * @example 2014
+                     */
+                    foundedYear: number;
                     /** @example +91 */
                     phoneCode: string;
                     phone: string;
@@ -5700,16 +5989,16 @@ export interface operations {
                     /** @description City or area within `country` */
                     location: string;
                     /** Format: uri */
-                    website?: string;
+                    website: string;
                     employeeRange: components["schemas"]["EmployeeRange"];
                     /**
                      * @default en
                      * @enum {string}
                      */
                     languagePref?: "en" | "hi" | "bn" | "mr" | "te" | "ta" | "gu" | "kn" | "ml" | "pa" | "or" | "as" | "ne" | "tl" | "id" | "si" | "am" | "sw" | "ur" | "fa" | "ps" | "ar";
-                    description?: string;
+                    description: string;
                     /** @description R2 key returned by POST /employers/me/company/documents/presign (which works BEFORE registration) after the direct PUT upload. Ownership- and existence-validated; attached to the new company. */
-                    registrationCertKey?: string;
+                    registrationCertKey: string;
                 };
             };
         };
@@ -5835,6 +6124,11 @@ export interface operations {
                     location?: string;
                     /** Format: uri */
                     website?: string;
+                    /**
+                     * @description Optional here, required on register — PATCH is a PARTIAL update, so an absent key means "leave it alone", not "blank it". Same range rule as register when present.
+                     * @example 2014
+                     */
+                    foundedYear?: number;
                     employeeRange?: components["schemas"]["EmployeeRange"];
                     /** @enum {string} */
                     languagePref?: "en" | "hi" | "bn" | "mr" | "te" | "ta" | "gu" | "kn" | "ml" | "pa" | "or" | "as" | "ne" | "tl" | "id" | "si" | "am" | "sw" | "ur" | "fa" | "ps" | "ar";
@@ -5901,7 +6195,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Invalid file type or exceeds 10 MB limit */
+            /** @description Invalid file type or exceeds 2 MB limit */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -7326,6 +7620,96 @@ export interface operations {
             };
         };
     };
+    getAdminPlans: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description All plans, cheapest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminPlan"][];
+                    };
+                };
+            };
+            /** @description Missing settings.view */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    patchAdminPlanPrice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Plan code, e.g. PRO_MONTHLY. */
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Price in paise. 100000000 = 10,00,000.00. */
+                    priceSubunits: number;
+                };
+            };
+        };
+        responses: {
+            /** @description The updated plan */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminPlan"];
+                    };
+                };
+            };
+            /** @description Missing settings.manage */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description No plan with that code */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description FREE_PLAN_NOT_PRICEABLE, PAID_PLAN_NEEDS_PRICE or PLAN_PRICE_INVALID */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     getAdminSettings: {
         parameters: {
             query?: never;
@@ -8006,6 +8390,32 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminDashboard"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+        };
+    };
+    getAdminAnalytics: {
+        parameters: {
+            query?: {
+                /** @description Trailing window length in days. Clamped, never rejected. */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Dashboard analytics */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminAnalytics"];
                     };
                 };
             };

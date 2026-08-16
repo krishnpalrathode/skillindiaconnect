@@ -74,6 +74,7 @@ import { JobLifecycleService } from './job-lifecycle.service';
 import { PublishGuardService } from './publish-guard.service';
 import { AdminJobsController } from './admin-jobs.controller';
 import { AdminJobsService } from './admin-jobs.service';
+import { JOB_POSTING_TERMS_VERSION } from './job-posting-terms';
 
 jest.setTimeout(240_000);
 
@@ -171,7 +172,10 @@ async function mkJob(
       employmentType: EmploymentType.FULL_TIME,
       market: JobMarket.GULF,
       location: 'Dubai',
-      description: 'x',
+      description: JOB_DESCRIPTION,
+      // Columns, not the DTO field — this bypasses the API and writes the row.
+      termsVersion: JOB_POSTING_TERMS_VERSION,
+      termsAcceptedAt: new Date(),
       categoryId,
       salaryMin: 100,
       salaryMax: 200,
@@ -194,7 +198,11 @@ beforeAll(async () => {
   try {
     [pg, redisContainer] = await Promise.all([
       new GenericContainer('postgres:16-alpine')
-        .withEnvironment({ POSTGRES_USER: 'sic', POSTGRES_PASSWORD: 'sic', POSTGRES_DB: 'sic_test' })
+        .withEnvironment({
+          POSTGRES_USER: 'sic',
+          POSTGRES_PASSWORD: 'sic',
+          POSTGRES_DB: 'sic_test',
+        })
         .withExposedPorts(5432)
         .start(),
       new GenericContainer('redis:7-alpine').withExposedPorts(6379).start(),
@@ -271,7 +279,10 @@ beforeAll(async () => {
         { provide: PrismaService, useValue: prisma as unknown as PrismaService },
         { provide: REDIS_CLIENT, useValue: redis },
         { provide: StorageService, useValue: {} }, // EmployerService dep; unused here
-        { provide: getQueueToken(QUEUE_NAMES.NOTIFICATION), useValue: { add: notificationQueueAdd } },
+        {
+          provide: getQueueToken(QUEUE_NAMES.NOTIFICATION),
+          useValue: { add: notificationQueueAdd },
+        },
         { provide: APP_GUARD, useClass: TestAuthGuard },
         {
           provide: APP_GUARD,
@@ -326,6 +337,24 @@ beforeEach(() => {
 const settleEvents = () => new Promise((resolve) => setTimeout(resolve, 50));
 
 // ─── review: the gate re-check trio ──────────────────────────────────────────
+
+/**
+ * A description that clears JOB_DESCRIPTION_MIN (300 chars).
+ *
+ * These fixtures POST through the HTTP layer, so the ValidationPipe runs and the
+ * old one-character 'x' is now correctly rejected. Kept realistic rather than
+ * padded with filler so the failure mode (a too-short description) stays legible
+ * if the floor ever moves.
+ */
+const JOB_DESCRIPTION = [
+  'We are hiring experienced masons for a large commercial construction project.',
+  'The work involves blockwork, plastering and finishing to a high standard on a',
+  'busy multi-storey site. You will report to the site supervisor and work as part',
+  'of a team of eight. Accommodation, health insurance and daily transport to site',
+  'are provided by the company. Overtime is available and paid at the standard',
+  'rate. Applicants should have their own basic hand tools and be comfortable',
+  'working at height with the correct safety equipment supplied on site.',
+].join(' ');
 
 describe('POST /admin/jobs/{id}/review — APPROVE re-runs the publish gates', () => {
   it('all gates passing → ACTIVE with the SAME post-publish work as a direct publish', async () => {
@@ -487,7 +516,9 @@ describe('GET /admin/jobs', () => {
     const { companyId } = await mkCompany(CompanyStatus.APPROVED);
     const featuredId = await mkJob(companyId, JobStatus.ACTIVE, { isFeatured: true });
 
-    const res = await get('/admin/jobs?featured=true&pageSize=100', UserRole.SUPER_ADMIN).expect(200);
+    const res = await get('/admin/jobs?featured=true&pageSize=100', UserRole.SUPER_ADMIN).expect(
+      200,
+    );
     const rows = res.body.data as Array<{ id: string; isFeatured: boolean }>;
     expect(rows.every((r) => r.isFeatured)).toBe(true);
     expect(rows.some((r) => r.id === featuredId)).toBe(true);
@@ -576,7 +607,8 @@ describe('POST /admin/jobs (on-behalf)', () => {
     // gates it exists to test. Qatar matches both GULF and the Doha location.
     country: 'Qatar',
     location: 'Doha',
-    description: 'x',
+    description: JOB_DESCRIPTION,
+    acceptedTermsVersion: JOB_POSTING_TERMS_VERSION,
     categoryId,
     requirements: [],
     salaryMin: 100,
@@ -749,9 +781,10 @@ describe('notes + resend endpoints (applications module)', () => {
     }).expect(201);
     expect(created.body.data.authorRole).toBe('SUPER_ADMIN');
 
-    const listed = await get(`/admin/applications/${applicationId}/notes`, UserRole.SUPER_ADMIN).expect(
-      200,
-    );
+    const listed = await get(
+      `/admin/applications/${applicationId}/notes`,
+      UserRole.SUPER_ADMIN,
+    ).expect(200);
     expect(listed.body.data).toHaveLength(1);
 
     await get(`/admin/applications/${applicationId}/notes`, UserRole.MODERATOR).expect(403);
@@ -774,7 +807,7 @@ describe('GET /admin/jobs/{id} — the moderation detail', () => {
     const res = await get(`/admin/jobs/${jobId}`, UserRole.SUPER_ADMIN).expect(200);
     const d = res.body.data;
     // The candidate-eye fields the row never carried:
-    expect(d.description).toBe('x');
+    expect(d.description).toBe(JOB_DESCRIPTION);
     expect(d.salaryMin).toBe(100);
     expect(d.salaryCurrency).toBe('AED');
     expect(d.hoursPerDay).toBe(8);

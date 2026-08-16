@@ -2,7 +2,6 @@ import type { components } from '@skillindiaconnect/shared-types';
 import { apiFetch } from './client';
 
 export type AdminMe = components['schemas']['AdminMe'];
-export type AdminDashboard = components['schemas']['AdminDashboard'];
 export type PermissionKey = components['schemas']['PermissionKey'];
 
 /**
@@ -12,9 +11,4 @@ export type PermissionKey = components['schemas']['PermissionKey'];
  */
 export function getAdminMe(): Promise<AdminMe> {
   return apiFetch<AdminMe>('/admin/me/permissions');
-}
-
-/** Platform KPIs + the two work-queue depths (RBAC: reports.view). */
-export function getAdminDashboard(): Promise<AdminDashboard> {
-  return apiFetch<AdminDashboard>('/admin/dashboard');
 }

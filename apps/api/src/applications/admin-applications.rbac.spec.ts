@@ -31,9 +31,9 @@ describe('AdminApplicationsController RBAC', () => {
   const guard = new PermissionsGuard(reflector, permService);
 
   it('the handler requires applications.manage', () => {
-    expect(reflector.get(REQUIRE_PERMISSIONS_KEY, AdminApplicationsController.prototype.list)).toEqual([
-      Permission.APPLICATIONS_MANAGE,
-    ]);
+    expect(
+      reflector.get(REQUIRE_PERMISSIONS_KEY, AdminApplicationsController.prototype.list),
+    ).toEqual([Permission.APPLICATIONS_MANAGE]);
   });
 
   it('ADMIN passes', async () => {
@@ -41,6 +41,8 @@ describe('AdminApplicationsController RBAC', () => {
   });
 
   it('MODERATOR → 403 (seed boundary, not a bug)', async () => {
-    await expect(guard.canActivate(ctx(UserRole.MODERATOR))).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(guard.canActivate(ctx(UserRole.MODERATOR))).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
   });
 });

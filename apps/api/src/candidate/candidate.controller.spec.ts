@@ -82,7 +82,9 @@ describe('CandidateController', () => {
         { provide: ProfileViewsReadService, useValue: profileViewsReadMock },
         {
           provide: ApplicationsAggregateService,
-          useValue: { countsForCandidate: jest.fn().mockResolvedValue({ applied: 0, shortlisted: 0 }) },
+          useValue: {
+            countsForCandidate: jest.fn().mockResolvedValue({ applied: 0, shortlisted: 0 }),
+          },
         },
       ],
     }).compile();

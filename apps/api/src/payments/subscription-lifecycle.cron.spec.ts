@@ -20,11 +20,7 @@ describe('SubscriptionLifecycleCron', () => {
     await cron.scheduleSubscriptionLifecycleSweep();
 
     expect(queue.add).toHaveBeenCalledTimes(1);
-    const [name, payload, opts] = queue.add.mock.calls[0] as [
-      string,
-      unknown,
-      { jobId: string },
-    ];
+    const [name, payload, opts] = queue.add.mock.calls[0] as [string, unknown, { jobId: string }];
     expect(name).toBe(JOB_NAMES.SUBSCRIPTION_LIFECYCLE_SWEEP);
     expect(payload).toEqual({});
 

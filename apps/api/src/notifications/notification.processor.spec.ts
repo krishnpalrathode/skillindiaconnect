@@ -65,13 +65,15 @@ function makeJob(
 
 // ── Prisma mock helpers ──────────────────────────────────────────────────────
 
-function makePrismaMock(overrides: {
-  whatsappCapable?: boolean;
-  phone?: string | null;
-  waNotifications?: boolean;
-  emailNotifs?: boolean;
-  email?: string;
-} = {}) {
+function makePrismaMock(
+  overrides: {
+    whatsappCapable?: boolean;
+    phone?: string | null;
+    waNotifications?: boolean;
+    emailNotifs?: boolean;
+    email?: string;
+  } = {},
+) {
   const whatsappCapable = overrides.whatsappCapable ?? true;
   // Use !== undefined so that an explicit null is preserved (not replaced by default)
   const phone = overrides.phone !== undefined ? overrides.phone : PHONE;
@@ -179,7 +181,9 @@ describe('NotificationProcessor', () => {
           // deliberately drops the call to action, which would quietly weaken
           // every assertion about email content here.
           provide: ConfigService,
-          useValue: { get: (key: string) => (key === 'WEB_APP_URL' ? 'https://app.test' : undefined) },
+          useValue: {
+            get: (key: string) => (key === 'WEB_APP_URL' ? 'https://app.test' : undefined),
+          },
         },
       ],
     })
@@ -193,12 +197,13 @@ describe('NotificationProcessor', () => {
   // ── WhatsApp downgrade path ─────────────────────────────────────────────────
 
   describe('WhatsApp — downgrade (whatsappCapable:false)', () => {
-    beforeEach(() =>
-      buildProcessor({ whatsappCapable: false, phone: PHONE }),
-    );
+    beforeEach(() => buildProcessor({ whatsappCapable: false, phone: PHONE }));
 
     it('does NOT call sendTemplate', async () => {
-      emailSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'email-1' } satisfies EmailSendResult);
+      emailSendSpy.mockResolvedValue({
+        ok: true,
+        providerMessageId: 'email-1',
+      } satisfies EmailSendResult);
       await processor.process(makeJob('whatsapp'));
       expect(waSendSpy).not.toHaveBeenCalled();
     });
@@ -227,7 +232,9 @@ describe('NotificationProcessor', () => {
       emailSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'email-1' });
       await processor.process(makeJob('whatsapp'));
       expect(auditLogSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ meta: expect.objectContaining({ reason: 'whatsapp_downgrade' }) }),
+        expect.objectContaining({
+          meta: expect.objectContaining({ reason: 'whatsapp_downgrade' }),
+        }),
       );
     });
   });
@@ -235,9 +242,7 @@ describe('NotificationProcessor', () => {
   // ── WhatsApp downgrade — no phone (employer) ─────────────────────────────────
 
   describe('WhatsApp — downgrade (no phone / employer user)', () => {
-    beforeEach(() =>
-      buildProcessor({ whatsappCapable: false, phone: null }),
-    );
+    beforeEach(() => buildProcessor({ whatsappCapable: false, phone: null }));
 
     it('skips whatsapp_messages row creation when no phone', async () => {
       emailSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'email-1' });
@@ -282,7 +287,9 @@ describe('NotificationProcessor', () => {
       await expect(processor.process(job)).rejects.toThrow();
 
       const updateCalls = prismaMock.whatsappMessage.update.mock.calls;
-      const statuses = updateCalls.map((c: [{ data: { status: DeliveryStatus } }]) => c[0].data.status);
+      const statuses = updateCalls.map(
+        (c: [{ data: { status: DeliveryStatus } }]) => c[0].data.status,
+      );
       expect(statuses.every((s: DeliveryStatus) => s !== DeliveryStatus.SENT)).toBe(true);
     });
 
@@ -422,7 +429,10 @@ describe('NotificationProcessor', () => {
     beforeEach(() => buildProcessor({ whatsappCapable: true, phone: PHONE }));
 
     it('calls sendTemplate with the right template key', async () => {
-      waSendSpy.mockResolvedValue({ ok: true, providerMessageId: PROVIDER_ID } satisfies WhatsappSendResult);
+      waSendSpy.mockResolvedValue({
+        ok: true,
+        providerMessageId: PROVIDER_ID,
+      } satisfies WhatsappSendResult);
 
       await processor.process(makeJob('whatsapp'));
 
@@ -497,9 +507,7 @@ describe('NotificationProcessor', () => {
   // ── Email bounce ─────────────────────────────────────────────────────────────
 
   describe('Email — bounce', () => {
-    beforeEach(() =>
-      buildProcessor({ email: MOCK_BOUNCE_EMAIL }),
-    );
+    beforeEach(() => buildProcessor({ email: MOCK_BOUNCE_EMAIL }));
 
     it('records email_messages status as BOUNCED', async () => {
       emailSendSpy.mockResolvedValue({ ok: false, bounced: true } satisfies EmailSendResult);
@@ -520,9 +528,7 @@ describe('NotificationProcessor', () => {
   // ── Email opt-out ────────────────────────────────────────────────────────────
 
   describe('Email — candidate opt-out', () => {
-    beforeEach(() =>
-      buildProcessor({ emailNotifs: false }),
-    );
+    beforeEach(() => buildProcessor({ emailNotifs: false }));
 
     it('skips send when emailNotifs = false', async () => {
       await processor.process(makeJob('email'));
@@ -537,11 +543,16 @@ describe('NotificationProcessor', () => {
     beforeEach(() => buildProcessor({ whatsappCapable: true, phone: PHONE }));
 
     it('passes the ORDERED params from the payload straight through', async () => {
-      waSendSpy.mockResolvedValue({ ok: true, providerMessageId: 'wa-1' } satisfies WhatsappSendResult);
+      waSendSpy.mockResolvedValue({
+        ok: true,
+        providerMessageId: 'wa-1',
+      } satisfies WhatsappSendResult);
       const vars = ['Suresh Kumar', 'Senior Electrician', 'Gulf Wiring LLC'];
 
       await processor.process(
-        makeJob('whatsapp', { data: { payload: { ...BASE_JOB_DATA.payload, data: { templateVars: vars } } } }),
+        makeJob('whatsapp', {
+          data: { payload: { ...BASE_JOB_DATA.payload, data: { templateVars: vars } } },
+        }),
       );
 
       // Third argument, positionally intact — the send is the last place the
@@ -704,7 +715,9 @@ describe('NotificationProcessor', () => {
 
     /** payload the email channel was actually handed. */
     const sentPayload = () =>
-      emailSendSpy.mock.calls[0]?.[2] as { attachments?: { filename: string; content: Buffer; contentType: string }[] };
+      emailSendSpy.mock.calls[0]?.[2] as {
+        attachments?: { filename: string; content: Buffer; contentType: string }[];
+      };
 
     it('the whatsappCapable DOWNGRADE attaches the PDF', async () => {
       // The path the API already promised as EMAIL_FALLBACK.
@@ -744,11 +757,11 @@ describe('NotificationProcessor', () => {
 
       await expect(
         processor.process(
-          makeJob(
-            'whatsapp',
-            { attemptsMade: 2, opts: { attempts: 3 },
-              data: { payload: { ...BASE_JOB_DATA.payload, data: DOC_DATA } } },
-          ),
+          makeJob('whatsapp', {
+            attemptsMade: 2,
+            opts: { attempts: 3 },
+            data: { payload: { ...BASE_JOB_DATA.payload, data: DOC_DATA } },
+          }),
         ),
       ).rejects.toThrow();
 

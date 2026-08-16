@@ -70,7 +70,10 @@ beforeAll(async () => {
       msg.includes('prisma: command not found')
     ) {
       dockerUnavailable = true;
-      console.warn('[audit-integration] Docker or infra unavailable â€” tests will be skipped:', msg);
+      console.warn(
+        '[audit-integration] Docker or infra unavailable â€” tests will be skipped:',
+        msg,
+      );
     } else {
       throw err;
     }
@@ -148,7 +151,10 @@ describe('AuditService.log â€” fire-and-safe', () => {
 
     expect(loggerSpy).toHaveBeenCalledWith(
       expect.stringContaining('audit insert failed'),
-      expect.objectContaining({ module: AUDIT_MODULES.CANDIDATE, action: AUDIT_ACTIONS.DOCUMENT_CHANGED }),
+      expect.objectContaining({
+        module: AUDIT_MODULES.CANDIDATE,
+        action: AUDIT_ACTIONS.DOCUMENT_CHANGED,
+      }),
     );
   });
 
@@ -327,4 +333,3 @@ describe('AuditService.query â€” internal filter', () => {
     expect(rows[0]!.actorUserId).toBe('actor-a');
   });
 });
-

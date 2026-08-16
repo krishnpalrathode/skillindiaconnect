@@ -89,11 +89,11 @@ export function PreviewExportStep({ profile, onBack }: PreviewExportStepProps) {
         </Button>
         <Button
           type="button"
-          variant="primary"
+          variant="brand"
           size="lg"
           loading={finishing}
           onClick={handleFinish}
-          className="rounded-xl bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] px-8 shadow-md transition-all hover:shadow-lg"
+          className="rounded-xl px-8 shadow-md transition-all hover:shadow-lg"
         >
           {t('saveAndContinue')}
         </Button>

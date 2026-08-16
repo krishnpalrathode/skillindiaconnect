@@ -130,7 +130,9 @@ export class RuntimeMetricsService implements OnModuleInit, OnModuleDestroy {
       mem.rss,
       { role },
     );
-    this.metrics.setGauge('sic_process_heap_used_bytes', 'V8 heap in use in bytes', mem.heapUsed, { role });
+    this.metrics.setGauge('sic_process_heap_used_bytes', 'V8 heap in use in bytes', mem.heapUsed, {
+      role,
+    });
     this.metrics.setGauge(
       'sic_process_uptime_seconds',
       'Process uptime in seconds (a reset indicates a crash or redeploy)',

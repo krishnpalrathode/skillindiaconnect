@@ -15,9 +15,7 @@ export const OptionalAuth = () => SetMetadata(IS_OPTIONAL_AUTH_KEY, true);
 /** Returns the attached user or null (for optional-auth public routes). */
 export const CurrentUserOptional = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): CurrentUserPayload | null => {
-    const request = ctx
-      .switchToHttp()
-      .getRequest<Request & { user?: CurrentUserPayload }>();
+    const request = ctx.switchToHttp().getRequest<Request & { user?: CurrentUserPayload }>();
     return request.user ?? null;
   },
 );

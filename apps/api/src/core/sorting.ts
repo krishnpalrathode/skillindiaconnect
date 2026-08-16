@@ -43,11 +43,8 @@ export function resolveSort(
   const [fbField, fbDir] = fallback.split(':');
 
   const field = rawField && rawField in whitelist ? rawField : (fbField as string);
-  const direction: SortDirection = rawDir === 'asc' || rawDir === 'desc'
-    ? rawDir
-    : fbDir === 'asc'
-      ? 'asc'
-      : 'desc';
+  const direction: SortDirection =
+    rawDir === 'asc' || rawDir === 'desc' ? rawDir : fbDir === 'asc' ? 'asc' : 'desc';
 
   return { field, direction, applied: `${field}:${direction}` };
 }

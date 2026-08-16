@@ -43,7 +43,10 @@ const UNKNOWN_JOB: Omit<JobSubset, 'id'> = {
   market: 'GULF',
 };
 
-export function toApplicationCard(app: Application, job: JobSubset | undefined): ApplicationCardDto {
+export function toApplicationCard(
+  app: Application,
+  job: JobSubset | undefined,
+): ApplicationCardDto {
   return {
     id: app.id,
     humanId: app.humanId,

@@ -27,7 +27,11 @@ function buildHarness(opts: { user?: Record<string, unknown> | null } = {}) {
   const tokens: Row[] = [];
   const userUpdates: Array<Record<string, unknown>> = [];
   const revokedFor: string[] = [];
-  const notified: Array<{ userId: string; type: NotificationType; payload: Record<string, unknown> }> = [];
+  const notified: Array<{
+    userId: string;
+    type: NotificationType;
+    payload: Record<string, unknown>;
+  }> = [];
 
   // Narrow stand-ins for the Prisma argument shapes this service actually uses.
   type TokenWhere = { userId?: string; id?: string; consumedAt?: null; tokenHash?: string };
@@ -84,9 +88,11 @@ function buildHarness(opts: { user?: Record<string, unknown> | null } = {}) {
   };
 
   const notifications = {
-    notify: jest.fn(async (userId: string, type: NotificationType, payload: Record<string, unknown>) => {
-      notified.push({ userId, type, payload });
-    }),
+    notify: jest.fn(
+      async (userId: string, type: NotificationType, payload: Record<string, unknown>) => {
+        notified.push({ userId, type, payload });
+      },
+    ),
   };
 
   const redis = {
@@ -141,7 +147,9 @@ describe('PasswordResetService.request', () => {
     expect(h.notified).toHaveLength(1);
     expect(h.notified[0]!.type).toBe(NotificationType.PASSWORD_RESET);
 
-    const link = String((h.notified[0]!.payload as never as { data: { resetUrl: string } }).data.resetUrl);
+    const link = String(
+      (h.notified[0]!.payload as never as { data: { resetUrl: string } }).data.resetUrl,
+    );
     expect(link).toContain(`${WEB_APP_URL}/reset-password?token=`);
   });
 

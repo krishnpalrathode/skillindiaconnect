@@ -48,9 +48,8 @@ describe('MockEmailChannel', () => {
 describe('MockWhatsappChannel — sendTemplate (unit)', () => {
   it('sendTemplate returns ok:true with providerMessageId for normal phone', async () => {
     // Inline test — avoids importing the mock module twice
-    const { MockWhatsappChannel } = jest.requireActual<
-      typeof import('./whatsapp.mock')
-    >('./whatsapp.mock');
+    const { MockWhatsappChannel } =
+      jest.requireActual<typeof import('./whatsapp.mock')>('./whatsapp.mock');
     const wa = new MockWhatsappChannel();
     const result = await wa.sendTemplate('+919876543210', 'wa.selected', { bodyParams: ['Alice'] });
     expect(result.ok).toBe(true);
@@ -58,9 +57,8 @@ describe('MockWhatsappChannel — sendTemplate (unit)', () => {
   });
 
   it('sendTemplate returns ok:false, notOnWhatsapp:true for 0000-suffix phone', async () => {
-    const { MockWhatsappChannel } = jest.requireActual<
-      typeof import('./whatsapp.mock')
-    >('./whatsapp.mock');
+    const { MockWhatsappChannel } =
+      jest.requireActual<typeof import('./whatsapp.mock')>('./whatsapp.mock');
     const wa = new MockWhatsappChannel();
     const result = await wa.sendTemplate('+919876540000', 'wa.selected', { bodyParams: [] });
     expect(result.ok).toBe(false);
@@ -68,9 +66,8 @@ describe('MockWhatsappChannel — sendTemplate (unit)', () => {
   });
 
   it('sendOtp and sendTemplate are tracked independently', async () => {
-    const { MockWhatsappChannel } = jest.requireActual<
-      typeof import('./whatsapp.mock')
-    >('./whatsapp.mock');
+    const { MockWhatsappChannel } =
+      jest.requireActual<typeof import('./whatsapp.mock')>('./whatsapp.mock');
     const wa = new MockWhatsappChannel();
     await wa.sendOtp('+919876543210', '123456', 'LOGIN');
     await wa.sendTemplate('+919876543210', 'wa.selected', { bodyParams: [] });

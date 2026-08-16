@@ -66,7 +66,9 @@ export function normalizeRazorpay(event: VerifiedGatewayEvent): NormalizedEvent 
   return {
     family,
     orderId:
-      str(payment?.notes?.orderId) ?? str(order?.notes?.orderId) ?? str(order?.receipt) ??
+      str(payment?.notes?.orderId) ??
+      str(order?.notes?.orderId) ??
+      str(order?.receipt) ??
       str(refund?.notes?.orderId),
     gatewayOrderId: str(payment?.order_id) ?? str(order?.id),
     gatewayPaymentId: str(payment?.id) ?? str(refund?.payment_id),

@@ -20,7 +20,11 @@
  */
 import { ResumeTemplate } from '@prisma/client';
 import { ResumeSource } from '../../candidate/candidate-read.service';
-import { RESUME_SETTINGS_DEFAULTS, ResumeRenderSettings, toResumeView } from '../resume-view.mapper';
+import {
+  RESUME_SETTINGS_DEFAULTS,
+  ResumeRenderSettings,
+  toResumeView,
+} from '../resume-view.mapper';
 import { TEMPLATE_REGISTRY } from './registry';
 import { ACCEPTED_RESUME_TEMPLATES } from '../dto/update-resume-settings.dto';
 

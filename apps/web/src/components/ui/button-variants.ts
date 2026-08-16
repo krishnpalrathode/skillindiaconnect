@@ -14,6 +14,20 @@ export const buttonVariants = cva(
       variant: {
         primary: 'bg-accent-500 text-neutral-900 hover:bg-accent-600 active:bg-accent-700',
         secondary: 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800',
+        /**
+         * The brand-navy gradient CTA — Next, Save, Download PDF, Publish.
+         *
+         * It exists as a variant because it kept being hand-rolled: seven call
+         * sites pasted `bg-gradient-to-r from-[#0F3D91] to-[#2E67B1]` onto
+         * `variant="primary"`, which repainted the background blue but LEFT the
+         * primary variant's `text-neutral-900` in place — near-black text on dark
+         * navy. Background and foreground are one decision, so they live in one
+         * place and cannot be half-overridden again.
+         *
+         * Carries colour only. Padding, radius and shadow stay at the call site,
+         * where they legitimately differ.
+         */
+        brand: 'bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] text-white',
         outline:
           'border border-border bg-background text-foreground hover:bg-neutral-100 active:bg-neutral-200',
         ghost: 'bg-transparent text-foreground hover:bg-neutral-100 active:bg-neutral-200',

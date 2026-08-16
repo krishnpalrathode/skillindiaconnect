@@ -48,9 +48,7 @@ export function createWhatsappChannelProvider(): Provider {
           // notification type has no approved template mapped.
           return new MetaWhatsappChannel(config);
         default:
-          throw new Error(
-            `Unknown WHATSAPP_PROVIDER '${provider}' — expected 'meta' or 'mock'.`,
-          );
+          throw new Error(`Unknown WHATSAPP_PROVIDER '${provider}' — expected 'meta' or 'mock'.`);
       }
     },
   };

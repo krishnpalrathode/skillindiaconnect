@@ -163,9 +163,7 @@ export class AdminJobsService {
 
     // Batched applicant counts via the S4-B3 aggregate export — never N+1.
     const counts = await this.applicationsAggregate.countsPerJob(rows.map((j) => j.id));
-    const data = rows.map((job) =>
-      this.toRow(job, counts.get(job.id)?.applications ?? 0),
-    );
+    const data = rows.map((job) => this.toRow(job, counts.get(job.id)?.applications ?? 0));
 
     return {
       data,
@@ -241,12 +239,7 @@ export class AdminJobsService {
    * `job.published` → search-cache invalidation).
    */
   private async approve(job: JobWithCompanyName, actor: AdminActor): Promise<JobData> {
-    await this.publishGuard.assertPublishable(
-      job,
-      { id: job.companyId },
-      actor.userId,
-      actor.role,
-    );
+    await this.publishGuard.assertPublishable(job, { id: job.companyId }, actor.userId, actor.role);
 
     const updated = await this.jobsService.activateJob(job.id, {
       moderationReason: null,
@@ -430,12 +423,7 @@ export class AdminJobsService {
     );
 
     if (publish === true) {
-      await this.publishGuard.assertPublishable(
-        job,
-        { id: company.id },
-        actor.userId,
-        actor.role,
-      );
+      await this.publishGuard.assertPublishable(job, { id: company.id }, actor.userId, actor.role);
       job = await this.jobsService.activateJob(job.id);
     }
 

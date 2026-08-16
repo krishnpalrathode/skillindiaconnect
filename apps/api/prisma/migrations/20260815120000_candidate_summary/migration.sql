@@ -1,0 +1,11 @@
+-- Candidate-written resume intro, rendered at the top of the resume.
+--
+-- Purely ADDITIVE and NULLABLE, so it is backward-compatible with the currently
+-- running code: an older API process never selects or writes this column, and
+-- every existing row is valid without it. That is what lets
+-- `prisma migrate deploy` run BEFORE the new containers take traffic.
+--
+-- VARCHAR(500) rather than TEXT: the length is a product rule (a summary longer
+-- than a short paragraph pushes the work history onto a second page), and
+-- enforcing it in the column means a direct DB write cannot bypass the DTO.
+ALTER TABLE "candidate_profiles" ADD COLUMN "summary" VARCHAR(500);

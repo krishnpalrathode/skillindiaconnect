@@ -131,9 +131,7 @@ export class MatchAlertProcessor extends WorkerHost {
       (sum, e) => sum + e.years + e.months / 12,
       0,
     );
-    const hasForeignExperience = profile.experiences.some(
-      (e) => e.type === ExperienceType.FOREIGN,
-    );
+    const hasForeignExperience = profile.experiences.some((e) => e.type === ExperienceType.FOREIGN);
     const docsRequiredCount = await this.completionService.getMandatoryDocCount();
     const docsPresentCount = profile.documents.length;
 
@@ -201,6 +199,8 @@ export class MatchAlertProcessor extends WorkerHost {
   private matchesLink(categorySlug: string | null): string {
     const base = this.config.get<string>('WEB_APP_URL') ?? '';
     const path = '/jobs';
-    return categorySlug ? `${base}${path}?category=${encodeURIComponent(categorySlug)}` : `${base}${path}`;
+    return categorySlug
+      ? `${base}${path}?category=${encodeURIComponent(categorySlug)}`
+      : `${base}${path}`;
   }
 }

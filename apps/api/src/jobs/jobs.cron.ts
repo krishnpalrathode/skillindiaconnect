@@ -16,9 +16,7 @@ import { QUEUE_NAMES, JOB_NAMES } from '../queue/queue.constants';
 export class JobsCron {
   private readonly logger = new Logger(JobsCron.name);
 
-  constructor(
-    @InjectQueue(QUEUE_NAMES.AUTO_ARCHIVE) private readonly autoArchiveQueue: Queue,
-  ) {}
+  constructor(@InjectQueue(QUEUE_NAMES.AUTO_ARCHIVE) private readonly autoArchiveQueue: Queue) {}
 
   @Cron('0 2 * * *')
   async scheduleAutoArchive(): Promise<void> {

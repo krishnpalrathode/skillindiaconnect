@@ -7,6 +7,7 @@ import {
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { DocumentType, Prisma, UserRole, WorkExperience } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
+import { MAX_UPLOAD_BYTES } from '../core/uploads';
 import { CompletionService } from './completion/completion.service';
 import {
   DEFAULT_MIN_COMPLETION_FOR_APPLY,
@@ -28,7 +29,7 @@ import {
 } from './mappers/candidate-self.mapper';
 
 /** Profile photo upload limits. Image-only; a signed url is short-lived. */
-const PHOTO_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+const PHOTO_MAX_BYTES = MAX_UPLOAD_BYTES;
 const PHOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const PHOTO_URL_EXPIRY_SECONDS = 3600; // the profile photo signed-url lifetime
 
@@ -167,6 +168,17 @@ export class CandidateService {
         ...(dto.currentLocation !== undefined && { currentLocation: dto.currentLocation }),
         ...(dto.nationality !== undefined && { nationality: dto.nationality }),
         ...(dto.noticePeriod !== undefined && { noticePeriod: dto.noticePeriod }),
+        /*
+          Trimmed, and an empty result stored as NULL rather than ''.
+
+          Clearing the summary is a real action — the candidate empties the box
+          and saves — and the only way a PATCH can express it is an empty string.
+          Storing that verbatim would leave `''`, which is truthy-adjacent enough
+          that a template checking `if (view.summary)` and one checking
+          `!== null` would disagree about whether to render the block. One
+          canonical "absent" avoids that entirely.
+        */
+        ...(dto.summary !== undefined && { summary: dto.summary.trim() || null }),
       },
     });
 

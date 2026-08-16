@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  ForbiddenException,
-  Get,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Patch, Post } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user.decorator';
 import { EmployerService } from './employer.service';
@@ -26,10 +19,7 @@ export class EmployerController {
   ) {}
 
   @Post('register')
-  async register(
-    @CurrentUser() user: CurrentUserPayload,
-    @Body() dto: RegisterCompanyDto,
-  ) {
+  async register(@CurrentUser() user: CurrentUserPayload, @Body() dto: RegisterCompanyDto) {
     this.assertEmployerRole(user.role);
     const company = await this.employerService.register(user.userId, dto);
 
@@ -55,30 +45,21 @@ export class EmployerController {
   }
 
   @Patch('me/company')
-  async updateMyCompany(
-    @CurrentUser() user: CurrentUserPayload,
-    @Body() dto: UpdateCompanyDto,
-  ) {
+  async updateMyCompany(@CurrentUser() user: CurrentUserPayload, @Body() dto: UpdateCompanyDto) {
     this.assertEmployerRole(user.role);
     const company = await this.employerService.updateCompany(user.userId, dto);
     return { data: await this.withCertKey(company) };
   }
 
   @Post('me/company/documents/presign')
-  async presignCert(
-    @CurrentUser() user: CurrentUserPayload,
-    @Body() dto: PresignCertDto,
-  ) {
+  async presignCert(@CurrentUser() user: CurrentUserPayload, @Body() dto: PresignCertDto) {
     this.assertEmployerRole(user.role);
     const result = await this.employerService.presignCert(user.userId, dto);
     return { data: result };
   }
 
   @Post('me/company/documents/confirm')
-  async confirmCert(
-    @CurrentUser() user: CurrentUserPayload,
-    @Body() dto: ConfirmCertDto,
-  ) {
+  async confirmCert(@CurrentUser() user: CurrentUserPayload, @Body() dto: ConfirmCertDto) {
     this.assertEmployerRole(user.role);
     const doc = await this.employerService.confirmCert(user.userId, dto);
     return { data: doc };

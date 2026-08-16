@@ -1290,6 +1290,7 @@ export const db = {
         country: 'United Arab Emirates',
         location: 'Abu Dhabi',
         website: 'https://gulfbuilders.example.com',
+        foundedYear: 2011,
         employeeRange: '201-500',
         languagePref: 'en',
         description:
@@ -1331,10 +1332,12 @@ export const db = {
         status: 'REJECTED',
         registrationNumber: 'DL-2024-22222',
         industryType: 'Manpower',
+        foundedYear: 2016,
         phoneCode: '+91',
         phone: '9876500000',
         country: 'India',
         location: 'Delhi',
+        website: 'https://apexmanpower.example.com',
         employeeRange: '51-200',
         languagePref: 'en',
         description: 'Company registration was rejected.',
@@ -2627,6 +2630,9 @@ export function buildResumeView(candidate: MockCandidate, settings: ResumeSettin
     maritalStatus: p.maritalStatus ?? null,
     nationality: p.nationality ?? null,
     currentLocation: p.currentLocation ?? null,
+    // Not settings-governed: writing an intro is itself the opt-in, so the only
+    // thing that omits it is the candidate leaving it empty.
+    summary: p.summary?.trim() || null,
     languages: p.languages ?? [],
     jobCategory: p.jobCategoryId ?? null,
     experiences: p.experiences ?? [],

@@ -126,7 +126,10 @@ export class CandidateInterestService {
    * filtered out here so the employer gets an honest count back rather than
    * discovering silently-skipped sends later.
    */
-  async notify(userId: string, candidateIds: string[]): Promise<{ queued: number; skipped: number }> {
+  async notify(
+    userId: string,
+    candidateIds: string[],
+  ): Promise<{ queued: number; skipped: number }> {
     const company = await this.employerService.getCompanyForEmployerUser(userId);
 
     const rows = await this.prisma.candidateInterest.findMany({
@@ -171,8 +174,7 @@ export class CandidateInterestService {
    * enumeration oracle — the same reason viewCandidate 404s uniformly.
    */
   private async assertVisibleCandidate(candidateId: string): Promise<void> {
-    const candidate =
-      await this.candidateRead.findVisibleCandidateForEmployerView(candidateId);
+    const candidate = await this.candidateRead.findVisibleCandidateForEmployerView(candidateId);
     if (!candidate) throw new NotFoundException({ code: 'CANDIDATE_NOT_FOUND' });
   }
 }
