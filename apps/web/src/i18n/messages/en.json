@@ -2508,7 +2508,7 @@
       "home": "Skill India Connect home"
     },
     "hero": {
-      "headline": "<hl>Safe, verified jobs</hl> in India and the Gulf",
+      "headline": "<hl>Safe, Verified Jobs</hl> for Skilled Workers in India and Around the World",
       "subline": "Every job on Skill India Connect must give you a place to stay, health insurance, and transport. We check every employer before their job goes live.",
       "ctaWorker": "Find Jobs",
       "ctaEmployer": "Hire Workers",
@@ -2620,7 +2620,11 @@
         "construction": "Construction & Civil",
         "electrical": "Electrical & Plumbing",
         "driving": "Drivers & Logistics",
-        "hospitality": "Hospitality & Catering"
+        "hospitality": "Hospitality & Catering",
+        "welding": "Welding & Fabrication",
+        "technician": "Technicians & Mechanics",
+        "healthcare": "Healthcare & Nursing",
+        "team": "Every Skilled Trade"
       },
       "trust": {
         "protection": "Every job includes accommodation, health insurance & transport",

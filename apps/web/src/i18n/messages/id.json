@@ -108,7 +108,7 @@
       "home": "Beranda Skill India Connect"
     },
     "hero": {
-      "headline": "<hl>Pekerjaan aman dan terverifikasi</hl> di India dan Teluk",
+      "headline": "<hl>Pekerjaan Aman dan Terverifikasi</hl> untuk Pekerja Terampil di India dan Seluruh Dunia",
       "subline": "Setiap pekerjaan di Skill India Connect wajib memberi Anda tempat tinggal, asuransi kesehatan, dan transportasi. Kami memeriksa setiap pemberi kerja sebelum lowongan mereka tayang.",
       "ctaWorker": "Cari pekerjaan",
       "ctaEmployer": "Rekrut pekerja",
@@ -220,7 +220,11 @@
         "construction": "Konstruksi & Sipil",
         "electrical": "Kelistrikan & Perpipaan",
         "driving": "Pengemudi & Logistik",
-        "hospitality": "Perhotelan & Katering"
+        "hospitality": "Perhotelan & Katering",
+        "welding": "Pengelasan & Fabrikasi",
+        "technician": "Teknisi & Mekanik",
+        "healthcare": "Kesehatan & Keperawatan",
+        "team": "Semua Keahlian"
       },
       "trust": {
         "protection": "Setiap pekerjaan mencakup tempat tinggal, asuransi kesehatan & transportasi",

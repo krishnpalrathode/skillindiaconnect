@@ -108,7 +108,7 @@
       "home": "Skill India Connect home"
     },
     "hero": {
-      "headline": "<hl>Ligtas, beripikadong trabaho</hl> sa India at Gulf",
+      "headline": "<hl>Ligtas, Beripikadong Trabaho</hl> para sa mga Bihasang Manggagawa sa India at sa Buong Mundo",
       "subline": "Bawat trabaho sa Skill India Connect ay dapat magbigay sa iyo ng matutuluyan, health insurance, at transportasyon. Sinusuri namin ang bawat employer bago mailabas ang trabaho nila.",
       "ctaWorker": "Maghanap ng trabaho",
       "ctaEmployer": "Kumuha ng manggagawa",
@@ -220,7 +220,11 @@
         "construction": "Konstruksyon at Sibil",
         "electrical": "Elektrikal at Tubero",
         "driving": "Drayber at Logistics",
-        "hospitality": "Hospitality at Catering"
+        "hospitality": "Hospitality at Catering",
+        "welding": "Welding at Fabrication",
+        "technician": "Technician at Mekaniko",
+        "healthcare": "Healthcare at Nursing",
+        "team": "Lahat ng Bihasang Trabaho"
       },
       "trust": {
         "protection": "Kasama sa bawat trabaho ang tirahan, health insurance at transportasyon",

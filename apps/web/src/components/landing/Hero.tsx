@@ -24,12 +24,37 @@ import { cn } from '@/lib/utils';
 export function Hero({ locale }: { locale: string }) {
   const t = useTranslations('landing.hero');
 
-  // The accent phrase is `whitespace-nowrap` from `sm` up so its underline
-  // stays a single box. Devanagari sets considerably wider than Latin at the
-  // same point size, and the Hindi phrase ("सुरक्षित, जाँची हुई नौकरियाँ") runs
-  // past the column at 60px — so Hindi steps down one size rather than being
-  // clipped. Arabic is shorter than Latin here and is fine at full size.
-  const headlineSize = locale === 'hi' ? 'lg:text-5xl' : 'lg:text-6xl';
+  /*
+    The accent phrase is `whitespace-nowrap` from `sm` up so its underline stays
+    a single box, which means the phrase itself must fit the column at 60px.
+
+    Indic scripts set considerably wider than Latin at the same point size, and
+    the headline grew when it took on "for Skilled Workers" — so every locale
+    whose accent phrase is a long Indic rendering of "Safe, verified jobs" steps
+    down one size rather than being clipped. This used to name Hindi alone,
+    which quietly left Tamil, Malayalam, Telugu and Kannada — all of which set
+    wider than Hindi — overflowing.
+
+    Arabic, Urdu, Persian and Pashto stay at full size: their accent phrases are
+    shorter than the Latin one, not longer.
+  */
+  const WIDE_SETTING_LOCALES = [
+    'hi',
+    'mr',
+    'ne',
+    'bn',
+    'as',
+    'or',
+    'pa',
+    'gu',
+    'ta',
+    'te',
+    'ml',
+    'kn',
+    'si',
+    'am',
+  ];
+  const headlineSize = WIDE_SETTING_LOCALES.includes(locale) ? 'lg:text-5xl' : 'lg:text-6xl';
 
   return (
     <section className="relative isolate overflow-hidden bg-gradient-to-br from-primary-800 via-primary-700 to-primary-900">

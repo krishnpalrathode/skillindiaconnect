@@ -10,12 +10,36 @@ import { cn } from '@/lib/utils';
  * Slide sources live in /public/hero (Pexels licence — attribution logged in
  * public/hero/README.md). Each file is pre-cropped to 4:3 so it drops straight
  * into the fixed-ratio frame without a client-side resize.
+ *
+ * The ORDER is the pitch: the group shot first, then the six trades we actually
+ * recruit for. Someone who only sees the first slide before scrolling should
+ * already have seen a worker they recognise as themselves — which is the whole
+ * reason this is a carousel and not one photograph.
+ *
+ * Hospitality is deliberately not in the rotation any more: at six slides the
+ * strip already runs 30 seconds, and the trades below are the ones the job feed
+ * is actually weighted towards. The file stays in /public/hero for reuse.
  */
 const SLIDES = [
-  { src: '/hero/worker-construction.jpg', categoryKey: 'construction' },
+  /*
+    The group shot leads.
+
+    It is the only frame that shows the whole promise at once — five trades,
+    together, looking straight at the reader — so it is what a visitor who never
+    waits for slide two takes away. The single-trade slides behind it then do
+    the specific work of "yes, yours too".
+
+    Being first also makes it the LCP image (see `priority` below), which is why
+    it is worth keeping at the same 900x675 as everything else rather than
+    shipping the full-resolution original.
+  */
+  { src: '/hero/worker-team.jpg', categoryKey: 'team' },
   { src: '/hero/worker-electrical.jpg', categoryKey: 'electrical' },
+  { src: '/hero/worker-welding.jpg', categoryKey: 'welding' },
+  { src: '/hero/worker-technician.jpg', categoryKey: 'technician' },
+  { src: '/hero/worker-healthcare.jpg', categoryKey: 'healthcare' },
   { src: '/hero/worker-driving.jpg', categoryKey: 'driving' },
-  { src: '/hero/worker-hospitality.jpg', categoryKey: 'hospitality' },
+  { src: '/hero/worker-construction.jpg', categoryKey: 'construction' },
 ] as const;
 
 /** Trust lines rotate in step with the slides. Each is a product fact. */
@@ -141,7 +165,7 @@ export function HeroCarousel() {
               <Image
                 src={slide.src}
                 /* Intentionally empty: the slide wrapper is labelled "Image N
-                   of 4" and the visible category chip names the trade, so a
+                   of M" and the visible category chip names the trade, so a
                    descriptive alt here would just repeat it. */
                 alt=""
                 fill

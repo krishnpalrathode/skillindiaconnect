@@ -108,7 +108,7 @@
       "home": "Ukurasa wa nyumbani wa Skill India Connect"
     },
     "hero": {
-      "headline": "<hl>Kazi salama na zilizothibitishwa</hl> India na Ghuba",
+      "headline": "<hl>Kazi Salama Zilizothibitishwa</hl> kwa Wafanyakazi Wenye Ujuzi India na Duniani Kote",
       "subline": "Kila kazi kwenye Skill India Connect lazima ikupe mahali pa kuishi, bima ya afya, na usafiri. Tunakagua kila mwajiri kabla kazi yake haijachapishwa.",
       "ctaWorker": "Tafuta kazi",
       "ctaEmployer": "Ajiri wafanyakazi",
@@ -220,7 +220,11 @@
         "construction": "Ujenzi na Uhandisi",
         "electrical": "Umeme na Mabomba",
         "driving": "Madereva na Usafirishaji",
-        "hospitality": "Ukarimu na Upishi"
+        "hospitality": "Ukarimu na Upishi",
+        "welding": "Uchomeleaji na Utengenezaji",
+        "technician": "Mafundi na Mekanika",
+        "healthcare": "Afya na Uuguzi",
+        "team": "Kila Ujuzi wa Kazi"
       },
       "trust": {
         "protection": "Kila kazi inajumuisha malazi, bima ya afya na usafiri",
