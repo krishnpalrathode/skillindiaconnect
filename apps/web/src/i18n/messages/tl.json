@@ -108,11 +108,16 @@
       "home": "Skill India Connect home"
     },
     "hero": {
-      "headline": "<hl>Ligtas, beripikadong trabaho</hl> sa India at Gulf",
+      "headline": "<hl>Ligtas, Beripikadong Trabaho</hl> para sa mga Bihasang Manggagawa sa India at sa Buong Mundo",
       "subline": "Bawat trabaho sa Skill India Connect ay dapat magbigay sa iyo ng matutuluyan, health insurance, at transportasyon. Sinusuri namin ang bawat employer bago mailabas ang trabaho nila.",
-      "ctaWorker": "Maghanap ng trabaho",
-      "ctaEmployer": "Kumuha ng manggagawa",
-      "freeNote": "Libre para sa mga manggagawa. Palagi."
+      "ctaWorker": "Maghanap ng Beripikadong Trabaho",
+      "ctaEmployer": "Kumuha ng Bihasang Manggagawa",
+      "freeNote": "Libre para sa mga manggagawa. Palagi.",
+      "badges": {
+        "verified": "Beripikadong Employer",
+        "free": "Libre para sa Manggagawa",
+        "global": "India at Global na Oportunidad"
+      }
     },
     "trust": {
       "ariaLabel": "Bakit kami pinagkakatiwalaan ng mga manggagawa",
@@ -131,7 +136,8 @@
       "whatsapp": {
         "title": "Mga update sa WhatsApp",
         "body": "Magpapadala kami ng mensahe kapag nagbago ang status ng trabaho mo."
-      }
+      },
+      "heading": "Bakit Kami Pinagkakatiwalaan ng mga Manggagawa"
     },
     "howItWorks": {
       "heading": "Paano ito gumagana",
@@ -221,7 +227,11 @@
         "construction": "Konstruksyon at Sibil",
         "electrical": "Elektrikal at Tubero",
         "driving": "Drayber at Logistics",
-        "hospitality": "Hospitality at Catering"
+        "hospitality": "Hospitality at Catering",
+        "welding": "Welding at Fabrication",
+        "technician": "Technician at Mekaniko",
+        "healthcare": "Healthcare at Nursing",
+        "team": "Lahat ng Bihasang Trabaho"
       },
       "trust": {
         "protection": "Kasama sa bawat trabaho ang tirahan, health insurance at transportasyon",
@@ -237,6 +247,19 @@
       "browseAll": "Tingnan lahat ng trabaho",
       "noFee": "Walang bayad kailanman — hindi sa amin, hindi sa kahit sinong employer dito.",
       "ctaPrimary": "Gumawa ng libreng profile"
+    },
+    "announce": {
+      "ariaLabel": "Aming mga pangako",
+      "verified": "100% Beripikadong Employer",
+      "free": "Libre para sa Manggagawa",
+      "global": "Trabaho sa India at Buong Mundo"
+    },
+    "stats": {
+      "ariaLabel": "Ang Skill India Connect sa mga numero",
+      "workers": "Bihasang Manggagawang Nakakonekta",
+      "employers": "Beripikadong Employer",
+      "placements": "Matagumpay na Placement",
+      "countries": "Bansang may Trabaho"
     }
   },
   "employer": {

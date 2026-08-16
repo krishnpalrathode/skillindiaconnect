@@ -1,9 +1,16 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { ShieldCheck, ArrowRight } from 'lucide-react';
+import { ShieldCheck, BadgeCheck, Search, UserRound, Globe } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button-variants';
 import { HeroCarousel } from './HeroCarousel';
 import { cn } from '@/lib/utils';
+
+/** The reassurance row under the CTAs — see the comment at its render site. */
+const HERO_BADGES = [
+  { key: 'verified', Icon: ShieldCheck },
+  { key: 'free', Icon: BadgeCheck },
+  { key: 'global', Icon: Globe },
+] as const;
 
 /**
  * Hero — server-rendered, zero client JS.
@@ -24,12 +31,37 @@ import { cn } from '@/lib/utils';
 export function Hero({ locale }: { locale: string }) {
   const t = useTranslations('landing.hero');
 
-  // The accent phrase is `whitespace-nowrap` from `sm` up so its underline
-  // stays a single box. Devanagari sets considerably wider than Latin at the
-  // same point size, and the Hindi phrase ("सुरक्षित, जाँची हुई नौकरियाँ") runs
-  // past the column at 60px — so Hindi steps down one size rather than being
-  // clipped. Arabic is shorter than Latin here and is fine at full size.
-  const headlineSize = locale === 'hi' ? 'lg:text-5xl' : 'lg:text-6xl';
+  /*
+    The accent phrase is `whitespace-nowrap` from `sm` up so its underline stays
+    a single box, which means the phrase itself must fit the column at 60px.
+
+    Indic scripts set considerably wider than Latin at the same point size, and
+    the headline grew when it took on "for Skilled Workers" — so every locale
+    whose accent phrase is a long Indic rendering of "Safe, verified jobs" steps
+    down one size rather than being clipped. This used to name Hindi alone,
+    which quietly left Tamil, Malayalam, Telugu and Kannada — all of which set
+    wider than Hindi — overflowing.
+
+    Arabic, Urdu, Persian and Pashto stay at full size: their accent phrases are
+    shorter than the Latin one, not longer.
+  */
+  const WIDE_SETTING_LOCALES = [
+    'hi',
+    'mr',
+    'ne',
+    'bn',
+    'as',
+    'or',
+    'pa',
+    'gu',
+    'ta',
+    'te',
+    'ml',
+    'kn',
+    'si',
+    'am',
+  ];
+  const headlineSize = WIDE_SETTING_LOCALES.includes(locale) ? 'lg:text-5xl' : 'lg:text-6xl';
 
   return (
     <section className="relative isolate overflow-hidden bg-gradient-to-br from-primary-800 via-primary-700 to-primary-900">
@@ -113,11 +145,8 @@ export function Hero({ locale }: { locale: string }) {
                 'hover:scale-[1.02] hover:shadow-xl hover:shadow-black/25 active:scale-[0.98]',
               )}
             >
+              <Search className="size-5 shrink-0" aria-hidden="true" />
               {t('ctaWorker')}
-              <ArrowRight
-                className="size-5 transition-transform duration-150 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
-                aria-hidden="true"
-              />
             </Link>
 
             <Link
@@ -129,17 +158,35 @@ export function Hero({ locale }: { locale: string }) {
                 'hover:scale-[1.02] hover:border-white hover:bg-white/10 active:scale-[0.98] active:bg-white/20',
               )}
             >
+              <UserRound className="size-5 shrink-0" aria-hidden="true" />
               {t('ctaEmployer')}
             </Link>
           </div>
 
-          <p
-            className="hero-anim animate-hero-rise mt-5 flex items-center gap-2 text-sm font-medium text-white/80"
+          {/*
+            The three promises, inline under the CTAs.
+
+            Same claims as the navy bar at the top of the page, restated at the
+            point of decision — someone who has just read the headline and is
+            deciding whether to press the orange button should not have to scroll
+            back up to remember that it is free. Rendered as one wrapping row of
+            small items rather than a second band, so it supports the button
+            instead of competing with it.
+          */}
+          <ul
+            className="hero-anim animate-hero-rise mt-5 flex flex-wrap items-center gap-x-5 gap-y-2"
             style={{ animationDelay: '240ms' }}
           >
-            <ShieldCheck className="size-4 shrink-0 text-accent-300" aria-hidden="true" />
-            {t('freeNote')}
-          </p>
+            {HERO_BADGES.map(({ key, Icon }) => (
+              <li
+                key={key}
+                className="flex items-center gap-1.5 text-sm font-semibold text-white/85"
+              >
+                <Icon className="size-4 shrink-0 text-accent-300" aria-hidden="true" />
+                {t(`badges.${key}`)}
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* ── Right column: auto-advancing worker imagery ── */}
