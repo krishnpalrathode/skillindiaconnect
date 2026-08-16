@@ -71,7 +71,10 @@ export function TermsAcceptance({
             </span>
           </span>
           <ChevronDown
-            className={cn('size-4 shrink-0 text-neutral-600 transition-transform', open && 'rotate-180')}
+            className={cn(
+              'size-4 shrink-0 text-neutral-600 transition-transform',
+              open && 'rotate-180',
+            )}
             aria-hidden="true"
           />
         </button>

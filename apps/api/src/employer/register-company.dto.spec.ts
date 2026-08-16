@@ -65,7 +65,11 @@ describe('RegisterCompanyDto — every profile field is required', () => {
     'description',
     'registrationCertKey',
   ])('rejects a payload missing %s', async (field) => {
-    const { [field]: _dropped, ...withoutField } = VALID as Record<string, unknown>;
+    // Copy-and-delete rather than destructuring the key away: the rest-sibling
+    // form leaves a binding nobody reads, which this repo's no-unused-vars rule
+    // rejects (its `^_` exemption covers arguments, not variables).
+    const withoutField: Record<string, unknown> = { ...VALID };
+    delete withoutField[field];
     expect(fieldErrors(await errorsFor(withoutField), field)).not.toHaveLength(0);
   });
 
@@ -94,9 +98,28 @@ describe('RegisterCompanyDto — every profile field is required', () => {
     ).toHaveLength(0);
   });
 
+  /**
+   * The previous version of this test added `languagePref` to VALID and then
+   * destructured it straight back off, so it asserted nothing the first test in
+   * this file did not already cover. Optionality has two halves worth pinning —
+   * absent is fine, and present-and-valid is fine — plus the bound that keeps it
+   * from being a free-text field.
+   */
   it('leaves languagePref optional — it is not on the form and has a server default', async () => {
-    const { languagePref: _omitted, ...withoutLocale } = { ...VALID, languagePref: 'en' };
-    expect(await errorsFor(withoutLocale)).toHaveLength(0);
+    expect('languagePref' in VALID).toBe(false);
+    expect(await errorsFor(VALID)).toHaveLength(0);
+  });
+
+  it('accepts a supported locale when one IS supplied', async () => {
+    expect(fieldErrors(await errorsFor({ ...VALID, languagePref: 'hi' }), 'languagePref')).toHaveLength(
+      0,
+    );
+  });
+
+  it('rejects a locale the platform does not support', async () => {
+    expect(
+      fieldErrors(await errorsFor({ ...VALID, languagePref: 'xx' }), 'languagePref'),
+    ).not.toHaveLength(0);
   });
 });
 
