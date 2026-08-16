@@ -1565,10 +1565,41 @@ const postJobs = http.post(`${BASE}/employers/me/jobs`, async ({ request }) => {
     accommodation: boolean;
     healthInsurance: boolean;
     transportation: boolean;
+    employmentType?: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT';
+    contractDuration?: components['schemas']['ContractDuration'];
   };
 
   if (!body.title || !body.market || !body.location) {
     return errorResponse(422, 'VALIDATION_ERROR', 'Validation failed', 'Required fields missing.');
+  }
+
+  // Mirrors JOB_DESCRIPTION_MIN in the API. A mock laxer than the server lets a
+  // form ship broken and only fail in production.
+  if (!body.description || body.description.trim().length < 300) {
+    return errorResponse(
+      400,
+      'VALIDATION_ERROR',
+      'Validation failed',
+      'description must be at least 300 characters.',
+    );
+  }
+
+  // The employmentType/contractDuration pairing, both directions.
+  if (body.employmentType === 'CONTRACT' && !body.contractDuration) {
+    return errorResponse(
+      400,
+      'CONTRACT_DURATION_REQUIRED',
+      'Contract duration required',
+      'A contract job must state how long the contract runs.',
+    );
+  }
+  if (body.employmentType !== 'CONTRACT' && body.contractDuration) {
+    return errorResponse(
+      400,
+      'CONTRACT_DURATION_NOT_APPLICABLE',
+      'Contract duration not applicable',
+      'Contract duration applies only to contract roles.',
+    );
   }
 
   const currency = body.currency ?? body.salaryCurrency ?? 'AED';
@@ -1582,6 +1613,8 @@ const postJobs = http.post(`${BASE}/employers/me/jobs`, async ({ request }) => {
     description: body.description,
     categoryId: body.categoryId ?? null,
     categoryOther: body.categoryOther ?? null,
+    employmentType: body.employmentType ?? 'FULL_TIME',
+    contractDuration: body.contractDuration ?? null,
     salaryMin: body.salaryMin ?? null,
     salaryMax: body.salaryMax ?? null,
     // Store both keys so public (salaryCurrency) and employer (currency) reads agree.

@@ -50,6 +50,20 @@ afterEach(() => {
 
 // ─── The list + review queue ─────────────────────────────────────────────────
 
+/**
+ * A description that clears the 300-character minimum (JOB_DESCRIPTION_MIN).
+ *
+ * Pasted rather than typed: user.type() sends one keystroke at a time, and 300+
+ * of those in jsdom turns a fast test into a slow one for no extra coverage.
+ */
+const LONG_DESCRIPTION = [
+  'We need an experienced worker for a long-term project on a busy commercial',
+  'site. The role covers day-to-day installation, maintenance and finishing work',
+  'to the standards set by the site supervisor. Accommodation, health insurance',
+  'and transport to site are provided. Overtime is available and paid at the',
+  'standard rate. Applicants should bring their own basic hand tools.',
+].join(' ');
+
 describe('AdminJobsTable', () => {
   it('the dashboard deep-link lands FILTERED: ?status=PENDING_REVIEW shows only the queue', async () => {
     signInAs(ADMIN_USER_ID);
@@ -414,10 +428,8 @@ describe('OnBehalfJobForm', () => {
     await waitFor(() => expect(categorySelect.options.length).toBeGreaterThan(1));
     await user.selectOptions(categorySelect, categorySelect.options[1]!.value);
     await user.type(screen.getByLabelText(/location/i), 'Dubai');
-    await user.type(
-      container.querySelector<HTMLTextAreaElement>('#ob-job-description')!,
-      'Operate tower cranes on site.',
-    );
+    await user.click(container.querySelector<HTMLTextAreaElement>('#ob-job-description')!);
+    await user.paste(LONG_DESCRIPTION);
     await user.type(container.querySelector<HTMLInputElement>('#salary-min')!, '2000');
     await user.type(container.querySelector<HTMLInputElement>('#salary-max')!, '2500');
 

@@ -171,7 +171,7 @@ async function mkJob(
       employmentType: EmploymentType.FULL_TIME,
       market: JobMarket.GULF,
       location: 'Dubai',
-      description: 'x',
+      description: JOB_DESCRIPTION,
       categoryId,
       salaryMin: 100,
       salaryMax: 200,
@@ -333,6 +333,24 @@ beforeEach(() => {
 const settleEvents = () => new Promise((resolve) => setTimeout(resolve, 50));
 
 // ─── review: the gate re-check trio ──────────────────────────────────────────
+
+/**
+ * A description that clears JOB_DESCRIPTION_MIN (300 chars).
+ *
+ * These fixtures POST through the HTTP layer, so the ValidationPipe runs and the
+ * old one-character 'x' is now correctly rejected. Kept realistic rather than
+ * padded with filler so the failure mode (a too-short description) stays legible
+ * if the floor ever moves.
+ */
+const JOB_DESCRIPTION = [
+  'We are hiring experienced masons for a large commercial construction project.',
+  'The work involves blockwork, plastering and finishing to a high standard on a',
+  'busy multi-storey site. You will report to the site supervisor and work as part',
+  'of a team of eight. Accommodation, health insurance and daily transport to site',
+  'are provided by the company. Overtime is available and paid at the standard',
+  'rate. Applicants should have their own basic hand tools and be comfortable',
+  'working at height with the correct safety equipment supplied on site.',
+].join(' ');
 
 describe('POST /admin/jobs/{id}/review — APPROVE re-runs the publish gates', () => {
   it('all gates passing → ACTIVE with the SAME post-publish work as a direct publish', async () => {
@@ -585,7 +603,7 @@ describe('POST /admin/jobs (on-behalf)', () => {
     // gates it exists to test. Qatar matches both GULF and the Doha location.
     country: 'Qatar',
     location: 'Doha',
-    description: 'x',
+    description: JOB_DESCRIPTION,
     categoryId,
     requirements: [],
     salaryMin: 100,
@@ -784,7 +802,7 @@ describe('GET /admin/jobs/{id} — the moderation detail', () => {
     const res = await get(`/admin/jobs/${jobId}`, UserRole.SUPER_ADMIN).expect(200);
     const d = res.body.data;
     // The candidate-eye fields the row never carried:
-    expect(d.description).toBe('x');
+    expect(d.description).toBe(JOB_DESCRIPTION);
     expect(d.salaryMin).toBe(100);
     expect(d.salaryCurrency).toBe('AED');
     expect(d.hoursPerDay).toBe(8);

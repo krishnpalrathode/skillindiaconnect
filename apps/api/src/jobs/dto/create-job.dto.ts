@@ -11,10 +11,19 @@ import {
   Max,
   MaxLength,
   Min,
+  MinLength,
 } from 'class-validator';
-import { Currency, EmploymentType, JobMarket } from '@prisma/client';
+import { ContractDuration, Currency, EmploymentType, JobMarket } from '@prisma/client';
 import { ALL_JOB_COUNTRIES } from '../job-countries';
 import { CATEGORY_OTHER_MAX_LENGTH } from '../../core/job-categories';
+
+/**
+ * Minimum length of a job description, in characters.
+ *
+ * Exported so the web form, the update DTO and the OpenAPI contract all state
+ * the SAME number — three copies of `300` drift the moment one is tuned.
+ */
+export const JOB_DESCRIPTION_MIN = 300;
 
 export class CreateJobDto {
   @IsString()
@@ -40,8 +49,20 @@ export class CreateJobDto {
   @MaxLength(500)
   location!: string;
 
+  /**
+   * A real description, not a placeholder.
+   *
+   * 300 characters is roughly three sentences — enough to say what the work is,
+   * where, and what the candidate needs. The floor applies at CREATE, so it
+   * catches a thin description while the employer is still on the form, rather
+   * than at publish where the error arrives detached from the field that caused
+   * it. It does mean a draft cannot be saved with two words in this box; that is
+   * consistent with the rest of the form, which already requires title, country,
+   * category, location, salary and hours before a draft will save.
+   */
   @IsString()
   @IsNotEmpty()
+  @MinLength(JOB_DESCRIPTION_MIN)
   @MaxLength(15000)
   description!: string;
 
@@ -122,11 +143,25 @@ export class CreateJobDto {
   @Min(0)
   overtimeRateSubunits?: number;
 
+  /** @deprecated Never collected by any form; use `contractDuration`. */
   @IsOptional()
   @IsInt()
   @Min(1)
   @Max(120)
   contractPeriodMonths?: number;
+
+  /**
+   * Optional HERE and paired in the service: it is REQUIRED when
+   * `employmentType` is CONTRACT and REJECTED otherwise.
+   *
+   * class-validator sees one field at a time, so a cross-field rule expressed
+   * here would either be unenforceable or would have to duplicate the
+   * employment-type check in a custom constraint. JobsService already owns the
+   * comparable category/categoryOther pairing; this lives beside it.
+   */
+  @IsOptional()
+  @IsEnum(ContractDuration)
+  contractDuration?: ContractDuration;
 
   @IsOptional()
   @IsInt()

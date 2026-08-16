@@ -18,9 +18,10 @@ import { countriesForMarket } from '@/lib/countries';
 import {
   DEFAULT_FORM_VALUES,
   validateJobForm,
+  CONTRACT_DURATIONS,
   formToPayload,
   jobToFormValues,
-  getCurrenciesForMarket,
+  defaultCurrencyForMarket,
   type JobFormValues,
 } from '@/lib/jobs/jobFormState';
 import {
@@ -92,8 +93,10 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
         // country to one valid for that market: India is auto-selected for LOCAL
         // (its only option); GULF requires an explicit pick.
         if (partial.market && partial.market !== prev.market) {
-          const currencies = getCurrenciesForMarket(partial.market);
-          next.salaryCurrency = currencies[0]!;
+          // The market picks the DEFAULT currency, not the available set — the
+          // list is now the full enum, so currencies[0] would put every market
+          // on INR regardless of where the job actually is.
+          next.salaryCurrency = defaultCurrencyForMarket(partial.market);
           next.country = partial.market === 'LOCAL' ? 'India' : '';
         }
         onValuesChange?.(next);
@@ -312,9 +315,17 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
           <select
             id="job-employment-type"
             value={values.employmentType}
-            onChange={(e) =>
-              patch({ employmentType: e.target.value as JobFormValues['employmentType'] })
-            }
+            onChange={(e) => {
+              const next = e.target.value as JobFormValues['employmentType'];
+              // Moving off Contract drops the duration with it. The server
+              // rejects a duration on a non-contract job, so keeping a stale
+              // value here would turn a harmless dropdown change into a 400.
+              patch(
+                next === 'CONTRACT'
+                  ? { employmentType: next }
+                  : { employmentType: next, contractDuration: '' },
+              );
+            }}
             className="flex h-12 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-[#0F3D91] ps-3.5 pe-3.5"
           >
             <option value="FULL_TIME">Full-time</option>
@@ -322,6 +333,40 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
             <option value="CONTRACT">Contract</option>
           </select>
         </Field>
+
+        {/*
+          Revealed by Contract only. A candidate's first question about a contract
+          role is how long it runs, and the band is the honest answer — an exact
+          month count would be a number the employer never actually committed to.
+        */}
+        {values.employmentType === 'CONTRACT' && (
+          <Field
+            id="job-contract-duration"
+            label="Contract duration"
+            required
+            error={errors.contractDuration}
+          >
+            <select
+              id="job-contract-duration"
+              value={values.contractDuration}
+              onChange={(e) =>
+                patch({
+                  contractDuration: e.target.value as JobFormValues['contractDuration'],
+                })
+              }
+              aria-invalid={!!errors.contractDuration}
+              aria-required
+              className="flex h-12 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-[#0F3D91] ps-3.5 pe-3.5"
+            >
+              <option value="">Select contract length</option>
+              {CONTRACT_DURATIONS.map((d) => (
+                <option key={d.value} value={d.value}>
+                  {d.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
 
         <Field id="job-location" label={t('basic.locationLabel')} required error={errors.location}>
           <Input

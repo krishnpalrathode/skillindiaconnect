@@ -48,6 +48,19 @@ enum EmploymentType {
   CONTRACT
 }
 
+/// Length of a CONTRACT engagement, as a BAND rather than an exact figure.
+///
+/// Bands, not a month count, because that is what an employer actually knows at
+/// posting time — "roughly six months to a year" is honest, while storing `9`
+/// invents a precision nobody stated. The bands are contiguous and
+/// non-overlapping so a reader can tell two jobs apart without arithmetic.
+enum ContractDuration {
+  MONTHS_1_6
+  MONTHS_6_12
+  YEARS_1_2
+  YEARS_2_5
+}
+
 enum JobStatus {
   DRAFT
   PENDING_REVIEW
@@ -624,7 +637,15 @@ model Job {
   daysPerWeek          Int
   overtime             Boolean @default(false)
   overtimeRateSubunits Int?
+  /// DEPRECATED in favour of `contractDuration`. An exact month count was never
+  /// collected by any form and is null on every row; it stays only because it is
+  /// already in the public contract. Do not write it from new code.
   contractPeriodMonths Int?
+  /// How long a CONTRACT role runs, as the BAND the employer actually chose.
+  /// Nullable because it is meaningless for full-time and part-time roles — the
+  /// "required exactly when employmentType is CONTRACT" pairing is enforced in
+  /// JobsService, which is the only place that can see both fields at once.
+  contractDuration     ContractDuration?
   vacancies            Int?
   genderPreference     String?
   isFeatured      Boolean   @default(false)

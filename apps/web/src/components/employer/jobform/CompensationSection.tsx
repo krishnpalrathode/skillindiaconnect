@@ -6,9 +6,11 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   getCurrenciesForMarket,
+  defaultCurrencyForMarket,
   type JobFormValues,
   type JobFormErrors,
 } from '@/lib/jobs/jobFormState';
+import { CURRENCIES } from '@/lib/currencies';
 
 interface CompensationSectionProps {
   values: JobFormValues;
@@ -22,10 +24,18 @@ export function CompensationSection({ values, errors, onChange }: CompensationSe
   const t = useTranslations('jobform.compensation');
   const currencies = getCurrenciesForMarket(values.market);
 
-  // When market changes (parent controls market), ensure currency is valid
+  /*
+    The list no longer narrows with the market, so a stored code is almost always
+    still valid; the guard remains for a row written before the list widened.
+    Falling back to the MARKET DEFAULT rather than the first option means a Gulf
+    job lands on AED instead of whatever happens to sort first.
+  */
   const currency = currencies.includes(values.salaryCurrency)
     ? values.salaryCurrency
-    : currencies[0]!;
+    : defaultCurrencyForMarket(values.market);
+
+  // Name beside the code: "OMR" alone is not something most posters can read off.
+  const nameFor = (code: string) => CURRENCIES.find((c) => c.code === code)?.name;
 
   return (
     <section aria-labelledby="compensation-heading" className="flex flex-col gap-4">
@@ -53,11 +63,14 @@ export function CompensationSection({ values, errors, onChange }: CompensationSe
           className="flex h-12 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/70 focus-visible:border-[#0F3D91] ps-3.5 pe-3.5"
           aria-required
         >
-          {currencies.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
+          {currencies.map((c) => {
+            const name = nameFor(c);
+            return (
+              <option key={c} value={c}>
+                {name ? `${c} — ${name}` : c}
+              </option>
+            );
+          })}
         </select>
       </Field>
 

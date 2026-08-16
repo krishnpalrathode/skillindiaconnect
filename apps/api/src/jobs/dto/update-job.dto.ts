@@ -10,10 +10,12 @@ import {
   Max,
   MaxLength,
   Min,
+  MinLength,
 } from 'class-validator';
-import { Currency, EmploymentType, JobMarket } from '@prisma/client';
+import { ContractDuration, Currency, EmploymentType, JobMarket } from '@prisma/client';
 import { ALL_JOB_COUNTRIES } from '../job-countries';
 import { CATEGORY_OTHER_MAX_LENGTH } from '../../core/job-categories';
+import { JOB_DESCRIPTION_MIN } from './create-job.dto';
 
 export class UpdateJobDto {
   @IsOptional()
@@ -39,8 +41,11 @@ export class UpdateJobDto {
   @MaxLength(500)
   location?: string;
 
+  // Same floor as create — see JOB_DESCRIPTION_MIN. An edit must not be able to
+  // whittle a published description back down below the bar it had to clear.
   @IsOptional()
   @IsString()
+  @MinLength(JOB_DESCRIPTION_MIN)
   @MaxLength(15000)
   description?: string;
 
@@ -129,11 +134,17 @@ export class UpdateJobDto {
   @Min(0)
   overtimeRateSubunits?: number;
 
+  /** @deprecated Never collected by any form; use `contractDuration`. */
   @IsOptional()
   @IsInt()
   @Min(1)
   @Max(120)
   contractPeriodMonths?: number;
+
+  // Paired with employmentType in JobsService, exactly as on create.
+  @IsOptional()
+  @IsEnum(ContractDuration)
+  contractDuration?: ContractDuration;
 
   @IsOptional()
   @IsInt()

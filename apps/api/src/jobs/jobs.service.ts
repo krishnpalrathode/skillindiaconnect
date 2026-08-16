@@ -6,7 +6,14 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { JobMarket, JobStatus, Prisma, UserRole } from '@prisma/client';
+import {
+  ContractDuration,
+  EmploymentType,
+  JobMarket,
+  JobStatus,
+  Prisma,
+  UserRole,
+} from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { EmployerService } from '../employer/employer.service';
 import { ApplicationsAggregateService } from '../applications/applications-aggregate.service';
@@ -161,6 +168,7 @@ export class JobsService {
     }
 
     const categoryOther = await this.resolveCategoryOther(dto.categoryId, dto.categoryOther);
+    const contractDuration = resolveContractDuration(dto.employmentType, dto.contractDuration);
 
     return this.prisma.job.create({
       data: {
@@ -190,6 +198,7 @@ export class JobsService {
         overtime: dto.overtime,
         overtimeRateSubunits: dto.overtimeRateSubunits,
         contractPeriodMonths: dto.contractPeriodMonths,
+        contractDuration,
         vacancies: dto.vacancies,
         genderPreference: dto.genderPreference,
         isFeatured: dto.isFeatured ?? false,
@@ -204,6 +213,9 @@ export class JobsService {
 
   /**
    * Pairs `categoryId` with `categoryOther` and returns what should be stored.
+   *
+   * (See `resolveContractDuration` at the foot of this file for the sibling
+   * employmentType/contractDuration pairing — same shape, no DB read needed.)
    *
    * Both directions are errors, and both are worth catching: free text with a
    * real trade selected means the UI sent a stale draft value that would then
@@ -351,10 +363,24 @@ export class JobsService {
       ? await this.resolveCategoryOther(dto.categoryId ?? job.categoryId, dto.categoryOther)
       : undefined;
 
+    /*
+      Re-pair employment type and contract duration whenever EITHER moves, for
+      the same reason as the category pair above: the rule is about the MERGED
+      job, not the patch. Switching a CONTRACT job to FULL_TIME without sending
+      a duration must clear the stored band — resolveContractDuration returns
+      null for that case, and the spread below writes it — while switching TO
+      CONTRACT without a duration is refused rather than silently left blank.
+    */
+    const contractTouched = dto.employmentType !== undefined || dto.contractDuration !== undefined;
+    const contractDuration = contractTouched
+      ? resolveContractDuration(dto.employmentType ?? job.employmentType, dto.contractDuration)
+      : undefined;
+
     const updated = await this.prisma.job.update({
       where: { id: jobId },
       data: {
         ...(categoryTouched && { categoryOther }),
+        ...(contractTouched && { contractDuration }),
         ...(dto.title !== undefined && { title: dto.title }),
         ...(dto.employmentType !== undefined && { employmentType: dto.employmentType }),
         ...(dto.market !== undefined && { market: dto.market }),
@@ -864,4 +890,40 @@ export interface TopJobRow {
   applications: number;
   shortlisted: number;
   hires: number;
+}
+
+/**
+ * Pairs `employmentType` with `contractDuration` and returns what to store.
+ *
+ * Both directions are errors. A CONTRACT job with no duration is the whole
+ * reason candidates ask "how long is this for?" before applying; a duration on a
+ * full-time job is a value the form cannot show and nobody can correct, which
+ * would then leak into the job card as a term that does not exist.
+ *
+ * Returns `null` rather than `undefined` for the non-contract case so that
+ * switching an existing CONTRACT job to FULL_TIME CLEARS the stale duration —
+ * `undefined` would leave the old band on the row, silently attached to a job
+ * that is no longer a contract.
+ */
+export function resolveContractDuration(
+  employmentType: EmploymentType,
+  contractDuration: ContractDuration | undefined,
+): ContractDuration | null {
+  if (employmentType === EmploymentType.CONTRACT) {
+    if (!contractDuration) {
+      throw new BadRequestException({
+        code: 'CONTRACT_DURATION_REQUIRED',
+        detail: 'A contract job must state how long the contract runs.',
+      });
+    }
+    return contractDuration;
+  }
+
+  if (contractDuration) {
+    throw new BadRequestException({
+      code: 'CONTRACT_DURATION_NOT_APPLICABLE',
+      detail: 'Contract duration applies only to contract roles.',
+    });
+  }
+  return null;
 }

@@ -1204,7 +1204,8 @@
       "heading": "Job Description",
       "subtitle": "Describe the role, responsibilities, and ideal candidate.",
       "placeholder": "Describe the position, day-to-day responsibilities, and what makes this a great opportunity…",
-      "charsLeft": "characters remaining"
+      "charsLeft": "characters remaining",
+      "charsToMinimum": "{count, plural, one {# more character} other {# more characters}} to reach the {min} minimum"
     },
     "compensation": {
       "heading": "Compensation",

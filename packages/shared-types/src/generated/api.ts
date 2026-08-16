@@ -3231,7 +3231,10 @@ export interface components {
             status: components["schemas"]["JobStatus"];
             market: components["schemas"]["JobMarket"];
             location: string;
+            /** @description At least 300 characters — roughly three sentences. Enforced on create AND update, so an edit cannot whittle a description back below the bar it originally had to clear. */
             description?: string;
+            /** @description Null unless `employmentType` is CONTRACT. */
+            contractDuration?: components["schemas"]["ContractDuration"] | null;
             /** Format: uuid */
             categoryId?: string | null;
             /** @description Free-text trade name. Set ONLY when `categoryId` is the `other` category; null/absent for every fixed trade. Required when that category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`). */
@@ -3879,7 +3882,9 @@ export interface components {
             title: string;
             market: components["schemas"]["JobMarket"];
             location: string;
-            description?: string;
+            /** @description At least 300 characters — roughly three sentences. Enforced at CREATE (not only at publish) so a thin description is reported against the field while the employer is still on the form. */
+            description: string;
+            contractDuration?: components["schemas"]["ContractDuration"];
             /** Format: uuid */
             categoryId?: string;
             /** @description Free-text trade name. Set ONLY when `categoryId` is the `other` category; null/absent for every fixed trade. Required when that category is chosen (400 `CATEGORY_OTHER_REQUIRED`) and rejected otherwise (400 `CATEGORY_OTHER_NOT_ALLOWED`). */
@@ -4343,8 +4348,17 @@ export interface components {
             airTicketArrival?: boolean;
             airTicketDeparture?: boolean;
             otherAllowance?: string | null;
+            /**
+             * @deprecated
+             * @description DEPRECATED — never collected by any form and null on every row. Use `contractDuration`, which stores the band the employer actually chose.
+             */
             contractPeriodMonths?: number | null;
         };
+        /**
+         * @description How long a CONTRACT role runs, as a BAND. Bands rather than a month count because that is what an employer knows at posting time — storing an exact figure would invent precision nobody stated. Required exactly when `employmentType` is CONTRACT (400 `CONTRACT_DURATION_REQUIRED`), and rejected for any other employment type (400 `CONTRACT_DURATION_NOT_APPLICABLE`).
+         * @enum {string}
+         */
+        ContractDuration: "MONTHS_1_6" | "MONTHS_6_12" | "YEARS_1_2" | "YEARS_2_5";
         AdminApplicationRow: components["schemas"]["Application"] & {
             candidateName?: string | null;
             jobTitle?: string | null;
