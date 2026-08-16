@@ -11,6 +11,9 @@ import { AdminDocumentsController } from './admin-documents.controller';
 import { AdminDocumentsService } from './admin-documents.service';
 import { AdminCandidatesController } from './admin-candidates.controller';
 import { AdminCandidatesService } from './admin-candidates.service';
+import { AdminAnalyticsController } from './admin-analytics.controller';
+import { AdminAnalyticsService } from './admin-analytics.service';
+import { SettingsModule } from '../settings/settings.module';
 
 /**
  * The admin module (S6a-B1) — a THIN ORCHESTRATION LAYER that OWNS NO TABLES.
@@ -47,8 +50,21 @@ import { AdminCandidatesService } from './admin-candidates.service';
     // S6b-B1: user-lifecycle writes (suspend/reactivate/purge-mark) go through
     // AccountService — the account module owns the users lifecycle columns.
     AccountModule,
+    // S22: the analytics window needs the completion threshold to count
+    // incomplete profiles — read through SettingsService, never the table.
+    SettingsModule,
   ],
-  controllers: [AdminDashboardController, AdminDocumentsController, AdminCandidatesController],
-  providers: [AdminDashboardService, AdminDocumentsService, AdminCandidatesService],
+  controllers: [
+    AdminDashboardController,
+    AdminAnalyticsController,
+    AdminDocumentsController,
+    AdminCandidatesController,
+  ],
+  providers: [
+    AdminDashboardService,
+    AdminAnalyticsService,
+    AdminDocumentsService,
+    AdminCandidatesService,
+  ],
 })
 export class AdminModule {}

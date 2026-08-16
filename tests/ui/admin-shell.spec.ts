@@ -61,9 +61,12 @@ test.describe('BROWSER-WALK: GET /admin/* resolves with no 404', () => {
     const nav = page.getByRole('navigation', { name: /admin navigation/i });
     await expect(nav).toBeVisible({ timeout: 10_000 });
 
-    // KPIs + queues rendered ⇒ /admin/dashboard resolved.
+    // KPIs + queues rendered ⇒ /admin/analytics resolved. (The dashboard's data
+    // source moved from /admin/dashboard to /admin/analytics; the walk still
+    // proves the same thing — a real admin GET returned real content.)
     await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
-    await expect(page.getByText('Waiting for you')).toBeVisible();
+    await expect(page.getByRole('link', { name: /Employers awaiting review:/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Last 30 days/ })).toBeVisible();
 
     expect(notFound).toHaveLength(0);
     await page.screenshot({ path: 'e2e/screenshots/admin-shell-browser-walk.png' });

@@ -206,6 +206,101 @@ export class CandidateReadService {
     return { total, active };
   }
 
+  // ── Admin analytics reads (Screen 22) ───────────────────────────────────────
+
+  /**
+   * Candidate registrations per day, split by the states the growth chart shows.
+   *
+   * `verified` means phone-verified (phoneVerifiedAt), `active` means the profile
+   * is visible and available — the two things the platform can actually observe.
+   * Neither is a proxy for "engaged"; the chart labels them literally.
+   */
+  async dailyGrowthSeries(from: Date, to: Date): Promise<CandidateGrowthRow[]> {
+    return this.prisma.$queryRaw<CandidateGrowthRow[]>`
+      SELECT to_char(date_trunc('day', p."createdAt"), 'YYYY-MM-DD') AS date,
+             COUNT(*)::int AS registrations,
+             COUNT(*) FILTER (WHERE p."phoneVerifiedAt" IS NOT NULL)::int AS verified,
+             COUNT(*) FILTER (WHERE p."profileVisible" AND p."isAvailable")::int AS active
+      FROM candidate_profiles p
+      JOIN users u ON u.id = p."userId"
+      WHERE u."purgedAt" IS NULL
+        AND p."createdAt" >= ${from} AND p."createdAt" < ${to}
+      GROUP BY 1 ORDER BY 1`;
+  }
+
+  /** Non-purged candidates created in a window — the KPI delta. */
+  async countCreatedBetween(from: Date, to: Date): Promise<number> {
+    return this.prisma.candidateProfile.count({
+      where: { user: { purgedAt: null }, createdAt: { gte: from, lt: to } },
+    });
+  }
+
+  /**
+   * Experience and age distributions.
+   *
+   * Age is derived from `dob`, which many profiles leave null — those land in an
+   * explicit "Not given" bucket rather than being dropped, so the chart's total
+   * still reconciles with the candidate count.
+   *
+   * There is NO education distribution: the schema has no education field. The
+   * dashboard says so rather than showing an empty donut.
+   */
+  async demographics(): Promise<{ experience: BucketRow[]; age: BucketRow[] }> {
+    const [experience, age] = await Promise.all([
+      this.prisma.$queryRaw<BucketRow[]>`
+        SELECT bucket AS label, COUNT(*)::int AS count FROM (
+          SELECT CASE
+                   WHEN COALESCE(y.total, 0) < 2  THEN '0-2 years'
+                   WHEN COALESCE(y.total, 0) < 5  THEN '2-5 years'
+                   WHEN COALESCE(y.total, 0) < 10 THEN '5-10 years'
+                   ELSE '10+ years'
+                 END AS bucket
+          FROM candidate_profiles p
+          JOIN users u ON u.id = p."userId" AND u."purgedAt" IS NULL
+          LEFT JOIN (
+            SELECT "candidateId", SUM(years + months / 12.0) AS total
+            FROM work_experiences GROUP BY "candidateId"
+          ) y ON y."candidateId" = p.id
+        ) s GROUP BY bucket`,
+      this.prisma.$queryRaw<BucketRow[]>`
+        SELECT bucket AS label, COUNT(*)::int AS count FROM (
+          SELECT CASE
+                   WHEN p.dob IS NULL THEN 'Not given'
+                   WHEN EXTRACT(YEAR FROM AGE(p.dob)) < 26 THEN '18-25'
+                   WHEN EXTRACT(YEAR FROM AGE(p.dob)) < 36 THEN '26-35'
+                   WHEN EXTRACT(YEAR FROM AGE(p.dob)) < 46 THEN '36-45'
+                   ELSE '45+'
+                 END AS bucket
+          FROM candidate_profiles p
+          JOIN users u ON u.id = p."userId" AND u."purgedAt" IS NULL
+        ) s GROUP BY bucket`,
+    ]);
+    return { experience, age };
+  }
+
+  /**
+   * Most-held candidate skills.
+   *
+   * This is SUPPLY (skills candidates have), not demand. The dashboard labels it
+   * as such — calling it "in-demand" would invert the meaning, and job-side skill
+   * requirements are not a structured field.
+   */
+  async topSkills(limit = 10): Promise<Array<{ name: string; count: number }>> {
+    return this.prisma.$queryRaw<Array<{ name: string; count: number }>>`
+      SELECT s.name, COUNT(*)::int AS count
+      FROM candidate_skills s
+      JOIN candidate_profiles p ON p.id = s."candidateId"
+      JOIN users u ON u.id = p."userId" AND u."purgedAt" IS NULL
+      GROUP BY s.name ORDER BY count DESC, s.name ASC LIMIT ${limit}`;
+  }
+
+  /** Profiles below the apply threshold — the "needs attention" row. */
+  async countIncompleteProfiles(threshold: number): Promise<number> {
+    return this.prisma.candidateProfile.count({
+      where: { user: { purgedAt: null, status: UserStatus.ACTIVE }, completionPct: { lt: threshold } },
+    });
+  }
+
   // ── S7-B1: the resume-render source (worker-side) ─────────────────────────
 
   /**
@@ -770,4 +865,17 @@ export interface BrowseFilter {
   q?: string;
   page?: number;
   pageSize?: number;
+}
+
+export interface CandidateGrowthRow {
+  date: string;
+  registrations: number;
+  verified: number;
+  active: number;
+}
+
+/** One slice of a distribution chart (experience, age). */
+export interface BucketRow {
+  label: string;
+  count: number;
 }

@@ -12,9 +12,6 @@ import {
 import { setAccessToken, resetClient } from '../../../lib/api/client';
 import { AdminProvider } from '../../../lib/admin/admin-context';
 import { AdminSidebar } from '../AdminSidebar';
-import { AdminKpis } from '../dashboard/AdminKpis';
-import { QueueCards } from '../dashboard/QueueCards';
-import type { AdminDashboard } from '../../../lib/api/admin';
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ locale: 'en' }),
@@ -126,49 +123,5 @@ describe('AdminSidebar — permission-driven navigation', () => {
 
     // Restore for later tests (the store is module-level).
     cell!.enabled = true;
-  });
-});
-
-describe('AdminKpis + QueueCards', () => {
-  const dashboard: AdminDashboard = {
-    counts: {
-      candidates: 128,
-      employers: { PENDING: 4, APPROVED: 37, REJECTED: 2 },
-      jobs: { PENDING_REVIEW: 3, ACTIVE: 22, ARCHIVED: 11 },
-      applications: { PENDING: 40, SHORTLISTED: 12, SELECTED: 5 },
-    },
-    revenueThisMonthSubunits: 353882,
-    currency: 'INR',
-    pendingEmployerReviews: 4,
-    pendingJobReviews: 3,
-  };
-
-  it('formats revenue from subunits (never computes it)', () => {
-    render(<AdminKpis data={dashboard} />);
-    // 353882 paise → ₹3,538.82. The value is FORMATTED from the server figure.
-    expect(screen.getByText('₹3,538.82')).toBeInTheDocument();
-  });
-
-  it('KPI cards carry value+meaning in one accessible label', () => {
-    render(<AdminKpis data={dashboard} />);
-    expect(screen.getByText('Candidates: 128')).toBeInTheDocument();
-  });
-
-  it('queue cards deep-link with the exact status filter, count in the accessible name', () => {
-    render(<QueueCards data={dashboard} />);
-
-    const employerQueue = screen.getByRole('link', { name: /Employers awaiting review: 4/ });
-    expect(employerQueue).toHaveAttribute('href', '/en/admin/employers?status=PENDING');
-
-    const jobQueue = screen.getByRole('link', { name: /Jobs awaiting review: 3/ });
-    expect(jobQueue).toHaveAttribute('href', '/en/admin/jobs?status=PENDING_REVIEW');
-  });
-
-  it('an empty queue states "nothing waiting" rather than vanishing', () => {
-    render(<QueueCards data={{ ...dashboard, pendingEmployerReviews: 0, pendingJobReviews: 0 }} />);
-    const employerQueue = screen.getByRole('link', {
-      name: /Employers awaiting review: Nothing waiting/,
-    });
-    expect(employerQueue).toBeInTheDocument();
   });
 });

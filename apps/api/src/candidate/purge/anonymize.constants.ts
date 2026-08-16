@@ -131,6 +131,9 @@ export const CANDIDATE_PROFILE_KEPT_FIELDS: Record<string, string> = {
   userId: 'links the tombstone pair',
   createdAt: 'membership date on the admin card',
   updatedAt: 'Prisma-managed',
+  // Not PII — a bare "already sent" timestamp. KEPT deliberately: clearing it
+  // would re-arm the once-per-candidate job-match alert against a tombstone.
+  matchAlertSentAt: 'send-guard; clearing it could re-alert a purged profile',
 };
 
 /**

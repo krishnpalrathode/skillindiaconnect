@@ -2379,6 +2379,237 @@ components:
           type: integer
           description: Jobs in PENDING_REVIEW — the Screen-26 work queue depth.
 
+    AnalyticsKpi:
+      type: object
+      required: [value, previous, deltaPct, spark]
+      description: |
+        One KPI tile. `deltaPct` is NULL when the previous window was zero —
+        growth from nothing has no rate, and the UI renders "New" rather than a
+        fabricated percentage. `spark` has exactly one point per day of the
+        window (zero-filled), so it is safe to index alongside the series.
+      properties:
+        value: { type: integer }
+        previous: { type: integer }
+        deltaPct: { type: number, nullable: true }
+        spark:
+          type: array
+          items: { type: integer }
+
+    AnalyticsSeriesPoint:
+      type: object
+      required: [date]
+      description: |
+        One day of a series. `date` is `YYYY-MM-DD` (UTC). Every other key is a
+        series name whose value is that day's count. Days with no rows are
+        present with explicit zeros — never omitted.
+      properties:
+        date: { type: string }
+      additionalProperties: true
+
+    AnalyticsFunnelStage:
+      type: object
+      required: [stage, count, pctOfTop, conversionFromPrev]
+      description: |
+        A COHORT stage — of the applications created in the window, how many EVER
+        reached this stage (read from application_timeline, not current status,
+        so the funnel cannot go back up). Stages are applied → shortlisted →
+        selected; there is no interview or withdrawn stage because
+        ApplicationStatus has no such value.
+      properties:
+        stage: { type: string, enum: [applied, shortlisted, selected] }
+        count: { type: integer }
+        pctOfTop: { type: number }
+        conversionFromPrev: { type: number, nullable: true }
+
+    AnalyticsBucket:
+      type: object
+      required: [label, count]
+      properties:
+        label: { type: string }
+        count: { type: integer }
+
+    AdminAnalytics:
+      type: object
+      required:
+        [
+          range,
+          kpis,
+          revenue,
+          currency,
+          candidateGrowth,
+          employerGrowth,
+          jobActivity,
+          applicationTrend,
+          funnel,
+          applicationStatus,
+          topJobs,
+          topEmployers,
+          topSkills,
+          demographics,
+          employerStatus,
+          jobStatus,
+          efficiency,
+          needsAttention,
+        ]
+      description: |
+        The admin dashboard's charts, for a trailing window of `days` (default
+        30, clamped 1–365). Every figure is a live aggregate over existing rows —
+        there is no snapshot table, because `createdAt` plus `application_timeline`
+        already ARE the history.
+
+        DELIBERATE OMISSIONS, so the UI does not invent them: no job VIEW counts
+        (nothing records a job view), no education distribution (no such field),
+        no state-level geography (candidates carry free-text `currentLocation`
+        only), and no interview/withdrawn funnel stage.
+      properties:
+        range:
+          type: object
+          required: [from, to, days]
+          properties:
+            from: { type: string, format: date-time }
+            to: { type: string, format: date-time, description: EXCLUSIVE upper bound. }
+            days: { type: integer }
+        kpis:
+          type: object
+          required: [candidates, employers, jobs, applications, hires]
+          properties:
+            candidates: { $ref: '#/components/schemas/AnalyticsKpi' }
+            employers: { $ref: '#/components/schemas/AnalyticsKpi' }
+            jobs: { $ref: '#/components/schemas/AnalyticsKpi' }
+            applications: { $ref: '#/components/schemas/AnalyticsKpi' }
+            hires: { $ref: '#/components/schemas/AnalyticsKpi' }
+        revenue:
+          allOf:
+            - $ref: '#/components/schemas/AnalyticsKpi'
+          description: |
+            Revenue INVOICED in the window, in INTEGER SUBUNITS — keyed on the
+            invoice's `issuedAt`, because the invoice is the financial record of
+            truth. `spark` is deliberately empty: invoices are sparse and lumpy,
+            so a mostly-zero daily line would say less than the figure does.
+            The client formats it; the server never emits a formatted amount.
+        currency:
+          type: string
+          example: INR
+        candidateGrowth:
+          type: array
+          description: Keys per point — registrations, verified, active.
+          items: { $ref: '#/components/schemas/AnalyticsSeriesPoint' }
+        employerGrowth:
+          type: array
+          description: Keys per point — registered, approved.
+          items: { $ref: '#/components/schemas/AnalyticsSeriesPoint' }
+        jobActivity:
+          type: array
+          description: Keys per point — created, published, archived.
+          items: { $ref: '#/components/schemas/AnalyticsSeriesPoint' }
+        applicationTrend:
+          type: array
+          description: Keys per point — total, pending, shortlisted, selected, rejected.
+          items: { $ref: '#/components/schemas/AnalyticsSeriesPoint' }
+        funnel:
+          type: array
+          items: { $ref: '#/components/schemas/AnalyticsFunnelStage' }
+        applicationStatus:
+          type: array
+          items:
+            type: object
+            required: [status, count]
+            properties:
+              status: { type: string }
+              count: { type: integer }
+        topJobs:
+          type: array
+          items:
+            type: object
+            required: [title, employerName, status, applications, shortlisted, hires]
+            properties:
+              title: { type: string }
+              employerName: { type: string }
+              status: { type: string }
+              applications: { type: integer }
+              shortlisted: { type: integer }
+              hires: { type: integer }
+        topEmployers:
+          type: array
+          items:
+            type: object
+            required: [name, activeJobs, applications, hires, successRate]
+            properties:
+              name: { type: string }
+              activeJobs: { type: integer }
+              applications: { type: integer }
+              hires: { type: integer }
+              successRate: { type: number }
+        topSkills:
+          type: array
+          description: |
+            Skills candidates HOLD (supply), not skills employers ask for —
+            job requirements are not a structured field. Labelled as supply in
+            the UI so the two are never conflated.
+          items:
+            type: object
+            required: [name, count]
+            properties:
+              name: { type: string }
+              count: { type: integer }
+        demographics:
+          type: object
+          required: [experience, age]
+          properties:
+            experience:
+              type: array
+              items: { $ref: '#/components/schemas/AnalyticsBucket' }
+            age:
+              type: array
+              description: Profiles without a dob land in an explicit "Not given" bucket.
+              items: { $ref: '#/components/schemas/AnalyticsBucket' }
+        employerStatus:
+          type: array
+          items:
+            type: object
+            required: [status, count]
+            properties:
+              status: { type: string }
+              count: { type: integer }
+        jobStatus:
+          type: array
+          items:
+            type: object
+            required: [status, count]
+            properties:
+              status: { type: string }
+              count: { type: integer }
+        efficiency:
+          type: object
+          required: [daysToShortlist, daysToHire, hireRate, applicationsPerJob]
+          description: |
+            MEDIAN days, not mean — one application left open for months would
+            drag an average away from the typical candidate's experience. NULL
+            when the window contains no such transition.
+          properties:
+            daysToShortlist: { type: number, nullable: true }
+            daysToHire: { type: number, nullable: true }
+            hireRate: { type: number }
+            applicationsPerJob: { type: number }
+        needsAttention:
+          type: object
+          required:
+            [
+              pendingEmployerReviews,
+              pendingJobReviews,
+              pendingApplications,
+              incompleteProfiles,
+              completionThreshold,
+            ]
+          properties:
+            pendingEmployerReviews: { type: integer }
+            pendingJobReviews: { type: integer }
+            pendingApplications: { type: integer }
+            incompleteProfiles: { type: integer }
+            completionThreshold:
+              type: integer
+              description: The candidates.min_completion_pct setting the count was taken against.
+
     RbacCell:
       type: object
       required: [role, permission, enabled, locked]
@@ -7110,6 +7341,39 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/AdminDashboard'
+        '403':
+          $ref: '#/components/responses/AdminForbidden'
+
+  /admin/analytics:
+    get:
+      operationId: getAdminAnalytics
+      tags: [admin]
+      summary: Admin dashboard analytics (S22)
+      description: |
+        **RBAC: `reports.view`** — the same reading surface as
+        `/admin/dashboard`, sliced by time.
+
+        Every series is zero-filled to one point per day, so a quiet week draws
+        as a flat line rather than a straight slope between two distant dates.
+        `days` out of range is CLAMPED (1–365), not rejected: an odd query
+        string should not 400 an admin out of their own overview.
+      parameters:
+        - name: days
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 365, default: 30 }
+          description: Trailing window length in days. Clamped, never rejected.
+      responses:
+        '200':
+          description: Dashboard analytics
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminAnalytics'
         '403':
           $ref: '#/components/responses/AdminForbidden'
 

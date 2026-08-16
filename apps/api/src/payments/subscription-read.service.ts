@@ -68,6 +68,23 @@ export class SubscriptionReadService {
     return result._sum.totalSubunits ?? 0;
   }
 
+  /**
+   * S22 (admin analytics): revenue invoiced in an ARBITRARY window, in integer
+   * subunits — the same figure as `revenueThisMonthSubunits`, but scoped to the
+   * dashboard's selected range so it can be compared against the previous one.
+   *
+   * Keyed on the invoice's `issuedAt` for the same reason as the monthly figure:
+   * the invoice is the financial record of truth, not the order's createdAt.
+   * `to` is EXCLUSIVE, matching every other window on that dashboard.
+   */
+  async revenueBetweenSubunits(from: Date, to: Date): Promise<number> {
+    const result = await this.prisma.order.aggregate({
+      _sum: { totalSubunits: true },
+      where: { invoice: { issuedAt: { gte: from, lt: to } } },
+    });
+    return result._sum.totalSubunits ?? 0;
+  }
+
   async effectivePlan(companyId: string): Promise<EffectivePlan> {
     // Latest paid subscription regardless of status: activation (S5-B2)
     // retires superseded rows and creates/extends the live one, so the

@@ -14,6 +14,7 @@ import {
 import { LogTable } from '@/components/admin/logs/LogTable';
 import { ExportButton } from '@/components/admin/logs/ExportButton';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ADMIN_PAGE_SHELL } from '@/lib/page-shell';
 
 const FILTER_KEYS = Object.keys(EMPTY_FILTERS) as Array<keyof LogFilterValues>;
 
@@ -117,7 +118,7 @@ function LogsScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={ADMIN_PAGE_SHELL}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900">{t('title')}</h1>

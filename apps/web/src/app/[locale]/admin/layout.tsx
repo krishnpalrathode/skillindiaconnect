@@ -13,9 +13,15 @@ import { Button } from '@/components/ui/button';
  * The admin shell (the THIRD shell — same F0 design system as the candidate and
  * employer shells, no new tokens).
  *
- * Visually distinct on purpose: a dark sidebar against the employer shell's white
- * one, plus a role badge in the header. In a tool where you can act on other
- * people's data, being unsure which console you're standing in is its own hazard.
+ * Shares the employer shell's surface language — same #F5F8FC page ground, the
+ * same translucent white sidebar, the same spacing rhythm — so moving between
+ * consoles does not feel like moving between products.
+ *
+ * It previously used a DARK sidebar to signal "you are in the admin console",
+ * because acting on other people's data while unsure which console you are in is
+ * its own hazard. That signal has not been dropped, only moved off the chrome:
+ * the shield mark and console name in the sidebar, and the role badge in the
+ * header, still say plainly where you are.
  *
  * Desktop-first — this is an internal back-office tool, not a candidate-facing
  * screen. The sidebar collapses to a drawer below `lg` so it degrades gracefully,
@@ -54,11 +60,11 @@ function ShellInner({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-svh bg-neutral-50 lg:flex">
+    <div className="min-h-svh bg-[#F5F8FC] lg:flex">
       {drawerOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+            className="fixed inset-0 z-40 bg-neutral-900/40 backdrop-blur-sm lg:hidden"
             aria-hidden="true"
             onClick={() => setDrawerOpen(false)}
           />
@@ -68,7 +74,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
             aria-label={t('nav.ariaLabel')}
             tabIndex={-1}
             onKeyDown={(e) => e.key === 'Escape' && setDrawerOpen(false)}
-            className="fixed inset-y-0 start-0 z-50 w-72 bg-neutral-900 shadow-xl focus:outline-none lg:hidden"
+            className="fixed inset-y-0 start-0 z-50 w-72 bg-[#F5F8FC] shadow-2xl focus:outline-none lg:hidden"
           >
             <AdminSidebar onNavClick={() => setDrawerOpen(false)} />
           </div>
@@ -77,14 +83,14 @@ function ShellInner({ children }: { children: React.ReactNode }) {
 
       <aside
         aria-label={t('nav.ariaLabel')}
-        className="z-10 hidden border-e border-neutral-800 bg-neutral-900 lg:fixed lg:inset-y-0 lg:start-0 lg:flex lg:w-64 lg:shrink-0 lg:flex-col"
+        className="z-10 hidden border-e border-neutral-200/70 bg-white/95 backdrop-blur-sm lg:fixed lg:inset-y-0 lg:start-0 lg:flex lg:w-64 lg:shrink-0 lg:flex-col"
       >
         <AdminSidebar />
       </aside>
 
       <div className="flex min-h-svh flex-1 flex-col lg:ms-64">
         <AdminHeader onMenuClick={() => setDrawerOpen((o) => !o)} />
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

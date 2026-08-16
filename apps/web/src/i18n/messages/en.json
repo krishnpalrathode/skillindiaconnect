@@ -2436,20 +2436,171 @@
     },
     "dashboard": {
       "title": "Dashboard",
-      "queuesHeading": "Waiting for you",
-      "kpisHeading": "Platform overview",
-      "pendingEmployerReviews": "Employers awaiting review",
-      "pendingJobReviews": "Jobs awaiting review",
-      "queueEmpty": "Nothing waiting",
-      "candidates": "Candidates",
-      "employers": "Employers",
-      "jobs": "Jobs",
-      "revenueThisMonth": "Revenue this month",
-      "employersByStatus": "Employers by status",
-      "jobsByStatus": "Jobs by status",
-      "applicationsByStatus": "Applications by status",
       "loadFailed": "Couldn't load the dashboard.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "subtitle": "Live platform activity for the selected range.",
+      "analytics": {
+        "rangeLabel": "Date range",
+        "range": {
+          "d7": "Last 7 days",
+          "d30": "Last 30 days",
+          "d90": "Last 90 days",
+          "d365": "Last 12 months",
+          "other": "{days} days"
+        },
+        "previousPeriod": "{days, plural, =365 {previous 12 months} other {previous # days}}",
+        "loadFailed": "Couldn't load the analytics.",
+        "retry": "Try again",
+        "kpi": {
+          "heading": "Executive summary",
+          "candidates": "New candidates",
+          "employers": "New employers",
+          "jobs": "Jobs posted",
+          "applications": "Applications",
+          "hires": "Hires",
+          "revenue": "Revenue invoiced",
+          "new": "New",
+          "none": "None",
+          "noneInPeriod": "none in the {period}",
+          "emptyBoth": "in this range or the {period}",
+          "vsPrevious": "vs {period} ({value})"
+        },
+        "attention": {
+          "heading": "Needs attention",
+          "employers": "Employers awaiting review",
+          "jobs": "Jobs awaiting review",
+          "applications": "Applications still pending",
+          "profiles": "Profiles below {threshold}% complete",
+          "clear": "Clear",
+          "nothingWaiting": "Nothing waiting"
+        },
+        "chart": {
+          "showTable": "Show data table",
+          "showChart": "Show chart",
+          "hoverLine": "Hover the chart for a daily breakdown",
+          "hoverColumn": "Hover a column for that day's split",
+          "lineAria": "Line chart: {series}",
+          "columnsAria": "Stacked columns: {series}",
+          "noData": "No data in this range.",
+          "date": "Date"
+        },
+        "candidateGrowth": {
+          "title": "Candidate growth",
+          "subtitle": "Registrations per day, and how many of them are phone-verified and visible",
+          "registered": "Registered",
+          "verified": "Verified",
+          "active": "Visible & available"
+        },
+        "funnel": {
+          "title": "Hiring funnel",
+          "subtitle": "Of applications submitted in the last {days} days",
+          "note": "Cohort-based: a stage counts every application that EVER reached it, read from the status timeline. There is no interview stage because the application state machine has none.",
+          "empty": "No applications in this range.",
+          "applied": "Applied",
+          "shortlisted": "Shortlisted",
+          "selected": "Selected",
+          "continueLabel": "continue",
+          "shareOfApplications": "{pct} of applications",
+          "stage": "Stage",
+          "count": "Count",
+          "pctOfApplied": "% of applied",
+          "fromPrevious": "From previous"
+        },
+        "applicationTrend": {
+          "title": "Application volume by status",
+          "subtitle": "Applications submitted each day, split by the status they hold now",
+          "pending": "Pending",
+          "shortlisted": "Shortlisted",
+          "selected": "Selected",
+          "rejected": "Rejected"
+        },
+        "jobActivity": {
+          "title": "Job activity",
+          "subtitle": "Jobs created each day, and how many went on to publish",
+          "created": "Created",
+          "published": "Published",
+          "archived": "Archived"
+        },
+        "employerGrowth": {
+          "title": "Employer growth",
+          "subtitle": "Companies registered each day, and how many are approved",
+          "registered": "Registered",
+          "approved": "Approved"
+        },
+        "efficiency": {
+          "title": "Hiring efficiency",
+          "subtitle": "Medians, not averages — one application left open for months would drag an average away from what a typical candidate experiences.",
+          "daysToShortlist": "Median days to shortlist",
+          "daysToShortlistHint": "From applying to being shortlisted",
+          "daysToHire": "Median days to hire",
+          "daysToHireHint": "From shortlisted to selected",
+          "hireRate": "Hire rate",
+          "hireRateHint": "Hires ÷ applications in this range",
+          "applicationsPerJob": "Applications per job",
+          "applicationsPerJobHint": "Applications ÷ jobs posted in this range"
+        },
+        "breakdown": {
+          "allTime": "All time, across the platform",
+          "applicationsTitle": "Applications by status",
+          "employersTitle": "Employers by status",
+          "jobsTitle": "Jobs by status",
+          "status": "Status",
+          "applications": "Applications",
+          "employers": "Employers",
+          "jobs": "Jobs"
+        },
+        "skills": {
+          "title": "Most common candidate skills",
+          "subtitle": "Skills candidates HAVE — this is supply, not employer demand",
+          "note": "Job postings don't carry structured skill requirements, so this cannot be compared against demand. Reading it as 'in-demand skills' would invert its meaning.",
+          "skill": "Skill",
+          "candidates": "Candidates"
+        },
+        "experience": {
+          "title": "Experience distribution",
+          "subtitle": "Total years across all recorded work history",
+          "band": "Band"
+        },
+        "age": {
+          "title": "Age distribution",
+          "subtitle": "Derived from date of birth",
+          "note": "Profiles with no date of birth are shown as 'Not given' rather than dropped, so this total still reconciles with the candidate count."
+        },
+        "topEmployers": {
+          "title": "Top employers",
+          "subtitle": "Approved companies, ranked by applications received",
+          "note": "Success rate is hires ÷ applications received — a company with no applications yet shows 0%, not a blank.",
+          "empty": "No approved employers yet.",
+          "company": "Company",
+          "activeJobs": "Active jobs",
+          "applications": "Applications",
+          "hires": "Hires",
+          "success": "Success"
+        },
+        "topJobs": {
+          "title": "Top performing jobs",
+          "subtitle": "Active jobs, ranked by applications received",
+          "note": "There is no view count: nothing on the platform records a job view, so a view-to-application conversion cannot be computed.",
+          "empty": "No active jobs yet.",
+          "job": "Job",
+          "employer": "Employer",
+          "applied": "Applied",
+          "shortlisted": "Shortlisted",
+          "hires": "Hires"
+        },
+        "gaps": {
+          "title": "What this dashboard can't tell you yet",
+          "subtitle": "These need a schema change first. They are listed rather than approximated, because an estimate here would be indistinguishable from a measurement.",
+          "viewsTitle": "Job views and view-to-apply conversion",
+          "viewsWhy": "Nothing on the platform records a job view.",
+          "educationTitle": "Education distribution",
+          "educationWhy": "Candidate profiles have no education field.",
+          "mapTitle": "Candidates by state (map)",
+          "mapWhy": "Location is free text, not a state reference — a map would be a guess at spelling.",
+          "funnelTitle": "Interview stage and withdrawals in the funnel",
+          "funnelWhy": "The application state machine is Pending → Shortlisted → Selected/Rejected. There is no interview or withdrawn status to count."
+        }
+      }
     }
   },
   "billing": {

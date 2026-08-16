@@ -94,7 +94,10 @@ beforeAll(async () => {
           this suite is about document upload, and the match-alert enqueue and
           the profile-complete notification are side effects it never asserts on.
         */
-        { provide: 'BullQueue_match-alert', useValue: { add: jest.fn() } },
+        {
+          provide: 'BullQueue_match-alert',
+          useValue: { add: jest.fn().mockResolvedValue(undefined) },
+        },
         { provide: NotificationService, useValue: { notify: jest.fn() } },
       ],
     }).compile();

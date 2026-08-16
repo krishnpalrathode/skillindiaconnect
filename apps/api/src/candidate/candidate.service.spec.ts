@@ -305,8 +305,12 @@ describe('CandidateService â€” integration (real DB)', () => {
           },
           // CompletionService's queue + notification deps. Stubs: this block
           // exercises the DOCUMENT_CHANGED → recompute wiring, not what the
-          // recompute goes on to enqueue or send.
-          { provide: 'BullQueue_match-alert', useValue: { add: jest.fn() } },
+          // recompute goes on to enqueue or send. Both must EXIST regardless, or
+          // Nest cannot build CompletionService and the module never compiles.
+          {
+            provide: 'BullQueue_match-alert',
+            useValue: { add: jest.fn().mockResolvedValue(undefined) },
+          },
           { provide: NotificationService, useValue: { notify: jest.fn() } },
         ],
       }).compile();

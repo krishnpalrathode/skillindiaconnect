@@ -55,14 +55,20 @@ export function AdminSidebar({ onNavClick }: { onNavClick?: () => void }) {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Admin-context brand mark — deliberately distinct from the employer shell:
-          you should never be unsure which console you are standing in. */}
-      <div className="flex h-16 shrink-0 items-center gap-2 border-b border-neutral-800 px-4">
-        <ShieldCheck className="size-5 text-primary-300" aria-hidden="true" />
+      {/* Admin-context brand mark. The shell is now the employer shell's light
+          surface, so THIS is what tells you which console you are standing in —
+          the shield and the console name, not the chrome colour. */}
+      <div className="flex h-16 shrink-0 items-center gap-2.5 border-b border-neutral-100 px-4">
+        <span
+          className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0F3D91] to-[#2E67B1] text-white"
+          aria-hidden="true"
+        >
+          <ShieldCheck className="size-5" />
+        </span>
         <Link
           href={`/${locale}/admin/dashboard`}
           onClick={onNavClick}
-          className="rounded text-sm font-bold tracking-tight text-white focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+          className="rounded text-sm font-bold tracking-tight text-neutral-900 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
         >
           {t('brand')}
         </Link>
@@ -70,7 +76,7 @@ export function AdminSidebar({ onNavClick }: { onNavClick?: () => void }) {
 
       <nav
         aria-label={t('nav.ariaLabel')}
-        className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-4"
+        className="flex flex-1 flex-col gap-1.5 overflow-y-auto px-3 py-5"
       >
         {items.map((item) => {
           const href = `/${locale}/admin/${item.key}`;
@@ -84,16 +90,24 @@ export function AdminSidebar({ onNavClick }: { onNavClick?: () => void }) {
               onClick={onNavClick}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                'group flex min-h-[44px] items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-200',
                 'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
                 active
-                  ? // Active state is not colour alone — the start-border and the
-                    // bolder weight carry it for anyone who cannot distinguish it.
-                    'border-s-2 border-primary-400 bg-neutral-800 font-semibold text-white'
-                  : 'border-s-2 border-transparent text-neutral-300 hover:bg-neutral-800 hover:text-white',
+                  ? // Same gradient pill as the employer nav. `font-semibold` is
+                    // kept from the old dark styling ON PURPOSE: it carries the
+                    // active state for anyone who cannot distinguish the colour,
+                    // which the gradient alone would not.
+                    'bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] font-semibold text-white shadow-lg shadow-[#0F3D91]/25'
+                  : 'text-neutral-600 hover:bg-white hover:text-[#0F3D91] hover:shadow-sm',
               )}
             >
-              <Icon className="size-5 shrink-0" aria-hidden="true" />
+              <Icon
+                className={cn(
+                  'size-5 shrink-0 transition-transform duration-200',
+                  !active && 'group-hover:scale-110',
+                )}
+                aria-hidden="true"
+              />
               <span>{t(`nav.${item.key}`)}</span>
             </Link>
           );

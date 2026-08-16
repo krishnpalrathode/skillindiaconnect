@@ -697,6 +697,49 @@ export class JobsService {
     return counts;
   }
 
+  // ── Admin analytics reads (Screen 22) ───────────────────────────────────────
+
+  /** Jobs created / published per day — the job-performance chart. */
+  async dailyJobSeries(from: Date, to: Date): Promise<JobSeriesRow[]> {
+    return this.prisma.$queryRaw<JobSeriesRow[]>`
+      SELECT to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS date,
+             COUNT(*)::int AS created,
+             COUNT(*) FILTER (WHERE "publishedAt" IS NOT NULL)::int AS published,
+             COUNT(*) FILTER (WHERE status = 'ARCHIVED')::int AS archived
+      FROM jobs
+      WHERE "createdAt" >= ${from} AND "createdAt" < ${to}
+      GROUP BY 1 ORDER BY 1`;
+  }
+
+  /** Active-job count created in a window — the KPI delta. */
+  async countCreatedBetween(from: Date, to: Date): Promise<number> {
+    return this.prisma.job.count({ where: { createdAt: { gte: from, lt: to } } });
+  }
+
+  /**
+   * Best-performing ACTIVE jobs by application volume.
+   *
+   * `views` is deliberately ABSENT: nothing records a job view, so the column in
+   * the reference design would have been a fabricated number. Conversion here is
+   * hires ÷ applications, both of which are real rows.
+   */
+  async topPerformingJobs(limit = 5): Promise<TopJobRow[]> {
+    return this.prisma.$queryRaw<TopJobRow[]>`
+      SELECT j.title,
+             c.name AS "employerName",
+             j.status::text AS status,
+             COUNT(a.id)::int AS applications,
+             COUNT(a.id) FILTER (WHERE a.status = 'SHORTLISTED')::int AS shortlisted,
+             COUNT(a.id) FILTER (WHERE a.status = 'SELECTED')::int AS hires
+      FROM jobs j
+      JOIN companies c ON c.id = j."companyId"
+      LEFT JOIN applications a ON a."jobId" = j.id
+      WHERE j.status = 'ACTIVE'
+      GROUP BY j.id, j.title, c.name, j.status
+      ORDER BY applications DESC, j.title ASC
+      LIMIT ${limit}`;
+  }
+
   /** All job ids for a company (S4-B3 aggregates scope applications by these). */
   async getJobIdsForCompany(companyId: string): Promise<string[]> {
     const rows = await this.prisma.job.findMany({
@@ -805,4 +848,20 @@ export class JobsService {
       this.eventEmitter.emit(JOB_EVENTS.PAUSED, payload);
     }
   }
+}
+
+export interface JobSeriesRow {
+  date: string;
+  created: number;
+  published: number;
+  archived: number;
+}
+
+export interface TopJobRow {
+  title: string;
+  employerName: string;
+  status: string;
+  applications: number;
+  shortlisted: number;
+  hires: number;
 }

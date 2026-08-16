@@ -49,6 +49,46 @@ export class EmployerService {
     private readonly notifications: NotificationService,
   ) {}
 
+  // ── Admin analytics reads (Screen 22) ───────────────────────────────────────
+
+  /** Companies registered per day — the employer growth series. */
+  async dailyEmployerSeries(from: Date, to: Date): Promise<EmployerSeriesRow[]> {
+    return this.prisma.$queryRaw<EmployerSeriesRow[]>`
+      SELECT to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS date,
+             COUNT(*)::int AS registered,
+             COUNT(*) FILTER (WHERE status = 'APPROVED')::int AS approved
+      FROM companies
+      WHERE "createdAt" >= ${from} AND "createdAt" < ${to}
+      GROUP BY 1 ORDER BY 1`;
+  }
+
+  /** Companies created in a window — the KPI delta. */
+  async countCreatedBetween(from: Date, to: Date): Promise<number> {
+    return this.prisma.company.count({ where: { createdAt: { gte: from, lt: to } } });
+  }
+
+  /**
+   * Employer leaderboard — active jobs, applications received, hires made.
+   *
+   * ONE query with two LEFT JOINs rather than a per-company walk. Success rate is
+   * hires ÷ applications; a company with no applications yet reports 0 rather
+   * than dividing by zero.
+   */
+  async leaderboard(limit = 5): Promise<EmployerLeaderboardRow[]> {
+    return this.prisma.$queryRaw<EmployerLeaderboardRow[]>`
+      SELECT c.name,
+             COUNT(DISTINCT j.id) FILTER (WHERE j.status = 'ACTIVE')::int AS "activeJobs",
+             COUNT(a.id)::int AS applications,
+             COUNT(a.id) FILTER (WHERE a.status = 'SELECTED')::int AS hires
+      FROM companies c
+      LEFT JOIN jobs j ON j."companyId" = c.id
+      LEFT JOIN applications a ON a."jobId" = j.id
+      WHERE c.status = 'APPROVED'
+      GROUP BY c.id, c.name
+      ORDER BY applications DESC, "activeJobs" DESC, c.name ASC
+      LIMIT ${limit}`;
+  }
+
   /** Attach the newest certificate key — one indexed lookup, never a join fan-out. */
   private async withCertKey(company: Company): Promise<CompanyResponse> {
     const latest = await this.prisma.companyDocument.findFirst({
@@ -394,4 +434,17 @@ export class EmployerService {
       },
     };
   }
+}
+
+export interface EmployerSeriesRow {
+  date: string;
+  registered: number;
+  approved: number;
+}
+
+export interface EmployerLeaderboardRow {
+  name: string;
+  activeJobs: number;
+  applications: number;
+  hires: number;
 }

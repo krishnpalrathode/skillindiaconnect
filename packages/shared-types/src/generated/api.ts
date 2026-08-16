@@ -2043,6 +2043,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin dashboard analytics (S22)
+         * @description **RBAC: `reports.view`** — the same reading surface as
+         *     `/admin/dashboard`, sliced by time.
+         *
+         *     Every series is zero-filled to one point per day, so a quiet week draws
+         *     as a flat line rather than a straight slope between two distant dates.
+         *     `days` out of range is CLAMPED (1–365), not rejected: an odd query
+         *     string should not 400 an admin out of their own overview.
+         */
+        get: operations["getAdminAnalytics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/employers/{id}/certificate/url": {
         parameters: {
             query?: never;
@@ -3995,6 +4021,155 @@ export interface components {
             pendingEmployerReviews: number;
             /** @description Jobs in PENDING_REVIEW — the Screen-26 work queue depth. */
             pendingJobReviews: number;
+        };
+        /**
+         * @description One KPI tile. `deltaPct` is NULL when the previous window was zero —
+         *     growth from nothing has no rate, and the UI renders "New" rather than a
+         *     fabricated percentage. `spark` has exactly one point per day of the
+         *     window (zero-filled), so it is safe to index alongside the series.
+         */
+        AnalyticsKpi: {
+            value: number;
+            previous: number;
+            deltaPct: number | null;
+            spark: number[];
+        };
+        /**
+         * @description One day of a series. `date` is `YYYY-MM-DD` (UTC). Every other key is a
+         *     series name whose value is that day's count. Days with no rows are
+         *     present with explicit zeros — never omitted.
+         */
+        AnalyticsSeriesPoint: {
+            date: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * @description A COHORT stage — of the applications created in the window, how many EVER
+         *     reached this stage (read from application_timeline, not current status,
+         *     so the funnel cannot go back up). Stages are applied → shortlisted →
+         *     selected; there is no interview or withdrawn stage because
+         *     ApplicationStatus has no such value.
+         */
+        AnalyticsFunnelStage: {
+            /** @enum {string} */
+            stage: "applied" | "shortlisted" | "selected";
+            count: number;
+            pctOfTop: number;
+            conversionFromPrev: number | null;
+        };
+        AnalyticsBucket: {
+            label: string;
+            count: number;
+        };
+        /**
+         * @description The admin dashboard's charts, for a trailing window of `days` (default
+         *     30, clamped 1–365). Every figure is a live aggregate over existing rows —
+         *     there is no snapshot table, because `createdAt` plus `application_timeline`
+         *     already ARE the history.
+         *
+         *     DELIBERATE OMISSIONS, so the UI does not invent them: no job VIEW counts
+         *     (nothing records a job view), no education distribution (no such field),
+         *     no state-level geography (candidates carry free-text `currentLocation`
+         *     only), and no interview/withdrawn funnel stage.
+         */
+        AdminAnalytics: {
+            range: {
+                /** Format: date-time */
+                from: string;
+                /**
+                 * Format: date-time
+                 * @description EXCLUSIVE upper bound.
+                 */
+                to: string;
+                days: number;
+            };
+            kpis: {
+                candidates: components["schemas"]["AnalyticsKpi"];
+                employers: components["schemas"]["AnalyticsKpi"];
+                jobs: components["schemas"]["AnalyticsKpi"];
+                applications: components["schemas"]["AnalyticsKpi"];
+                hires: components["schemas"]["AnalyticsKpi"];
+            };
+            /**
+             * @description Revenue INVOICED in the window, in INTEGER SUBUNITS — keyed on the
+             *     invoice's `issuedAt`, because the invoice is the financial record of
+             *     truth. `spark` is deliberately empty: invoices are sparse and lumpy,
+             *     so a mostly-zero daily line would say less than the figure does.
+             *     The client formats it; the server never emits a formatted amount.
+             */
+            revenue: components["schemas"]["AnalyticsKpi"];
+            /** @example INR */
+            currency: string;
+            /** @description Keys per point — registrations, verified, active. */
+            candidateGrowth: components["schemas"]["AnalyticsSeriesPoint"][];
+            /** @description Keys per point — registered, approved. */
+            employerGrowth: components["schemas"]["AnalyticsSeriesPoint"][];
+            /** @description Keys per point — created, published, archived. */
+            jobActivity: components["schemas"]["AnalyticsSeriesPoint"][];
+            /** @description Keys per point — total, pending, shortlisted, selected, rejected. */
+            applicationTrend: components["schemas"]["AnalyticsSeriesPoint"][];
+            funnel: components["schemas"]["AnalyticsFunnelStage"][];
+            applicationStatus: {
+                status: string;
+                count: number;
+            }[];
+            topJobs: {
+                title: string;
+                employerName: string;
+                status: string;
+                applications: number;
+                shortlisted: number;
+                hires: number;
+            }[];
+            topEmployers: {
+                name: string;
+                activeJobs: number;
+                applications: number;
+                hires: number;
+                successRate: number;
+            }[];
+            /**
+             * @description Skills candidates HOLD (supply), not skills employers ask for —
+             *     job requirements are not a structured field. Labelled as supply in
+             *     the UI so the two are never conflated.
+             */
+            topSkills: {
+                name: string;
+                count: number;
+            }[];
+            demographics: {
+                experience: components["schemas"]["AnalyticsBucket"][];
+                /** @description Profiles without a dob land in an explicit "Not given" bucket. */
+                age: components["schemas"]["AnalyticsBucket"][];
+            };
+            employerStatus: {
+                status: string;
+                count: number;
+            }[];
+            jobStatus: {
+                status: string;
+                count: number;
+            }[];
+            /**
+             * @description MEDIAN days, not mean — one application left open for months would
+             *     drag an average away from the typical candidate's experience. NULL
+             *     when the window contains no such transition.
+             */
+            efficiency: {
+                daysToShortlist: number | null;
+                daysToHire: number | null;
+                hireRate: number;
+                applicationsPerJob: number;
+            };
+            needsAttention: {
+                pendingEmployerReviews: number;
+                pendingJobReviews: number;
+                pendingApplications: number;
+                incompleteProfiles: number;
+                /** @description The candidates.min_completion_pct setting the count was taken against. */
+                completionThreshold: number;
+            };
         };
         /**
          * @description One cell of the Screen-27 matrix. `locked = true` means IMMUTABLE — the
@@ -8174,6 +8349,32 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminDashboard"];
+                    };
+                };
+            };
+            403: components["responses"]["AdminForbidden"];
+        };
+    };
+    getAdminAnalytics: {
+        parameters: {
+            query?: {
+                /** @description Trailing window length in days. Clamped, never rejected. */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Dashboard analytics */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminAnalytics"];
                     };
                 };
             };
