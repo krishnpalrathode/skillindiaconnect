@@ -229,6 +229,14 @@
         "verified": "Waajiri huthibitishwa kabla ya kutangaza"
       },
       "verifiedStrip": "Waajiri waliothibitishwa pekee"
+    },
+    "recentJobs": {
+      "heading": "Kazi mpya za wiki hii",
+      "subheading": "Nafasi halisi kutoka kwa waajiri waliothibitishwa Ghuba na kote India. Angalia bila akaunti — akaunti inahitajika unapoomba tu.",
+      "apply": "Omba sasa",
+      "browseAll": "Ona kazi zote",
+      "noFee": "Hulipi ada yoyote — si kwetu, wala kwa mwajiri yeyote hapa.",
+      "ctaPrimary": "Tengeneza wasifu bila malipo"
     }
   },
   "employer": {

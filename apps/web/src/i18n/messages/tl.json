@@ -229,6 +229,14 @@
         "verified": "Beripikado ang employer bago mag-post"
       },
       "verifiedStrip": "Beripikadong employer lamang"
+    },
+    "recentJobs": {
+      "heading": "Pinakabagong trabaho ngayong linggo",
+      "subheading": "Tunay na bakante mula sa mga beripikadong employer sa Gulf at buong India. Libreng tingnan — kailangan lang ng account kapag mag-a-apply.",
+      "apply": "Mag-apply na",
+      "browseAll": "Tingnan lahat ng trabaho",
+      "noFee": "Walang bayad kailanman — hindi sa amin, hindi sa kahit sinong employer dito.",
+      "ctaPrimary": "Gumawa ng libreng profile"
     }
   },
   "employer": {

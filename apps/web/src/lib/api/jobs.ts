@@ -18,6 +18,37 @@ export async function searchJobsServer(
   return serverFetch<JobSearchResult>(`/jobs${qs ? `?${qs}` : ''}`);
 }
 
+/** How many jobs the landing page shows. Cited by the fetch and by its test. */
+export const LANDING_JOBS_COUNT = 10;
+
+/** How long the landing page's copy of that list may be stale, in seconds. */
+const LANDING_JOBS_REVALIDATE = 60;
+
+/**
+ * SSR-only: the newest ACTIVE jobs, for the PUBLIC landing page.
+ *
+ * Never throws. The landing page is the front door — for most visitors it is
+ * the only page they will ever see — so it must render with the API down. A
+ * failure here yields an empty list and the section removes itself; it must
+ * never turn a marketing page into a 500.
+ *
+ * Unauthenticated by design: `GET /jobs` is `@Public()`, so this is the same
+ * data a search-engine crawler sees. That matters commercially — server-rendered
+ * job titles and salaries are what makes these listings indexable, and organic
+ * search is how a job board actually acquires candidates.
+ */
+export async function getLandingJobsServer(): Promise<JobCard[]> {
+  try {
+    const result = await serverFetch<JobSearchResult>(
+      `/jobs?sort=recent&pageSize=${LANDING_JOBS_COUNT}`,
+      { revalidate: LANDING_JOBS_REVALIDATE },
+    );
+    return result.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export interface JobCountryFacet {
   country: string;
   count: number;

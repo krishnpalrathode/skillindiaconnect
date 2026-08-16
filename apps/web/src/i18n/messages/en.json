@@ -2669,6 +2669,14 @@
         "verified": "Employers verified before posting"
       },
       "verifiedStrip": "Verified employers only"
+    },
+    "recentJobs": {
+      "heading": "Latest jobs, posted this week",
+      "subheading": "Real openings from verified employers in the Gulf and across India. Browse freely — you only need an account to apply.",
+      "apply": "Apply now",
+      "browseAll": "See all jobs",
+      "noFee": "You never pay a fee. Not to us, not to any employer on this platform.",
+      "ctaPrimary": "Create your free profile"
     }
   },
   "staticPages": {
