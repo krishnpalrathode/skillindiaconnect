@@ -1,9 +1,16 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { ShieldCheck, ArrowRight } from 'lucide-react';
+import { ShieldCheck, BadgeCheck, Search, UserRound, Globe } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button-variants';
 import { HeroCarousel } from './HeroCarousel';
 import { cn } from '@/lib/utils';
+
+/** The reassurance row under the CTAs — see the comment at its render site. */
+const HERO_BADGES = [
+  { key: 'verified', Icon: ShieldCheck },
+  { key: 'free', Icon: BadgeCheck },
+  { key: 'global', Icon: Globe },
+] as const;
 
 /**
  * Hero — server-rendered, zero client JS.
@@ -138,11 +145,8 @@ export function Hero({ locale }: { locale: string }) {
                 'hover:scale-[1.02] hover:shadow-xl hover:shadow-black/25 active:scale-[0.98]',
               )}
             >
+              <Search className="size-5 shrink-0" aria-hidden="true" />
               {t('ctaWorker')}
-              <ArrowRight
-                className="size-5 transition-transform duration-150 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
-                aria-hidden="true"
-              />
             </Link>
 
             <Link
@@ -154,17 +158,35 @@ export function Hero({ locale }: { locale: string }) {
                 'hover:scale-[1.02] hover:border-white hover:bg-white/10 active:scale-[0.98] active:bg-white/20',
               )}
             >
+              <UserRound className="size-5 shrink-0" aria-hidden="true" />
               {t('ctaEmployer')}
             </Link>
           </div>
 
-          <p
-            className="hero-anim animate-hero-rise mt-5 flex items-center gap-2 text-sm font-medium text-white/80"
+          {/*
+            The three promises, inline under the CTAs.
+
+            Same claims as the navy bar at the top of the page, restated at the
+            point of decision — someone who has just read the headline and is
+            deciding whether to press the orange button should not have to scroll
+            back up to remember that it is free. Rendered as one wrapping row of
+            small items rather than a second band, so it supports the button
+            instead of competing with it.
+          */}
+          <ul
+            className="hero-anim animate-hero-rise mt-5 flex flex-wrap items-center gap-x-5 gap-y-2"
             style={{ animationDelay: '240ms' }}
           >
-            <ShieldCheck className="size-4 shrink-0 text-accent-300" aria-hidden="true" />
-            {t('freeNote')}
-          </p>
+            {HERO_BADGES.map(({ key, Icon }) => (
+              <li
+                key={key}
+                className="flex items-center gap-1.5 text-sm font-semibold text-white/85"
+              >
+                <Icon className="size-4 shrink-0 text-accent-300" aria-hidden="true" />
+                {t(`badges.${key}`)}
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* ── Right column: auto-advancing worker imagery ── */}

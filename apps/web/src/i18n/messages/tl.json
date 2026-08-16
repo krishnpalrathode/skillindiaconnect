@@ -110,9 +110,14 @@
     "hero": {
       "headline": "<hl>Ligtas, Beripikadong Trabaho</hl> para sa mga Bihasang Manggagawa sa India at sa Buong Mundo",
       "subline": "Bawat trabaho sa Skill India Connect ay dapat magbigay sa iyo ng matutuluyan, health insurance, at transportasyon. Sinusuri namin ang bawat employer bago mailabas ang trabaho nila.",
-      "ctaWorker": "Maghanap ng trabaho",
-      "ctaEmployer": "Kumuha ng manggagawa",
-      "freeNote": "Libre para sa mga manggagawa. Palagi."
+      "ctaWorker": "Maghanap ng Beripikadong Trabaho",
+      "ctaEmployer": "Kumuha ng Bihasang Manggagawa",
+      "freeNote": "Libre para sa mga manggagawa. Palagi.",
+      "badges": {
+        "verified": "Beripikadong Employer",
+        "free": "Libre para sa Manggagawa",
+        "global": "India at Global na Oportunidad"
+      }
     },
     "trust": {
       "ariaLabel": "Bakit kami pinagkakatiwalaan ng mga manggagawa",
@@ -131,7 +136,8 @@
       "whatsapp": {
         "title": "Mga update sa WhatsApp",
         "body": "Magpapadala kami ng mensahe kapag nagbago ang status ng trabaho mo."
-      }
+      },
+      "heading": "Bakit Kami Pinagkakatiwalaan ng mga Manggagawa"
     },
     "howItWorks": {
       "heading": "Paano ito gumagana",
@@ -232,6 +238,19 @@
         "verified": "Beripikado ang employer bago mag-post"
       },
       "verifiedStrip": "Beripikadong employer lamang"
+    },
+    "announce": {
+      "ariaLabel": "Aming mga pangako",
+      "verified": "100% Beripikadong Employer",
+      "free": "Libre para sa Manggagawa",
+      "global": "Trabaho sa India at Buong Mundo"
+    },
+    "stats": {
+      "ariaLabel": "Ang Skill India Connect sa mga numero",
+      "workers": "Bihasang Manggagawang Nakakonekta",
+      "employers": "Beripikadong Employer",
+      "placements": "Matagumpay na Placement",
+      "countries": "Bansang may Trabaho"
     }
   },
   "employer": {

@@ -3,6 +3,8 @@ import { getTranslations } from 'next-intl/server';
 import { LandingHeader } from '@/components/landing/LandingHeader';
 import { Hero } from '@/components/landing/Hero';
 import { TrustStrip } from '@/components/landing/TrustStrip';
+import { AnnouncementBar } from '@/components/landing/AnnouncementBar';
+import { StatsBand } from '@/components/landing/StatsBand';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { WorkerProtection } from '@/components/landing/WorkerProtection';
 import { ForEmployers } from '@/components/landing/ForEmployers';
@@ -40,7 +42,12 @@ export default async function HomePage({ params }: Props) {
       <LandingHeader />
 
       <main id="main">
+        {/* Claim bar → hero → proof. The band and the stats card bracket the
+            hero top and bottom, which is what stops the light hero from
+            floating unanchored between two white sections. */}
+        <AnnouncementBar />
         <Hero locale={locale} />
+        <StatsBand />
         <TrustStrip />
         <HowItWorks locale={locale} />
         <WorkerProtection />

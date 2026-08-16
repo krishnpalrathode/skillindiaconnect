@@ -110,9 +110,14 @@
     "hero": {
       "headline": "<hl>Kazi Salama Zilizothibitishwa</hl> kwa Wafanyakazi Wenye Ujuzi India na Duniani Kote",
       "subline": "Kila kazi kwenye Skill India Connect lazima ikupe mahali pa kuishi, bima ya afya, na usafiri. Tunakagua kila mwajiri kabla kazi yake haijachapishwa.",
-      "ctaWorker": "Tafuta kazi",
-      "ctaEmployer": "Ajiri wafanyakazi",
-      "freeNote": "Bure kwa wafanyakazi. Daima."
+      "ctaWorker": "Tafuta Kazi Zilizothibitishwa",
+      "ctaEmployer": "Ajiri Wenye Ujuzi",
+      "freeNote": "Bure kwa wafanyakazi. Daima.",
+      "badges": {
+        "verified": "Waajiri Waliothibitishwa",
+        "free": "Bure kwa Wafanyakazi",
+        "global": "Fursa za India na Dunia"
+      }
     },
     "trust": {
       "ariaLabel": "Kwa nini wafanyakazi wanatuamini",
@@ -131,7 +136,8 @@
       "whatsapp": {
         "title": "Taarifa kupitia WhatsApp",
         "body": "Tunakutumia ujumbe hali ya ombi lako inapobadilika."
-      }
+      },
+      "heading": "Kwa Nini Wafanyakazi Wanatuamini"
     },
     "howItWorks": {
       "heading": "Jinsi inavyofanya kazi",
@@ -232,6 +238,19 @@
         "verified": "Waajiri huthibitishwa kabla ya kutangaza"
       },
       "verifiedStrip": "Waajiri waliothibitishwa pekee"
+    },
+    "announce": {
+      "ariaLabel": "Ahadi zetu",
+      "verified": "Waajiri Waliothibitishwa 100%",
+      "free": "Bure kwa Wafanyakazi",
+      "global": "Kazi India na Duniani"
+    },
+    "stats": {
+      "ariaLabel": "Skill India Connect kwa namba",
+      "workers": "Wafanyakazi Wenye Ujuzi Waliounganishwa",
+      "employers": "Waajiri Waliothibitishwa",
+      "placements": "Ajira Zilizofanikiwa",
+      "countries": "Nchi zenye Nafasi za Kazi"
     }
   },
   "employer": {
