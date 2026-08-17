@@ -14,6 +14,7 @@ import { ApiRequestError } from '@/lib/api/client';
 import { EMPTY_FILTERS } from '@/lib/jobs/searchParams';
 import { BrandLoader } from '@/components/ui/brand-loader';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { VideoIntroPrompt } from '@/components/dashboard/VideoIntroPrompt';
 import { KpiCards } from '@/components/dashboard/KpiCards';
 import { RecentViewersCard } from '@/components/dashboard/RecentViewersCard';
 import { ProfileSummaryCard } from '@/components/dashboard/ProfileSummaryCard';
@@ -149,6 +150,11 @@ export default function DashboardPage() {
         unreadCount={unreadCount}
         locale={locale}
       />
+
+      {/* Directly under the greeting, above the KPIs: it is a prompt to act, so
+          it sits where the eye lands first and removes itself for good once
+          there is a video. */}
+      <VideoIntroPrompt locale={locale} />
 
       <KpiCards stats={stats} unreadCount={unreadCount} profileViews={profileViews} />
 

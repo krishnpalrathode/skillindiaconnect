@@ -382,7 +382,6 @@
       "educationalCert": "Educational Certificate",
       "educationalCertHint": "PDF or image, up to 5 MB",
       "videoIntro": "Video Introduction",
-      "videoComingSoon": "Coming soon (B6)",
       "reupload": "Re-upload",
       "notUploaded": "Not uploaded",
       "uploadNow": "Upload now",
@@ -411,7 +410,25 @@
       "salaryRangeError": "Maximum must be greater than or equal to the minimum",
       "salaryLimitError": "Enter a value up to {max, number}."
     },
-    "settingsPageSubtitle": "Control what employers can see and how we contact you."
+    "settingsPageSubtitle": "Control what employers can see and how we contact you.",
+    "video": {
+      "title": "Work video introduction",
+      "hint": "A short clip of you doing your work. Up to {max} minutes and {maxMb} MB.",
+      "upload": "Upload video",
+      "replace": "Replace",
+      "remove": "Remove",
+      "play": "Play your video",
+      "loading": "Loading",
+      "checking": "Checking…",
+      "uploading": "Uploading…",
+      "saving": "Saving…",
+      "uploaded": "Video uploaded",
+      "removed": "Video removed",
+      "meta": "{duration} · {mb} MB",
+      "errTooLarge": "That file is over {maxMb} MB. Record a shorter clip or use a lower quality setting.",
+      "errTooLong": "That video is longer than {max}. Please record a shorter one.",
+      "errUnreadable": "We couldn't read that video. Please try an MP4 recorded on your phone."
+    }
   },
   "document": {
     "upload": "Upload document",
@@ -543,8 +560,7 @@
       "sendEmail": "Send to email",
       "exportComingSoon": "Resume export coming in Sprint 7",
       "saveAndContinue": "Save & continue to profile",
-      "videoTitle": "Video introduction",
-      "videoComingSoon": "Coming soon"
+      "videoTitle": "Video introduction"
     },
     "upload": {
       "selectFile": "Select file",
@@ -1112,6 +1128,11 @@
     "profileSummary": {
       "completion": "{pct}% complete",
       "completeNow": "Complete now →"
+    },
+    "videoPrompt": {
+      "title": "Upload your work video for better opportunities",
+      "body": "Employers are far more likely to shortlist candidates they can see working. It takes two minutes.",
+      "cta": "Add your video"
     }
   },
   "notifications": {

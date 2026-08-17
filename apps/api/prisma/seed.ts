@@ -66,8 +66,19 @@ async function main(): Promise<void> {
     ['candidates.mandatory_documents', ['PASSPORT', 'EXPERIENCE_CERT', 'EDUCATIONAL_CERT'], false],
     ['candidates.min_completion_pct', 70, false],
     ['candidates.match_alert_min_pct', 80, false],
-    ['candidates.video_max_minutes', 5, false],
-    ['candidates.video_max_mb', 500, false],
+    /*
+      Working-video ceilings. 5 min / 500 MB were placeholders from when the
+      feature was shelved; these are the shipped limits.
+
+      2 minutes because an employer skims, and a candidate who needs four
+      minutes to introduce themselves is not being helped by being allowed to.
+      10 MB because the audience uploads from pre-paid mobile data — the same
+      reasoning as MAX_UPLOAD_MB in core/uploads.ts, scaled to the fact that
+      video is simply bigger. At typical phone bitrates 10 MB comfortably holds
+      two minutes at 480-720p, which is all a talking-head clip needs.
+    */
+    ['candidates.video_max_minutes', 2, false],
+    ['candidates.video_max_mb', 10, false],
     // S5-B1: Payments — GST for the LOCAL checkout split; Stripe routing flag
     // for FOREIGN companies (off = Razorpay International, the locked primary).
     ['payments.gst_rate_pct', 18, false],

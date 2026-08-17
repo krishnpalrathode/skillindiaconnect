@@ -376,5 +376,12 @@
       "accountSuspended": "Suspendido ang iyong account. Makipag-ugnayan sa suporta.",
       "genericError": "May nangyaring mali. Pakisubukan muli."
     }
+  },
+  "dashboard": {
+    "videoPrompt": {
+      "title": "Mag-upload ng video ng iyong trabaho para sa mas magandang oportunidad",
+      "body": "Mas madalas pinipili ng mga employer ang mga nakikita nilang nagtatrabaho. Dalawang minuto lang.",
+      "cta": "Magdagdag ng video"
+    }
   }
 }

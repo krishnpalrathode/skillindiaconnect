@@ -375,7 +375,6 @@
       "educationalCert": "الشهادة التعليمية",
       "educationalCertHint": "PDF أو صورة، حتى 5 ميغابايت",
       "videoIntro": "مقدمة فيديو",
-      "videoComingSoon": "قريباً (B6)",
       "reupload": "إعادة الرفع",
       "notUploaded": "لم يُرفع",
       "uploadNow": "ارفع الآن",
@@ -530,8 +529,7 @@
       "sendEmail": "إرسال بالبريد الإلكتروني",
       "exportComingSoon": "تصدير السيرة الذاتية قادم في Sprint 7",
       "saveAndContinue": "حفظ والمتابعة إلى الملف الشخصي",
-      "videoTitle": "مقدمة فيديو",
-      "videoComingSoon": "قريباً"
+      "videoTitle": "مقدمة فيديو"
     },
     "upload": {
       "selectFile": "اختر ملفاً",
@@ -1083,6 +1081,11 @@
     "profileSummary": {
       "completion": "{pct}% مكتمل",
       "completeNow": "أكمل الآن ←"
+    },
+    "videoPrompt": {
+      "title": "ارفع فيديو عملك للحصول على فرص أفضل",
+      "body": "جهات العمل ترشّح غالباً من تستطيع رؤيتهم أثناء العمل. لن يستغرق الأمر سوى دقيقتين.",
+      "cta": "أضف الفيديو"
     }
   },
   "notifications": {

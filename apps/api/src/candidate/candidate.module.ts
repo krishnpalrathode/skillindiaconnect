@@ -13,9 +13,14 @@ import { OnboardingService } from './onboarding.service';
 import { ProfileViewsReadService } from './profile-views-read.service';
 import { QueueModule } from '../queue/queue.module';
 import { ApplicationsModule } from '../applications/applications.module';
+import { SettingsModule } from '../settings/settings.module';
+import { VideoService } from './video.service';
 
 @Module({
-  imports: [QueueModule, NotificationModule, forwardRef(() => ApplicationsModule)],
+  // SettingsModule: the video size/length ceilings are Super-Admin tunable
+  // settings, so VideoService reads them through SettingsService rather than
+  // hardcoding numbers an admin believes they can change.
+  imports: [QueueModule, NotificationModule, SettingsModule, forwardRef(() => ApplicationsModule)],
   controllers: [CandidateController, DocumentController, OnboardingController],
   providers: [
     CandidateService,
@@ -24,6 +29,7 @@ import { ApplicationsModule } from '../applications/applications.module';
     SkillService,
     CompletionService,
     DocumentService,
+    VideoService,
     OnboardingService,
     // Split ownership: Employer module writes profile_views; Candidate module reads own rows.
     ProfileViewsReadService,

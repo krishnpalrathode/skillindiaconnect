@@ -24,6 +24,8 @@ import { UpdateExperienceDto } from './dto/update-experience.dto';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { PresignPhotoDto } from './dto/presign-photo.dto';
 import { ConfirmPhotoDto } from './dto/confirm-photo.dto';
+import { VideoService } from './video.service';
+import { PresignVideoDto, ConfirmVideoDto } from './dto/video.dto';
 
 @Controller('candidates')
 export class CandidateController {
@@ -32,6 +34,7 @@ export class CandidateController {
     private readonly experienceService: ExperienceService,
     private readonly skillService: SkillService,
     private readonly profileViewsReadService: ProfileViewsReadService,
+    private readonly videoService: VideoService,
     @Inject(forwardRef(() => ApplicationsAggregateService))
     private readonly applicationsAggregate: ApplicationsAggregateService,
   ) {}
@@ -62,6 +65,45 @@ export class CandidateController {
   async confirmPhoto(@CurrentUser() user: CurrentUserPayload, @Body() dto: ConfirmPhotoDto) {
     this.candidateService.assertCandidateRole(user.role);
     return { data: await this.candidateService.confirmPhoto(user.userId, dto) };
+  }
+
+  // ─── Working video introduction ───────────────────────────────────────────
+  // Same presign → PUT to R2 → confirm shape as photos and documents. The
+  // limits come back with the status so the UI states the real numbers rather
+  // than hardcoding a copy of them that can drift from the Settings.
+
+  @Get('me/video')
+  async videoStatus(@CurrentUser() user: CurrentUserPayload) {
+    this.candidateService.assertCandidateRole(user.role);
+    const [status, limits] = await Promise.all([
+      this.videoService.status(user.userId),
+      this.videoService.limits(),
+    ]);
+    return { data: { ...status, maxMb: limits.maxMb, maxDurationSec: limits.maxDurationSec } };
+  }
+
+  @Post('me/video/presign')
+  async presignVideo(@CurrentUser() user: CurrentUserPayload, @Body() dto: PresignVideoDto) {
+    this.candidateService.assertCandidateRole(user.role);
+    return { data: await this.videoService.presign(user.userId, dto) };
+  }
+
+  @Post('me/video/confirm')
+  async confirmVideo(@CurrentUser() user: CurrentUserPayload, @Body() dto: ConfirmVideoDto) {
+    this.candidateService.assertCandidateRole(user.role);
+    return { data: await this.videoService.confirm(user.userId, dto) };
+  }
+
+  @Get('me/video/url')
+  async videoUrl(@CurrentUser() user: CurrentUserPayload) {
+    this.candidateService.assertCandidateRole(user.role);
+    return { data: await this.videoService.playbackUrl(user.userId) };
+  }
+
+  @Delete('me/video')
+  async deleteVideo(@CurrentUser() user: CurrentUserPayload) {
+    this.candidateService.assertCandidateRole(user.role);
+    return { data: await this.videoService.remove(user.userId) };
   }
 
   // ─── Completion ───────────────────────────────────────────────────────────

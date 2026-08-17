@@ -6,6 +6,7 @@ import { CandidateService } from './candidate.service';
 import { ExperienceService } from './experience.service';
 import { SkillService } from './skill.service';
 import { ProfileViewsReadService } from './profile-views-read.service';
+import { VideoService } from './video.service';
 import { ApplicationsAggregateService } from '../applications/applications-aggregate.service';
 
 const MOCK_CANDIDATE_USER = {
@@ -80,6 +81,28 @@ describe('CandidateController', () => {
         { provide: ExperienceService, useValue: experienceMock },
         { provide: SkillService, useValue: skillMock },
         { provide: ProfileViewsReadService, useValue: profileViewsReadMock },
+        {
+          // The video routes are covered in video.service.spec.ts; here the
+          // controller only needs the dependency to exist so it can be built.
+          provide: VideoService,
+          useValue: {
+            status: jest.fn().mockResolvedValue({
+              hasVideo: false,
+              uploadedAt: null,
+              durationSec: null,
+              sizeBytes: null,
+            }),
+            limits: jest.fn().mockResolvedValue({
+              maxMb: 10,
+              maxBytes: 10 * 1024 * 1024,
+              maxDurationSec: 120,
+            }),
+            presign: jest.fn(),
+            confirm: jest.fn(),
+            playbackUrl: jest.fn(),
+            remove: jest.fn(),
+          },
+        },
         {
           provide: ApplicationsAggregateService,
           useValue: {

@@ -514,6 +514,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/candidates/me/video": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Current working-video status and the active limits
+         * @description Returns whether a video exists plus the limits currently in force, so the
+         *     UI states the real numbers instead of hardcoding its own copy. The limits
+         *     come from Settings (`candidates.video_max_mb`,
+         *     `candidates.video_max_minutes`) and a Super-Admin may change them.
+         */
+        get: operations["getCandidateMeVideo"];
+        put?: never;
+        post?: never;
+        /**
+         * Remove the working video
+         * @description Clears the video columns and queues the R2 object for deletion.
+         *     IDEMPOTENT — removing a video that does not exist succeeds.
+         */
+        delete: operations["deleteCandidateMeVideo"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/candidates/me/video/presign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Presign a working-video upload */
+        post: operations["postCandidateMeVideoPresign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/candidates/me/video/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm an uploaded working video
+         * @description Verifies OWNERSHIP (key prefix) and that the PUT landed (HEAD), re-checks
+         *     the REAL size and mime from the object, writes the video columns and
+         *     queues the replaced object for deletion.
+         */
+        post: operations["postCandidateMeVideoConfirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/candidates/me/video/url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Short-expiry signed playback url for the candidate's own video */
+        get: operations["getCandidateMeVideoUrl"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/candidates/me/complete-onboarding": {
         parameters: {
             query?: never;
@@ -2871,6 +2955,25 @@ export interface components {
              * @description Passport expiry date (PASSPORT type only; set during confirm step)
              */
             expiryDate?: string;
+        };
+        /**
+         * @description The candidate's working-video introduction, plus the limits currently in
+         *     force. `maxMb` / `maxDurationSec` are echoed so the UI can state the
+         *     real ceilings rather than keeping its own copy that drifts when a
+         *     Super-Admin changes the Setting.
+         */
+        CandidateVideoStatus: {
+            hasVideo: boolean;
+            /** Format: date-time */
+            uploadedAt?: string | null;
+            /** @description Rounded to whole seconds on write. */
+            durationSec?: number | null;
+            /** @description The REAL stored size, read back from the object. */
+            sizeBytes?: number | null;
+            /** @description Present on GET /candidates/me/video; absent on confirm/delete. */
+            maxMb?: number;
+            /** @description Present on GET /candidates/me/video; absent on confirm/delete. */
+            maxDurationSec?: number;
         };
         /**
          * @description Candidate profile shape. **Privacy rules (viewer-aware DTOs):**
@@ -5534,6 +5637,191 @@ export interface operations {
             };
             /** @description Upload not found (HEAD check failed) or invalid file */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getCandidateMeVideo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Video status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CandidateVideoStatus"];
+                    };
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deleteCandidateMeVideo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Video removed (or there was none) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CandidateVideoStatus"];
+                    };
+                };
+            };
+        };
+    };
+    postCandidateMeVideoPresign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    fileName: string;
+                    /**
+                     * @description The container formats a phone or browser actually produces.
+                     * @enum {string}
+                     */
+                    mimeType: "video/mp4" | "video/quicktime" | "video/webm";
+                    sizeBytes: number;
+                    /** @description Length as the browser measured it (`HTMLVideoElement.duration`). Fractional values are normal and are rounded once, on write. */
+                    durationSec: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Presigned PUT url */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** Format: uri */
+                            uploadUrl: string;
+                            key: string;
+                            /** @example 300 */
+                            expiresInSeconds: number;
+                        };
+                    };
+                };
+            };
+            /** @description `INVALID_FILE_TYPE`, `FILE_TOO_LARGE` (meta.maxMb) or `VIDEO_TOO_LONG` (meta.maxDurationSec). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postCandidateMeVideoConfirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    key: string;
+                    durationSec: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Video recorded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CandidateVideoStatus"];
+                    };
+                };
+            };
+            /** @description The key is not owned by this candidate */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description `UPLOAD_NOT_FOUND`, `INVALID_FILE_TYPE`, `FILE_TOO_LARGE` or `VIDEO_TOO_LONG`. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getCandidateMeVideoUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Signed url */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            url: string;
+                            expiresInSeconds: number;
+                        };
+                    };
+                };
+            };
+            /** @description No video uploaded (`VIDEO_NOT_FOUND`) */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

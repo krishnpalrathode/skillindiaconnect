@@ -376,5 +376,12 @@
       "accountSuspended": "Akaunti yako imesimamishwa. Wasiliana na msaada.",
       "genericError": "Hitilafu imetokea. Tafadhali jaribu tena."
     }
+  },
+  "dashboard": {
+    "videoPrompt": {
+      "title": "Pakia video ya kazi yako kwa fursa bora zaidi",
+      "body": "Waajiri huchagua zaidi wale wanaoweza kuwaona wakifanya kazi. Inachukua dakika mbili tu.",
+      "cta": "Ongeza video"
+    }
   }
 }

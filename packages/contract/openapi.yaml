@@ -436,6 +436,33 @@ components:
           format: date
           description: Passport expiry date (PASSPORT type only; set during confirm step)
 
+    CandidateVideoStatus:
+      type: object
+      required: [hasVideo]
+      description: |
+        The candidate's working-video introduction, plus the limits currently in
+        force. `maxMb` / `maxDurationSec` are echoed so the UI can state the
+        real ceilings rather than keeping its own copy that drifts when a
+        Super-Admin changes the Setting.
+      properties:
+        hasVideo:
+          type: boolean
+        uploadedAt:
+          type: [string, 'null']
+          format: date-time
+        durationSec:
+          type: [integer, 'null']
+          description: Rounded to whole seconds on write.
+        sizeBytes:
+          type: [integer, 'null']
+          description: The REAL stored size, read back from the object.
+        maxMb:
+          type: integer
+          description: Present on GET /candidates/me/video; absent on confirm/delete.
+        maxDurationSec:
+          type: integer
+          description: Present on GET /candidates/me/video; absent on confirm/delete.
+
     CandidateProfile:
       type: object
       required: [id, email, role]
@@ -4136,6 +4163,193 @@ paths:
                 $ref: '#/components/schemas/Error'
         '422':
           description: Upload not found (HEAD check failed) or invalid file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ── Candidate: working video introduction ─────────────────────────────────────
+  # Same presign -> PUT to R2 -> confirm shape as photos and documents.
+  #
+  # The SIZE ceiling is enforced server-side from the stored object (HEAD), so it
+  # cannot be talked around. The DURATION is measured by the browser and declared
+  # by the client: verifying it server-side would need a demuxer this process does
+  # not carry. The byte cap is the limit that actually protects the platform; the
+  # length cap is a product rule. Stated here so no reader assumes otherwise.
+  /candidates/me/video:
+    get:
+      operationId: getCandidateMeVideo
+      tags: [candidate]
+      summary: Current working-video status and the active limits
+      description: |
+        Returns whether a video exists plus the limits currently in force, so the
+        UI states the real numbers instead of hardcoding its own copy. The limits
+        come from Settings (`candidates.video_max_mb`,
+        `candidates.video_max_minutes`) and a Super-Admin may change them.
+      responses:
+        '200':
+          description: Video status
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CandidateVideoStatus'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      operationId: deleteCandidateMeVideo
+      tags: [candidate]
+      summary: Remove the working video
+      description: |
+        Clears the video columns and queues the R2 object for deletion.
+        IDEMPOTENT — removing a video that does not exist succeeds.
+      responses:
+        '200':
+          description: Video removed (or there was none)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CandidateVideoStatus'
+  /candidates/me/video/presign:
+    post:
+      operationId: postCandidateMeVideoPresign
+      tags: [candidate]
+      summary: Presign a working-video upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fileName, mimeType, sizeBytes, durationSec]
+              properties:
+                fileName:
+                  type: string
+                mimeType:
+                  type: string
+                  enum: [video/mp4, video/quicktime, video/webm]
+                  description: The container formats a phone or browser actually produces.
+                sizeBytes:
+                  type: integer
+                  minimum: 1
+                durationSec:
+                  type: number
+                  minimum: 1
+                  description: >
+                    Length as the browser measured it
+                    (`HTMLVideoElement.duration`). Fractional values are normal
+                    and are rounded once, on write.
+      responses:
+        '200':
+          description: Presigned PUT url
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [uploadUrl, key, expiresInSeconds]
+                    properties:
+                      uploadUrl:
+                        type: string
+                        format: uri
+                      key:
+                        type: string
+                      expiresInSeconds:
+                        type: integer
+                        example: 300
+        '422':
+          description: >
+            `INVALID_FILE_TYPE`, `FILE_TOO_LARGE` (meta.maxMb) or
+            `VIDEO_TOO_LONG` (meta.maxDurationSec).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /candidates/me/video/confirm:
+    post:
+      operationId: postCandidateMeVideoConfirm
+      tags: [candidate]
+      summary: Confirm an uploaded working video
+      description: |
+        Verifies OWNERSHIP (key prefix) and that the PUT landed (HEAD), re-checks
+        the REAL size and mime from the object, writes the video columns and
+        queues the replaced object for deletion.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key, durationSec]
+              properties:
+                key:
+                  type: string
+                durationSec:
+                  type: number
+                  minimum: 1
+      responses:
+        '200':
+          description: Video recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CandidateVideoStatus'
+        '403':
+          description: The key is not owned by this candidate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: >
+            `UPLOAD_NOT_FOUND`, `INVALID_FILE_TYPE`, `FILE_TOO_LARGE` or
+            `VIDEO_TOO_LONG`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /candidates/me/video/url:
+    get:
+      operationId: getCandidateMeVideoUrl
+      tags: [candidate]
+      summary: Short-expiry signed playback url for the candidate's own video
+      responses:
+        '200':
+          description: Signed url
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [url, expiresInSeconds]
+                    properties:
+                      url:
+                        type: string
+                      expiresInSeconds:
+                        type: integer
+        '404':
+          description: No video uploaded (`VIDEO_NOT_FOUND`)
           content:
             application/json:
               schema:

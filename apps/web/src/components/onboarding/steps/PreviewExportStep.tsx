@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Video } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
 import { ResumeExportHub } from '@/components/resume/ResumeExportHub';
+import { VideoIntroUpload } from '@/components/profile/VideoIntroUpload';
 import { postCompleteOnboarding } from '@/lib/api/candidate';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
@@ -60,16 +60,17 @@ export function PreviewExportStep({ profile, onBack }: PreviewExportStepProps) {
       {/* S7-F1 export hub: completion ring + live preview + Download PDF (async). */}
       <ResumeExportHub profile={profile} />
 
-      {/* Video slot (Coming Soon — B6) */}
-      <div className="flex items-start gap-3 rounded-[22px] border-2 border-dashed border-neutral-200 bg-neutral-50/60 p-5">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600">
-          <Video className="size-5" aria-hidden="true" />
-        </span>
-        <div>
-          <p className="text-sm font-semibold text-neutral-700">{t('videoTitle')}</p>
-          <p className="mt-0.5 text-xs text-neutral-600">{t('videoComingSoon')}</p>
-        </div>
-      </div>
+      {/*
+        The working video, live here too.
+
+        Onboarding is the moment a candidate is already thinking about how they
+        present themselves, so it is the best chance to get a video at all —
+        and leaving this as "coming soon" while the profile page has a working
+        uploader would tell the same person two different things about the same
+        feature. Uploading stays OPTIONAL: it is not part of the step's
+        validation and Save & Continue does not wait on it.
+      */}
+      <VideoIntroUpload />
 
       {error && (
         <p role="alert" className="text-sm text-error-fg">

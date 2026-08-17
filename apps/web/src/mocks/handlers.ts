@@ -4727,6 +4727,139 @@ const adminResendWhatsapp = http.post(
 
 // ─── Export all handlers ──────────────────────────────────────────────────────
 
+// ─── Working video introduction ───────────────────────────────────────────────
+// The mock mirrors the server's LIMITS and its ownership rule, so the UI's
+// pre-checks and error paths are exercised here exactly as they are for real.
+const MOCK_VIDEO_MAX_MB = 10;
+const MOCK_VIDEO_MAX_DURATION_SEC = 120;
+
+/** The stored video, per candidate. Kept beside the profile, like the columns. */
+function videoStatusFor(profile: Record<string, unknown>) {
+  const key = profile.videoR2Key as string | undefined;
+  return {
+    hasVideo: !!key,
+    uploadedAt: (profile.videoUploadedAt as string | undefined) ?? null,
+    durationSec: (profile.videoDurationSec as number | undefined) ?? null,
+    sizeBytes: (profile.videoSizeBytes as number | undefined) ?? null,
+  };
+}
+
+const candidateVideoStatus = http.get(`${BASE}/candidates/me/video`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+  const candidate = db.candidates.get(user.id);
+  if (!candidate)
+    return errorResponse(404, 'NOT_FOUND', 'Not found', 'Candidate profile not found.');
+
+  return HttpResponse.json({
+    data: {
+      ...videoStatusFor(candidate.profile as unknown as Record<string, unknown>),
+      maxMb: MOCK_VIDEO_MAX_MB,
+      maxDurationSec: MOCK_VIDEO_MAX_DURATION_SEC,
+    },
+  });
+});
+
+const candidateVideoPresign = http.post(
+  `${BASE}/candidates/me/video/presign`,
+  async ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const body = (await request.json()) as {
+      fileName: string;
+      mimeType: string;
+      sizeBytes: number;
+      durationSec: number;
+    };
+
+    if (!['video/mp4', 'video/quicktime', 'video/webm'].includes(body.mimeType)) {
+      return errorResponse(
+        422,
+        'INVALID_FILE_TYPE',
+        'Invalid file',
+        'That video format is not supported.',
+      );
+    }
+    if (body.sizeBytes > MOCK_VIDEO_MAX_MB * 1024 * 1024) {
+      return errorResponse(422, 'FILE_TOO_LARGE', 'Too large', 'That video is too large.');
+    }
+    if (body.durationSec > MOCK_VIDEO_MAX_DURATION_SEC) {
+      return errorResponse(422, 'VIDEO_TOO_LONG', 'Too long', 'That video is too long.');
+    }
+
+    const key = `candidates/${user.id}/video/mock-${body.fileName}`;
+    return HttpResponse.json({
+      data: {
+        uploadUrl: `https://mock-r2.example.com/${key}?sig=mock`,
+        key,
+        expiresInSeconds: 300,
+      },
+    });
+  },
+);
+
+const candidateVideoConfirm = http.post(
+  `${BASE}/candidates/me/video/confirm`,
+  async ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+    const candidate = db.candidates.get(user.id);
+    if (!candidate)
+      return errorResponse(404, 'NOT_FOUND', 'Not found', 'Candidate profile not found.');
+
+    const body = (await request.json()) as { key: string; durationSec: number };
+    if (!body.key || !body.key.startsWith(`candidates/${user.id}/video/`)) {
+      return errorResponse(403, 'KEY_NOT_OWNED', 'Forbidden', 'This upload key is not yours.');
+    }
+    if (body.durationSec > MOCK_VIDEO_MAX_DURATION_SEC) {
+      return errorResponse(422, 'VIDEO_TOO_LONG', 'Too long', 'That video is too long.');
+    }
+
+    const p = candidate.profile as unknown as Record<string, unknown>;
+    p.videoR2Key = body.key;
+    p.videoDurationSec = Math.round(body.durationSec);
+    p.videoSizeBytes = 4 * 1024 * 1024;
+    p.videoUploadedAt = new Date().toISOString();
+
+    return HttpResponse.json({ data: videoStatusFor(p) });
+  },
+);
+
+const candidateVideoUrl = http.get(`${BASE}/candidates/me/video/url`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+  const candidate = db.candidates.get(user.id);
+  const key = (candidate?.profile as unknown as Record<string, unknown> | undefined)?.videoR2Key;
+  if (!key) {
+    return errorResponse(404, 'VIDEO_NOT_FOUND', 'Not found', 'No video uploaded.');
+  }
+  return HttpResponse.json({
+    data: { url: `https://mock-r2.example.com/${key}?sig=mock`, expiresInSeconds: 300 },
+  });
+});
+
+const candidateVideoDelete = http.delete(`${BASE}/candidates/me/video`, ({ request }) => {
+  const user = getAuthUser(request);
+  if (!user)
+    return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+  const candidate = db.candidates.get(user.id);
+  if (candidate) {
+    const p = candidate.profile as unknown as Record<string, unknown>;
+    p.videoR2Key = undefined;
+    p.videoDurationSec = undefined;
+    p.videoSizeBytes = undefined;
+    p.videoUploadedAt = undefined;
+  }
+  return HttpResponse.json({
+    data: { hasVideo: false, uploadedAt: null, durationSec: null, sizeBytes: null },
+  });
+});
+
 export const handlers = [
   health,
   // Auth
@@ -4756,6 +4889,11 @@ export const handlers = [
   candidateDocumentsConfirm,
   candidatePhotoPresign,
   candidatePhotoConfirm,
+  candidateVideoStatus,
+  candidateVideoPresign,
+  candidateVideoConfirm,
+  candidateVideoUrl,
+  candidateVideoDelete,
   candidateCompleteOnboarding,
   // S2: Stats + Notifications
   candidateMeStats,

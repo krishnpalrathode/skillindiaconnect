@@ -376,5 +376,12 @@
       "accountSuspended": "Akun Anda telah ditangguhkan. Hubungi dukungan untuk bantuan.",
       "genericError": "Terjadi kesalahan. Silakan coba lagi."
     }
+  },
+  "dashboard": {
+    "videoPrompt": {
+      "title": "Unggah video pekerjaan Anda untuk peluang yang lebih baik",
+      "body": "Perusahaan lebih sering memilih kandidat yang bisa mereka lihat bekerja. Hanya butuh dua menit.",
+      "cta": "Tambah video"
+    }
   }
 }

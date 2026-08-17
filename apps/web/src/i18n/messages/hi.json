@@ -375,7 +375,6 @@
       "educationalCert": "शैक्षिक प्रमाण पत्र",
       "educationalCertHint": "PDF या छवि, अधिकतम 5 MB",
       "videoIntro": "वीडियो परिचय",
-      "videoComingSoon": "जल्द आ रहा है (B6)",
       "reupload": "पुनः अपलोड करें",
       "notUploaded": "अपलोड नहीं किया",
       "uploadNow": "अभी अपलोड करें",
@@ -530,8 +529,7 @@
       "sendEmail": "ईमेल पर भेजें",
       "exportComingSoon": "रिज्यूमे निर्यात Sprint 7 में आएगा",
       "saveAndContinue": "सहेजें और प्रोफ़ाइल पर जाएं",
-      "videoTitle": "वीडियो परिचय",
-      "videoComingSoon": "जल्द आ रहा है"
+      "videoTitle": "वीडियो परिचय"
     },
     "upload": {
       "selectFile": "फ़ाइल चुनें",
@@ -1083,6 +1081,11 @@
     "profileSummary": {
       "completion": "{pct}% पूर्ण",
       "completeNow": "अभी पूरी करें →"
+    },
+    "videoPrompt": {
+      "title": "बेहतर अवसरों के लिए अपना काम का वीडियो अपलोड करें",
+      "body": "जिन कामगारों को कंपनियाँ काम करते देख पाती हैं, उन्हें चुने जाने की संभावना कहीं ज़्यादा होती है। बस दो मिनट लगेंगे।",
+      "cta": "वीडियो जोड़ें"
     }
   },
   "notifications": {

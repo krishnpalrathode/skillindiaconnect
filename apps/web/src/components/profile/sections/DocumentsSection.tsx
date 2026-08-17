@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { FileText, Upload, Video } from 'lucide-react';
+import { FileText, Upload } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Badge } from '@/components/ui/badge';
 import { Field } from '@/components/ui/field';
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { EditableSection } from '@/components/profile/EditableSection';
 import { DocumentValidity } from '@/components/common/DocumentValidity';
 import { FileUpload } from '@/components/upload/FileUpload';
+import { VideoIntroUpload } from '@/components/profile/VideoIntroUpload';
 import { getCandidateProfile } from '@/lib/api/candidate';
 import type { PresignRequest } from '@/lib/api/candidate';
 import { MAX_UPLOAD_MB } from '@/lib/uploads';
@@ -155,19 +156,13 @@ export function DocumentsSection({
         );
       })}
 
-      {/* Video — B6 placeholder */}
-      <div className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-neutral-200 bg-neutral-50/60 p-4">
-        <span
-          className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600"
-          aria-hidden="true"
-        >
-          <Video className="size-4" />
-        </span>
-        <div>
-          <p className="text-sm font-medium text-neutral-600">{t('videoIntro')}</p>
-          <p className="text-xs text-neutral-600">{t('videoComingSoon')}</p>
-        </div>
-      </div>
+      {/* Working video introduction — live (was a "coming soon" placeholder).
+          It owns its own fetch/upload state and its own buttons, so it is not
+          threaded through this section's edit form: it is not a profile FIELD,
+          it is a separate object with its own lifecycle. Rendered in both the
+          read and edit views so it is reachable either way — only one of the
+          two is ever mounted. */}
+      <VideoIntroUpload />
 
       <p className="text-xs text-neutral-600 font-medium">{t('count', { count: uploadedCount })}</p>
     </div>
@@ -236,19 +231,13 @@ export function DocumentsSection({
         );
       })}
 
-      {/* Video — B6 placeholder */}
-      <div className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-neutral-200 bg-neutral-50/60 p-4">
-        <span
-          className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600"
-          aria-hidden="true"
-        >
-          <Video className="size-4" />
-        </span>
-        <div>
-          <p className="text-sm font-medium text-neutral-600">{t('videoIntro')}</p>
-          <p className="text-xs text-neutral-600">{t('videoComingSoon')}</p>
-        </div>
-      </div>
+      {/* Working video introduction — live (was a "coming soon" placeholder).
+          It owns its own fetch/upload state and its own buttons, so it is not
+          threaded through this section's edit form: it is not a profile FIELD,
+          it is a separate object with its own lifecycle. Rendered in both the
+          read and edit views so it is reachable either way — only one of the
+          two is ever mounted. */}
+      <VideoIntroUpload />
     </div>
   );
 

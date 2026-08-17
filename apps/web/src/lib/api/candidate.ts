@@ -154,6 +154,45 @@ export async function uploadToPresignedUrl(uploadUrl: string, file: File): Promi
   if (!res.ok) throw new Error(`Upload failed (${res.status})`);
 }
 
+// ─── Working video introduction ───────────────────────────────────────────────
+
+export type CandidateVideoStatus = components['schemas']['CandidateVideoStatus'];
+
+/** Status + the limits currently in force (read from Settings, server-side). */
+export function getCandidateVideo(): Promise<CandidateVideoStatus> {
+  return apiFetch<CandidateVideoStatus>('/candidates/me/video');
+}
+
+export interface PresignVideoRequest {
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  durationSec: number;
+}
+
+export function presignVideo(body: PresignVideoRequest): Promise<PresignResponse> {
+  return apiFetch<PresignResponse>('/candidates/me/video/presign', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export function confirmVideo(key: string, durationSec: number): Promise<CandidateVideoStatus> {
+  return apiFetch<CandidateVideoStatus>('/candidates/me/video/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ key, durationSec }),
+  });
+}
+
+/** Short-expiry signed url — fetched on demand, never stored. */
+export function getCandidateVideoUrl(): Promise<{ url: string; expiresInSeconds: number }> {
+  return apiFetch<{ url: string; expiresInSeconds: number }>('/candidates/me/video/url');
+}
+
+export function deleteCandidateVideo(): Promise<CandidateVideoStatus> {
+  return apiFetch<CandidateVideoStatus>('/candidates/me/video', { method: 'DELETE' });
+}
+
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
 export interface PatchCandidateSettingsBody {
