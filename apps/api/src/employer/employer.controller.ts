@@ -7,6 +7,8 @@ import { RegisterCompanyDto } from './dto/register-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { PresignCertDto } from './dto/presign-cert.dto';
 import { ConfirmCertDto } from './dto/confirm-cert.dto';
+import { ScheduleVerificationCallDto } from './dto/schedule-verification-call.dto';
+import { VerificationCallService } from './verification-call.service';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS, AUDIT_MODULES, AuditStatus } from '../audit/audit.types';
 
@@ -15,6 +17,7 @@ export class EmployerController {
   constructor(
     private readonly employerService: EmployerService,
     private readonly dashboardService: EmployerDashboardService,
+    private readonly verificationCallService: VerificationCallService,
     private readonly audit: AuditService,
   ) {}
 
@@ -69,6 +72,38 @@ export class EmployerController {
   async getDashboard(@CurrentUser() user: CurrentUserPayload) {
     this.assertEmployerRole(user.role);
     return { data: await this.dashboardService.getDashboard(user.userId) };
+  }
+
+  // ─── Verification call (the fast path around the 24-hour queue) ────────────
+
+  @Get('me/verification-call')
+  async getVerificationCall(@CurrentUser() user: CurrentUserPayload) {
+    this.assertEmployerRole(user.role);
+    return { data: await this.verificationCallService.current(user.userId) };
+  }
+
+  @Post('me/verification-call')
+  async scheduleVerificationCall(
+    @CurrentUser() user: CurrentUserPayload,
+    @Body() dto: ScheduleVerificationCallDto,
+  ) {
+    this.assertEmployerRole(user.role);
+    const booking = await this.verificationCallService.schedule(user.userId, dto);
+
+    // Audited like registration: it is an employer action that pulls staff time
+    // into a queue, so "who asked, for when" needs to be answerable later.
+    await this.audit.log({
+      actorUserId: user.userId,
+      actorRole: user.role,
+      action: AUDIT_ACTIONS.VERIFICATION_CALL_REQUESTED,
+      module: AUDIT_MODULES.EMPLOYER,
+      targetType: 'Company',
+      targetId: user.userId,
+      status: AuditStatus.SUCCESS,
+      meta: { slotAt: booking.slotAt },
+    });
+
+    return { data: booking };
   }
 
   private assertEmployerRole(role: UserRole): void {

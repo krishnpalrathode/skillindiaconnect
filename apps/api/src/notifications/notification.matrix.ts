@@ -51,6 +51,20 @@ export const NOTIFICATION_MATRIX: Record<NotificationType, MatrixEntry> = {
     whatsapp: false,
     email: true,
   },
+  /*
+    ── Admin-directed ─────────────────────────────────────────────────────────
+    An employer proposed a slot for a verification call.
+
+    Email as well as in-app, and deliberately so: the point of the feature is
+    that a human turns up at a specific time, and an in-app row is only seen by
+    an admin who happens to be looking at the console. WhatsApp is off — staff
+    are not on the WhatsApp tier, which is candidate-facing.
+  */
+  VERIFICATION_CALL_REQUESTED: {
+    inApp: true,
+    whatsapp: false,
+    email: true,
+  },
   // ── Job moderation outcomes (S6b-B2 — employer-facing) ───────────────────────
   JOB_APPROVED: {
     inApp: true,

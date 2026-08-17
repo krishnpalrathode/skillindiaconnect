@@ -53,6 +53,30 @@ export function getCompany(): Promise<Company> {
   return apiFetch<Company>('/employers/me/company');
 }
 
+// ─── Verification call ────────────────────────────────────────────────────────
+
+export type VerificationCallRequest = components['schemas']['VerificationCallRequest'];
+
+/** The pending request, or null when none is booked. */
+export function getVerificationCall(): Promise<VerificationCallRequest | null> {
+  return apiFetch<VerificationCallRequest | null>('/employers/me/verification-call');
+}
+
+/**
+ * Book or re-book. `slotAt` must be an ISO INSTANT (`Date.toISOString()`) —
+ * the employer picks a local time and an admin reads it in their own zone, so
+ * the offset has to travel with it.
+ */
+export function scheduleVerificationCall(body: {
+  slotAt: string;
+  note?: string;
+}): Promise<VerificationCallRequest> {
+  return apiFetch<VerificationCallRequest>('/employers/me/verification-call', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
 export function patchCompany(body: Partial<Company>): Promise<Company> {
   return apiFetch<Company>('/employers/me/company', {
     method: 'PATCH',

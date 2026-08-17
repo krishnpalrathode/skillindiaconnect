@@ -997,6 +997,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/employers/me/verification-call": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The employer's current verification-call request */
+        get: operations["getEmployerMeVerificationCall"];
+        put?: never;
+        /**
+         * Book or re-book a verification call
+         * @description UPSERT keyed on the company — re-posting replaces the pending request
+         *     rather than creating a second one, so this is both "schedule" and
+         *     "reschedule".
+         *
+         *     On success every admin holding `employers.approve_reject` is notified
+         *     in-app and by email. Notification failure does NOT fail the booking:
+         *     the request is already committed, and losing it to protect the message
+         *     about it would be the wrong trade.
+         */
+        post: operations["postEmployerMeVerificationCall"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/employers/me/dashboard": {
         parameters: {
             query?: never;
@@ -2903,10 +2931,24 @@ export interface components {
         /** @enum {string} */
         GenderPreference: "MALE" | "FEMALE" | "ANY";
         /**
+         * @description An employer's request for a live verification call instead of waiting
+         *     out the standard review. ONE per company — re-booking replaces it.
+         */
+        VerificationCallRequest: {
+            /**
+             * Format: date-time
+             * @description The proposed start, UTC.
+             */
+            slotAt: string;
+            note?: string | null;
+            /** Format: date-time */
+            requestedAt: string;
+        };
+        /**
          * @description Must match the Prisma `NotificationType` enum (the DB source of truth). PROFILE_VIEWED fires when an employer views a candidate's full profile (deduplicated per company per rolling 24 h window). Data payload: `{ companyName: string }`. PASSPORT_EXPIRY fires when a passport is within the reminder window. Data payload: `{ expiryDate: string, daysRemaining: integer }`.
          * @enum {string}
          */
-        NotificationType: "APPLICATION_SELECTED" | "APPLICATION_SHORTLISTED" | "APPLICATION_REJECTED" | "NEW_JOB_MATCH" | "PROFILE_REMINDER" | "JOB_CLOSING_SOON" | "PASSPORT_EXPIRY" | "PROFILE_VIEWED" | "EMPLOYER_APPROVED" | "EMPLOYER_REJECTED" | "EMPLOYER_SUSPENDED" | "SUBSCRIPTION_PURCHASED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "CANDIDATE_MATCHES" | "RESUME_SENT" | "RESUME_READY" | "JOB_APPROVED" | "JOB_REJECTED" | "JOB_POSTED_ONBEHALF";
+        NotificationType: "APPLICATION_SELECTED" | "APPLICATION_SHORTLISTED" | "APPLICATION_REJECTED" | "NEW_JOB_MATCH" | "PROFILE_REMINDER" | "JOB_CLOSING_SOON" | "PASSPORT_EXPIRY" | "PROFILE_VIEWED" | "EMPLOYER_APPROVED" | "EMPLOYER_REJECTED" | "EMPLOYER_SUSPENDED" | "SUBSCRIPTION_PURCHASED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "CANDIDATE_MATCHES" | "RESUME_SENT" | "RESUME_READY" | "JOB_APPROVED" | "JOB_REJECTED" | "JOB_POSTED_ONBEHALF" | "VERIFICATION_CALL_REQUESTED";
         UserSummary: {
             /** Format: uuid */
             id: string;
@@ -6545,6 +6587,89 @@ export interface operations {
                      *       "code": "UPLOAD_NOT_FOUND"
                      *     }
                      */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getEmployerMeVerificationCall: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The pending request, or null when none is booked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VerificationCallRequest"] | null;
+                    };
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postEmployerMeVerificationCall: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * Format: date-time
+                     * @description Proposed start as an ISO-8601 INSTANT. The employer picks a moment in their timezone and an admin reads it in theirs, so the value must carry an offset.
+                     */
+                    slotAt: string;
+                    /** @description Optional context — a phone number, "after 6pm", a language. */
+                    note?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Call booked */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VerificationCallRequest"];
+                    };
+                };
+            };
+            /** @description `COMPANY_NOT_FOUND` — this user has no company */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description `VERIFICATION_CALL_NOT_APPLICABLE` (company is not PENDING), `SLOT_IN_PAST`, or `SLOT_TOO_FAR` (meta.maxDaysAhead). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };

@@ -304,6 +304,24 @@ components:
       enum: [MALE, FEMALE, ANY]
 
     # ── Notification enums (S2 + S3) ───────────────────────────────────────────
+    VerificationCallRequest:
+      type: object
+      required: [slotAt, requestedAt]
+      description: |
+        An employer's request for a live verification call instead of waiting
+        out the standard review. ONE per company — re-booking replaces it.
+      properties:
+        slotAt:
+          type: string
+          format: date-time
+          description: The proposed start, UTC.
+        note:
+          type: [string, 'null']
+          maxLength: 500
+        requestedAt:
+          type: string
+          format: date-time
+
     NotificationType:
       type: string
       description: >
@@ -335,6 +353,7 @@ components:
           JOB_APPROVED,
           JOB_REJECTED,
           JOB_POSTED_ONBEHALF,
+          VERIFICATION_CALL_REQUESTED,
         ]
 
     # ── Settings enums (S2) ─────────────────────────────────────────────────────
@@ -5172,6 +5191,91 @@ paths:
                 status: 422
                 detail: The uploaded file was not found in storage. Please try uploading again.
                 code: UPLOAD_NOT_FOUND
+
+  # ── Employer: verification call ───────────────────────────────────────────────
+  # The fast path around the 24-hour review queue. Booking a call does NOT change
+  # company status — an admin still decides after speaking to them.
+  /employers/me/verification-call:
+    get:
+      operationId: getEmployerMeVerificationCall
+      tags: [employer]
+      summary: The employer's current verification-call request
+      responses:
+        '200':
+          description: The pending request, or null when none is booked
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    oneOf:
+                      - $ref: '#/components/schemas/VerificationCallRequest'
+                      - type: 'null'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      operationId: postEmployerMeVerificationCall
+      tags: [employer]
+      summary: Book or re-book a verification call
+      description: |
+        UPSERT keyed on the company — re-posting replaces the pending request
+        rather than creating a second one, so this is both "schedule" and
+        "reschedule".
+
+        On success every admin holding `employers.approve_reject` is notified
+        in-app and by email. Notification failure does NOT fail the booking:
+        the request is already committed, and losing it to protect the message
+        about it would be the wrong trade.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slotAt]
+              properties:
+                slotAt:
+                  type: string
+                  format: date-time
+                  description: >
+                    Proposed start as an ISO-8601 INSTANT. The employer picks a
+                    moment in their timezone and an admin reads it in theirs, so
+                    the value must carry an offset.
+                note:
+                  type: string
+                  maxLength: 500
+                  description: Optional context — a phone number, "after 6pm", a language.
+      responses:
+        '201':
+          description: Call booked
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/VerificationCallRequest'
+        '404':
+          description: '`COMPANY_NOT_FOUND` — this user has no company'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: >
+            `VERIFICATION_CALL_NOT_APPLICABLE` (company is not PENDING),
+            `SLOT_IN_PAST`, or `SLOT_TOO_FAR` (meta.maxDaysAhead).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /employers/me/dashboard:
     get:

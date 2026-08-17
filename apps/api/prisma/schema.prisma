@@ -193,6 +193,14 @@ enum NotificationType {
   /// to tell them. Employer-INITIATED outreach, so it is deliberately a
   /// different type from PROFILE_VIEWED (passive, in-app only).
   EMPLOYER_INTERESTED
+  /// An employer proposed a slot for a live verification call, asking to skip
+  /// the 24-hour review queue.
+  ///
+  /// The FIRST admin-directed notification in the system — every other type
+  /// targets the candidate or the employer whose record changed. It fans out to
+  /// the staff who actually hold `employers.approve_reject`, because a call
+  /// nobody with authority sees is the same as no call at all.
+  VERIFICATION_CALL_REQUESTED
 }
 
 enum DeliveryStatus {
@@ -541,8 +549,41 @@ model Company {
   subscriptions  Subscription[]
   profileViews   ProfileView[]
   interests      CandidateInterest[]
+  verificationCall VerificationCallRequest?
   @@index([status, type])
   @@map("companies")
+}
+
+/// An employer asking for a live verification call instead of waiting out the
+/// standard review queue.
+///
+/// ONE row per company (`companyId` is unique), so "schedule" and "reschedule"
+/// are the same operation: an upsert. Keeping a history of every slot a company
+/// ever proposed would grow without bound and buy nothing — the only thing
+/// anybody acts on is the slot being asked for now. It also bounds how much
+/// noise a single employer can generate for admins, since re-picking a time
+/// replaces the request rather than raising a new one.
+///
+/// Cascade-deleted with the company: this is scheduling state, not a financial
+/// record and not an audit trail, so it carries none of the retention rules
+/// those tables do.
+model VerificationCallRequest {
+  id                String   @id @default(uuid())
+  companyId         String   @unique
+  /// The employer user who asked — kept so an admin knows who to expect on the
+  /// call, which is not always the company's primary contact.
+  requestedByUserId String
+  /// The proposed start, stored UTC like every other timestamp here.
+  slotAt            DateTime
+  /// Optional context from the employer (a phone number, "after 6pm", …).
+  note              String?  @db.VarChar(500)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([slotAt])
+  @@map("verification_call_requests")
 }
 
 model EmployerUser {

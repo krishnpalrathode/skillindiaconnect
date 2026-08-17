@@ -4860,6 +4860,50 @@ const candidateVideoDelete = http.delete(`${BASE}/candidates/me/video`, ({ reque
   });
 });
 
+// ─── Employer verification call ───────────────────────────────────────────────
+// One booking per company, like the server's unique constraint — re-posting
+// REPLACES rather than stacking, so the mock exercises the same reschedule path.
+let mockVerificationCall: { slotAt: string; note: string | null; requestedAt: string } | null =
+  null;
+
+const employerVerificationCallGet = http.get(
+  `${BASE}/employers/me/verification-call`,
+  ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+    return HttpResponse.json({ data: mockVerificationCall });
+  },
+);
+
+const employerVerificationCallPost = http.post(
+  `${BASE}/employers/me/verification-call`,
+  async ({ request }) => {
+    const user = getAuthUser(request);
+    if (!user)
+      return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Valid access token required.');
+
+    const body = (await request.json()) as { slotAt: string; note?: string };
+    const slot = new Date(body.slotAt);
+    if (Number.isNaN(slot.getTime())) {
+      return errorResponse(422, 'INVALID_SLOT', 'Invalid slot', 'That is not a valid time.');
+    }
+    if (slot.getTime() <= Date.now()) {
+      return errorResponse(422, 'SLOT_IN_PAST', 'Slot in past', 'Choose a future time.');
+    }
+    if (slot.getTime() > Date.now() + 30 * 24 * 60 * 60 * 1000) {
+      return errorResponse(422, 'SLOT_TOO_FAR', 'Slot too far', 'Choose a nearer time.');
+    }
+
+    mockVerificationCall = {
+      slotAt: slot.toISOString(),
+      note: body.note ?? null,
+      requestedAt: new Date().toISOString(),
+    };
+    return HttpResponse.json({ data: mockVerificationCall }, { status: 201 });
+  },
+);
+
 export const handlers = [
   health,
   // Auth
@@ -4889,6 +4933,8 @@ export const handlers = [
   candidateDocumentsConfirm,
   candidatePhotoPresign,
   candidatePhotoConfirm,
+  employerVerificationCallGet,
+  employerVerificationCallPost,
   candidateVideoStatus,
   candidateVideoPresign,
   candidateVideoConfirm,

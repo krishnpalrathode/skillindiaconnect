@@ -34,6 +34,9 @@ export const AUDIT_ACTIONS = {
   ACCOUNT_DELETION_REQUESTED: 'account.deletion_requested',
   // Employer (S2-B4 — stubs only until that sprint lands)
   EMPLOYER_REGISTERED: 'employer.registered',
+  /// An employer booked (or re-booked) a live verification call. Recorded
+  /// because it pulls staff time into a queue on the employer's initiative.
+  VERIFICATION_CALL_REQUESTED: 'employer.verification_call_requested',
   EMPLOYER_APPROVED: 'employer.approved',
   EMPLOYER_REJECTED: 'employer.rejected',
   EMPLOYER_SUSPENDED: 'employer.suspended',

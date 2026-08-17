@@ -12,6 +12,7 @@ import { CandidateViewController } from './candidate-view.controller';
 import { CandidateInterestController } from './candidate-interest.controller';
 import { DocumentAccessController } from './document-access.controller';
 import { EmployerService } from './employer.service';
+import { VerificationCallService } from './verification-call.service';
 import { EmployerApprovalService } from './employer-approval.service';
 import { EmployerProfileService } from './employer-profile.service';
 import { EmployerDashboardService } from './employer-dashboard.service';
@@ -51,6 +52,7 @@ import { DocumentAccessService } from './document-access.service';
   providers: [
     EmployerService,
     EmployerApprovalService,
+    VerificationCallService,
     EmployerProfileService,
     EmployerDashboardService,
     CandidateViewService,

@@ -115,6 +115,10 @@ function subjectFor(input: EmailContentInput): string {
       return 'Your profile is ready — you can now apply';
     case NotificationType.EMPLOYER_REGISTERED:
       return company ? `${company} is registered — under review` : 'Your company is under review';
+    case NotificationType.VERIFICATION_CALL_REQUESTED:
+      return company
+        ? `Verification call requested — ${company}`
+        : 'Verification call requested';
     default:
       return input.title;
   }
@@ -171,6 +175,10 @@ function ctaFor(input: EmailContentInput): { label: string; url: string } | unde
       return make('Browse jobs', '/jobs');
     case NotificationType.EMPLOYER_REGISTERED:
       return make('Go to dashboard', '/employer/dashboard');
+    case NotificationType.VERIFICATION_CALL_REQUESTED:
+      // The admin console's employer list, not the employer's own dashboard —
+      // this is the one notification type whose audience is staff.
+      return make('Review employers', '/admin/employers');
     case NotificationType.PASSWORD_RESET: {
       // The one type whose destination is single-use and caller-supplied.
       const reset = str(d['resetUrl']);
@@ -252,6 +260,23 @@ function paragraphsFor(input: EmailContentInput): string[] {
         'Keep your documents current — an expired passport stops an application at the visa stage, and we will remind you well before that happens.',
       );
       break;
+    case NotificationType.VERIFICATION_CALL_REQUESTED: {
+      // `paragraphsFor` reads from `input.data`; the short `d` alias only
+      // exists in ctaFor, which is where this shape was copied from.
+      const callData = input.data ?? {};
+      const slot = str(callData['slotAt']);
+      extra.push(
+        slot
+          ? `They proposed ${new Date(slot).toUTCString()} (UTC). Confirm or reschedule with them directly.`
+          : 'Confirm a time with them directly.',
+      );
+      const callNote = str(callData['note']);
+      if (callNote) extra.push(`Their note: "${callNote}"`);
+      extra.push(
+        'Approving after the call is still a manual decision — this request only books the conversation.',
+      );
+      break;
+    }
     case NotificationType.EMPLOYER_REGISTERED:
       extra.push(
         'Our team is verifying your company details. Verification usually takes up to 24 hours, and we will email you the moment it is done.',

@@ -162,6 +162,21 @@ export const notificationMeta: Record<NotificationType, NotificationMeta> = {
     bgClass: 'bg-info-bg',
     routeFn: toJob,
   },
+  /*
+    The one ADMIN-directed type. It reaches this map because staff read their
+    notifications through the same feed component everyone else does, so it
+    still needs an icon and a destination.
+
+    It routes into the admin console rather than to any candidate-facing page —
+    the recipient is an approver who needs the employer queue, and the default
+    `/notifications` landing would leave them to find it themselves.
+  */
+  VERIFICATION_CALL_REQUESTED: {
+    Icon: CalendarClock,
+    colorClass: 'text-accent-700',
+    bgClass: 'bg-accent-50',
+    routeFn: () => '/admin/employers',
+  },
 };
 
 /** Fallback for any type not in the map (defensive against future enum additions). */

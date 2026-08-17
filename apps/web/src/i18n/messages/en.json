@@ -992,6 +992,28 @@
       "loadError": "Couldn't load your interested candidates.",
       "retry": "Try again",
       "sectionTitle": "Interest"
+    },
+    "verificationCall": {
+      "action": "Request instant approval →",
+      "rescheduleAction": "Change time →",
+      "title": "Schedule a verification call",
+      "rescheduleTitle": "Change your call time",
+      "body": "Pick a time to speak with our team and we can verify your company on the call instead of waiting for the queue.",
+      "dateLabel": "Date",
+      "timeLabel": "Time",
+      "timezoneHint": "Times are in your timezone ({zone}).",
+      "noteLabel": "Anything we should know? (optional)",
+      "noteHint": "A phone number to reach you on, a preferred language, or a time that suits better.",
+      "confirm": "Request call",
+      "rescheduleConfirm": "Update time",
+      "cancel": "Cancel",
+      "booked": "Call requested — our team will confirm shortly.",
+      "bookedBanner": "You asked for a verification call on {when}. Our team will confirm shortly.",
+      "errRequired": "Please choose a date and a time.",
+      "errPast": "Please choose a time in the future.",
+      "errTooFar": "Please choose a time within the next {days} days.",
+      "errNotApplicable": "Your company is no longer awaiting review.",
+      "errGeneric": "We couldn't book that call. Please try again."
     }
   },
   "jobs": {
