@@ -115,6 +115,8 @@ function subjectFor(input: EmailContentInput): string {
       return 'Your profile is ready — you can now apply';
     case NotificationType.EMPLOYER_REGISTERED:
       return company ? `${company} is registered — under review` : 'Your company is under review';
+    case NotificationType.CANDIDATE_INACTIVE_CHECK_IN:
+      return 'Are you still looking for work?';
     case NotificationType.VERIFICATION_CALL_REQUESTED:
       return company
         ? `Verification call requested — ${company}`
@@ -175,6 +177,8 @@ function ctaFor(input: EmailContentInput): { label: string; url: string } | unde
       return make('Browse jobs', '/jobs');
     case NotificationType.EMPLOYER_REGISTERED:
       return make('Go to dashboard', '/employer/dashboard');
+    case NotificationType.CANDIDATE_INACTIVE_CHECK_IN:
+      return make('Yes — show me jobs', '/jobs');
     case NotificationType.VERIFICATION_CALL_REQUESTED:
       // The admin console's employer list, not the employer's own dashboard —
       // this is the one notification type whose audience is staff.
@@ -258,6 +262,17 @@ function paragraphsFor(input: EmailContentInput): string[] {
       );
       extra.push(
         'Keep your documents current — an expired passport stops an application at the visa stage, and we will remind you well before that happens.',
+      );
+      break;
+    case NotificationType.CANDIDATE_INACTIVE_CHECK_IN:
+      extra.push(
+        'We have not seen you in a while, so employers browsing for workers are now seeing your profile as inactive.',
+      );
+      extra.push(
+        'Signing in is all it takes to mark yourself active again — you do not need to change anything on your profile.',
+      );
+      extra.push(
+        'If you have already found work, you can turn off "Available for work" in your settings and we will stop showing you to employers.',
       );
       break;
     case NotificationType.VERIFICATION_CALL_REQUESTED: {

@@ -63,6 +63,7 @@ const FINISHED_JOB_RETENTION = {
       { name: QUEUE_NAMES.MATCH_ALERT },
       // Employer → candidate outreach — API enqueues, worker sends.
       { name: QUEUE_NAMES.INTEREST_NOTIFY },
+      { name: QUEUE_NAMES.CANDIDATE_INACTIVITY },
     ),
   ],
   exports: [BullModule],

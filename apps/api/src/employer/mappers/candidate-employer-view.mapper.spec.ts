@@ -259,6 +259,7 @@ describe('toBrowseCard — phone/religion/salary/documents absent by constructio
       // CandidateBrowseSource fields
       photoKey: null,
       updatedAt: new Date(),
+      user: { lastLoginAt: new Date() },
     });
     const json = JSON.parse(JSON.stringify(card)) as Record<string, unknown>;
     expect('phone' in json).toBe(false);

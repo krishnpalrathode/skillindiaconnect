@@ -193,6 +193,15 @@ enum NotificationType {
   /// to tell them. Employer-INITIATED outreach, so it is deliberately a
   /// different type from PROFILE_VIEWED (passive, in-app only).
   EMPLOYER_INTERESTED
+  /// "Are you still looking?" — sent to a candidate who has not signed in for
+  /// 30 days.
+  ///
+  /// Has NO once-ever guard column. The guard is the notifications table
+  /// itself: the scan skips anyone who already has one of these dated AFTER
+  /// their `lastLoginAt`. That self-resets the moment they sign in, so each
+  /// separate spell of inactivity earns exactly one email and a returning
+  /// candidate who lapses again is asked again.
+  CANDIDATE_INACTIVE_CHECK_IN
   /// An employer proposed a slot for a live verification call, asking to skip
   /// the 24-hour review queue.
   ///

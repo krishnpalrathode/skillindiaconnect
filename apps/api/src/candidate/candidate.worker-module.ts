@@ -4,6 +4,8 @@ import { R2Module } from '../core/storage/r2.module';
 import { NotificationService } from '../notifications/notification.service';
 import { PassportExpiryCron } from './passport-expiry.cron';
 import { PassportExpiryProcessor } from './passport-expiry.processor';
+import { InactivityCron } from './inactivity.cron';
+import { InactivityProcessor } from './inactivity.processor';
 import { PurgeCron } from './purge/purge.cron';
 import { PurgeProcessor } from './purge/purge.processor';
 import { PurgeService } from './purge/purge.service';
@@ -43,6 +45,8 @@ import { MatchService } from '../applications/match/match.service';
     NotificationService, // fan-out entry point used by the processor
     PassportExpiryCron, // @Cron → enqueue
     PassportExpiryProcessor, // BullMQ processor → scan + notify
+    InactivityCron, // @Cron → enqueue the daily 30-day inactivity scan
+    InactivityProcessor, // BullMQ processor → scan + "still looking?" fan-out
     PurgeCron, // @Cron → enqueue the daily sweep
     PurgeProcessor, // BullMQ processor → sweep fan-out + per-user purge
     PurgeService, // the anonymization transaction + R2 destruction

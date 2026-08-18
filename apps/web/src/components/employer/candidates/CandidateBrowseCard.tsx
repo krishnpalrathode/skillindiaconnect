@@ -4,7 +4,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { MapPin, Plane, Briefcase } from 'lucide-react';
+import { MapPin, Plane, Briefcase, Clock } from 'lucide-react';
 import { jobCategoryLabelKey } from '@/lib/jobs/categories';
 import type { CandidateBrowseCard as CandidateBrowseCardModel } from '@/lib/api/employer-candidates';
 
@@ -73,6 +73,32 @@ export function CandidateBrowseCard({ candidate }: CandidateBrowseCardProps) {
           {candidate.isAvailable ? t('available') : t('notAvailable')}
         </span>
       </div>
+
+      {/*
+        Activity, beside availability rather than instead of it.
+
+        The two say different things and an employer needs both: "available" is
+        what the candidate ticked, this is when they were last actually here. A
+        profile marked available that has not been opened in two months is the
+        one that wastes a phone call, and nothing on this card used to
+        distinguish it.
+
+        Only rendered when it is worth knowing — an ACTIVE candidate is the
+        expected case, and a green "active" badge on every card would be noise
+        that makes the INACTIVE ones harder to spot rather than easier.
+      */}
+      {candidate.activityStatus !== 'ACTIVE' && (
+        <span
+          className={`inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+            candidate.activityStatus === 'INACTIVE'
+              ? 'bg-warning-bg text-warning-fg'
+              : 'bg-neutral-100 text-neutral-600'
+          }`}
+        >
+          <Clock className="size-3" aria-hidden="true" />
+          {t(candidate.activityStatus === 'INACTIVE' ? 'inactive' : 'recentlyActive')}
+        </span>
+      )}
 
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-600">
         {candidate.currentLocation && (

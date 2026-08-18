@@ -602,6 +602,7 @@ export class CandidateReadService {
         isAvailable: true,
         completionPct: true,
         updatedAt: true,
+        user: { select: { lastLoginAt: true } },
         experiences: { select: { type: true, years: true, months: true } },
         skills: { select: { name: true }, orderBy: { name: 'asc' }, take: 3 },
       },
@@ -672,6 +673,7 @@ export class CandidateReadService {
       isAvailable: true,
       completionPct: true,
       updatedAt: true,
+      user: { select: { lastLoginAt: true } },
       experiences: {
         select: { type: true, years: true, months: true },
       },
@@ -851,6 +853,12 @@ export interface CandidateBrowseSource {
   currentLocation: string | null;
   isAvailable: boolean;
   completionPct: number;
+  /**
+   * Drives the coarse activity bucket employers see. Selected through the
+   * user relation because the auth module owns the value — this is a read of
+   * it, not a second copy.
+   */
+  user: { lastLoginAt: Date | null } | null;
   updatedAt: Date;
   totalExperienceYears: number;
   hasForeignExperience: boolean;

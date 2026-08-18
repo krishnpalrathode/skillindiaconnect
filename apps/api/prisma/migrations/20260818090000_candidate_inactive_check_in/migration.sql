@@ -1,0 +1,12 @@
+-- "Are you still looking?" — the 30-day inactivity check-in.
+--
+-- A single new enum VALUE and nothing else. There is deliberately no
+-- `inactivityNudgeSentAt` column: the send-once guard is a query against the
+-- notifications table (skip anyone with one of these dated after their
+-- lastLoginAt), which self-resets on sign-in and therefore needs no state of
+-- its own to keep in step.
+--
+-- Additive and backward-compatible: older code never emits this value, so
+-- `prisma migrate deploy` is safe to run before new containers take traffic.
+-- IF NOT EXISTS so a re-run cannot fail.
+ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'CANDIDATE_INACTIVE_CHECK_IN';

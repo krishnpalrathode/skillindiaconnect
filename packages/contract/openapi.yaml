@@ -322,6 +322,18 @@ components:
           type: string
           format: date-time
 
+    CandidateActivityStatus:
+      type: string
+      description: |
+        How recently a candidate actually used the platform, derived at read
+        time from their last sign-in. DISTINCT from , which is what
+        the candidate declares — this is what they do.
+
+        ACTIVE = signed in within 7 days · RECENT = within 30 · INACTIVE = longer
+        ago, or never. Deliberately coarse: an employer needs to decide whether
+        to call, not to see a person's login timestamp.
+      enum: [ACTIVE, RECENT, INACTIVE]
+
     NotificationType:
       type: string
       description: >
@@ -354,6 +366,7 @@ components:
           JOB_REJECTED,
           JOB_POSTED_ONBEHALF,
           VERIFICATION_CALL_REQUESTED,
+          CANDIDATE_INACTIVE_CHECK_IN,
         ]
 
     # ── Settings enums (S2) ─────────────────────────────────────────────────────
@@ -1574,6 +1587,11 @@ components:
           description: true if any work experience has type = FOREIGN
         isAvailable:
           type: boolean
+          description: >-
+            What the candidate DECLARES — a toggle they set and may never
+            revisit. Read it alongside `activityStatus`, never instead of it.
+        activityStatus:
+          $ref: '#/components/schemas/CandidateActivityStatus'
         completionPct:
           type: integer
           description: Stored profile-completion percentage (0-100).

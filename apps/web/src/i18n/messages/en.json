@@ -968,7 +968,9 @@
           "passportExpired": "Expired",
           "proHint": "Document access is available on Pro."
         }
-      }
+      },
+      "recentlyActive": "Active this month",
+      "inactive": "Not active for 30+ days"
     },
     "interest": {
       "pageTitle": "Interested Candidates",

@@ -2945,10 +2945,21 @@ export interface components {
             requestedAt: string;
         };
         /**
+         * @description How recently a candidate actually used the platform, derived at read
+         *     time from their last sign-in. DISTINCT from , which is what
+         *     the candidate declares — this is what they do.
+         *
+         *     ACTIVE = signed in within 7 days · RECENT = within 30 · INACTIVE = longer
+         *     ago, or never. Deliberately coarse: an employer needs to decide whether
+         *     to call, not to see a person's login timestamp.
+         * @enum {string}
+         */
+        CandidateActivityStatus: "ACTIVE" | "RECENT" | "INACTIVE";
+        /**
          * @description Must match the Prisma `NotificationType` enum (the DB source of truth). PROFILE_VIEWED fires when an employer views a candidate's full profile (deduplicated per company per rolling 24 h window). Data payload: `{ companyName: string }`. PASSPORT_EXPIRY fires when a passport is within the reminder window. Data payload: `{ expiryDate: string, daysRemaining: integer }`.
          * @enum {string}
          */
-        NotificationType: "APPLICATION_SELECTED" | "APPLICATION_SHORTLISTED" | "APPLICATION_REJECTED" | "NEW_JOB_MATCH" | "PROFILE_REMINDER" | "JOB_CLOSING_SOON" | "PASSPORT_EXPIRY" | "PROFILE_VIEWED" | "EMPLOYER_APPROVED" | "EMPLOYER_REJECTED" | "EMPLOYER_SUSPENDED" | "SUBSCRIPTION_PURCHASED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "CANDIDATE_MATCHES" | "RESUME_SENT" | "RESUME_READY" | "JOB_APPROVED" | "JOB_REJECTED" | "JOB_POSTED_ONBEHALF" | "VERIFICATION_CALL_REQUESTED";
+        NotificationType: "APPLICATION_SELECTED" | "APPLICATION_SHORTLISTED" | "APPLICATION_REJECTED" | "NEW_JOB_MATCH" | "PROFILE_REMINDER" | "JOB_CLOSING_SOON" | "PASSPORT_EXPIRY" | "PROFILE_VIEWED" | "EMPLOYER_APPROVED" | "EMPLOYER_REJECTED" | "EMPLOYER_SUSPENDED" | "SUBSCRIPTION_PURCHASED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "CANDIDATE_MATCHES" | "RESUME_SENT" | "RESUME_READY" | "JOB_APPROVED" | "JOB_REJECTED" | "JOB_POSTED_ONBEHALF" | "VERIFICATION_CALL_REQUESTED" | "CANDIDATE_INACTIVE_CHECK_IN";
         UserSummary: {
             /** Format: uuid */
             id: string;
@@ -3688,7 +3699,9 @@ export interface components {
             skills?: string[];
             /** @description true if any work experience has type = FOREIGN */
             hasForeignExperience: boolean;
+            /** @description What the candidate DECLARES — a toggle they set and may never revisit. Read it alongside `activityStatus`, never instead of it. */
             isAvailable: boolean;
+            activityStatus?: components["schemas"]["CandidateActivityStatus"];
             /** @description Stored profile-completion percentage (0-100). */
             completionPct?: number;
         };

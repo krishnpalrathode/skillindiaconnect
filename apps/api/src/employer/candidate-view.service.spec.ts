@@ -206,6 +206,7 @@ describe('CandidateViewService', () => {
           isAvailable: true,
           completionPct: 70,
           updatedAt: new Date(),
+          user: { lastLoginAt: new Date() },
           totalExperienceYears: 2.5,
           hasForeignExperience: false,
           skills: [{ name: 'Welding' }],

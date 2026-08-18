@@ -921,7 +921,9 @@
           "passportExpired": "منتهي",
           "proHint": "الوصول إلى المستندات متاح في خطة Pro."
         }
-      }
+      },
+      "recentlyActive": "نشط هذا الشهر",
+      "inactive": "غير نشط منذ 30+ يوماً"
     },
     "interest": {
       "pageTitle": "المرشحون المهتم بهم",

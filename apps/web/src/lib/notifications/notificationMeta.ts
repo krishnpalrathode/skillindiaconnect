@@ -171,6 +171,17 @@ export const notificationMeta: Record<NotificationType, NotificationMeta> = {
     the recipient is an approver who needs the employer queue, and the default
     `/notifications` landing would leave them to find it themselves.
   */
+  /*
+    The "are you still looking?" check-in. Its in-app row exists for the moment
+    they DO come back — by definition the email is what reached them — so it
+    routes to jobs, which is the reason to have come back at all.
+  */
+  CANDIDATE_INACTIVE_CHECK_IN: {
+    Icon: CalendarClock,
+    colorClass: 'text-warning-fg',
+    bgClass: 'bg-warning-bg',
+    routeFn: toJob,
+  },
   VERIFICATION_CALL_REQUESTED: {
     Icon: CalendarClock,
     colorClass: 'text-accent-700',

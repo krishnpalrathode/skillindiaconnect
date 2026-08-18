@@ -10,6 +10,10 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis';
 import { createHash, randomUUID } from 'node:crypto';
+// A shared CONSTANT, not a cross-module service call — auth still owns the
+// `users` row it writes here; it only borrows the threshold the candidate
+// activity buckets are defined against, so the two cannot drift.
+import { ACTIVITY_WRITE_THROTTLE_HOURS } from '../candidate/activity.constants';
 import { UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { REDIS_CLIENT } from '../core/redis/redis.provider';
@@ -151,6 +155,31 @@ export class TokenService {
     if (user.status === UserStatus.SUSPENDED) {
       throw new ForbiddenException({ code: 'ACCOUNT_SUSPENDED' });
     }
+
+    /*
+      Refreshing counts as being seen.
+
+      `lastLoginAt` drives the candidate activity buckets employers browse by
+      and the 30-day "are you still looking?" email. Written only at LOGIN it
+      would mean the opposite of what it says: somebody who opens the app every
+      morning on a phone that never signs them out could go months without a
+      login event and be reported to employers as inactive, then emailed asking
+      if they are still looking. That is the exact user this feature must not
+      insult.
+
+      THROTTLED, because a refresh happens every few minutes for an open app and
+      this value is measured in days — one write per half-day keeps the field
+      accurate to well inside the smallest bucket while keeping the auth hot
+      path read-mostly. Fire-and-forget for the same reason: a failed activity
+      write must never cost the user their session.
+    */
+    const staleBefore = new Date(Date.now() - ACTIVITY_WRITE_THROTTLE_HOURS * 60 * 60 * 1000);
+    if (!user.lastLoginAt || user.lastLoginAt < staleBefore) {
+      await this.prisma.user
+        .update({ where: { id: user.id }, data: { lastLoginAt: new Date() } })
+        .catch(() => undefined);
+    }
+
     return this.issue(user.id, user.email, user.role, ip, userAgent);
   }
 

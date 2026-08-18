@@ -16,6 +16,8 @@ export const QUEUE_NAMES = {
   MATCH_ALERT: 'match-alert',
   /** Employer outreach to candidates they marked as interesting. */
   INTEREST_NOTIFY: 'interest-notify',
+  // Daily scan for candidates who have not signed in for 30 days.
+  CANDIDATE_INACTIVITY: 'candidate-inactivity',
 } as const;
 
 export const JOB_NAMES = {
@@ -28,6 +30,7 @@ export const JOB_NAMES = {
   SEND_NOTIFICATION: 'send-notification',
   AUTO_ARCHIVE_JOBS: 'auto-archive-jobs',
   PASSPORT_EXPIRY_SCAN: 'passport-expiry-scan',
+  INACTIVITY_SCAN: 'inactivity-scan',
   SUBSCRIPTION_LIFECYCLE_SWEEP: 'subscription-lifecycle-sweep',
   // S7-B1
   GENERATE_RESUME: 'generate-resume',

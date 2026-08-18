@@ -40,6 +40,9 @@ describe('TokenService', () => {
       } as unknown as jest.Mocked<PrismaService['refreshSession']>,
       user: {
         findUniqueOrThrow: jest.fn(),
+        // rotate() also refreshes lastLoginAt (throttled) so that a live
+        // session counts as activity for the candidate inactivity buckets.
+        update: jest.fn().mockResolvedValue(undefined),
       } as unknown as jest.Mocked<PrismaService['user']>,
     };
 

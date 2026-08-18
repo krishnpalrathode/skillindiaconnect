@@ -921,7 +921,9 @@
           "passportExpired": "समाप्त",
           "proHint": "दस्तावेज़ पहुँच Pro पर उपलब्ध है।"
         }
-      }
+      },
+      "recentlyActive": "इस महीने सक्रिय",
+      "inactive": "30+ दिनों से निष्क्रिय"
     },
     "interest": {
       "pageTitle": "रुचि वाले उम्मीदवार",

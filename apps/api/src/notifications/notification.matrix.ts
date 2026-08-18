@@ -52,6 +52,22 @@ export const NOTIFICATION_MATRIX: Record<NotificationType, MatrixEntry> = {
     email: true,
   },
   /*
+    "Are you still looking?" — the 30-day inactivity check-in.
+
+    EMAIL is the channel that matters: the recipient is by definition not
+    opening the app, so an in-app row alone would sit unread forever — it is
+    kept only so the message is there when they do come back. WhatsApp is off
+    deliberately; this is a re-engagement nudge, and putting marketing-shaped
+    messages down a channel candidates associate with real application news is
+    how that channel stops being trusted (and, on Meta's rules, how a template
+    gets rejected).
+  */
+  CANDIDATE_INACTIVE_CHECK_IN: {
+    inApp: true,
+    whatsapp: false,
+    email: true,
+  },
+  /*
     ── Admin-directed ─────────────────────────────────────────────────────────
     An employer proposed a slot for a verification call.
 
