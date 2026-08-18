@@ -18,6 +18,7 @@ import { TemplateGallery } from './TemplateGallery';
 import { RegeneratePrompt } from './RegeneratePrompt';
 import { SendWhatsAppButton } from './SendWhatsAppButton';
 import { EmailResumeButton } from './EmailResumeButton';
+import { CoverLetterCard } from './CoverLetterCard';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type CompletionResult = components['schemas']['CompletionResult'];
@@ -258,6 +259,10 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
             {/* Editing settings doesn't change an already-generated PDF. */}
             {dirtySinceGenerate && hasGenerated && <RegeneratePrompt />}
           </section>
+
+          {/* The cover letter, between the settings and delivery: it is part of
+              the application pack, not a delivery channel. */}
+          <CoverLetterCard hasGenerated={hasGenerated} isBlocked={blockedByCompletion} />
 
           <section className="rounded-2xl border border-neutral-200/70 bg-white p-5 shadow-sm sm:p-6">
             <p className="mb-2.5 text-sm font-bold text-neutral-800">{t('delivery.title')}</p>

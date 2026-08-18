@@ -21,6 +21,8 @@ import { BrowserPoolService } from '../pdf/browser-pool.service';
 import { PdfRenderService } from '../pdf/pdf-render.service';
 import { RESUME_SETTINGS_DEFAULTS, ResumeRenderSettings, toResumeView } from './resume-view.mapper';
 import { renderClassic } from './templates/classic.template';
+import { buildCoverLetter } from './cover-letter/cover-letter.content';
+import { renderCoverLetter } from './cover-letter/cover-letter.template';
 import { TEMPLATE_REGISTRY, selectTemplate } from './templates/registry';
 import { ResumeRenderService } from './resume-render.service';
 import { ResumeRenderProcessor } from './resume-render.processor';
@@ -316,6 +318,53 @@ describe('toResumeView (the chokepoint, object level)', () => {
       const html = renderClassic(toResumeView(source, allOn, good));
       expect(html).toContain(`src="${good}"`);
     });
+  });
+});
+
+describe('cover letter — IN THE PDF BYTES', () => {
+  /*
+    Asserted on parsed bytes, not on the HTML, for the same reason the privacy
+    gate above is: this is a document a candidate emails to a stranger, and
+    "it was in the markup" is not the claim being made. A letter whose sign-off
+    renders off the page is still wrong even though the string was present.
+  */
+  it('renders a complete business letter a candidate could actually send', async () => {
+    const view = toResumeView(source, allOn, null);
+    const html = renderCoverLetter(buildCoverLetter(view, { companyName: 'Al Habtoor' }));
+    const text = await extractText(await pool.render(html));
+
+    // Sender, subject, evidence, sign-off, enclosure — the whole skeleton.
+    expectNameRendered(text);
+    expect(text).toContain('suresh@example.com');
+    expect(text).toContain('RE:');
+    expect(text).toContain('Al Habtoor');
+    expect(text).toContain('Gulf Wiring LLC');
+    // Unaddressed → faithfully. The convention check, on the printed page.
+    expect(text).toContain('Yours faithfully');
+    expect(text).toContain('Curriculum Vitae');
+  });
+
+  it('fits on ONE page', async () => {
+    // Four short paragraphs is the design; a two-page cover letter is a
+    // content bug, and this is the assertion that would catch it.
+    const view = toResumeView(source, allOn, null);
+    const buffer = await pool.render(
+      renderCoverLetter(buildCoverLetter(view, { companyName: 'Al Habtoor' })),
+    );
+    const parser = new PDFParse({ data: new Uint8Array(buffer) });
+    try {
+      const info = await parser.getText();
+      expect(info.pages.length).toBe(1);
+    } finally {
+      await parser.destroy();
+    }
+  });
+
+  it('keeps a withheld phone number out of the bytes', async () => {
+    const hidden = toResumeView(source, { ...allOff, template: ResumeTemplate.CLASSIC }, null);
+    const text = await extractText(await pool.render(renderCoverLetter(buildCoverLetter(hidden))));
+    expect(text).not.toContain(PHONE);
+    expect(text).toContain('suresh@example.com');
   });
 });
 

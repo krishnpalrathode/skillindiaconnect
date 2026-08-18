@@ -30,6 +30,15 @@ export function buildResumeFilename(name: string): string {
   return safe ? `${safe}-Resume.pdf` : 'Resume.pdf';
 }
 
+/** Same rules, different document — see buildResumeFilename. */
+export function buildCoverLetterFilename(name: string): string {
+  const safe = name
+    .replace(/[^a-zA-Z0-9 ]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+  return safe ? `${safe}-Cover-Letter.pdf` : 'Cover-Letter.pdf';
+}
+
 /**
  * Resume delivery (S7-B2, API-PROCESS side).
  *
@@ -185,6 +194,56 @@ export class ResumeDeliveryService {
         channel: 'EMAIL',
         documentKey: generation.r2Key,
         documentFilename: buildResumeFilename(name),
+      },
+    });
+
+    await this.auditDelivery(AUDIT_ACTIONS.RESUME_EMAILED, userId, generation.id, 'EMAIL');
+    return { delivered: 'EMAIL' };
+  }
+
+  /**
+   * Email the cover letter to the candidate's own account address.
+   *
+   * Same hard rule as the resume: the recipient is the account email, never an
+   * address from the request. This endpoint is "send it to me so I can forward
+   * it", not a mailing feature — accepting a destination would turn a candidate
+   * tool into an open relay for sending strangers other people's documents.
+   *
+   * Shares the daily send budget with the resume rather than getting its own.
+   * They are the same action from the platform's point of view (one person
+   * emailing themselves their application pack), and two independent budgets
+   * would simply double the ceiling the budget exists to impose.
+   */
+  async sendCoverLetterEmail(
+    userId: string,
+    candidateId: string,
+  ): Promise<{ delivered: ResumeDeliveryChannel }> {
+    const generation = await this.resumeService.requireReadyGeneration(
+      candidateId,
+      'RESUME_NOT_READY',
+      HttpStatus.UNPROCESSABLE_ENTITY,
+    );
+    if (!generation.coverLetterR2Key) {
+      throw new HttpException(
+        {
+          code: 'COVER_LETTER_NOT_FOUND',
+          detail: 'Regenerate your resume to create a cover letter.',
+        },
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    await this.applySendBudget(candidateId);
+    const name = await this.resolveSnapshotName(generation, candidateId);
+
+    await this.notifications.enqueueEmail(userId, NotificationType.RESUME_SENT, {
+      title: 'Your cover letter',
+      body: 'Your cover letter is attached. Send it together with your CV when you apply.',
+      data: {
+        generationId: generation.id,
+        channel: 'EMAIL',
+        documentKey: generation.coverLetterR2Key,
+        documentFilename: buildCoverLetterFilename(name),
       },
     });
 

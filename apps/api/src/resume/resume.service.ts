@@ -181,6 +181,33 @@ export class ResumeService {
   }
 
   /**
+   * Signed url for the cover letter rendered alongside the latest resume.
+   *
+   * A 404 here means something different from the resume's 404, so it carries
+   * its own code: the resume exists but predates the feature (or its letter
+   * render failed), and the fix is to regenerate — not to generate for the
+   * first time. Collapsing both into RESUME_NOT_FOUND would send a candidate
+   * who is looking at their own finished resume a message telling them to make
+   * one.
+   */
+  async getCoverLetterUrl(candidateId: string): Promise<{ url: string; expiresInSeconds: number }> {
+    const ready = await this.requireReadyGeneration(candidateId, 'RESUME_NOT_FOUND', 404);
+    if (!ready.coverLetterR2Key) {
+      throw new HttpException(
+        {
+          code: 'COVER_LETTER_NOT_FOUND',
+          detail: 'Regenerate your resume to create a cover letter.',
+        },
+        404,
+      );
+    }
+    return {
+      url: await this.storage.presignGet(ready.coverLetterR2Key, RESUME_URL_EXPIRY_SECONDS),
+      expiresInSeconds: RESUME_URL_EXPIRY_SECONDS,
+    };
+  }
+
+  /**
    * The READY gate both delivery endpoints stand on: you cannot send a resume
    * that does not exist. PENDING and FAILED are both "not ready" — the client
    * generates first (the poll tells it when).

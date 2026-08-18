@@ -112,6 +112,15 @@
       "placeholder": "Example: Electrician with 6 years on residential and commercial sites in Kerala and Dubai. Comfortable with wiring, panel work and site safety. Looking for Gulf projects.",
       "counter": "{used}/{max}",
       "save": "Save"
+    },
+    "coverLetter": {
+      "title": "Cover letter",
+      "hint": "A formal letter to send with your CV. It is written from your profile and updates whenever you regenerate your resume.",
+      "download": "Download letter",
+      "email": "Email it to me",
+      "generateFirst": "Generate your resume first — your cover letter is created at the same time.",
+      "emailQueued": "Your cover letter is on its way to your email.",
+      "errRegenerate": "This resume was made before cover letters existed. Regenerate it to get one."
     }
   },
   "common": {

@@ -104,3 +104,30 @@ export function emailResume(): Promise<ResumeDeliveryResult> {
     method: 'POST',
   });
 }
+
+// ─── Cover letter ─────────────────────────────────────────────────────────────
+// Rendered alongside the resume in the same worker job, so there is no separate
+// generate or poll: if the resume is READY, the letter exists.
+
+/**
+ * `GET /candidates/me/resume/cover-letter/download` — short-lived signed url.
+ *
+ * 404 `COVER_LETTER_NOT_FOUND` means the resume predates the feature (or its
+ * letter render failed) and the fix is to REGENERATE — distinct from
+ * `RESUME_NOT_FOUND`, which means there is no resume at all.
+ */
+export function getCoverLetterDownloadUrl(): Promise<{ url: string; expiresInSeconds: number }> {
+  return apiFetch<{ url: string; expiresInSeconds: number }>(
+    '/candidates/me/resume/cover-letter/download',
+  );
+}
+
+/**
+ * `POST /candidates/me/resume/cover-letter/send-email` — emails the letter to
+ * the candidate's OWN account email. Shares the resume's daily send budget.
+ */
+export function emailCoverLetter(): Promise<ResumeDeliveryResult> {
+  return apiFetch<ResumeDeliveryResult>('/candidates/me/resume/cover-letter/send-email', {
+    method: 'POST',
+  });
+}

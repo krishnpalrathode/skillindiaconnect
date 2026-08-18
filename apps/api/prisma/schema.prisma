@@ -487,6 +487,12 @@ model ResumeGeneration {
   // rebuilding it from the live profile would drift from the stored bytes the
   // moment the candidate edits their profile, and the contract states the view
   // IS what the PDF contains. Null for pre-S7-B2 rows.
+  /// S8: the cover letter rendered from the SAME profile snapshot, in the same
+  /// worker job. Kept on the generation rather than in its own table because
+  /// the two documents are a matched pair — a letter that quoted a different
+  /// snapshot than the CV beside it would contradict it.
+  coverLetterR2Key    String?
+  coverLetterSizeBytes Int?
   viewSnapshot     Json?
   createdAt        DateTime      @default(now())
   generatedAt      DateTime?

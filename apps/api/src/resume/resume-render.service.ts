@@ -8,6 +8,8 @@ import { RESUME_SETTINGS_DEFAULTS, ResumeRenderSettings, toResumeView } from './
 import { toSettings } from './resume-settings.service';
 import { toStoredResumeView } from './resume-view.wire';
 import { selectTemplate } from './templates/registry';
+import { buildCoverLetter } from './cover-letter/cover-letter.content';
+import { renderCoverLetter } from './cover-letter/cover-letter.template';
 
 export interface RenderResumeResult {
   resumeId: string;
@@ -92,6 +94,39 @@ export class ResumeRenderService {
       filename: 'resume.pdf',
     });
 
+    /*
+      The cover letter, from the SAME view, in the SAME job.
+
+      Rendered here rather than behind its own generate/poll flow for one
+      reason: the two documents are sent together and must describe the same
+      person on the same day. A separately-generated letter would quote a
+      profile snapshot taken minutes or weeks apart from the CV beside it, and
+      the first time those disagreed — a job title updated between the two — the
+      candidate would be the last to know.
+
+      Failure is NON-FATAL and deliberately so. The resume is the artifact the
+      candidate asked for and it is already rendered and stored by this point;
+      losing it because the optional second document failed would be a plainly
+      worse outcome than shipping without a letter. A null key reads downstream
+      as "regenerate to get one", which is also what pre-S8 rows read as.
+    */
+    let coverLetterR2Key: string | null = null;
+    let coverLetterSizeBytes: number | null = null;
+    try {
+      const letterHtml = renderCoverLetter(buildCoverLetter(view));
+      const letter = await this.pdfRender.renderToR2(letterHtml, {
+        keyPrefix: `resumes/${candidateId}`,
+        filename: 'cover-letter.pdf',
+      });
+      coverLetterR2Key = letter.r2Key;
+      coverLetterSizeBytes = letter.sizeBytes;
+    } catch (err) {
+      this.logger.error(
+        `generation ${generationId}: cover letter render failed — resume is unaffected`,
+        err instanceof Error ? err.stack : undefined,
+      );
+    }
+
     const generatedAt = new Date();
     await this.prisma.$transaction([
       this.prisma.resumeGeneration.update({
@@ -101,6 +136,8 @@ export class ResumeRenderService {
           r2Key,
           sizeBytes,
           contentHash,
+          coverLetterR2Key,
+          coverLetterSizeBytes,
           generatedAt,
           failureReason: null,
           settingsSnapshot: settings as unknown as Prisma.InputJsonValue,

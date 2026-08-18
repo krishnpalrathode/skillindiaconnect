@@ -59,6 +59,23 @@ export class ResumeController {
     return { data: await this.resumeService.getDownloadUrl(candidateId) };
   }
 
+  // ─── Cover letter ─────────────────────────────────────────────────────────
+  // Rendered with the resume in one job, so there is no separate generate or
+  // poll here — if the resume is READY, the letter is there.
+
+  @Get('cover-letter/download')
+  async getCoverLetterDownload(@CurrentUser() user: CurrentUserPayload) {
+    const candidateId = await this.scope(user);
+    return { data: await this.resumeService.getCoverLetterUrl(candidateId) };
+  }
+
+  @Post('cover-letter/send-email')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async sendCoverLetterEmail(@CurrentUser() user: CurrentUserPayload) {
+    const candidateId = await this.scope(user);
+    return { data: await this.deliveryService.sendCoverLetterEmail(user.userId, candidateId) };
+  }
+
   @Post('send-whatsapp')
   @HttpCode(HttpStatus.ACCEPTED)
   async sendWhatsapp(@CurrentUser() user: CurrentUserPayload) {
