@@ -1,4 +1,5 @@
 import type { components } from '@skillindiaconnect/shared-types';
+import { maritalStatusLabel } from '@/lib/maritalStatus';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type ResumeSettings = components['schemas']['ResumeSettings'];
@@ -92,7 +93,7 @@ export function buildResumePreview(
     email: profile.email ?? '',
     summary: profile.summary?.trim() || null,
     dob: profile.dob ?? null,
-    maritalStatus: profile.maritalStatus ?? null,
+    maritalStatus: maritalStatusLabel(profile.maritalStatus),
     nationality: profile.nationality ?? null,
     currentLocation: profile.currentLocation ?? null,
     languages: profile.languages ?? [],

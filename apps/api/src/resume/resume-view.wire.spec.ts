@@ -9,7 +9,7 @@
  */
 import { ResumeTemplate } from '@prisma/client';
 import { ResumeSource } from '../candidate/candidate-read.service';
-import { RESUME_SETTINGS_DEFAULTS, toResumeView } from './resume-view.mapper';
+import { RESUME_SETTINGS_DEFAULTS, formatEnumLabel, toResumeView } from './resume-view.mapper';
 import { toStoredResumeView, toWireResumeView } from './resume-view.wire';
 
 const PHONE = '+919812345678';
@@ -170,5 +170,31 @@ describe('stored → wire resume view', () => {
       showPassportNumber: true,
       template: ResumeTemplate.CLASSIC,
     });
+  });
+});
+
+describe('enum values are rendered as English, not as database tokens', () => {
+  /*
+    The bug this pins: MARRIED reached the PDF and the preview verbatim, so the
+    one enum on the page shouted at the reader beside sentence-case labels.
+  */
+  it('sentence-cases the marital status', () => {
+    expect(formatEnumLabel('MARRIED')).toBe('Married');
+    expect(formatEnumLabel('SINGLE')).toBe('Single');
+    expect(formatEnumLabel('WIDOWED')).toBe('Widowed');
+  });
+
+  it('handles multi-word tokens, so a future enum needs no new code', () => {
+    expect(formatEnumLabel('PREFER_NOT_TO_SAY')).toBe('Prefer not to say');
+  });
+
+  it('is applied by the mapper, so every template inherits it', () => {
+    const view = toResumeView({ ...source, maritalStatus: 'MARRIED' }, RESUME_SETTINGS_DEFAULTS, null);
+    expect(view.maritalStatus).toBe('Married');
+  });
+
+  it('leaves an absent status absent rather than rendering an empty label', () => {
+    const view = toResumeView({ ...source, maritalStatus: null }, RESUME_SETTINGS_DEFAULTS, null);
+    expect(view.maritalStatus).toBeNull();
   });
 });
