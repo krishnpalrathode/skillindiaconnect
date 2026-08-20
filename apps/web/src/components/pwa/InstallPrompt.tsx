@@ -12,6 +12,20 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+/**
+ * ⛔ THE INSTALL BANNER IS CURRENTLY OFF. Flip to `true` to bring it back.
+ *
+ * Switched off temporarily during Android/TWA testing, where the banner competes
+ * with what is actually being tested. Nothing else needs changing to re-enable —
+ * the component, its copy and its dismissal memory are all still here.
+ *
+ * NOTE this does NOT stop listening for `beforeinstallprompt`. The listener stays
+ * and still calls preventDefault(), because that is what suppresses CHROME'S OWN
+ * mini-infobar. Remove the listener and you do not get "no banner" — you get
+ * Chrome's banner instead of ours, which is the opposite of the intent.
+ */
+const INSTALL_PROMPT_ENABLED = false;
+
 /** Remembers a dismissal so the banner asks once, not once per page view. */
 const DISMISSED_KEY = 'sic.pwa.install-dismissed';
 
@@ -71,6 +85,10 @@ export function InstallPrompt() {
     */
     setDeferred(null);
   }, [deferred]);
+
+  // Disabled: the event is still intercepted above (keeping Chrome's own
+  // infobar suppressed), we simply never show our own banner.
+  if (!INSTALL_PROMPT_ENABLED) return null;
 
   if (!deferred) return null;
 
