@@ -926,7 +926,7 @@ components:
           $ref: '#/components/schemas/EmployeeRange'
         languagePref:
           type: string
-          enum: [en, hi, bn, mr, te, ta, gu, kn, ml, pa, or, as, ne, tl, id, si, am, sw, ur, fa, ps, ar]
+          enum: [en, hi, ar, fr, de, es, pt, zh, ru, ja]
           default: en
         description:
           type: string

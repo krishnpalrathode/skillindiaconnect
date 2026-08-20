@@ -37,10 +37,20 @@ export interface LocaleDefinition {
 }
 
 /**
- * Ordered deliberately: English first (the default and the fallback), Hindi
- * second (the largest candidate language), then the remaining Indian languages
- * by speaker population, then Arabic last as the destination-market language.
- * The switcher renders this order as-is.
+ * Ordered deliberately: English first (the default and the fallback), then
+ * Hindi and Arabic — the two languages of the corridor this product was built
+ * for — then the remaining world languages by reach. The switcher renders this
+ * order as-is.
+ *
+ * WHY THIS SET CHANGED. It was previously India-first: Hindi plus ten Indian
+ * regional languages plus the South-Asian/East-African migrant corridor. That
+ * served candidates. This set serves an INTERNATIONAL market instead — the
+ * major business languages — with India represented by Hindi and English.
+ *
+ * The regional catalogues were deleted rather than left orphaned: an entry here
+ * with no catalogue silently renders entirely in English, which looks like a
+ * bug to the one user who picked it. If any of them is wanted back, it is one
+ * entry here plus its message file.
  */
 export const LOCALES = [
   {
@@ -60,177 +70,72 @@ export const LOCALES = [
     intlLocale: 'hi-IN',
   },
   {
-    code: 'bn',
-    nativeName: 'বাংলা',
-    shortLabel: 'বা',
-    englishName: 'Bengali',
-    dir: 'ltr',
-    intlLocale: 'bn-IN',
-  },
-  {
-    code: 'mr',
-    nativeName: 'मराठी',
-    shortLabel: 'मर',
-    englishName: 'Marathi',
-    dir: 'ltr',
-    intlLocale: 'mr-IN',
-  },
-  {
-    code: 'te',
-    nativeName: 'తెలుగు',
-    shortLabel: 'తె',
-    englishName: 'Telugu',
-    dir: 'ltr',
-    intlLocale: 'te-IN',
-  },
-  {
-    code: 'ta',
-    nativeName: 'தமிழ்',
-    shortLabel: 'த',
-    englishName: 'Tamil',
-    dir: 'ltr',
-    intlLocale: 'ta-IN',
-  },
-  {
-    code: 'gu',
-    nativeName: 'ગુજરાતી',
-    shortLabel: 'ગુ',
-    englishName: 'Gujarati',
-    dir: 'ltr',
-    intlLocale: 'gu-IN',
-  },
-  {
-    code: 'kn',
-    nativeName: 'ಕನ್ನಡ',
-    shortLabel: 'ಕ',
-    englishName: 'Kannada',
-    dir: 'ltr',
-    intlLocale: 'kn-IN',
-  },
-  {
-    code: 'ml',
-    nativeName: 'മലയാളം',
-    shortLabel: 'മ',
-    englishName: 'Malayalam',
-    dir: 'ltr',
-    intlLocale: 'ml-IN',
-  },
-  {
-    code: 'pa',
-    nativeName: 'ਪੰਜਾਬੀ',
-    shortLabel: 'ਪੰ',
-    englishName: 'Punjabi',
-    dir: 'ltr',
-    intlLocale: 'pa-IN',
-  },
-  {
-    code: 'or',
-    nativeName: 'ଓଡ଼ିଆ',
-    shortLabel: 'ଓ',
-    englishName: 'Odia',
-    dir: 'ltr',
-    intlLocale: 'or-IN',
-  },
-  {
-    code: 'as',
-    nativeName: 'অসমীয়া',
-    shortLabel: 'অ',
-    englishName: 'Assamese',
-    dir: 'ltr',
-    intlLocale: 'as-IN',
-  },
-  {
-    code: 'ne',
-    nativeName: 'नेपाली',
-    shortLabel: 'ने',
-    englishName: 'Nepali',
-    dir: 'ltr',
-    intlLocale: 'ne-NP',
-  },
-  /*
-    ── The wider Gulf corridor ────────────────────────────────────────────────
-    The languages above cover workers leaving India. These cover the rest of the
-    GCC blue-collar workforce this platform's employers hire alongside them —
-    Filipino, Indonesian and Sri Lankan workers are a large share of Gulf site
-    and service labour, and Amharic and Swahili speakers a large share of
-    domestic and hospitality work. Arabic is the destination language and is
-    already listed below.
-  */
-  {
-    code: 'tl',
-    nativeName: 'Filipino',
-    shortLabel: 'FIL',
-    englishName: 'Filipino',
-    dir: 'ltr',
-    intlLocale: 'fil-PH',
-  },
-  {
-    code: 'id',
-    nativeName: 'Bahasa Indonesia',
-    shortLabel: 'ID',
-    englishName: 'Indonesian',
-    dir: 'ltr',
-    intlLocale: 'id-ID',
-  },
-  {
-    code: 'si',
-    nativeName: 'සිංහල',
-    shortLabel: 'සි',
-    englishName: 'Sinhala',
-    dir: 'ltr',
-    intlLocale: 'si-LK',
-  },
-  {
-    code: 'am',
-    nativeName: 'አማርኛ',
-    shortLabel: 'አማ',
-    englishName: 'Amharic',
-    dir: 'ltr',
-    intlLocale: 'am-ET',
-  },
-  {
-    code: 'sw',
-    nativeName: 'Kiswahili',
-    shortLabel: 'SW',
-    englishName: 'Swahili',
-    dir: 'ltr',
-    intlLocale: 'sw-KE',
-  },
-  // The RTL group. `ur` and `ps` are written in Nastaʿlīq/Arabic script and `ar`
-  // in Naskh; `fa` is Perso-Arabic. All set dir="rtl", which the
-  // logical-property CSS convention (see frontend-conventions.md) turns into a
-  // correct mirror with no per-component work.
-  {
-    code: 'ur',
-    nativeName: 'اردو',
-    shortLabel: 'اد',
-    englishName: 'Urdu',
-    dir: 'rtl',
-    intlLocale: 'ur-IN',
-  },
-  {
-    code: 'fa',
-    nativeName: 'فارسی',
-    shortLabel: 'فا',
-    englishName: 'Persian',
-    dir: 'rtl',
-    intlLocale: 'fa-IR',
-  },
-  {
-    code: 'ps',
-    nativeName: 'پښتو',
-    shortLabel: 'پښ',
-    englishName: 'Pashto',
-    dir: 'rtl',
-    intlLocale: 'ps-AF',
-  },
-  {
+    // Kept despite the pivot: the Gulf is still where these jobs are, and it is
+    // the one non-English catalogue that is translated as deeply as Hindi.
     code: 'ar',
     nativeName: 'العربية',
     shortLabel: 'ع',
     englishName: 'Arabic',
     dir: 'rtl',
     intlLocale: 'ar',
+  },
+  {
+    code: 'fr',
+    nativeName: 'Français',
+    shortLabel: 'FR',
+    englishName: 'French',
+    dir: 'ltr',
+    intlLocale: 'fr-FR',
+  },
+  {
+    code: 'de',
+    nativeName: 'Deutsch',
+    shortLabel: 'DE',
+    englishName: 'German',
+    dir: 'ltr',
+    intlLocale: 'de-DE',
+  },
+  {
+    code: 'es',
+    nativeName: 'Español',
+    shortLabel: 'ES',
+    englishName: 'Spanish',
+    dir: 'ltr',
+    intlLocale: 'es-ES',
+  },
+  {
+    code: 'pt',
+    nativeName: 'Português',
+    shortLabel: 'PT',
+    englishName: 'Portuguese',
+    dir: 'ltr',
+    intlLocale: 'pt-PT',
+  },
+  {
+    // Simplified script. `zh` alone leaves the variant to the browser, which is
+    // how a Simplified reader ends up looking at Traditional.
+    code: 'zh',
+    nativeName: '简体中文',
+    shortLabel: '中',
+    englishName: 'Chinese (Simplified)',
+    dir: 'ltr',
+    intlLocale: 'zh-Hans',
+  },
+  {
+    code: 'ru',
+    nativeName: 'Русский',
+    shortLabel: 'RU',
+    englishName: 'Russian',
+    dir: 'ltr',
+    intlLocale: 'ru-RU',
+  },
+  {
+    code: 'ja',
+    nativeName: '日本語',
+    shortLabel: '日',
+    englishName: 'Japanese',
+    dir: 'ltr',
+    intlLocale: 'ja-JP',
   },
 ] as const satisfies readonly LocaleDefinition[];
 

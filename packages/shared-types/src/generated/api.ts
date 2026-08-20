@@ -3327,7 +3327,7 @@ export interface components {
              * @default en
              * @enum {string}
              */
-            languagePref: "en" | "hi" | "bn" | "mr" | "te" | "ta" | "gu" | "kn" | "ml" | "pa" | "or" | "as" | "ne" | "tl" | "id" | "si" | "am" | "sw" | "ur" | "fa" | "ps" | "ar";
+            languagePref: "en" | "hi" | "ar" | "fr" | "de" | "es" | "pt" | "zh" | "ru" | "ja";
             description?: string;
             /** @description R2 key for the uploaded registration certificate document */
             registrationCertKey?: string | null;

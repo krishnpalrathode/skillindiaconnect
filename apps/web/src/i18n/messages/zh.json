@@ -1,0 +1,111 @@
+{
+  "nav": {
+    "home": "首页",
+    "dashboard": "工作台",
+    "profile": "个人资料",
+    "jobs": "职位",
+    "applications": "申请记录",
+    "notifications": "通知",
+    "notificationsShort": "提醒",
+    "resumeBuilder": "简历生成器",
+    "resumeBuilderShort": "简历",
+    "settings": "设置",
+    "logout": "退出登录",
+    "login": "登录"
+  },
+  "landing": {
+    "meta": {
+      "title": "Skill India Connect — 印度与海湾地区安全、经过核实的职位",
+      "description": "在印度和海湾地区寻找经过核实的职位。每个职位都包含住宿、医疗保险和交通。对工人永久免费。"
+    },
+    "nav": {
+      "login": "登录",
+      "signUp": "免费注册",
+      "skipToContent": "跳到主要内容",
+      "home": "Skill India Connect 首页"
+    },
+    "hero": {
+      "headline": "为技术工人提供安全、<hl>经过核实的职位</hl>，遍及印度与世界各地",
+      "subline": "Skill India Connect 上的每个职位都必须提供住宿、医疗保险和交通。职位发布前，我们会先核实雇主。",
+      "ctaWorker": "查找核实职位",
+      "ctaEmployer": "招聘技术人才",
+      "freeNote": "对工人永久免费。",
+      "badges": {
+        "verified": "已核实雇主",
+        "free": "工人免费",
+        "global": "印度与全球机会"
+      }
+    },
+    "trust": {
+      "ariaLabel": "工人为何信任我们",
+      "verifiedEmployers": {
+        "title": "已核实雇主",
+        "body": "每家公司发布职位前都会经过我们核实。"
+      },
+      "protection": {
+        "title": "工人保障",
+        "body": "每个职位都提供住宿、医疗保障和交通。"
+      },
+      "free": {
+        "title": "工人免费",
+        "body": "创建资料和投递申请均不收费。"
+      },
+      "whatsapp": {
+        "title": "WhatsApp 通知",
+        "body": "申请状态一有变化，我们就会通知您。"
+      },
+      "heading": "工人为何信任我们"
+    },
+    "howItWorks": {
+      "heading": "使用流程",
+      "subheading": "三步找到下一份工作。",
+      "step1": {
+        "title": "创建资料",
+        "body": "填写您的技能和工作经历，用手机几分钟即可完成。"
+      },
+      "step2": {
+        "title": "完成核实",
+        "body": "上传证件。我们的团队会核实，让雇主信任您的资料。"
+      },
+      "step3": {
+        "title": "成功入职",
+        "body": "申请与您技能匹配的职位，雇主会直接联系您。"
+      },
+      "cta": "免费创建我的资料"
+    },
+    "announce": {
+      "ariaLabel": "我们的承诺",
+      "verified": "100% 已核实雇主",
+      "free": "工人免费",
+      "global": "印度与全球职位"
+    },
+    "stats": {
+      "ariaLabel": "Skill India Connect 数据",
+      "workers": "已连接的技术工人",
+      "employers": "已核实雇主",
+      "placements": "成功入职人数",
+      "countries": "提供职位的国家"
+    },
+    "recentJobs": {
+      "heading": "本周最新发布的职位",
+      "subheading": "来自海湾地区和印度各地已核实雇主的真实职位。可自由浏览，仅在申请时才需要账户。",
+      "apply": "立即申请",
+      "browseAll": "查看全部职位",
+      "noFee": "您无需支付任何费用，无论是给我们还是给平台上的任何雇主。",
+      "ctaPrimary": "免费创建我的资料"
+    },
+    "categories": {
+      "heading": "按工种找工作",
+      "subheading": "找到与您技能相符的工作。",
+      "construction": "建筑",
+      "driving": "驾驶",
+      "electrical": "电工",
+      "welding": "焊接",
+      "plumbing": "管道",
+      "hospitality": "酒店餐饮",
+      "carpentry": "木工",
+      "housekeeping": "保洁",
+      "cta": "查看我的工种职位"
+    }
+  }
+}

@@ -26,7 +26,11 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
         {/* Form panel */}
         <div className="flex flex-1 flex-col lg:w-1/2">
-          <div className="flex justify-end px-4 pt-4 sm:px-8 sm:pt-6">
+          {/* pb-* is what separates the switcher from the card below. The
+              content area is `flex-1` and centres its child at lg, so padding
+              on THIS row is the only spacing that survives that centring —
+              adding pt to the card instead does nothing once it is centred. */}
+          <div className="flex justify-end px-4 pb-6 pt-4 sm:px-8 sm:pb-8 sm:pt-6">
             <LanguageSwitcher variant="light" />
           </div>
           <div className="flex flex-1 items-start justify-center px-4 pb-12 pt-4 sm:px-8 lg:items-center lg:pt-0">

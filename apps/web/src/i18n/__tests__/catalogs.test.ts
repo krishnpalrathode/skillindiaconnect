@@ -61,11 +61,11 @@ describe('locale registry', () => {
     expect(getDirection(undefined)).toBe('ltr');
   });
 
-  it('marks Arabic and Urdu as RTL and the Indic languages as LTR', () => {
+  it('marks Arabic as RTL and the rest as LTR', () => {
     expect(getDirection('ar')).toBe('rtl');
-    expect(getDirection('ur')).toBe('rtl');
     expect(getDirection('hi')).toBe('ltr');
-    expect(getDirection('ml')).toBe('ltr');
+    expect(getDirection('fr')).toBe('ltr');
+    expect(getDirection('zh')).toBe('ltr');
   });
 });
 
