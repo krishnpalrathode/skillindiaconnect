@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.skillindiaconnect_web.twa",
+      "sha256_cert_fingerprints": [
+        "8A:55:68:1A:A3:36:B9:A7:A3:67:3F:99:90:3A:42:4A:DF:D1:E7:D4:80:87:9E:42:B6:C4:45:AE:78:39:90:5B"
+      ]
+    }
+  }
+]

@@ -1,0 +1,48 @@
+{
+  "_comment": [
+    "Bubblewrap TWA configuration — prepared, NOT yet buildable.",
+    "",
+    "Every value here mirrors the per-locale web manifest served by",
+    "apps/web/src/app/[locale]/manifest.webmanifest/route.ts, so the wrapper and the",
+    "web app cannot drift apart. See docs/pwa-play-store.md.",
+    "",
+    "BEFORE THIS CAN BUILD:",
+    "  1. Deploy the PWA work — /en/manifest.webmanifest and /icons/* currently 404",
+    "     on the host below, so `bubblewrap init --manifest` has nothing to read.",
+    "  2. Replace signingKey + the assetlinks fingerprint with real values.",
+    "",
+    "HOST IS A TESTING ORIGIN. Building a TWA against a *.vercel.app default and moving",
+    "to a custom domain later means: move assetlinks.json, regenerate, re-review on Play,",
+    "and every existing install still pointing at the old origin."
+  ],
+  "packageId": "REPLACE_ME_ANDROID_PACKAGE_NAME",
+  "host": "skillindiaconnect-web.vercel.app",
+  "name": "Skill India Connect",
+  "launcherName": "Skill India Connect",
+  "startUrl": "/en",
+  "_comment_startUrl": "The web manifest is PER LOCALE with start_url /{locale}. A TWA is built from one of them, so the wrapper pins one launch locale. /en is the fallback locale; users switch language in-app on first run.",
+  "themeColor": "#1a3c6e",
+  "navigationBarColor": "#1a3c6e",
+  "backgroundColor": "#ffffff",
+  "_comment_colors": "From apps/web/src/styles/tokens.css — --color-primary-700 (brand anchor) and --background. Must match the web manifest or the splash flashes a different colour than the app.",
+  "iconUrl": "https://skillindiaconnect-web.vercel.app/icons/icon-512.png",
+  "maskableIconUrl": "https://skillindiaconnect-web.vercel.app/icons/icon-maskable-512.png",
+  "display": "standalone",
+  "orientation": "portrait",
+  "shortcuts": [],
+  "signingKey": {
+    "path": "REPLACE_ME_PATH_TO_KEYSTORE",
+    "alias": "REPLACE_ME_KEY_ALIAS"
+  },
+  "_comment_signing": "Play App Signing is the decision (docs/pwa-play-store.md B2). This keystore is the UPLOAD key only — Google holds the app signing key and re-signs. The fingerprint that goes into assetlinks.json comes from Play Console → Setup → App Integrity → App signing key certificate → SHA-256, NOT from this keystore.",
+  "appVersionCode": 1,
+  "appVersionName": "1.0.0",
+  "enableNotifications": false,
+  "_comment_notifications": "Deliberately false. Push is explicitly out of scope — if it is added later it goes behind the existing notification-channel seam as a `push` tier, the way email and WhatsApp did.",
+  "fallbackType": "customtabs",
+  "_comment_fallback": "If Asset Links verification fails, Chrome Custom Tabs is a less-bad fallback than a full browser window — but it still shows a URL bar. It is a safety net, not a fix.",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  }
+}

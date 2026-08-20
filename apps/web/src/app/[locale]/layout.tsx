@@ -5,6 +5,8 @@ import { MockSetup } from '@/mocks/mock-setup';
 import { AuthProvider } from '@/lib/auth/auth-context';
 import { LogoutConfirmProvider } from '@/lib/auth/logout-confirm';
 import { RouteTitle } from '@/components/RouteTitle';
+import { ServiceWorkerRegistrar } from '@/components/pwa/ServiceWorkerRegistrar';
+import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 import { ToastProvider } from '@/components/ui/toast';
 import { routing } from '@/i18n/routing';
 import { notFound } from 'next/navigation';
@@ -35,6 +37,12 @@ export async function generateMetadata({
 
   return {
     title: { default: brand, template: `${brand} | %s` },
+    /*
+      Per-locale manifest. next-intl gives every locale its own URL prefix, and
+      the manifest carries the localized name plus this locale's lang/dir — see
+      the route handler for why one global manifest cannot be correct here.
+    */
+    manifest: `/${locale}/manifest.webmanifest`,
   };
 }
 
@@ -50,6 +58,9 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       <RouteTitle />
+      {/* PWA. Both render null until the browser says otherwise, and neither
+          blocks or wraps the tree — a failure here must not cost a page. */}
+      <ServiceWorkerRegistrar />
       {/* ToastProvider sits ABOVE the pages so a toast raised just before a
           router.replace() survives the navigation — this layout is not
           remounted when the route below it changes. */}
@@ -58,7 +69,10 @@ export default async function LocaleLayout({ children, params }: Props) {
           <AuthProvider>
             {/* Inside AuthProvider + ToastProvider: it needs both to sign out
                 and to raise the confirmation toast. */}
-            <LogoutConfirmProvider>{children}</LogoutConfirmProvider>
+            <LogoutConfirmProvider>
+              {children}
+              <InstallPrompt />
+            </LogoutConfirmProvider>
           </AuthProvider>
         </MockSetup>
       </ToastProvider>
