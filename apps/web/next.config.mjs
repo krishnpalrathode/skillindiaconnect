@@ -31,6 +31,25 @@ function rootPublicEnv() {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   env: rootPublicEnv(),
+  /*
+    The service worker must be REVALIDATED on every navigation, not served from
+    the HTTP cache. This is what makes the kill switch work: disabling a bad
+    worker means deploying a replacement sw.js, and the browser only picks that
+    up if it actually re-fetches the file. A long-lived cached sw.js would leave
+    users pinned to the broken version with no remote way to reach them.
+
+    offline.html gets the same treatment for a smaller reason — it is precached
+    by the worker at install, so a stale HTTP copy would be frozen in until the
+    cache version is bumped.
+  */
+  async headers() {
+    return [
+      {
+        source: '/:file(sw.js|offline.html)',
+        headers: [{ key: 'Cache-Control', value: 'no-cache, must-revalidate' }],
+      },
+    ];
+  },
   // output: 'standalone' is enabled only in the Docker build (Linux) via NEXT_STANDALONE=1.
   // On Windows, pnpm's virtual-store symlinks require Developer Mode for standalone mode.
   // The Dockerfile re-enables this via a build arg in Prompt 4.

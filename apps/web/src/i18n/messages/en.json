@@ -3097,5 +3097,15 @@
   "sorting": {
     "sortAscending": "Sort by {column}, ascending",
     "sortDescending": "Sort by {column}, descending"
+  },
+  "pwa": {
+    "shortName": "Skill India",
+    "install": {
+      "ariaLabel": "Install this app",
+      "title": "Add Skill India Connect to your phone",
+      "body": "Opens like an app, loads faster, and works from your home screen.",
+      "action": "Add to home screen",
+      "dismiss": "Not now"
+    }
   }
 }
