@@ -73,7 +73,21 @@ describe.each(templates)('%s — provenance footer placement', (template) => {
     // content again.
     expect(html).toContain('<main');
     expect(html).toMatch(/<main[\s\S]*<\/main>/);
-    expect(html).toMatch(/main \{[^}]*flex: 1 0 auto/);
+    /*
+      TWO mechanisms are valid, and both leave the footer room to be pushed
+      down:
+        - the original sticky-footer frame, where body is a flex column and
+          main grows via `flex: 1 0 auto`;
+        - the sidebar family, where body is a GRID whose first row is `1fr` —
+          the main column takes the slack and the auto row beneath holds the
+          footer. It needs a grid because the sidebar must span full height
+          BESIDE the footer, which one flex column cannot express.
+      What matters is that something between header and footer absorbs the
+      leftover space; asserting one implementation would have banned the other.
+    */
+    const growsByFlex = /main \{[^}]*flex: 1 0 auto/.test(html);
+    const growsByGrid = /grid-template-rows:[^;]*1fr/.test(html);
+    expect(growsByFlex || growsByGrid).toBe(true);
   });
 
   it('renders the footer LAST — after </main>, immediately before </body>', () => {

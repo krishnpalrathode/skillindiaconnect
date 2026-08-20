@@ -12,21 +12,29 @@ type ResumeSettings = components['schemas']['ResumeSettings'];
 type ResumeTemplate = ResumeSettings['template'];
 
 /**
- * The order the gallery presents. MODERN first — it is the recommended one —
- * then the plainer layouts, then the three decorative ones. Ordered by how
- * SAFE the choice is rather than by how striking it looks: a candidate
- * scanning left to right meets the conservative options first, which are the
- * right default for most Gulf employers, and reaches the expressive ones only
- * after passing those.
+ * The order the gallery presents.
+ *
+ * The first SIX are one supplied photo-led design in six colourways (COMPACT
+ * being the structural variant — a banner across the top instead of a
+ * sidebar). They lead because that is the design the product chose, and MODERN
+ * heads them as the recommended one. EXECUTIVE and TIMELINE follow: they are
+ * the two genuinely different layouts left, so they belong after the family
+ * rather than interleaved with it.
+ *
+ * Note the six are no longer ordered by how CONSERVATIVE they are — that was
+ * the old rationale and it stopped being true when they became colour choices
+ * rather than different documents. A candidate picking among them is picking a
+ * colour, which is why the copy in `resume.templates.descriptions` names the
+ * colour instead of claiming a different structure.
  *
  * EIGHT, deliberately: the grid is four columns, so eight tiles fill two rows
  * exactly and a ninth would sit alone in a half-empty third row.
  *
  * ELEGANT is the one left out. It is not deleted — its enum value and renderer
  * both remain, so a candidate who already chose it still gets that resume — it
- * is simply no longer OFFERED. Of the nine it was the most redundant once
- * HERITAGE arrived: both are formal serif documents, and HERITAGE is the better
- * of the two for this audience because it prints and photocopies cleanly.
+ * is simply no longer OFFERED. It is the tile the eight-slot grid costs us, and
+ * of the three older layouts it is the most decorative and the least suited to
+ * this audience.
  */
 const TEMPLATES: ResumeTemplate[] = [
   'MODERN',

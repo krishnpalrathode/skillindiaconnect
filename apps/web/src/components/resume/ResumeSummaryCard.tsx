@@ -18,6 +18,11 @@ import { patchCandidateProfile } from '@/lib/api/candidate';
 export const SUMMARY_MAX_LENGTH = 500;
 
 interface ResumeSummaryCardProps {
+  /**
+   * A first draft built from the candidate's own profile, used ONLY when they
+   * have not written a summary yet. Never overwrites saved text.
+   */
+  suggestion?: string | null;
   /** The saved value, or null when they have not written one. */
   value: string | null;
   /** Called with the newly SAVED value so the live preview updates with it. */
@@ -39,12 +44,20 @@ interface ResumeSummaryCardProps {
  * to get back to "no summary at all". An emptied box saves as null, and every PDF
  * template then omits the block rather than printing an empty rule.
  */
-export function ResumeSummaryCard({ value, onSaved }: ResumeSummaryCardProps) {
+export function ResumeSummaryCard({ value, suggestion, onSaved }: ResumeSummaryCardProps) {
   const t = useTranslations('resume.summary');
   const tToast = useTranslations('toast');
   const { showToast } = useToast();
 
-  const [draft, setDraft] = useState(value ?? '');
+  /*
+    Seeded with the SAVED text, or the generated draft when there is none.
+
+    The order matters: a saved summary always wins, so the suggestion can never
+    overwrite something the candidate wrote. And it is only an initial value —
+    it goes in the box for them to edit and Save, it is not persisted behind
+    their back.
+  */
+  const [draft, setDraft] = useState(value ?? suggestion ?? '');
   const [busy, setBusy] = useState(false);
 
   // Compare TRIMMED against TRIMMED: trailing whitespace is not a change worth

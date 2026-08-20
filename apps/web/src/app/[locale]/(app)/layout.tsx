@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLogoutConfirm } from '@/lib/auth/logout-confirm';
+import { LanguageSwitcher } from '@/components/auth/LanguageSwitcher';
 import { BrandLoader } from '@/components/ui/brand-loader';
 import { cn } from '@/lib/utils';
 
@@ -212,8 +213,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
+        {/*
+          Language, directly above Log out.
+
+          The switcher existed on the public pages, the auth pages and the
+          employer shell — everywhere EXCEPT here, so a candidate could pick
+          their language before signing in and then had no way to change it for
+          the entire time they were actually using the product.
+        */}
+        <div className="px-3 pt-4 border-t border-neutral-100">
+          <LanguageSwitcher variant="light" className="w-full" />
+        </div>
+
         {/* Logout */}
-        <div className="px-3 py-4 border-t border-neutral-100">
+        <div className="px-3 pb-4 pt-3">
           <button
             type="button"
             onClick={() => requestLogout()}
@@ -237,14 +250,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             className="object-cover object-center"
           />
         </div>
-        <button
-          type="button"
-          onClick={() => requestLogout()}
-          aria-label={t('logout')}
-          className="flex items-center justify-center size-9 rounded-lg text-neutral-600 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
-        >
-          <LogOut className="size-5" aria-hidden="true" />
-        </button>
+        <div className="flex items-center gap-1.5">
+          <LanguageSwitcher variant="light" />
+          <button
+            type="button"
+            onClick={() => requestLogout()}
+            aria-label={t('logout')}
+            className="flex items-center justify-center size-9 rounded-lg text-neutral-600 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
+          >
+            <LogOut className="size-5" aria-hidden="true" />
+          </button>
+        </div>
       </header>
 
       {/* ── Main content ──────────────────────────────────────────────── */}

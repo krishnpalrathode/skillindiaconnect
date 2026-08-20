@@ -212,7 +212,14 @@ describe.each(REGISTERED_TEMPLATES)(
           ),
         ),
       );
-      expect(text).toContain(SUMMARY);
+      /*
+        Whitespace-normalised: the sidebar family sets the intro in a 62mm
+        column, so the extracted text wraps mid-sentence. The words are all
+        present and in order — a literal contains would be asserting the
+        column width, not that the summary reached the page.
+      */
+      const flat = text.replace(/\s+/g, ' ');
+      expect(flat).toContain(SUMMARY);
       // pdf-parse emits text in layout order, so an index comparison is a real
       // statement about where it sits on the page.
       expect(text.indexOf(SUMMARY)).toBeLessThan(text.indexOf('Gulf Wiring LLC'));
@@ -432,7 +439,9 @@ describe('ResumeRenderService (persistence flow, pool real, DB mocked)', () => {
     const { service, storage } = build({ language: 'hi' });
     await service.renderGeneration('gen-1');
     const bufferArg = (storage.putObject as jest.Mock).mock.calls[0][1] as Buffer;
-    expect(await extractText(bufferArg)).toContain('Suresh Kumar'); // rendered, in English
+    // Case-insensitive: the sidebar templates set the name in caps, so the
+    // bytes read SURESH KUMAR. Typography, not a rendering fault.
+    expectNameRendered(await extractText(bufferArg)); // rendered, in English
   });
 
   it('already-READY generation returns without re-rendering (retry idempotence)', async () => {

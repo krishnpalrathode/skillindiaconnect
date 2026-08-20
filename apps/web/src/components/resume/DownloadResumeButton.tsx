@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Download } from 'lucide-react';
+import { Download, RefreshCw } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
@@ -270,12 +270,22 @@ export function DownloadResumeButton({
 
   if (phase === 'idle') {
     return (
+      /*
+        ORANGE, not the navy brand gradient.
+
+        This is the one action the whole Resume Builder exists for, and in navy
+        it sat among a page of navy headings, navy section icons and a navy
+        preview header — present, but not obviously THE thing to press. Orange
+        is the accent the product already reserves for its primary calls to
+        action ("Sign Up Free", "Find Verified Jobs"), and it is the only warm
+        colour on this screen, so it reads as the action at a glance.
+      */
       <Button
         type="button"
-        variant="brand"
+        variant="primary"
         size="lg"
         onClick={startGenerate}
-        className="w-full rounded-xl shadow-md transition-all hover:shadow-lg sm:w-auto sm:self-center sm:px-10"
+        className="w-full rounded-xl font-bold shadow-lg shadow-accent-500/30 transition-all hover:shadow-xl hover:shadow-accent-500/40 sm:w-auto sm:self-center sm:px-10"
       >
         <Download className="size-4" aria-hidden="true" />
         {t('downloadPdf')}
@@ -292,7 +302,17 @@ export function DownloadResumeButton({
         onRetry={startGenerate}
       />
       {phase === 'ready' && showRegenerate && (
-        <Button type="button" variant="outline" size="md" onClick={startGenerate}>
+        <Button
+          type="button"
+          variant="brand"
+          size="md"
+          onClick={startGenerate}
+          className="group rounded-xl font-bold shadow-md transition-all hover:shadow-lg"
+        >
+          <RefreshCw
+            className="size-4 transition-transform duration-300 group-hover:rotate-180"
+            aria-hidden="true"
+          />
           {t('regenerate')}
         </Button>
       )}

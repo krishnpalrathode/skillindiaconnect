@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { components } from '@skillindiaconnect/shared-types';
 import { CompletionRing } from '@/components/common/CompletionRing';
@@ -12,6 +13,7 @@ import { canExportResume, RESUME_MIN_COMPLETION_PCT } from '@/lib/resume/complet
 import { getResume, type ResumeInfo } from '@/lib/api/resume';
 import { ResumePreview } from './ResumePreview';
 import { ResumeSummaryCard } from './ResumeSummaryCard';
+import { DEFAULT_ABOUT_YOU } from '@/lib/resume/summaryDraft';
 import { DownloadResumeButton } from './DownloadResumeButton';
 import { ResumeSettingsPanel } from './ResumeSettingsPanel';
 import { TemplateGallery } from './TemplateGallery';
@@ -142,42 +144,39 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
   return (
     <div className="flex flex-col gap-5">
       {/*
-        Completion — server-computed, never client-side.
+        Completion ring BESIDE the intro, not stacked above it.
 
-        Laid out as a ROW from sm up: the ring on the start side with its label
-        beside it. Stacked and centred, this was a wide band of empty space
-        around one small ring on any screen past mobile.
+        Full-width and alone, the ring was a band of mostly empty space with one
+        small circle in it, and it pushed the first thing the candidate actually
+        has to DO below the fold. Paired with the intro they read as what they
+        are: a status and a task, side by side. It collapses back to stacked
+        below `lg`, where two columns would squeeze the textarea.
 
-        Ring props match the Profile hero's exactly — both screens render the
-        SAME number, so rendering it in two different styles read as a bug.
+        Ring props stay IDENTICAL to the Profile hero's — both screens render
+        the same number, so rendering it two different ways read as a bug.
       */}
-      <section className="flex flex-col items-center gap-4 rounded-2xl border border-neutral-200/70 bg-gradient-to-br from-white to-[#E8F0FE]/50 px-5 py-5 shadow-sm sm:flex-row sm:gap-6 sm:px-6">
-        {/*
-          IDENTICAL to the Profile hero's ring — same size, same stroke, same
-          panel treatment around it. The comment here already claimed they
-          matched while the numbers said 132/12 against the hero's 150/13, so
-          the same percentage rendered visibly differently on the two screens
-          that show it. Anything changed here belongs in ProfileHero too.
-        */}
-        <div className="flex shrink-0 items-center justify-center rounded-2xl border border-neutral-200/60 bg-gradient-to-br from-neutral-50 to-[#E8F0FE]/50 px-6 py-5">
-          <CompletionRing
-            pct={completion?.pct ?? profile.completionPct ?? 0}
-            size={150}
-            strokeWidth={13}
-            gradient
-            gradientColors={['#0F3D91', '#F57C20']}
-            glow
-            milestones
-          />
-        </div>
-        <p className="text-center text-sm font-bold text-neutral-800 sm:text-start">
-          {t('completionTitle')}
-        </p>
-      </section>
+      <div className="grid gap-5 lg:grid-cols-[auto_1fr] lg:items-stretch">
+        <section className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-neutral-200/70 bg-gradient-to-br from-white to-[#E8F0FE]/50 px-5 py-5 shadow-sm sm:px-6">
+          <div className="flex shrink-0 items-center justify-center rounded-2xl border border-neutral-200/60 bg-gradient-to-br from-neutral-50 to-[#E8F0FE]/50 px-6 py-5">
+            <CompletionRing
+              pct={completion?.pct ?? profile.completionPct ?? 0}
+              size={150}
+              strokeWidth={13}
+              gradient
+              gradientColors={['#0F3D91', '#F57C20']}
+              glow
+              milestones
+            />
+          </div>
+          <p className="text-center text-sm font-bold text-neutral-800">{t('completionTitle')}</p>
+        </section>
 
-      {/* The intro the candidate writes, ABOVE the preview: it is an input, and
-          the preview immediately below is where they see the result of it. */}
-      <ResumeSummaryCard value={summary} onSaved={setSummary} />
+        {/* The intro the candidate writes, ABOVE the preview: it is an input,
+            and the preview further down is where they see the result of it.
+            Prefilled from their own profile when they have not written one — an
+            empty box is a writing task most people skip. */}
+        <ResumeSummaryCard value={summary} suggestion={DEFAULT_ABOUT_YOU} onSaved={setSummary} />
+      </div>
 
       {/* Live preview (prominent) — reflects the current Resume Settings. */}
       {settings ? (
@@ -233,16 +232,29 @@ export function ResumeExportHub({ profile }: ResumeExportHubProps) {
             {regenerate && (
               <div className="mt-4 flex flex-col gap-2 border-t border-neutral-100 pt-4">
                 <p className="text-xs text-neutral-600">{t('regenerateHint')}</p>
+                {/*
+                  Navy, not a plain outline.
+
+                  It is a real action — it rebuilds the PDF — and as a bare
+                  bordered button it read as disabled next to the cards above
+                  it. Navy rather than the orange used for Download PDF, so the
+                  hierarchy still holds: orange is the thing to press first,
+                  this is the thing to press after changing something.
+                */}
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="brand"
                   size="md"
                   onClick={() => {
                     if (blockedByCompletion()) return;
                     regenerate();
                   }}
-                  className="self-start"
+                  className="group self-start rounded-xl font-bold shadow-md transition-all hover:shadow-lg"
                 >
+                  <RefreshCw
+                    className="size-4 transition-transform duration-300 group-hover:rotate-180"
+                    aria-hidden="true"
+                  />
                   {t('regenerate')}
                 </Button>
               </div>
