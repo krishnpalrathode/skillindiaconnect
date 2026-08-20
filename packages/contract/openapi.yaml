@@ -694,7 +694,7 @@ components:
             not governed by this toggle — only the number itself is.
         template:
           type: string
-          enum: [CLASSIC, MODERN, COMPACT, MINIMAL, ELEGANT, EXECUTIVE, TIMELINE]
+          enum: [CLASSIC, MODERN, COMPACT, MINIMAL, ELEGANT, EXECUTIVE, TIMELINE, SLATE, HERITAGE]
           default: CLASSIC
           description: |
             Which HTML template renders the PDF (CR-001 B1/B2). Applied at
@@ -4660,7 +4660,7 @@ paths:
                   # ResumeSettings.template description. This body carries
                   # additionalProperties: false, so the property must be listed
                   # explicitly to be accepted at all.
-                  enum: [CLASSIC, MODERN, COMPACT, MINIMAL, ELEGANT, EXECUTIVE, TIMELINE]
+                  enum: [CLASSIC, MODERN, COMPACT, MINIMAL, ELEGANT, EXECUTIVE, TIMELINE, SLATE, HERITAGE]
       responses:
         '200':
           description: Settings updated (the FULL resulting settings)

@@ -18,15 +18,25 @@ type ResumeTemplate = ResumeSettings['template'];
  * scanning left to right meets the conservative options first, which are the
  * right default for most Gulf employers, and reaches the expressive ones only
  * after passing those.
+ *
+ * EIGHT, deliberately: the grid is four columns, so eight tiles fill two rows
+ * exactly and a ninth would sit alone in a half-empty third row.
+ *
+ * ELEGANT is the one left out. It is not deleted — its enum value and renderer
+ * both remain, so a candidate who already chose it still gets that resume — it
+ * is simply no longer OFFERED. Of the nine it was the most redundant once
+ * HERITAGE arrived: both are formal serif documents, and HERITAGE is the better
+ * of the two for this audience because it prints and photocopies cleanly.
  */
 const TEMPLATES: ResumeTemplate[] = [
   'MODERN',
   'CLASSIC',
+  'SLATE',
+  'HERITAGE',
   'COMPACT',
   'MINIMAL',
   'EXECUTIVE',
   'TIMELINE',
-  'ELEGANT',
 ];
 const RECOMMENDED: ResumeTemplate = 'MODERN';
 
@@ -39,6 +49,8 @@ const PREVIEW: Record<ResumeTemplate, string> = {
   ELEGANT: '/resume-templates/elegant.jpg',
   EXECUTIVE: '/resume-templates/executive.jpg',
   TIMELINE: '/resume-templates/timeline.jpg',
+  SLATE: '/resume-templates/slate.jpg',
+  HERITAGE: '/resume-templates/heritage.jpg',
 };
 
 interface TemplateGalleryProps {
@@ -97,6 +109,17 @@ export function TemplateGallery({ settings, onSettingsChange, onCommitted }: Tem
     }
   }
 
+  /*
+    The offered list, plus the candidate's current choice if it is not on it.
+
+    Without this, anyone still on a retired template (ELEGANT) would open the
+    gallery, see no tile selected, and have no way to tell what their resume
+    currently looks like.
+  */
+  const visibleTemplates = TEMPLATES.includes(settings.template)
+    ? TEMPLATES
+    : [...TEMPLATES, settings.template];
+
   return (
     <section className="flex flex-col gap-2.5">
       <h4 className="flex items-center gap-2.5 text-sm font-bold text-neutral-800">
@@ -114,7 +137,7 @@ export function TemplateGallery({ settings, onSettingsChange, onCommitted }: Tem
       >
         <legend className="sr-only">{t('title')}</legend>
 
-        {TEMPLATES.map((template) => {
+        {visibleTemplates.map((template) => {
           const checked = settings.template === template;
           const name = t(`names.${template}`);
           const description = t(`descriptions.${template}`);

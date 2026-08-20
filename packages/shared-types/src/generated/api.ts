@@ -3179,7 +3179,7 @@ export interface components {
              * @default CLASSIC
              * @enum {string}
              */
-            template: "CLASSIC" | "MODERN" | "COMPACT" | "MINIMAL" | "ELEGANT" | "EXECUTIVE" | "TIMELINE";
+            template: "CLASSIC" | "MODERN" | "COMPACT" | "MINIMAL" | "ELEGANT" | "EXECUTIVE" | "TIMELINE" | "SLATE" | "HERITAGE";
         };
         /**
          * @description One asynchronous PDF generation (S7-0). Generation is WORKER-SIDE and
@@ -6094,7 +6094,7 @@ export interface operations {
                     showFatherName?: boolean;
                     showPassportNumber?: boolean;
                     /** @enum {string} */
-                    template?: "CLASSIC" | "MODERN" | "COMPACT" | "MINIMAL" | "ELEGANT" | "EXECUTIVE" | "TIMELINE";
+                    template?: "CLASSIC" | "MODERN" | "COMPACT" | "MINIMAL" | "ELEGANT" | "EXECUTIVE" | "TIMELINE" | "SLATE" | "HERITAGE";
                 };
             };
         };
