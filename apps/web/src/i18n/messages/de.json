@@ -1,0 +1,111 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "dashboard": "Übersicht",
+    "profile": "Profil",
+    "jobs": "Stellen",
+    "applications": "Bewerbungen",
+    "notifications": "Benachrichtigungen",
+    "notificationsShort": "Hinweise",
+    "resumeBuilder": "Lebenslauf erstellen",
+    "resumeBuilderShort": "Lebenslauf",
+    "settings": "Einstellungen",
+    "logout": "Abmelden",
+    "login": "Anmelden"
+  },
+  "landing": {
+    "meta": {
+      "title": "Skill India Connect — Sichere, geprüfte Stellen in Indien und am Golf",
+      "description": "Geprüfte Stellen in Indien und am Golf. Jede Stelle umfasst Unterkunft, Krankenversicherung und Transport. Für Arbeitnehmer kostenlos."
+    },
+    "nav": {
+      "login": "Anmelden",
+      "signUp": "Kostenlos registrieren",
+      "skipToContent": "Zum Hauptinhalt springen",
+      "home": "Skill India Connect Startseite"
+    },
+    "hero": {
+      "headline": "Sichere, <hl>geprüfte Stellen</hl> für Fachkräfte in Indien und weltweit",
+      "subline": "Jede Stelle auf Skill India Connect muss Unterkunft, Krankenversicherung und Transport bieten. Wir prüfen jeden Arbeitgeber, bevor eine Anzeige online geht.",
+      "ctaWorker": "Geprüfte Stellen finden",
+      "ctaEmployer": "Fachkräfte einstellen",
+      "freeNote": "Für Arbeitnehmer immer kostenlos.",
+      "badges": {
+        "verified": "Geprüfte Arbeitgeber",
+        "free": "Kostenlos für Arbeitnehmer",
+        "global": "Chancen in Indien und weltweit"
+      }
+    },
+    "trust": {
+      "ariaLabel": "Warum Arbeitnehmer uns vertrauen",
+      "verifiedEmployers": {
+        "title": "Geprüfte Arbeitgeber",
+        "body": "Wir prüfen jedes Unternehmen, bevor es eine Stelle ausschreiben darf."
+      },
+      "protection": {
+        "title": "Schutz für Arbeitnehmer",
+        "body": "Unterkunft, Krankenversicherung und Transport bei jeder Stelle."
+      },
+      "free": {
+        "title": "Kostenlos für Arbeitnehmer",
+        "body": "Keine Gebühren für Profil oder Bewerbung."
+      },
+      "whatsapp": {
+        "title": "Updates per WhatsApp",
+        "body": "Wir melden uns, sobald sich Ihr Bewerbungsstatus ändert."
+      },
+      "heading": "Warum Arbeitnehmer uns vertrauen"
+    },
+    "howItWorks": {
+      "heading": "So funktioniert es",
+      "subheading": "Drei Schritte zu Ihrer nächsten Stelle.",
+      "step1": {
+        "title": "Profil anlegen",
+        "body": "Tragen Sie Fähigkeiten und Berufserfahrung ein. Das dauert am Handy nur wenige Minuten."
+      },
+      "step2": {
+        "title": "Verifizieren lassen",
+        "body": "Laden Sie Ihre Dokumente hoch. Unser Team prüft sie, damit Arbeitgeber Ihrem Profil vertrauen."
+      },
+      "step3": {
+        "title": "Eingestellt werden",
+        "body": "Bewerben Sie sich auf passende Stellen. Arbeitgeber melden sich direkt bei Ihnen."
+      },
+      "cta": "Kostenloses Profil erstellen"
+    },
+    "announce": {
+      "ariaLabel": "Unsere Zusagen",
+      "verified": "100 % geprüfte Arbeitgeber",
+      "free": "Kostenlos für Arbeitnehmer",
+      "global": "Stellen in Indien und weltweit"
+    },
+    "stats": {
+      "ariaLabel": "Skill India Connect in Zahlen",
+      "workers": "Vermittelte Fachkräfte",
+      "employers": "Geprüfte Arbeitgeber",
+      "placements": "Erfolgreiche Vermittlungen",
+      "countries": "Länder mit Stellenangeboten"
+    },
+    "recentJobs": {
+      "heading": "Neueste Stellen aus dieser Woche",
+      "subheading": "Echte Angebote geprüfter Arbeitgeber am Golf und in ganz Indien. Frei einsehbar — ein Konto brauchen Sie nur zum Bewerben.",
+      "apply": "Jetzt bewerben",
+      "browseAll": "Alle Stellen ansehen",
+      "noFee": "Sie zahlen nie eine Gebühr. Weder an uns noch an einen Arbeitgeber auf dieser Plattform.",
+      "ctaPrimary": "Kostenloses Profil erstellen"
+    },
+    "categories": {
+      "heading": "Stellen nach Gewerk",
+      "subheading": "Finden Sie Arbeit, die zu Ihrem Handwerk passt.",
+      "construction": "Bau",
+      "driving": "Fahrdienst",
+      "electrical": "Elektrik",
+      "welding": "Schweißen",
+      "plumbing": "Sanitär",
+      "hospitality": "Gastgewerbe",
+      "carpentry": "Tischlerei",
+      "housekeeping": "Reinigung",
+      "cta": "Stellen für mein Gewerk ansehen"
+    }
+  }
+}

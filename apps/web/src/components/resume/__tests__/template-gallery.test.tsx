@@ -31,6 +31,7 @@ import type { components } from '@skillindiaconnect/shared-types';
 import { render } from '../../../test-utils';
 import { TemplateGallery } from '../TemplateGallery';
 import * as resumeApi from '../../../lib/api/resume';
+import enMessages from '../../../i18n/messages/en.json';
 
 type ResumeSettings = components['schemas']['ResumeSettings'];
 
@@ -99,13 +100,28 @@ describe('TemplateGallery — presentation', () => {
   });
 
   it("each option's accessible name carries its DESCRIPTION, not just its name", () => {
-    // A screen-reader user choosing between four layouts needs the same help
-    // the sighted user gets from the card text.
+    /*
+      A screen-reader user choosing between eight layouts needs the same help
+      the sighted user gets from the card text.
+
+      Asserted against the MESSAGE CATALOGUE, not against pinned prose. The
+      earlier version matched the literal copy ("two columns", "hiring
+      software"), which meant a copy edit failed a test about accessibility and
+      told nobody what had actually broken. What matters is that whatever the
+      catalogue says ends up in the accessible name.
+    */
     setup();
-    expect(
-      screen.getByRole('radio', { name: /compact.*two columns.*one page/i }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /minimal.*hiring software/i })).toBeInTheDocument();
+    const names = enMessages.resume.templates.names as Record<string, string>;
+    const descriptions = enMessages.resume.templates.descriptions as Record<string, string>;
+
+    for (const template of ['COMPACT', 'MINIMAL'] as const) {
+      // A FUNCTION matcher, not a regex: the catalogue is prose and would
+      // otherwise have to be escaped before it could be matched against itself.
+      const expected = `${names[template]} — ${descriptions[template]}`;
+      expect(
+        screen.getByRole('radio', { name: (accessibleName) => accessibleName === expected }),
+      ).toBeInTheDocument();
+    }
   });
 
   it('badges MODERN as recommended, and only MODERN', () => {

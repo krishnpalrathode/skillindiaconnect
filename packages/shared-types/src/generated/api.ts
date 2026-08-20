@@ -3179,7 +3179,7 @@ export interface components {
              * @default CLASSIC
              * @enum {string}
              */
-            template: "CLASSIC" | "MODERN" | "COMPACT" | "MINIMAL" | "ELEGANT" | "EXECUTIVE" | "TIMELINE";
+            template: "CLASSIC" | "MODERN" | "COMPACT" | "MINIMAL" | "ELEGANT" | "EXECUTIVE" | "TIMELINE" | "SLATE" | "HERITAGE";
         };
         /**
          * @description One asynchronous PDF generation (S7-0). Generation is WORKER-SIDE and
@@ -3327,7 +3327,7 @@ export interface components {
              * @default en
              * @enum {string}
              */
-            languagePref: "en" | "hi" | "bn" | "mr" | "te" | "ta" | "gu" | "kn" | "ml" | "pa" | "or" | "as" | "ne" | "tl" | "id" | "si" | "am" | "sw" | "ur" | "fa" | "ps" | "ar";
+            languagePref: "en" | "hi" | "ar" | "fr" | "de" | "es" | "pt" | "zh" | "ru" | "ja";
             description?: string;
             /** @description R2 key for the uploaded registration certificate document */
             registrationCertKey?: string | null;
@@ -6094,7 +6094,7 @@ export interface operations {
                     showFatherName?: boolean;
                     showPassportNumber?: boolean;
                     /** @enum {string} */
-                    template?: "CLASSIC" | "MODERN" | "COMPACT" | "MINIMAL" | "ELEGANT" | "EXECUTIVE" | "TIMELINE";
+                    template?: "CLASSIC" | "MODERN" | "COMPACT" | "MINIMAL" | "ELEGANT" | "EXECUTIVE" | "TIMELINE" | "SLATE" | "HERITAGE";
                 };
             };
         };

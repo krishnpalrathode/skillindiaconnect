@@ -94,12 +94,25 @@ describe('the choice is REAL — templates are not the same document', () => {
     }
   });
 
-  it('MINIMAL deliberately omits the photo; the others render it', () => {
-    // A design decision about this template (parsers stumble on images and its
-    // selling point is machine-readability) — NOT a privacy rule.
-    expect(html(ResumeTemplate.MINIMAL, full, PHOTO)).not.toContain('<img');
-    for (const t of [ResumeTemplate.CLASSIC, ResumeTemplate.MODERN, ResumeTemplate.COMPACT]) {
+  it('the sidebar family renders the photo, and drops the frame when there is none', () => {
+    /*
+      MINIMAL used to be the no-photo, ATS-first template and this test pinned
+      that. The six supplied replacements are all photo-led designs, so the
+      old expectation no longer describes any of them.
+
+      What is still worth pinning is the pair that actually matters: a photo on
+      file is shown, and a candidate WITHOUT one gets no empty frame — an
+      unfilled photo box reads as a broken image on a document they are sending
+      to an employer.
+    */
+    for (const t of [
+      ResumeTemplate.MINIMAL,
+      ResumeTemplate.CLASSIC,
+      ResumeTemplate.MODERN,
+      ResumeTemplate.COMPACT,
+    ]) {
       expect(html(t, full, PHOTO)).toContain('<img');
+      expect(html(t, full, null)).not.toContain('<img');
     }
   });
 });
@@ -107,7 +120,15 @@ describe('the choice is REAL — templates are not the same document', () => {
 describe.each(ALL)('%s — robustness', (template) => {
   it('renders a SPARSE profile as a complete document', () => {
     const out = html(template, sparse);
-    expect(out).toContain('Suresh Kumar');
+    /*
+      Asserted in PARTS, not as one string: the sidebar family gives the surname
+      the accent colour, which means the name is two elements
+      (`Suresh <span>Kumar</span>`) and never appears contiguously in the HTML.
+      It still reads as one name in the rendered PDF — resume-render.spec.ts
+      checks that on the extracted bytes, which is where it matters.
+    */
+    expect(out).toContain('Suresh');
+    expect(out).toContain('Kumar');
     expect(out).toContain('suresh@example.com');
     expect(out).toMatch(/<\/html>\s*$/);
     // Empty sections must not render as bare headings with nothing under them.

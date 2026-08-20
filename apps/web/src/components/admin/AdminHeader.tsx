@@ -4,6 +4,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import { LogOut, Menu } from 'lucide-react';
 import { useLogoutConfirm } from '@/lib/auth/logout-confirm';
+import { LanguageSwitcher } from '@/components/auth/LanguageSwitcher';
 import { useAdmin } from '@/lib/admin/admin-context';
 import { Badge } from '@/components/ui/badge';
 
@@ -42,6 +43,9 @@ export function AdminHeader({ onMenuClick }: { onMenuClick?: () => void }) {
             {role}
           </Badge>
         )}
+        {/* Admins are staff, but they are also users of a multilingual
+            product — and this was the last shell with no way to switch. */}
+        <LanguageSwitcher variant="light" />
         <button
           type="button"
           onClick={() => requestLogout()}

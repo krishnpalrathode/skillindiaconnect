@@ -35,32 +35,15 @@ export function Hero({ locale }: { locale: string }) {
     The accent phrase is `whitespace-nowrap` from `sm` up so its underline stays
     a single box, which means the phrase itself must fit the column at 60px.
 
-    Indic scripts set considerably wider than Latin at the same point size, and
-    the headline grew when it took on "for Skilled Workers" — so every locale
-    whose accent phrase is a long Indic rendering of "Safe, verified jobs" steps
-    down one size rather than being clipped. This used to name Hindi alone,
-    which quietly left Tamil, Malayalam, Telugu and Kannada — all of which set
-    wider than Hindi — overflowing.
+    Devanagari sets wider than Latin at the same point size, so Hindi steps down
+    one size rather than being clipped.
 
-    Arabic, Urdu, Persian and Pashto stay at full size: their accent phrases are
-    shorter than the Latin one, not longer.
+    Hindi is the only entry left. The Indic regional locales this list also named
+    were retired with the move to a world-language set, and the languages that
+    replaced them — French, German, Spanish, Portuguese, Russian, Chinese and
+    Japanese — all set at or below Latin width here. Arabic likewise.
   */
-  const WIDE_SETTING_LOCALES = [
-    'hi',
-    'mr',
-    'ne',
-    'bn',
-    'as',
-    'or',
-    'pa',
-    'gu',
-    'ta',
-    'te',
-    'ml',
-    'kn',
-    'si',
-    'am',
-  ];
+  const WIDE_SETTING_LOCALES = ['hi'];
   const headlineSize = WIDE_SETTING_LOCALES.includes(locale) ? 'lg:text-5xl' : 'lg:text-6xl';
 
   return (

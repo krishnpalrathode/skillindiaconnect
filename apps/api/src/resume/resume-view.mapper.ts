@@ -83,6 +83,28 @@ export const RESUME_SETTINGS_DEFAULTS: ResumeRenderSettings = {
  *
  * ⚠️ CODEOWNERS second review: this mapper is a new privacy surface.
  */
+/**
+ * Turn a stored enum value into something a human reads.
+ *
+ * `MARRIED` is a database token, not English. It reached the resume PDF and the
+ * on-screen preview verbatim, so a candidate's own CV shouted MARRIED back at
+ * them beside sentence-case labels — the one field on the page that looked like
+ * a system dump rather than a document.
+ *
+ * Applied HERE, in the mapper, rather than in each template: the ResumeView is
+ * defined as "exactly what the PDF renders", so it should carry display-ready
+ * text. Fixing it in one template would have left the other six wrong, and
+ * fixing it in all seven invites the eighth to forget.
+ *
+ * Handles multi-word tokens (`SOME_VALUE` → `Some value`) so any enum added to
+ * this view later is right without further thought. English-only, matching the
+ * English-only MVP the whole renderer is built around.
+ */
+export function formatEnumLabel(value: string): string {
+  const spaced = value.replace(/_/g, ' ').toLowerCase().trim();
+  return spaced ? spaced.charAt(0).toUpperCase() + spaced.slice(1) : spaced;
+}
+
 export function toResumeView(
   source: ResumeSource,
   settings: ResumeRenderSettings,
@@ -96,7 +118,7 @@ export function toResumeView(
     email: source.user.email,
     photoDataUri,
     dob: source.dob ? source.dob.toISOString().slice(0, 10) : null,
-    maritalStatus: source.maritalStatus,
+    maritalStatus: source.maritalStatus ? formatEnumLabel(source.maritalStatus) : null,
     nationality: source.nationality,
     currentLocation: source.currentLocation,
     languages: source.languages,

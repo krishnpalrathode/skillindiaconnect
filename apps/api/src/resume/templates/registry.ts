@@ -8,6 +8,8 @@ import { renderMinimal } from './minimal.template';
 import { renderElegant } from './elegant.template';
 import { renderExecutive } from './executive.template';
 import { renderTimeline } from './timeline.template';
+import { renderSlate } from './slate.template';
+import { renderHeritage } from './heritage.template';
 
 /**
  * A template is a PURE function of the ResumeView and nothing else.
@@ -46,6 +48,8 @@ export const TEMPLATE_REGISTRY: Record<ResumeTemplate, TemplateRenderer> = {
   [ResumeTemplate.ELEGANT]: renderElegant,
   [ResumeTemplate.EXECUTIVE]: renderExecutive,
   [ResumeTemplate.TIMELINE]: renderTimeline,
+  [ResumeTemplate.SLATE]: renderSlate,
+  [ResumeTemplate.HERITAGE]: renderHeritage,
 };
 
 const logger = new Logger('TemplateRegistry');

@@ -22,8 +22,15 @@ import { TEMPLATE_REGISTRY } from './registry';
 
 const TEMPLATE_DIR = __dirname;
 
-/** Everything a template file is allowed to import from. */
-const ALLOWED_IMPORTS = ['../resume-view.mapper', './shared'];
+/**
+ * Everything a template file is allowed to import from.
+ *
+ * `./sidebar-family` is the shared layout for the six-colourway sidebar family.
+ * It is on this list, and it is ALSO scanned by this spec (see templateFiles
+ * below), so admitting it widens the surface by exactly one file that is held
+ * to the same rule — a template still cannot reach the raw profile through it.
+ */
+const ALLOWED_IMPORTS = ['../resume-view.mapper', './shared', './sidebar-family'];
 
 /**
  * Imports that would defeat the design outright. Named explicitly (rather than
@@ -40,7 +47,13 @@ const FORBIDDEN_PATTERNS: Array<[RegExp, string]> = [
 
 function templateFiles(): string[] {
   return readdirSync(TEMPLATE_DIR).filter(
-    (f) => f.endsWith('.template.ts') && !f.endsWith('.spec.ts'),
+    (f) =>
+      (f.endsWith('.template.ts') ||
+        // The shared layout renders too, so it gets the same scrutiny as the
+        // templates that delegate to it. Leaving it unscanned would move the
+        // rendering out of reach of the guard that protects it.
+        f === 'sidebar-family.ts') &&
+      !f.endsWith('.spec.ts'),
   );
 }
 
@@ -62,9 +75,13 @@ describe('template modules are structurally unable to bypass the mapper', () => 
       one: a renderer that exists but was never registered (so it can never be
       selected) and a registry entry with no file both surface here.
     */
-    const expected = Object.keys(TEMPLATE_REGISTRY)
-      .map((t) => `${t.toLowerCase()}.template.ts`)
-      .sort();
+    const expected = [
+      ...Object.keys(TEMPLATE_REGISTRY).map((t) => `${t.toLowerCase()}.template.ts`),
+      // Scanned as well, and asserted here so it cannot quietly stop being
+      // scanned — that would move the six sidebar templates' actual rendering
+      // outside this guard while every per-file check still passed.
+      'sidebar-family.ts',
+    ].sort();
     expect(files.sort()).toEqual(expected);
   });
 
@@ -90,9 +107,23 @@ describe('template modules are structurally unable to bypass the mapper', () => 
 
   it.each(templateFiles())('%s escapes through the SHARED esc(), never its own copy', (file) => {
     const source = readFileSync(join(TEMPLATE_DIR, file), 'utf8');
-    // Four private copies of an escaping routine is a security-relevant
-    // duplication: one drifts, misses a character, and user text injects markup.
-    expect(source).toMatch(/import\s*\{[^}]*\besc\b[^}]*\}\s*from\s*'\.\/shared'/s);
+
+    /*
+      The rule is about files that EMIT MARKUP. Most templates in the sidebar
+      family only supply a theme object and delegate the rendering, so they
+      interpolate nothing and have nothing to escape — requiring the import
+      there would be cargo-cult, and worse, it would teach the next person to
+      add an unused import to satisfy a test.
+
+      So: a file that builds HTML must import the shared esc; a file that
+      builds none is exempt. Either way NOBODY may define a private copy,
+      which is the security-relevant half — one copy drifts, misses a
+      character, and user text injects markup into the render context.
+    */
+    const emitsMarkup = /<[a-z!]/i.test(source);
+    if (emitsMarkup) {
+      expect(source).toMatch(/import\s*\{[^}]*\besc\b[^}]*\}\s*from\s*'\.\/shared'/s);
+    }
     expect(source).not.toMatch(/function\s+esc\s*\(/);
   });
 });

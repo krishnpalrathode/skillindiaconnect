@@ -25,16 +25,20 @@
         "MINIMAL": "Minimal",
         "ELEGANT": "Elegant",
         "EXECUTIVE": "Executive",
-        "TIMELINE": "Timeline"
+        "TIMELINE": "Timeline",
+        "SLATE": "Slate",
+        "HERITAGE": "Heritage"
       },
       "descriptions": {
-        "CLASSIC": "Traditional and formal. A safe choice for international employers.",
-        "MODERN": "Clean and spacious. Works well for most candidates.",
-        "COMPACT": "Two columns. Fits more experience on one page.",
-        "MINIMAL": "Plain and simple. Easiest for hiring software to read.",
+        "CLASSIC": "The same layout in deep charcoal and amber — a slightly more formal finish.",
+        "MODERN": "Navy sidebar with an orange accent. Your photo, contact details and skills sit beside your work history.",
+        "COMPACT": "A teal banner across the top instead of a sidebar, with everything in one column.",
+        "MINIMAL": "Warm orange sidebar with a round photo. The brightest of the set.",
         "ELEGANT": "Decorative serif with a formal, certificate-like finish.",
         "EXECUTIVE": "Bold colour header. Stands out in a printed stack.",
-        "TIMELINE": "Shows your work history as a continuous timeline."
+        "TIMELINE": "Shows your work history as a continuous timeline.",
+        "SLATE": "Green sidebar with a round photo. Calm and easy to read.",
+        "HERITAGE": "Purple sidebar with a round photo. Distinctive without being loud."
       }
     },
     "downloadPdf": "Download PDF",

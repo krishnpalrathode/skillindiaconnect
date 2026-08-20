@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
+import { MARITAL_STATUS_LABELS } from '@/lib/maritalStatus';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -92,13 +93,6 @@ function InfoRow({
     </div>
   );
 }
-
-const MARITAL_STATUS_LABELS: Record<MaritalStatus, string> = {
-  SINGLE: 'Single',
-  MARRIED: 'Married',
-  DIVORCED: 'Divorced',
-  WIDOWED: 'Widowed',
-};
 
 export function PersonalInfoSection({
   profile,

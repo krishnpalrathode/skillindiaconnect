@@ -1,0 +1,111 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "dashboard": "Panel",
+    "profile": "Perfil",
+    "jobs": "Empleos",
+    "applications": "Candidaturas",
+    "notifications": "Notificaciones",
+    "notificationsShort": "Avisos",
+    "resumeBuilder": "Creador de CV",
+    "resumeBuilderShort": "CV",
+    "settings": "Ajustes",
+    "logout": "Cerrar sesión",
+    "login": "Iniciar sesión"
+  },
+  "landing": {
+    "meta": {
+      "title": "Skill India Connect — Empleos seguros y verificados en India y el Golfo",
+      "description": "Encuentre empleos verificados en India y el Golfo. Cada oferta incluye alojamiento, seguro médico y transporte. Gratis para los trabajadores."
+    },
+    "nav": {
+      "login": "Iniciar sesión",
+      "signUp": "Registrarse gratis",
+      "skipToContent": "Ir al contenido principal",
+      "home": "Inicio de Skill India Connect"
+    },
+    "hero": {
+      "headline": "<hl>Empleos verificados</hl> y seguros para trabajadores cualificados en India y en todo el mundo",
+      "subline": "Toda oferta en Skill India Connect debe darle alojamiento, seguro médico y transporte. Verificamos a cada empleador antes de publicar.",
+      "ctaWorker": "Buscar empleos verificados",
+      "ctaEmployer": "Contratar personal cualificado",
+      "freeNote": "Gratis para los trabajadores. Siempre.",
+      "badges": {
+        "verified": "Empleadores verificados",
+        "free": "Gratis para trabajadores",
+        "global": "Oportunidades en India y el mundo"
+      }
+    },
+    "trust": {
+      "ariaLabel": "Por qué los trabajadores confían en nosotros",
+      "verifiedEmployers": {
+        "title": "Empleadores verificados",
+        "body": "Comprobamos cada empresa antes de que pueda publicar una oferta."
+      },
+      "protection": {
+        "title": "Protección del trabajador",
+        "body": "Alojamiento, cobertura médica y transporte en cada empleo."
+      },
+      "free": {
+        "title": "Gratis para los trabajadores",
+        "body": "Sin comisiones por crear un perfil o postularse."
+      },
+      "whatsapp": {
+        "title": "Avisos por WhatsApp",
+        "body": "Le escribimos cuando cambia el estado de su candidatura."
+      },
+      "heading": "Por qué los trabajadores confían en nosotros"
+    },
+    "howItWorks": {
+      "heading": "Cómo funciona",
+      "subheading": "Tres pasos hacia su próximo empleo.",
+      "step1": {
+        "title": "Cree su perfil",
+        "body": "Añada sus competencias y su experiencia. Son unos minutos desde el móvil."
+      },
+      "step2": {
+        "title": "Verifíquese",
+        "body": "Suba sus documentos. Nuestro equipo los revisa para que los empleadores confíen en su perfil."
+      },
+      "step3": {
+        "title": "Consiga el empleo",
+        "body": "Postúlese a ofertas acordes con sus competencias. Los empleadores le contactan directamente."
+      },
+      "cta": "Crear mi perfil gratuito"
+    },
+    "announce": {
+      "ariaLabel": "Nuestros compromisos",
+      "verified": "100 % empleadores verificados",
+      "free": "Gratis para trabajadores",
+      "global": "Empleos en India y en el mundo"
+    },
+    "stats": {
+      "ariaLabel": "Skill India Connect en cifras",
+      "workers": "Trabajadores cualificados conectados",
+      "employers": "Empleadores verificados",
+      "placements": "Colocaciones exitosas",
+      "countries": "Países con ofertas de empleo"
+    },
+    "recentJobs": {
+      "heading": "Últimas ofertas, publicadas esta semana",
+      "subheading": "Vacantes reales de empleadores verificados en el Golfo y en toda India. Consulte libremente: solo necesita una cuenta para postularse.",
+      "apply": "Postularme",
+      "browseAll": "Ver todas las ofertas",
+      "noFee": "Usted nunca paga una comisión. Ni a nosotros ni a ningún empleador de esta plataforma.",
+      "ctaPrimary": "Crear mi perfil gratuito"
+    },
+    "categories": {
+      "heading": "Empleos por oficio",
+      "subheading": "Encuentre trabajo acorde con su oficio.",
+      "construction": "Construcción",
+      "driving": "Conducción",
+      "electrical": "Electricidad",
+      "welding": "Soldadura",
+      "plumbing": "Fontanería",
+      "hospitality": "Hostelería",
+      "carpentry": "Carpintería",
+      "housekeeping": "Limpieza",
+      "cta": "Ver ofertas de mi oficio"
+    }
+  }
+}

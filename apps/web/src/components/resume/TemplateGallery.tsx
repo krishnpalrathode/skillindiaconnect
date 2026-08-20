@@ -12,21 +12,39 @@ type ResumeSettings = components['schemas']['ResumeSettings'];
 type ResumeTemplate = ResumeSettings['template'];
 
 /**
- * The order the gallery presents. MODERN first — it is the recommended one —
- * then the plainer layouts, then the three decorative ones. Ordered by how
- * SAFE the choice is rather than by how striking it looks: a candidate
- * scanning left to right meets the conservative options first, which are the
- * right default for most Gulf employers, and reaches the expressive ones only
- * after passing those.
+ * The order the gallery presents.
+ *
+ * The first SIX are one supplied photo-led design in six colourways (COMPACT
+ * being the structural variant — a banner across the top instead of a
+ * sidebar). They lead because that is the design the product chose, and MODERN
+ * heads them as the recommended one. EXECUTIVE and TIMELINE follow: they are
+ * the two genuinely different layouts left, so they belong after the family
+ * rather than interleaved with it.
+ *
+ * Note the six are no longer ordered by how CONSERVATIVE they are — that was
+ * the old rationale and it stopped being true when they became colour choices
+ * rather than different documents. A candidate picking among them is picking a
+ * colour, which is why the copy in `resume.templates.descriptions` names the
+ * colour instead of claiming a different structure.
+ *
+ * EIGHT, deliberately: the grid is four columns, so eight tiles fill two rows
+ * exactly and a ninth would sit alone in a half-empty third row.
+ *
+ * ELEGANT is the one left out. It is not deleted — its enum value and renderer
+ * both remain, so a candidate who already chose it still gets that resume — it
+ * is simply no longer OFFERED. It is the tile the eight-slot grid costs us, and
+ * of the three older layouts it is the most decorative and the least suited to
+ * this audience.
  */
 const TEMPLATES: ResumeTemplate[] = [
   'MODERN',
   'CLASSIC',
+  'SLATE',
+  'HERITAGE',
   'COMPACT',
   'MINIMAL',
   'EXECUTIVE',
   'TIMELINE',
-  'ELEGANT',
 ];
 const RECOMMENDED: ResumeTemplate = 'MODERN';
 
@@ -39,6 +57,8 @@ const PREVIEW: Record<ResumeTemplate, string> = {
   ELEGANT: '/resume-templates/elegant.jpg',
   EXECUTIVE: '/resume-templates/executive.jpg',
   TIMELINE: '/resume-templates/timeline.jpg',
+  SLATE: '/resume-templates/slate.jpg',
+  HERITAGE: '/resume-templates/heritage.jpg',
 };
 
 interface TemplateGalleryProps {
@@ -97,6 +117,17 @@ export function TemplateGallery({ settings, onSettingsChange, onCommitted }: Tem
     }
   }
 
+  /*
+    The offered list, plus the candidate's current choice if it is not on it.
+
+    Without this, anyone still on a retired template (ELEGANT) would open the
+    gallery, see no tile selected, and have no way to tell what their resume
+    currently looks like.
+  */
+  const visibleTemplates = TEMPLATES.includes(settings.template)
+    ? TEMPLATES
+    : [...TEMPLATES, settings.template];
+
   return (
     <section className="flex flex-col gap-2.5">
       <h4 className="flex items-center gap-2.5 text-sm font-bold text-neutral-800">
@@ -114,7 +145,7 @@ export function TemplateGallery({ settings, onSettingsChange, onCommitted }: Tem
       >
         <legend className="sr-only">{t('title')}</legend>
 
-        {TEMPLATES.map((template) => {
+        {visibleTemplates.map((template) => {
           const checked = settings.template === template;
           const name = t(`names.${template}`);
           const description = t(`descriptions.${template}`);

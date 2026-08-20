@@ -522,6 +522,8 @@ enum ResumeTemplate {
   ELEGANT
   EXECUTIVE
   TIMELINE
+  SLATE
+  HERITAGE
 }
 
 // ───────── EMPLOYER ─────────

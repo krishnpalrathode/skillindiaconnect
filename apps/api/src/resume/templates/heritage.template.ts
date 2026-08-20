@@ -2,7 +2,7 @@ import { ResumeViewDto } from '../resume-view.mapper';
 import { renderSidebarResume } from './sidebar-family';
 
 /**
- * CLASSIC — RAHUL SHARMA — near-black sidebar, orange accent, square photo frame. Darker and heavier than MODERN; the square frame and denser sidebar make it the most formal of the family.
+ * HERITAGE — SURESH KUMAR — violet sidebar with a circular photo. The most distinctive colourway; it stands out in a stack of navy CVs, which is the whole reason to pick it.
  *
  * The LAYOUT lives in `sidebar-family.ts`; this file supplies only the theme.
  * The six templates in this family are one supplied design in six colourways,
@@ -10,12 +10,12 @@ import { renderSidebarResume } from './sidebar-family';
  * list of sections the supplied artwork shows that the candidate profile has no
  * field for (education, certifications, skill meters, per-job bullet points).
  */
-export function renderClassic(view: ResumeViewDto): string {
+export function renderHeritage(view: ResumeViewDto): string {
   return renderSidebarResume(view, {
-    sidebar: '#111c2e',
-    accent: '#ef7c1b',
-    ink: '#111c2e',
-    photo: 'rounded',
+    sidebar: '#4c2a86',
+    accent: '#7c4dcc',
+    ink: '#221434',
+    photo: 'circle',
     layout: 'sidebar',
   });
 }

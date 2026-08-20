@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { FileText, Upload } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
-import { Badge } from '@/components/ui/badge';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { EditableSection } from '@/components/profile/EditableSection';
@@ -17,7 +16,6 @@ import { MAX_UPLOAD_MB } from '@/lib/uploads';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type CandidateDocument = components['schemas']['CandidateDocument'];
-type DocumentStatus = components['schemas']['DocumentStatus'];
 type DocType = PresignRequest['type'];
 
 interface DocumentsSectionProps {
@@ -25,18 +23,6 @@ interface DocumentsSectionProps {
   onProfileUpdate: (p: CandidateProfile) => void;
   onCompletionRefetch: () => Promise<void>;
 }
-
-const STATUS_VARIANT: Record<DocumentStatus, 'success' | 'warning' | 'error' | 'neutral'> = {
-  VERIFIED: 'success',
-  PENDING: 'warning',
-  REJECTED: 'error',
-};
-
-const STATUS_LABEL: Record<DocumentStatus, string> = {
-  VERIFIED: 'Verified',
-  PENDING: 'Pending review',
-  REJECTED: 'Rejected',
-};
 
 /* Size is the platform-wide ceiling for every type — see lib/uploads.ts. */
 const DOC_TYPES: { type: DocType; labelKey: string; hintKey: string; maxMb: number }[] = [
@@ -68,8 +54,11 @@ function DocRow({ doc, label }: { doc: CandidateDocument; label: string }) {
       <div className="flex min-w-0 flex-col gap-1.5">
         <p className="truncate text-sm font-bold text-neutral-900">{label}</p>
         <p className="truncate text-xs text-neutral-600">{fileName}</p>
+        {/* No verification badge: candidate documents have no review workflow
+            (CandidateDocument has no status column — the API hardcodes PENDING),
+            so "Pending review" promised a decision that was never coming. Only
+            the expiry, which is real stored data, is shown. */}
         <div className="flex flex-wrap gap-1.5">
-          <Badge variant={STATUS_VARIANT[doc.status]}>{STATUS_LABEL[doc.status]}</Badge>
           <DocumentValidity expiryDate={doc.expiryDate} />
         </div>
       </div>
@@ -188,9 +177,6 @@ export function DocumentsSection({
                     {existingDoc.key.split('/').pop()}
                   </p>
                   <div className="flex gap-1.5 mt-0.5">
-                    <Badge variant={STATUS_VARIANT[existingDoc.status]} className="text-xs">
-                      {STATUS_LABEL[existingDoc.status]}
-                    </Badge>
                     <DocumentValidity expiryDate={existingDoc.expiryDate} />
                   </div>
                 </div>

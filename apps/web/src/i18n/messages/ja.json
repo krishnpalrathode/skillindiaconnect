@@ -1,0 +1,111 @@
+{
+  "nav": {
+    "home": "ホーム",
+    "dashboard": "ダッシュボード",
+    "profile": "プロフィール",
+    "jobs": "求人",
+    "applications": "応募状況",
+    "notifications": "通知",
+    "notificationsShort": "お知らせ",
+    "resumeBuilder": "履歴書作成",
+    "resumeBuilderShort": "履歴書",
+    "settings": "設定",
+    "logout": "ログアウト",
+    "login": "ログイン"
+  },
+  "landing": {
+    "meta": {
+      "title": "Skill India Connect — インドと湾岸諸国の安全で確認済みの求人",
+      "description": "インドと湾岸諸国の確認済み求人を探せます。すべての求人に住居・健康保険・交通手段が含まれます。労働者は無料です。"
+    },
+    "nav": {
+      "login": "ログイン",
+      "signUp": "無料で登録",
+      "skipToContent": "メインコンテンツへ移動",
+      "home": "Skill India Connect ホーム"
+    },
+    "hero": {
+      "headline": "インドと世界の技能労働者へ、安全で<hl>確認済みの求人</hl>",
+      "subline": "Skill India Connect のすべての求人には、住居・健康保険・交通手段が必要です。掲載前にすべての雇用主を確認しています。",
+      "ctaWorker": "確認済みの求人を探す",
+      "ctaEmployer": "技能人材を採用する",
+      "freeNote": "労働者はいつでも無料です。",
+      "badges": {
+        "verified": "確認済みの雇用主",
+        "free": "労働者は無料",
+        "global": "インドと世界の求人"
+      }
+    },
+    "trust": {
+      "ariaLabel": "労働者に選ばれる理由",
+      "verifiedEmployers": {
+        "title": "確認済みの雇用主",
+        "body": "求人を掲載する前に、すべての企業を確認しています。"
+      },
+      "protection": {
+        "title": "労働者の保護",
+        "body": "すべての求人に住居・健康保険・交通手段が付きます。"
+      },
+      "free": {
+        "title": "労働者は無料",
+        "body": "プロフィール作成も応募も手数料はかかりません。"
+      },
+      "whatsapp": {
+        "title": "WhatsApp でお知らせ",
+        "body": "応募状況が変わり次第ご連絡します。"
+      },
+      "heading": "労働者に選ばれる理由"
+    },
+    "howItWorks": {
+      "heading": "ご利用の流れ",
+      "subheading": "次の仕事まで3ステップ。",
+      "step1": {
+        "title": "プロフィールを作成",
+        "body": "スキルと職歴を入力します。スマートフォンで数分で完了します。"
+      },
+      "step2": {
+        "title": "確認を受ける",
+        "body": "書類をアップロードしてください。担当者が確認し、雇用主の信頼につながります。"
+      },
+      "step3": {
+        "title": "採用される",
+        "body": "スキルに合う求人に応募すると、雇用主から直接連絡が届きます。"
+      },
+      "cta": "無料でプロフィールを作成"
+    },
+    "announce": {
+      "ariaLabel": "私たちの約束",
+      "verified": "雇用主100%確認済み",
+      "free": "労働者は無料",
+      "global": "インドと世界の求人"
+    },
+    "stats": {
+      "ariaLabel": "数字で見る Skill India Connect",
+      "workers": "登録技能労働者",
+      "employers": "確認済みの雇用主",
+      "placements": "就業決定数",
+      "countries": "求人のある国"
+    },
+    "recentJobs": {
+      "heading": "今週掲載された最新の求人",
+      "subheading": "湾岸諸国とインド各地の確認済み雇用主による実際の求人です。閲覧は自由で、応募のときだけアカウントが必要です。",
+      "apply": "応募する",
+      "browseAll": "すべての求人を見る",
+      "noFee": "手数料は一切かかりません。当社にも、このプラットフォーム上のどの雇用主にもです。",
+      "ctaPrimary": "無料でプロフィールを作成"
+    },
+    "categories": {
+      "heading": "職種から探す",
+      "subheading": "あなたの技能に合う仕事を見つけましょう。",
+      "construction": "建設",
+      "driving": "運転",
+      "electrical": "電気",
+      "welding": "溶接",
+      "plumbing": "配管",
+      "hospitality": "接客",
+      "carpentry": "大工",
+      "housekeeping": "清掃",
+      "cta": "自分の職種の求人を見る"
+    }
+  }
+}

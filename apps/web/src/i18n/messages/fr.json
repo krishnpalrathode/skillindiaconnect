@@ -1,0 +1,111 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "dashboard": "Tableau de bord",
+    "profile": "Profil",
+    "jobs": "Offres",
+    "applications": "Candidatures",
+    "notifications": "Notifications",
+    "notificationsShort": "Alertes",
+    "resumeBuilder": "Créateur de CV",
+    "resumeBuilderShort": "CV",
+    "settings": "Paramètres",
+    "logout": "Se déconnecter",
+    "login": "Se connecter"
+  },
+  "landing": {
+    "meta": {
+      "title": "Skill India Connect — Emplois sûrs et vérifiés en Inde et dans le Golfe",
+      "description": "Trouvez des emplois vérifiés en Inde et dans le Golfe. Chaque offre inclut le logement, l'assurance santé et le transport. Gratuit pour les travailleurs."
+    },
+    "nav": {
+      "login": "Connexion",
+      "signUp": "Inscription gratuite",
+      "skipToContent": "Aller au contenu principal",
+      "home": "Accueil Skill India Connect"
+    },
+    "hero": {
+      "headline": "Des <hl>emplois vérifiés</hl> et sûrs pour les travailleurs qualifiés, en Inde et dans le monde",
+      "subline": "Chaque offre sur Skill India Connect doit vous garantir un logement, une assurance santé et le transport. Nous vérifions chaque employeur avant la publication.",
+      "ctaWorker": "Trouver des emplois vérifiés",
+      "ctaEmployer": "Recruter des talents qualifiés",
+      "freeNote": "Gratuit pour les travailleurs. Toujours.",
+      "badges": {
+        "verified": "Employeurs vérifiés",
+        "free": "Gratuit pour les travailleurs",
+        "global": "Opportunités en Inde et dans le monde"
+      }
+    },
+    "trust": {
+      "ariaLabel": "Pourquoi les travailleurs nous font confiance",
+      "verifiedEmployers": {
+        "title": "Employeurs vérifiés",
+        "body": "Nous contrôlons chaque entreprise avant toute publication."
+      },
+      "protection": {
+        "title": "Protection des travailleurs",
+        "body": "Logement, couverture santé et transport sur chaque poste."
+      },
+      "free": {
+        "title": "Gratuit pour les travailleurs",
+        "body": "Aucun frais pour créer un profil ou postuler."
+      },
+      "whatsapp": {
+        "title": "Suivi sur WhatsApp",
+        "body": "Nous vous écrivons dès que votre candidature évolue."
+      },
+      "heading": "Pourquoi les travailleurs nous font confiance"
+    },
+    "howItWorks": {
+      "heading": "Comment ça marche",
+      "subheading": "Trois étapes vers votre prochain emploi.",
+      "step1": {
+        "title": "Créez votre profil",
+        "body": "Ajoutez vos compétences et votre expérience. Quelques minutes suffisent depuis votre téléphone."
+      },
+      "step2": {
+        "title": "Faites-vous vérifier",
+        "body": "Envoyez vos documents. Notre équipe les contrôle pour rassurer les employeurs."
+      },
+      "step3": {
+        "title": "Soyez recruté",
+        "body": "Postulez aux offres qui correspondent à vos compétences. Les employeurs vous contactent directement."
+      },
+      "cta": "Créer mon profil gratuit"
+    },
+    "announce": {
+      "ariaLabel": "Nos engagements",
+      "verified": "100 % employeurs vérifiés",
+      "free": "Gratuit pour les travailleurs",
+      "global": "Emplois en Inde et dans le monde"
+    },
+    "stats": {
+      "ariaLabel": "Skill India Connect en chiffres",
+      "workers": "Travailleurs qualifiés connectés",
+      "employers": "Employeurs vérifiés",
+      "placements": "Placements réussis",
+      "countries": "Pays proposant des emplois"
+    },
+    "recentJobs": {
+      "heading": "Dernières offres, publiées cette semaine",
+      "subheading": "De vraies offres d'employeurs vérifiés dans le Golfe et en Inde. Consultez librement — un compte n'est nécessaire que pour postuler.",
+      "apply": "Postuler",
+      "browseAll": "Voir toutes les offres",
+      "noFee": "Vous ne payez jamais de frais. Ni à nous, ni à aucun employeur de la plateforme.",
+      "ctaPrimary": "Créer mon profil gratuit"
+    },
+    "categories": {
+      "heading": "Emplois par métier",
+      "subheading": "Trouvez un poste qui correspond à votre métier.",
+      "construction": "Construction",
+      "driving": "Conduite",
+      "electrical": "Électricité",
+      "welding": "Soudure",
+      "plumbing": "Plomberie",
+      "hospitality": "Hôtellerie",
+      "carpentry": "Menuiserie",
+      "housekeeping": "Entretien",
+      "cta": "Voir les offres de mon métier"
+    }
+  }
+}
