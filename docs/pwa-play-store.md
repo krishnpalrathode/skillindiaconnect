@@ -16,12 +16,24 @@ a deploy to the web is live in the installed app with no store release.
 Units 1–3 are shipped in code. Everything below needs a person, and the first three are
 ordered because each one blocks the next.
 
-**1. Get the web origin** *(5 minutes, blocks everything)*
-Render dashboard → `skillindiaconnect-web` → the URL at the top. Then *Settings → Custom
-Domains* to see whether it is the platform default or a custom domain.
+**1. Get the web origin** — ✅ **DONE**
+`https://skillindiaconnect-web.vercel.app` — **Vercel**, platform default, not a custom
+domain. (An earlier reading of `render.yaml` concluded Render; that was wrong. The live site
+answers on Vercel.)
 
-> Origin = `___________________________`
-> Default `*.onrender.com` or custom? = `___________________________`
+Units 1–3 are deployed to it and verified in production:
+
+| Path | Status | Content-Type |
+| --- | --- | --- |
+| `/en/manifest.webmanifest` | 200 | `application/manifest+json` |
+| `/ar/manifest.webmanifest` | 200 | `dir: rtl`, localized name |
+| `/icons/*` (all four) | 200 | `image/png` |
+| `/sw.js` | 200 | `Cache-Control: no-cache, must-revalidate` |
+| `/.well-known/assetlinks.json` | 200 | `application/json` |
+
+> ⚠️ The assetlinks fingerprint currently holds the **TEST key** (see the test-APK section
+> below), not a Play one. It verifies — Google's statements API confirms it — but it must be
+> replaced before anything reaches Play.
 
 **2. Decide the custom domain — now, not after launch** *(blocks TWA generation)*
 If a production domain (`skillindiaconnect.com` or similar) is intended at all, **attach it
@@ -48,6 +60,10 @@ build**.
 
 > Package name = `___________________________`
 > Upload-key custodian = `___________________________`
+
+**4b. Throwaway test APK — ✅ BUILT** *(sideload only, never Play)*
+`~/Downloads/skillindiaconnect-TEST-ONLY.apk`. Signed with a disposable key, Asset Links
+verified by Google. Full procedure and the four Windows traps: *The throwaway test APK*, below.
 
 **5. The acceptance test — on a real cheap Android phone, not an emulator**
 Install the release build and confirm:
@@ -661,6 +677,96 @@ The policy also carries a `draftNotice` flag and is dated `2026-08-02`.
 > **Do not fix this in code.** Adding sentences to a privacy policy is a legal review, not a
 > content edit. Take this list to whoever reviews the job-posting terms.
 > **Action:** ☐ policy updated  ☐ data-safety form matches the updated policy
+
+---
+
+### The throwaway test APK — built, and how to rebuild it
+
+A disposable sideload build whose **only** job is proving the mechanism: does the wrapper open
+fullscreen with no address bar? It never touches Play.
+
+> **Built:** `skillindiaconnect-TEST-ONLY.apk` (3.5 MB), signed, Asset Links verified by
+> Google. Copied to `~/Downloads/`.
+
+#### Toolchain (one-off, ~1 GB)
+
+```
+npm i -g @bubblewrap/cli
+yes | bubblewrap doctor      # downloads JDK 17 + Android SDK to ~/.bubblewrap
+```
+
+Installing the SDK requires accepting the
+[Android SDK Terms](https://developer.android.com/studio/terms.html).
+
+#### The disposable key — never the release key
+
+Named so it cannot be mistaken for one, and generated **outside the repo** so it can never be
+committed:
+
+```
+keytool -genkeypair -v -keystore test-only.keystore -alias test-only \
+  -keyalg RSA -keysize 2048 -validity 3650 \
+  -storepass testonly -keypass testonly \
+  -dname "CN=SKILL INDIA CONNECT TEST ONLY - NOT FOR RELEASE, OU=Testing, O=DO NOT USE FOR PLAY, ..."
+```
+
+Its SHA-256 went into `assetlinks.json` so the sideloaded build verifies — **without that step
+the APK proves nothing**, because it would open with an address bar for the ordinary reason
+rather than because the wrapper is broken.
+
+#### Build
+
+```
+bubblewrap init --manifest=https://skillindiaconnect-web.vercel.app/en/manifest.webmanifest
+# patch twa-manifest.json (see traps), then:
+./gradlew.bat assembleRelease
+zipalign -p -f 4 app/build/outputs/apk/release/app-release-unsigned.apk out.apk
+apksigner sign --ks test-only.keystore --ks-key-alias test-only out.apk
+apksigner verify --print-certs out.apk
+```
+
+#### Four traps hit while doing this — all cost real time
+
+1. **`enableNotifications` defaults to `true`.** Bubblewrap turns it on regardless of the web
+   manifest. Left alone, the app requests notification permission on first run — the exact
+   thing push-being-out-of-scope was supposed to prevent. **Set it to `false` in
+   `twa-manifest.json` and re-run `bubblewrap update`.**
+2. **`bubblewrap build` cannot spawn `gradlew.bat`** on Windows — it invokes it without `./`,
+   which neither Git Bash nor its cmd child resolves. Run `./gradlew.bat assembleRelease`
+   directly and sign with `apksigner` afterwards; the result is identical.
+3. **SDK licence prompts ignore piped input.** `yes | sdkmanager --licenses` silently fails
+   and the build then dies on a missing `build-tools`. Real stdin redirection works:
+   `cmd /c "sdkmanager.bat --sdk_root=... --licenses < yes.txt"`.
+4. **`sdkmanager` needs `--sdk_root`** when the SDK sits at `~/.bubblewrap/android_sdk`;
+   without it, it prints help and exits 0, which looks like success.
+
+#### Verifying before you burn a build
+
+Check the statement is live **before** building — Google's API is authoritative and takes
+seconds:
+
+```
+curl "https://digitalassetlinks.googleapis.com/v1/statements:list\
+?source.web.site=https://skillindiaconnect-web.vercel.app\
+&relation=delegate_permission/common.handle_all_urls"
+```
+
+Confirmed for this build: **1 statement**, package `app.vercel.skillindiaconnect_web.twa`,
+fingerprint `8A:55:68:…`, no errors. The signed APK's certificate digest matches byte-for-byte.
+
+#### 🔴 Before anything goes to Play — undo this
+
+The test fingerprint is **live on the production origin right now**. While it is there, any
+build signed with that disposable keystore is trusted by the origin with no address bar. The
+keystore is local and this is a testing domain, so exposure is bounded — but it is not
+something to leave sitting.
+
+> ☐ Replace the fingerprint in `apps/web/public/.well-known/assetlinks.json` with the **Play
+>   App Signing** one (*Setup → App Integrity → App signing key certificate → SHA-256*)
+> ☐ Replace `package_name` with the real Play package
+> ☐ Delete `test-only.keystore`
+> ☐ Re-run the statements API check against the new fingerprint
+> ☐ Rebuild the wrapper against the **real domain**, not `*.vercel.app`
 
 ---
 
