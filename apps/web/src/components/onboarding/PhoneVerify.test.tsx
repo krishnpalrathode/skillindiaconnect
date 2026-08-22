@@ -32,6 +32,29 @@ describe('PhoneVerify — honest send failures (CR-WA W1.6)', () => {
     return user;
   }
 
+  /**
+   * The two lines used to render together once a code was on its way: the panel
+   * promised "We'll send a WhatsApp OTP to confirm your number" directly above
+   * "Enter the 6-digit code sent to your number" — simultaneously announcing a
+   * future send and asking for the code from one already sent.
+   */
+  it('stops promising to send a code once the code has been sent', async () => {
+    const user = userEvent.setup();
+    render(<PhoneVerify onVerified={vi.fn()} />);
+
+    // Before sending: the intent line is the right thing to show.
+    expect(screen.getByText(/we'll send a whatsapp otp/i)).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/mobile number/i), WORKING_NUMBER);
+    await user.click(screen.getByRole('button', { name: /verify phone/i }));
+
+    // After: only the "enter the code" line, and the promise is gone.
+    await waitFor(() =>
+      expect(screen.getByText(/enter the 6-digit code sent to your number/i)).toBeInTheDocument(),
+    );
+    expect(screen.queryByText(/we'll send a whatsapp otp/i)).toBeNull();
+  });
+
   it('a provider outage says so — and never claims the code was sent', async () => {
     await submit(OUTAGE_NUMBER);
 
