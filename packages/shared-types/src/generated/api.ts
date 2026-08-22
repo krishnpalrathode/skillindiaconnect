@@ -73,7 +73,7 @@ export interface paths {
         };
         /**
          * Initiate Google OAuth flow
-         * @description Redirects the browser to Google's OAuth consent screen. Candidates only — employers and admins MUST use email/password. The callback URL is `GET /auth/google/callback`.
+         * @description Redirects the browser to Google's OAuth consent screen. Candidates only — employers and admins MUST use email/password. The callback URL is `GET /auth/google/callback`. See also `GET /auth/linkedin` for the other supported provider.
          */
         get: operations["getAuthGoogle"];
         put?: never;
@@ -102,6 +102,67 @@ export interface paths {
          *       redirected to the error page with `?error=GOOGLE_NOT_ALLOWED`.
          */
         get: operations["getAuthGoogleCallback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/linkedin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Initiate LinkedIn OAuth (OpenID Connect) flow
+         * @description Redirects the browser to LinkedIn's consent screen, requesting the `openid profile email` scopes. Candidates only — employers and admins MUST use email/password, exactly as for Google.
+         *     The provider is OPTIONAL infrastructure: when `LINKEDIN_OAUTH_*` is not configured this redirects to `{WEB_APP_URL}/login?error=LINKEDIN_UNAVAILABLE` rather than failing.
+         *     A CSRF `state` nonce is minted here and parked in a short-lived `sic_oauth_state` HttpOnly cookie, then required to match at the callback.
+         */
+        get: operations["getAuthLinkedin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/linkedin/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * LinkedIn OAuth callback
+         * @description Handles the LinkedIn callback. On success sets the `sic_refresh` HttpOnly
+         *     cookie and redirects to `{WEB_APP_URL}/callback`.
+         *
+         *     Like the Google callback, this ALWAYS redirects — failures go to
+         *     `{WEB_APP_URL}/login?error={code}`:
+         *
+         *     - `LINKEDIN_NOT_ALLOWED` — the email is registered as employer/admin.
+         *     - `ACCOUNT_SUSPENDED` — the account exists but is suspended.
+         *     - `LINKEDIN_NO_EMAIL` — LinkedIn released no email address. `email` is
+         *       OPTIONAL in the OIDC userinfo response, and this product keys identity
+         *       on email, so the sign-in cannot proceed.
+         *     - `LINKEDIN_EMAIL_UNVERIFIED` — LinkedIn has not verified the address.
+         *       Refused because accounts are linked BY EMAIL, so an unverified address
+         *       would be an account-takeover primitive.
+         *     - `LINKEDIN_PROFILE_FAILED` — LinkedIn was unreachable or rejected the
+         *       userinfo request.
+         *     - `LINKEDIN_FAILED` — consent declined, or the `state` nonce did not
+         *       match. Deliberately one code for several causes: distinguishing them
+         *       would tell a prober how far they got.
+         *     - `LINKEDIN_UNAVAILABLE` — the provider is not configured.
+         */
+        get: operations["getAuthLinkedinCallback"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4797,30 +4858,55 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Redirect to web app callback URL */
+            /**
+             * @description ALWAYS a redirect — never a JSON body. This route is the tail of a browser redirect chain, so a failure has to land the user on a page they can act on rather than on an error document served from the API domain.
+             *     Success redirects to `{WEB_APP_URL}/callback` with the `sic_refresh` HttpOnly cookie set. Failure redirects to `{WEB_APP_URL}/login?error={code}` with no cookie set. Only the code crosses the redirect; the web app owns the translated copy.
+             */
             302: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Google sign-in not allowed for this email/role */
-            403: {
+        };
+    };
+    getAuthLinkedin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect to LinkedIn consent, or back to login if unconfigured */
+            302: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Google sign-in not allowed",
-                     *       "status": 403,
-                     *       "detail": "This email is registered as an employer or admin — use email/password.",
-                     *       "code": "GOOGLE_NOT_ALLOWED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Error"];
+                content?: never;
+            };
+        };
+    };
+    getAuthLinkedinCallback: {
+        parameters: {
+            query: {
+                code?: string;
+                /** @description CSRF nonce; must match the `sic_oauth_state` cookie. */
+                state: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect to the web app, or to login with an error code */
+            302: {
+                headers: {
+                    [name: string]: unknown;
                 };
+                content?: never;
             };
         };
     };

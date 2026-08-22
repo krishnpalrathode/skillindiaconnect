@@ -234,7 +234,6 @@
     "signupSubtitle": "Join thousands of workers finding opportunities",
     "googleLogin": "Continue with Google",
     "googleSignup": "Sign up with Google",
-    "googleCandidateOnly": "Google sign-up is for job seekers only",
     "orDivider": "or",
     "tabEmail": "Email",
     "tabPhone": "Phone",
@@ -311,6 +310,20 @@
       "body": "You will need to sign in again to see your applications and job matches.",
       "confirm": "Log out",
       "cancel": "Stay signed in"
+    },
+    "linkedinLogin": "Continue with LinkedIn",
+    "linkedinSignup": "Sign up with LinkedIn",
+    "socialCandidateOnly": "Google and LinkedIn sign-up are for job seekers only",
+    "oauthError": {
+      "GENERIC": "That sign-in didn't work. Please try again, or use your email and password.",
+      "GOOGLE_NOT_ALLOWED": "This email is registered as an employer or admin account. Please sign in with your email and password.",
+      "LINKEDIN_NOT_ALLOWED": "This email is registered as an employer or admin account. Please sign in with your email and password.",
+      "ACCOUNT_SUSPENDED": "This account has been suspended. Please contact support.",
+      "LINKEDIN_NO_EMAIL": "LinkedIn didn't share an email address for your account. Please sign up with your email instead.",
+      "LINKEDIN_EMAIL_UNVERIFIED": "LinkedIn has not verified the email address on your account. Please verify it on LinkedIn, or sign up with your email instead.",
+      "LINKEDIN_PROFILE_FAILED": "We couldn't reach LinkedIn just now. Please try again in a moment.",
+      "LINKEDIN_FAILED": "LinkedIn sign-in didn't complete. Please try again.",
+      "LINKEDIN_UNAVAILABLE": "LinkedIn sign-in is not available right now. Please use Google or your email and password."
     }
   },
   "profile": {

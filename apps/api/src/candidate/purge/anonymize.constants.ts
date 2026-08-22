@@ -48,7 +48,14 @@ export function userAnonymizedFields(userId: string, now: Date): Prisma.UserUnch
   return {
     email: purgedEmail(userId),
     passwordHash: null, // no credential survives; login is impossible
-    googleId: null, //     OAuth link severed
+    // EVERY federated link is severed, not just the first one we shipped. A
+    // surviving provider id is a live way back IN: the callback matches on it
+    // before it ever looks at email, so signing in with that provider would
+    // hand the caller the anonymized account instead of creating a new one.
+    // Any provider added later belongs on this list — that is the whole reason
+    // the purge spec asserts these are null field by field.
+    googleId: null,
+    linkedinId: null,
     lastLoginAt: null,
     termsAcceptedAt: null,
     deletionDueAt: null, // the grace window is consumed

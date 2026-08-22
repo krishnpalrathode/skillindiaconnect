@@ -169,6 +169,7 @@ async function mkFullCandidate(opts?: {
       email,
       passwordHash: `hash-${n}`,
       googleId: `google-${n}`,
+      linkedinId: `linkedin-${n}`,
       role: UserRole.CANDIDATE,
       status: opts?.status ?? UserStatus.PENDING_DELETION,
       deletionDueAt: opts?.deletionDueAt === undefined ? PAST : opts.deletionDueAt,
@@ -518,6 +519,10 @@ describe('purgeUser — full anonymization, proven by absence', () => {
     expect(user.email).toBe(`purged-${fx.userId}@deleted.invalid`);
     expect(user.passwordHash).toBeNull();
     expect(user.googleId).toBeNull();
+    // EVERY federated link, not just the first one shipped: a surviving provider
+    // id is matched before email on the next sign-in, so it would hand the
+    // caller this anonymized account.
+    expect(user.linkedinId).toBeNull();
     expect(user.deletionDueAt).toBeNull();
     expect(user.purgedAt).not.toBeNull();
 

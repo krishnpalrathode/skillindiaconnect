@@ -285,6 +285,37 @@ const authGoogleCallback = http.get(`${BASE}/auth/google/callback`, () => {
   });
 });
 
+/*
+  LinkedIn OAuth, mocked at the same fidelity as Google: a redirect out and a
+  redirect back. The real handshake cannot be exercised here — it needs
+  linkedin.com and a real consent screen — so what these pin is that the BUTTONS
+  navigate to the right endpoints and that the app survives the round trip.
+
+  The failure path is mocked too, because it is the half that has UI of its own:
+  ?scenario=error returns the redirect a refused sign-in produces, so the login
+  page's error notice can be tested without a live provider.
+*/
+const authLinkedinInit = http.get(`${BASE}/auth/linkedin`, ({ request }) => {
+  const scenario = new URL(request.url).searchParams.get('scenario');
+  if (scenario === 'error') {
+    return new HttpResponse(null, {
+      status: 302,
+      headers: { Location: '/login?error=LINKEDIN_NO_EMAIL' },
+    });
+  }
+  return new HttpResponse(null, {
+    status: 302,
+    headers: { Location: 'https://www.linkedin.com/oauth/v2/authorization?mock=true' },
+  });
+});
+
+const authLinkedinCallback = http.get(`${BASE}/auth/linkedin/callback`, () => {
+  return new HttpResponse(null, {
+    status: 302,
+    headers: { Location: '/callback?mock=true' },
+  });
+});
+
 const authRefresh = http.post(`${BASE}/auth/refresh`, ({ request }) => {
   const cookie = request.headers.get('Cookie') ?? '';
   const match = /sic_refresh=([^;]+)/.exec(cookie);
@@ -4911,6 +4942,8 @@ export const handlers = [
   authLogin,
   authGoogleInit,
   authGoogleCallback,
+  authLinkedinInit,
+  authLinkedinCallback,
   authRefresh,
   authLogout,
   authOtpSend,

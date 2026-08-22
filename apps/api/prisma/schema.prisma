@@ -258,6 +258,13 @@ model User {
   email            String     @unique @db.Citext
   passwordHash     String?
   googleId         String?    @unique
+  /// LinkedIn OIDC subject (`sub`). PAIRWISE — LinkedIn issues a different value
+  /// per application, so this identifies the member to US and is not a portable
+  /// LinkedIn member id. Nullable because most accounts never use LinkedIn, and
+  /// unique so one LinkedIn identity cannot be attached to two accounts.
+  /// Severed by the purge worker (anonymize.constants.ts) — otherwise it would
+  /// survive as a live way back into an anonymized account.
+  linkedinId       String?    @unique
   role             UserRole
   status           UserStatus @default(ACTIVE)
   lastLoginAt      DateTime?
