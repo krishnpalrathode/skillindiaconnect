@@ -1774,7 +1774,7 @@ const publishJob = http.post(`${BASE}/employers/me/jobs/:id/publish`, ({ request
     that left it null would show the "pending review" branch instead — passing
     tests for a message the employer would never see in production.
   */
-  const AUTO_ARCHIVE_DAYS = 90;
+  const AUTO_ARCHIVE_DAYS = 45;
   job.autoArchiveAt = new Date(Date.now() + AUTO_ARCHIVE_DAYS * 86400000).toISOString();
   return HttpResponse.json({ data: job });
 });
