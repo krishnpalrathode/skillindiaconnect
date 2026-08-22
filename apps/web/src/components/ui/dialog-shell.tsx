@@ -30,7 +30,12 @@ export function DialogShell({
   confirmDisabled?: boolean;
   onConfirm: () => void;
   onClose: () => void;
-  cancelLabel: string;
+  /**
+   * Omit for an acknowledgement dialog — one that informs rather than asks.
+   * Passing the same text as `confirmLabel` renders two identical buttons,
+   * which is what this optionality exists to prevent.
+   */
+  cancelLabel?: string;
   children?: React.ReactNode;
   /** S6b-F1: destructive dialogs (the purge) announce as alertdialog. */
   role?: 'dialog' | 'alertdialog';
@@ -88,9 +93,11 @@ export function DialogShell({
         {children}
 
         <div className="mt-5 flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={busy}>
-            {cancelLabel}
-          </Button>
+          {cancelLabel && (
+            <Button variant="outline" size="sm" onClick={onClose} disabled={busy}>
+              {cancelLabel}
+            </Button>
+          )}
           <Button
             variant={confirmVariant}
             size="sm"

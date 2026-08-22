@@ -15,6 +15,7 @@ import { RichTextField } from './RichTextField';
 import { RequirementsField } from './RequirementsField';
 import { PublishErrorHandler } from './PublishErrorHandler';
 import { TermsAcceptance } from './TermsAcceptance';
+import { PublishedNotice } from './PublishedNotice';
 import { countriesForMarket } from '@/lib/countries';
 import {
   DEFAULT_FORM_VALUES,
@@ -62,6 +63,13 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
     null,
   );
   const [savedJobId, setSavedJobId] = useState<string | null>(job?.id ?? null);
+  /*
+    The just-published job, held only long enough to show the lifetime notice.
+    Non-null means "publish succeeded, tell them when it expires" — the redirect
+    waits for them to acknowledge, so the message cannot be missed by a
+    navigation firing underneath it.
+  */
+  const [publishedJob, setPublishedJob] = useState<Job | null>(null);
   const [categories, setCategories] = useState<JobCategory[]>([]);
   /**
    * Whether anything has changed since the last successful save.
@@ -172,8 +180,10 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
         jobId = created.id;
         setSavedJobId(jobId);
       }
-      await publishJob(jobId!);
-      router.push(`/${locale}/employer/jobs?published=1`);
+      const published = await publishJob(jobId!);
+      setPublishStatus('idle');
+      setDirty(false);
+      setPublishedJob(published);
     } catch (err) {
       setPublishStatus('error');
       if (err instanceof ApiRequestError) {
@@ -468,6 +478,16 @@ export function JobForm({ job, onValuesChange }: JobFormProps) {
         onChange={(next) => patch({ termsAccepted: next })}
         error={errors.termsAccepted}
       />
+
+      {publishedJob && (
+        <PublishedNotice
+          autoArchiveAt={publishedJob.autoArchiveAt}
+          onClose={() => {
+            setPublishedJob(null);
+            router.push(`/${locale}/employer/jobs?published=1`);
+          }}
+        />
+      )}
 
       {/* ── Publish error banner ──────────────────────────────────────────────── */}
       {publishError && (

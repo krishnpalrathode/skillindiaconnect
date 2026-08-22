@@ -1352,6 +1352,15 @@
       "draftError": "Failed to save draft. Please try again.",
       "publish": "Post Job",
       "publishing": "Publishing…"
+    },
+    "published": {
+      "liveTitle": "Your job is live",
+      "liveBody": "Candidates can see and apply to this job until <date></date> — that is <days></days> days from today.",
+      "archiveHint": "After that it is archived automatically: it stops showing to candidates, but it stays in My Jobs with its applicants, and you can repost it any time.",
+      "pendingTitle": "Sent for review",
+      "pendingBody": "An admin will review this job before it goes live. Candidates cannot see it yet.",
+      "pendingHint": "Its time on the site starts counting once it is approved, not now — so nothing is lost while it waits.",
+      "confirm": "Got it"
     }
   },
   "myjobs": {

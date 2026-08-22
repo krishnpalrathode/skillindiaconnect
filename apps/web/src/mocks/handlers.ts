@@ -1767,6 +1767,15 @@ const publishJob = http.post(`${BASE}/employers/me/jobs/:id/publish`, ({ request
 
   job.status = 'ACTIVE';
   job.publishedAt = new Date().toISOString();
+  /*
+    The real API stamps autoArchiveAt at publish, from the jobs.auto_archive_days
+    setting (90 by default). The mock has to as well: the post-publish notice
+    reads this field to tell the employer when the posting expires, and a mock
+    that left it null would show the "pending review" branch instead — passing
+    tests for a message the employer would never see in production.
+  */
+  const AUTO_ARCHIVE_DAYS = 90;
+  job.autoArchiveAt = new Date(Date.now() + AUTO_ARCHIVE_DAYS * 86400000).toISOString();
   return HttpResponse.json({ data: job });
 });
 

@@ -3430,6 +3430,12 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             publishedAt?: string | null;
+            /**
+             * Format: date-time
+             * @description When this job will be archived automatically. Stamped at PUBLISH from the `jobs.auto_archive_days` setting, so it reflects the platform's current job lifetime rather than a fixed period. NULL while a job is a draft or awaiting admin review — the clock only starts once the job is actually ACTIVE.
+             *     The API has always returned this; it was simply undocumented here.
+             */
+            autoArchiveAt?: string | null;
             /** Format: date-time */
             archivedAt?: string | null;
         };
