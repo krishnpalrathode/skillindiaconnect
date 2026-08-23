@@ -64,6 +64,8 @@ const FINISHED_JOB_RETENTION = {
       // Employer → candidate outreach — API enqueues, worker sends.
       { name: QUEUE_NAMES.INTEREST_NOTIFY },
       { name: QUEUE_NAMES.CANDIDATE_INACTIVITY },
+      // Hourly one-time profile-completion nudge — cron enqueues, worker sends.
+      { name: QUEUE_NAMES.PROFILE_NUDGE },
     ),
   ],
   exports: [BullModule],

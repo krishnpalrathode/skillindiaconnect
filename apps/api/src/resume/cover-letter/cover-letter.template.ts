@@ -1,4 +1,4 @@
-import { esc, pageFrame } from '../templates/shared';
+import { esc, pageFrame, watermarkFrame, watermarkLayer } from '../templates/shared';
 import { CoverLetterContent } from './cover-letter.content';
 
 /**
@@ -31,6 +31,7 @@ export function renderCoverLetter(letter: CoverLetterContent): string {
 <meta charset="utf-8" />
 <style>
   ${pageFrame('25mm 22mm')}
+  ${watermarkFrame()}
   body {
     /* Serif for prose. Georgia is present on every platform Chromium runs on
        here and reads better at length than the UI sans the resumes use. */
@@ -64,6 +65,7 @@ export function renderCoverLetter(letter: CoverLetterContent): string {
 </style>
 </head>
 <body>
+  ${watermarkLayer()}
   <header>
     <h1>${esc(letter.senderName)}</h1>
     ${letter.senderHeadline ? `<p class="headline">${esc(letter.senderHeadline)}</p>` : ''}

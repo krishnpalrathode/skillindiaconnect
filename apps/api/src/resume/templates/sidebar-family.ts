@@ -7,6 +7,8 @@ import {
   factRows,
   safePhotoSrc,
   summaryText,
+  watermarkFrame,
+  watermarkLayer,
 } from './shared';
 
 /**
@@ -193,6 +195,7 @@ export function renderSidebarResume(view: ResumeViewDto, theme: SidebarTheme): s
      cannot paint into the @page margin — so the margin is 0 and every block
      supplies its own padding. Same technique EXECUTIVE uses. */
   @page { size: A4; margin: 0; }
+  ${watermarkFrame()}
   * { margin: 0; padding: 0; box-sizing: border-box; }
   section { break-inside: auto; }
   li { break-inside: avoid; }
@@ -312,6 +315,7 @@ export function renderSidebarResume(view: ResumeViewDto, theme: SidebarTheme): s
 </style>
 </head>
 <body>
+  ${watermarkLayer()}
   <aside class="side">
     ${photo}
     ${band ? `<div><h1 class="name bandname">${esc(first)} ${rest ? `<span class="accent">${esc(rest)}</span>` : ''}</h1>${view.jobCategory ? `<p class="trade bandtrade">${esc(view.jobCategory)}</p>` : ''}</div>` : ''}

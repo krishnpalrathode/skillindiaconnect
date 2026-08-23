@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { formatDuration } from '@/lib/formatDuration';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -264,8 +265,7 @@ export function AdminCandidateProfile({ candidateId }: { candidateId: string }) 
                 {' · '}
                 {exp.companyName}
                 {exp.country ? ` · ${exp.country}` : ''}
-                {typeof exp.years === 'number' &&
-                  ` · ${t('experienceYears', { years: exp.years, months: exp.months ?? 0 })}`}
+                {typeof exp.years === 'number' && ` · ${formatDuration(t, exp.years, exp.months)}`}
               </li>
             ))}
           </ul>
