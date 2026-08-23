@@ -13,6 +13,7 @@ import type { Redis } from 'ioredis';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { MetricsService } from '../../core/observability/metrics.service';
 import { REDIS_CLIENT } from '../../core/redis/redis.provider';
+import { EMAIL_CHANNEL, type EmailChannel } from '../../notifications/channels/email.channel';
 import {
   WHATSAPP_CHANNEL,
   WhatsappChannel,
@@ -25,6 +26,7 @@ const CODE_LENGTH = 6;
 const CODE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_ATTEMPTS = 5;
 const SEND_BUDGET_PHONE = 5; // per hour, SHARED across PHONE_VERIFY + LOGIN
+const SEND_BUDGET_EMAIL = 5; // per hour, per address — mirrors the phone budget
 const SEND_BUDGET_IP = 20; // per hour, per IP
 const SEND_WINDOW_S = 3600; // 1 hour in seconds
 
@@ -61,6 +63,7 @@ export class OtpService {
     private readonly prisma: PrismaService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
     @Inject(WHATSAPP_CHANNEL) private readonly whatsapp: WhatsappChannel,
+    @Inject(EMAIL_CHANNEL) private readonly email: EmailChannel,
     private readonly metrics: MetricsService,
     private readonly config: ConfigService,
   ) {}
@@ -247,6 +250,111 @@ export class OtpService {
     }
     this.logger.debug(`OTP_DEV_CODE is active — all issued OTPs are the fixed dev code.`);
     return fixed;
+  }
+
+  /**
+   * Issue an EMAIL_VERIFY code and send it INLINE, from the API process.
+   *
+   * The worker rule (worker-and-external-sends.md) says external sends belong to
+   * the worker. This is the same shape as the OTP exception already documented
+   * there: the user is sitting at a code-entry box, and a queued send would put
+   * an unbounded wait between "we sent it" and the code arriving. It is an
+   * interactive authentication step, not a notification.
+   *
+   * Storage, TTL, attempt limits and budgets are shared with the phone path —
+   * only the destination column and the transport differ.
+   */
+  async issueEmail(email: string, ip: string): Promise<OtpIssueResult> {
+    await this.checkEmailBudget(email);
+    await this.applyIpBudget(ip);
+
+    const code = this.devFixedCode() ?? generateCode();
+    const codeHash = hashCode(code);
+    const expiresAt = new Date(Date.now() + CODE_TTL_MS);
+
+    // At most one live challenge per (email, purpose), same as the phone path.
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      await tx.otpChallenge.updateMany({
+        where: { email, purpose: OtpPurpose.EMAIL_VERIFY, consumedAt: null },
+        data: { consumedAt: new Date() },
+      });
+      await tx.otpChallenge.create({
+        data: { email, purpose: OtpPurpose.EMAIL_VERIFY, codeHash, expiresAt, attempts: 0 },
+      });
+    });
+
+    /*
+      Same defensive catch as the WhatsApp path, for the same reason: the channel
+      contract is that a send never throws, but this is the auth path, where a
+      thrown adapter error costs a user their account access rather than a
+      retried background job. A throw is folded into the same failure handling.
+    */
+    let ok = false;
+    try {
+      const result = await this.email.send(email, 'EMAIL_VERIFY', {
+        subject: 'Your Skill India Connect verification code',
+        text: `Your verification code is ${code}. It expires in 5 minutes. If you did not request this, ignore this email.`,
+      });
+      ok = result.ok;
+    } catch (err) {
+      // No address, no code — the redaction rule applies to logs.
+      this.logger.error(
+        'Email OTP adapter THREW, violating its no-throw contract; treating as a ' +
+          `failed send: ${err instanceof Error ? err.name : 'unknown error'}`,
+      );
+      ok = false;
+    }
+
+    /*
+      Reported honestly. A caller that showed "code sent" on a failed send would
+      leave the user waiting for something that is never coming — the same
+      honesty rule the WhatsApp path follows.
+    */
+    return { outcome: ok ? 'SENT' : 'SEND_FAILED' };
+  }
+
+  /**
+   * Verify an EMAIL_VERIFY code. Identical rules to the phone path — expiry,
+   * attempt ceiling, single use — differing only in which column identifies the
+   * challenge.
+   */
+  async verifyEmail(email: string, otp: string): Promise<{ challenge: OtpChallenge }> {
+    const challenge = await this.prisma.otpChallenge.findFirst({
+      where: { email, purpose: OtpPurpose.EMAIL_VERIFY, consumedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!challenge || challenge.expiresAt < new Date()) {
+      throw new UnauthorizedException({ code: 'INVALID_OTP' });
+    }
+    if (challenge.attempts >= MAX_ATTEMPTS) {
+      throw new UnauthorizedException({ code: 'INVALID_OTP' });
+    }
+
+    if (hashCode(otp) !== challenge.codeHash) {
+      await this.prisma.otpChallenge.update({
+        where: { id: challenge.id },
+        data: { attempts: { increment: 1 } },
+      });
+      throw new UnauthorizedException({ code: 'INVALID_OTP' });
+    }
+
+    const consumed = await this.prisma.otpChallenge.update({
+      where: { id: challenge.id },
+      data: { consumedAt: new Date() },
+    });
+    return { challenge: consumed };
+  }
+
+  private async checkEmailBudget(email: string): Promise<void> {
+    const key = `otp:send:email:${email.toLowerCase()}`;
+    const count = await this.redis.incr(key);
+    if (count === 1) {
+      await this.redis.expire(key, SEND_WINDOW_S);
+    }
+    if (count > SEND_BUDGET_EMAIL) {
+      throw new HttpException({ code: 'OTP_RATE_LIMITED' }, HttpStatus.TOO_MANY_REQUESTS);
+    }
   }
 
   private async checkPhoneBudget(phone: string): Promise<void> {

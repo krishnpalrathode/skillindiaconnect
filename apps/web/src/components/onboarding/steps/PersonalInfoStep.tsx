@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
 import { DatePicker } from '@/components/ui/date-picker';
 import { PhoneVerify } from '@/components/onboarding/PhoneVerify';
+import { EmailVerify } from '@/components/onboarding/EmailVerify';
+import { SetPassword } from '@/components/onboarding/SetPassword';
 import { BrandLoader } from '@/components/ui/brand-loader';
 import {
   patchCandidateProfile,
@@ -78,6 +80,41 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
   const [fullName, setFullName] = useState(profile.fullName ?? '');
   const [dob, setDob] = useState(profile.dob ?? '');
   const [phoneVerified, setPhoneVerified] = useState(!!profile.phoneVerifiedAt);
+
+  /*
+    ── Which credential step this candidate owes ─────────────────────────────
+
+    An email signup arrives with an address and a password and owes a verified
+    phone. A phone signup arrives with a verified phone and owes the other two.
+    Both are read from the SERVER's view of the account rather than remembered
+    client-side, so a reload mid-onboarding resumes on the right step instead
+    of restarting or skipping one.
+
+    `hasGoogle` is why the password step is not simply `!hasPassword`: a Google
+    account has no password hash either, and demanding one from someone who
+    already has a durable way in would be a step invented out of a null.
+  */
+  const needsEmail = !profile.email;
+  const needsPassword = !profile.hasPassword && !profile.hasGoogle;
+
+  const [emailVerified, setEmailVerified] = useState(!needsEmail);
+  const [passwordSet, setPasswordSet] = useState(!needsPassword);
+
+  /*
+    Each block is asked for INDEPENDENTLY, on its own condition. Nesting the
+    password step inside the email branch looked equivalent and was not: once
+    the address is saved, `needsEmail` is false, so after a reload the whole
+    branch — password step included — disappeared, and a candidate who had
+    verified their email but never set a password advanced without one.
+
+    - the phone is asked for only when it is not already proven (a phone signup
+      proved theirs to create the account);
+    - the password is asked for only once there IS an address to sign in with,
+      which is Decision 2's ordering.
+  */
+  const showPhoneVerify = !phoneVerified;
+  const showEmailVerify = needsEmail && !emailVerified;
+  const showSetPassword = !passwordSet && (emailVerified || !needsEmail);
   const [maritalStatus, setMaritalStatus] = useState<MaritalStatus | ''>(
     profile.maritalStatus ?? '',
   );
@@ -106,7 +143,15 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
   const showNameError = fullName.trim().length > 0 && !nameValid;
   const showAgeError = dob.length > 0 && !ageValid;
 
-  const canAdvance = nameValid && ageValid && phoneVerified;
+  /*
+    Every candidate must leave this step with at least one PROVEN way to be
+    reached — whichever one their signup route did not already establish. A
+    phone signup is gated on the email, an email signup on the phone, exactly
+    as before. `passwordSet` starts true whenever no password was owed, so it
+    adds nothing to the email-signup or Google paths.
+  */
+  const contactVerified = needsEmail ? emailVerified : phoneVerified;
+  const canAdvance = nameValid && ageValid && contactVerified && passwordSet;
 
   // Display-only chips parsed from the comma-separated languages input — the
   // saved value remains the same comma string the API has always received.
@@ -356,15 +401,46 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
         )}
       </div>
 
-      {/* Phone verify — REQUIRED: a verified mobile number gates advancing. */}
-      <PhoneVerify
-        initialPhone={profile.phone ?? ''}
-        alreadyVerified={!!profile.phoneVerifiedAt}
-        onVerified={(phone) => {
-          setPhoneVerified(true);
-          onProfileUpdate({ ...profile, phone });
-        }}
-      />
+      {/*
+        The swap. A phone signup verified their number to create the account,
+        so this slot asks for the things they still lack — an address, then a
+        password — instead of re-asking for the number they already proved.
+        An email signup sees exactly what it always has.
+      */}
+      {showEmailVerify && (
+        <EmailVerify
+          onVerified={(email) => {
+            setEmailVerified(true);
+            onProfileUpdate({ ...profile, email });
+          }}
+        />
+      )}
+
+      {/* Phone verify — REQUIRED for an email signup: a verified mobile number
+          gates advancing. A phone signup never sees it; theirs is already
+          proven, and re-asking would demand the one thing they have shown. */}
+      {showPhoneVerify && (
+        <PhoneVerify
+          initialPhone={profile.phone ?? ''}
+          alreadyVerified={false}
+          onVerified={(phone) => {
+            setPhoneVerified(true);
+            onProfileUpdate({ ...profile, phone });
+          }}
+        />
+      )}
+
+      {/* Only once there is an address to sign in with — Decision 2. Offering it
+          earlier would let someone set a password on an account we cannot yet
+          reach if they forget it. */}
+      {showSetPassword && (
+        <SetPassword
+          onSet={() => {
+            setPasswordSet(true);
+            onProfileUpdate({ ...profile, hasPassword: true });
+          }}
+        />
+      )}
 
       {error && (
         <p role="alert" className="text-sm text-error-fg">

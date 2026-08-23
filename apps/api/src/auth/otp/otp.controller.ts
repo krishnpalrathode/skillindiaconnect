@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
-import { OtpPurpose, UserStatus } from '@prisma/client';
+import { OtpPurpose, UserRole, UserStatus } from '@prisma/client';
 import { Request, Response } from 'express';
 import { Public } from '../decorators/public.decorator';
 import { CurrentUser, CurrentUserPayload } from '../decorators/current-user.decorator';
@@ -25,6 +25,10 @@ import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { PhoneLoginStartDto } from './dto/phone-login-start.dto';
 import { PhoneLoginVerifyDto } from './dto/phone-login-verify.dto';
+import { EmailVerifyStartDto } from './dto/email-verify-start.dto';
+import { EmailVerifyConfirmDto } from './dto/email-verify-confirm.dto';
+import { PhoneSignupStartDto } from './dto/phone-signup-start.dto';
+import { PhoneSignupVerifyDto } from './dto/phone-signup-verify.dto';
 
 const REFRESH_COOKIE = 'sic_refresh';
 
@@ -131,6 +135,129 @@ export class OtpController {
     });
 
     return { data: { phoneVerified: true, whatsappCapable: true } };
+  }
+
+  // ─── Phone signup (candidates only) ──────────────────────────────────────
+
+  /**
+   * Start creating a candidate account from a phone number.
+   *
+   * ⚠️ THIS ONE IS DELIBERATELY *NOT* ENUMERATION-SAFE, unlike phone LOGIN
+   * directly below it. A number already registered gets 409
+   * PHONE_ALREADY_IN_USE.
+   *
+   * That looks inconsistent next to `login/phone/start`, so the reasoning is
+   * worth stating. A signup endpoint cannot hide the answer and still work: if
+   * we accepted the request silently we would either create a second account
+   * on a number that already has one, or drop the request on the floor and
+   * leave someone tapping "Get OTP" forever on a number that will never
+   * receive one. Email signup already faces this and already answers it — it
+   * returns 409 EMAIL_TAKEN. The oracle exists on the signup path regardless
+   * of what this endpoint does, so matching the established behaviour is
+   * better than inventing a half-measure that only costs usability.
+   *
+   * Login is different, and stays sealed: there, refusing to say anything
+   * costs the user nothing, because the sign-in screen offers the email route
+   * unconditionally.
+   */
+  @Public()
+  @Post('signup/phone/start')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
+  async phoneSignupStart(@Body() dto: PhoneSignupStartDto, @Req() req: Request) {
+    const existing = await this.candidateReadService.findCandidateUserByVerifiedPhone(dto.phone);
+    if (existing) {
+      throw new ConflictException({ code: 'PHONE_ALREADY_IN_USE' });
+    }
+
+    const result = await this.otpService.issue(
+      dto.phone,
+      OtpPurpose.PHONE_VERIFY,
+      req.ip ?? '0.0.0.0',
+    );
+
+    // A number WhatsApp cannot reach must not silently become a dead signup —
+    // the UI needs this to offer the email route instead.
+    if (result.outcome === 'NOT_ON_WHATSAPP') {
+      throw new ConflictException({ code: 'PHONE_NOT_ON_WHATSAPP' });
+    }
+    if (result.outcome === 'SEND_FAILED') {
+      throw new ServiceUnavailableException({ code: 'OTP_SEND_FAILED' });
+    }
+
+    return { data: { sent: true } };
+  }
+
+  /**
+   * Complete phone signup: prove the code, create the account, sign them in.
+   *
+   * The account is born with `email: null` and `passwordHash: null`. Neither is
+   * a placeholder to be filled in later by guesswork — onboarding asks for an
+   * address and verifies it (`email/verify/*`), then asks for a password
+   * (`password/set`). Until then the phone IS the credential, which is why the
+   * profile is created in the SAME transaction as the user with
+   * `phoneVerifiedAt` already stamped: a user row without a verified phone on
+   * this path would be an account nobody could ever sign back in to.
+   *
+   * `whatsappCapable` is true because a code was just delivered over WhatsApp
+   * and answered — that is the strongest evidence this flag ever gets.
+   */
+  @Public()
+  @Post('signup/phone/verify')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
+  async phoneSignupVerify(
+    @Body() dto: PhoneSignupVerifyDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.otpService.verify(dto.phone, dto.otp, OtpPurpose.PHONE_VERIFY);
+
+    // Re-checked after the code is proven: the number could have been claimed
+    // during the five minutes the code was alive.
+    const existing = await this.candidateReadService.findCandidateUserByVerifiedPhone(dto.phone);
+    if (existing) {
+      throw new ConflictException({ code: 'PHONE_ALREADY_IN_USE' });
+    }
+
+    const now = new Date();
+    const user = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          email: null,
+          passwordHash: null,
+          role: UserRole.CANDIDATE,
+          termsAcceptedAt: now,
+        },
+        select: { id: true, email: true, role: true },
+      });
+      await tx.candidateProfile.create({
+        data: {
+          userId: created.id,
+          fullName: '',
+          phone: dto.phone,
+          phoneVerifiedAt: now,
+          whatsappCapable: true,
+        },
+      });
+      return created;
+    });
+
+    const tokens = await this.tokenService.issue(
+      user.id,
+      user.email,
+      user.role,
+      req.ip,
+      req.headers['user-agent'],
+    );
+    this.setRefreshCookie(res, tokens.refreshToken, tokens.refreshExp);
+
+    return {
+      data: {
+        user: { id: user.id, email: user.email, role: user.role },
+        accessToken: tokens.accessToken,
+      },
+    };
   }
 
   // ─── Phone login (candidates only) ───────────────────────────────────────
@@ -253,5 +380,71 @@ export class OtpController {
       path: '/api/v1/auth',
       maxAge: exp * 1000 - Date.now(),
     });
+  }
+
+  // ─── Email verification (onboarding, phone-signup path) ─────────────────────
+
+  /**
+   * Send an EMAIL_VERIFY code to an address the SIGNED-IN candidate is claiming.
+   *
+   * AUTHENTICATED, unlike the phone-login endpoints: the caller already has an
+   * account (created by phone signup) and is attaching an address to it. That
+   * also means there is nothing to enumerate — the address is the caller's own
+   * claim, not a lookup — so this reports the send outcome HONESTLY instead of
+   * the deliberately vague "if an account exists" used on the login path.
+   *
+   * Rejects an address already in use before sending, so the candidate is told
+   * immediately rather than after typing a code that could never have worked.
+   */
+  @Post('email/verify/start')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
+  async emailVerifyStart(
+    @Body() dto: EmailVerifyStartDto,
+    @CurrentUser() actor: CurrentUserPayload,
+    @Req() req: Request,
+  ) {
+    const taken = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (taken && taken.id !== actor.userId) {
+      throw new ConflictException({ code: 'EMAIL_ALREADY_REGISTERED' });
+    }
+
+    const result = await this.otpService.issueEmail(dto.email, req.ip ?? '0.0.0.0');
+
+    if (result.outcome === 'SEND_FAILED') {
+      throw new ServiceUnavailableException({ code: 'OTP_SEND_FAILED' });
+    }
+    return { data: { sent: true } };
+  }
+
+  /**
+   * Confirm the code and attach the address to the account.
+   *
+   * The write is the point: `email` and `emailVerifiedAt` are set together, in
+   * one update, so an address can never be stored without the proof that it
+   * belongs to this person.
+   */
+  @Post('email/verify/confirm')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
+  async emailVerifyConfirm(
+    @Body() dto: EmailVerifyConfirmDto,
+    @CurrentUser() actor: CurrentUserPayload,
+  ) {
+    await this.otpService.verifyEmail(dto.email, dto.otp);
+
+    // Re-checked AFTER the code is proven: the address could have been claimed
+    // by someone else during the five minutes the code was valid.
+    const taken = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (taken && taken.id !== actor.userId) {
+      throw new ConflictException({ code: 'EMAIL_ALREADY_REGISTERED' });
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: actor.userId },
+      data: { email: dto.email, emailVerifiedAt: new Date() },
+    });
+
+    return { data: { email: updated.email, emailVerifiedAt: updated.emailVerifiedAt } };
   }
 }

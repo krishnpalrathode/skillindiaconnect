@@ -402,6 +402,199 @@ const authOtpVerify = http.post(`${BASE}/auth/otp/verify`, async ({ request }) =
   return HttpResponse.json({ data: { phoneVerified: true, whatsappCapable: true } });
 });
 
+// ─── Phone signup (candidates only) ───────────────────────────────────────────
+
+/**
+ * Unlike `/auth/login/phone/start`, this one ANSWERS whether the number is
+ * taken — the same asymmetry the real API has, and the reason it is worth
+ * modelling here: the signup form's error branch is only exercised if the mock
+ * can produce the 409.
+ */
+const authSignupPhoneStart = http.post(`${BASE}/auth/signup/phone/start`, async ({ request }) => {
+  const body = (await request.json()) as { phone: string };
+
+  if (db.verifiedPhones.has(body.phone) || body.phone === '+919555555555') {
+    return errorResponse(
+      409,
+      'PHONE_ALREADY_IN_USE',
+      'Phone already registered',
+      'This number is already registered with another account.',
+    );
+  }
+
+  if (body.phone === NOT_ON_WHATSAPP_PHONE) {
+    return errorResponse(
+      409,
+      'PHONE_NOT_ON_WHATSAPP',
+      'Phone not on WhatsApp',
+      'This number is not reachable via WhatsApp. Please try a different number.',
+    );
+  }
+
+  if (body.phone === OTP_RATE_LIMITED_PHONE) {
+    return errorResponse(
+      429,
+      'OTP_RATE_LIMITED',
+      'Too Many Requests',
+      'Too many verification codes requested. Please wait before trying again.',
+    );
+  }
+
+  if (body.phone === OTP_SEND_FAILS_PHONE) {
+    return errorResponse(
+      503,
+      'OTP_SEND_FAILED',
+      'Could not send the code',
+      "We couldn't send your code right now. Please try again.",
+    );
+  }
+
+  return HttpResponse.json({ data: { sent: true } });
+});
+
+const authSignupPhoneVerify = http.post(`${BASE}/auth/signup/phone/verify`, async ({ request }) => {
+  const body = (await request.json()) as { phone: string; otp: string; acceptedTerms: boolean };
+
+  if (body.otp !== MOCK_OTP) {
+    return errorResponse(
+      401,
+      'INVALID_OTP',
+      'Invalid OTP',
+      'OTP is incorrect, expired, or too many attempts.',
+    );
+  }
+
+  if (db.verifiedPhones.has(body.phone)) {
+    return errorResponse(
+      409,
+      'PHONE_ALREADY_IN_USE',
+      'Phone already registered',
+      'This number is already registered with another account.',
+    );
+  }
+
+  const id = `mock-user-${Date.now()}`;
+  // email and passwordHash are NULL — the phone is the credential. This is the
+  // shape onboarding then fills in, and the reason the mock user type allows it.
+  db.users.set(id, {
+    id,
+    email: null,
+    passwordHash: null,
+    role: 'CANDIDATE',
+    status: 'ACTIVE',
+  });
+  db.verifiedPhones.set(body.phone, id);
+  db.candidates.set(id, {
+    userId: id,
+    profile: buildProfile(id, null, {
+      phone: body.phone,
+      phoneVerifiedAt: new Date().toISOString(),
+      // The shape onboarding then fills in — this is what makes the mock
+      // exercise the email + password steps rather than the phone one.
+      hasPassword: false,
+      hasGoogle: false,
+    }),
+    resumeSettings: {
+      language: 'en',
+      showPhone: true,
+      showReligion: false,
+      showFatherName: false,
+      showPassportNumber: false,
+      template: 'CLASSIC',
+    },
+    lastRenderedAt: null,
+  });
+
+  const { accessToken } = issueTokens(id);
+  return HttpResponse.json({
+    data: { user: { id, email: null, role: 'CANDIDATE' }, accessToken },
+  });
+});
+
+// ─── Email verification + first password (phone-signup onboarding) ────────────
+
+const authEmailVerifyStart = http.post(`${BASE}/auth/email/verify/start`, async ({ request }) => {
+  const body = (await request.json()) as { email: string };
+  const caller = getAuthUser(request);
+  if (!caller) return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Sign in required.');
+
+  const taken = [...db.users.values()].find((u) => u.email === body.email && u.id !== caller.id);
+  if (taken) {
+    return errorResponse(
+      409,
+      'EMAIL_ALREADY_REGISTERED',
+      'Email already registered',
+      'An account with this email already exists.',
+    );
+  }
+
+  return HttpResponse.json({ data: { sent: true } });
+});
+
+const authEmailVerifyConfirm = http.post(
+  `${BASE}/auth/email/verify/confirm`,
+  async ({ request }) => {
+    const body = (await request.json()) as { email: string; otp: string };
+    const caller = getAuthUser(request);
+    if (!caller) return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Sign in required.');
+
+    if (body.otp !== MOCK_OTP) {
+      return errorResponse(
+        401,
+        'INVALID_OTP',
+        'Invalid OTP',
+        'OTP is incorrect, expired, or too many attempts.',
+      );
+    }
+
+    const taken = [...db.users.values()].find((u) => u.email === body.email && u.id !== caller.id);
+    if (taken) {
+      return errorResponse(
+        409,
+        'EMAIL_ALREADY_REGISTERED',
+        'Email already registered',
+        'An account with this email already exists.',
+      );
+    }
+
+    const user = db.users.get(caller.id);
+    if (user) user.email = body.email;
+    const candidate = db.candidates.get(caller.id);
+    if (candidate) {
+      candidate.profile.email = body.email;
+      candidate.profile.emailVerifiedAt = new Date().toISOString();
+    }
+
+    return HttpResponse.json({
+      data: { email: body.email, emailVerifiedAt: new Date().toISOString() },
+    });
+  },
+);
+
+const authPasswordSet = http.post(`${BASE}/auth/password/set`, async ({ request }) => {
+  const caller = getAuthUser(request);
+  if (!caller) return errorResponse(401, 'UNAUTHORIZED', 'Unauthorized', 'Sign in required.');
+
+  const user = db.users.get(caller.id);
+  // Refuses to overwrite, exactly as the API does — a repeat call is a
+  // conflict, not a silent reset.
+  if (!user || user.passwordHash) {
+    return errorResponse(
+      409,
+      'PASSWORD_ALREADY_SET',
+      'Password already set',
+      'This account already has a password.',
+    );
+  }
+
+  user.passwordHash = 'hashed';
+  // Keep the profile the onboarding step reads in step with the user row,
+  // otherwise the password step would reappear on the next fetch.
+  const candidate = db.candidates.get(caller.id);
+  if (candidate) candidate.profile.hasPassword = true;
+  return HttpResponse.json({ data: { passwordSet: true } });
+});
+
 const authLoginPhoneStart = http.post(`${BASE}/auth/login/phone/start`, () => {
   return HttpResponse.json({ data: { message: 'If an account exists, an OTP has been sent.' } });
 });
@@ -1767,6 +1960,15 @@ const publishJob = http.post(`${BASE}/employers/me/jobs/:id/publish`, ({ request
 
   job.status = 'ACTIVE';
   job.publishedAt = new Date().toISOString();
+  /*
+    The real API stamps autoArchiveAt at publish, from the jobs.auto_archive_days
+    setting (90 by default). The mock has to as well: the post-publish notice
+    reads this field to tell the employer when the posting expires, and a mock
+    that left it null would show the "pending review" branch instead — passing
+    tests for a message the employer would never see in production.
+  */
+  const AUTO_ARCHIVE_DAYS = 45;
+  job.autoArchiveAt = new Date(Date.now() + AUTO_ARCHIVE_DAYS * 86400000).toISOString();
   return HttpResponse.json({ data: job });
 });
 
@@ -4917,6 +5119,11 @@ export const handlers = [
   authOtpVerify,
   authLoginPhoneStart,
   authLoginPhoneVerify,
+  authSignupPhoneStart,
+  authSignupPhoneVerify,
+  authEmailVerifyStart,
+  authEmailVerifyConfirm,
+  authPasswordSet,
   authForgotPassword,
   authResetPassword,
   // Candidate profile

@@ -21,6 +21,7 @@ import { PrismaService } from '../../core/prisma/prisma.service';
 import { MetricsService } from '../../core/observability/metrics.service';
 import { REDIS_CLIENT } from '../../core/redis/redis.provider';
 import { WHATSAPP_CHANNEL } from '../../notifications/channels/whatsapp.channel';
+import { EMAIL_CHANNEL } from '../../notifications/channels/email.channel';
 
 const PHONE = '+911234567890';
 const IP = '203.0.113.9';
@@ -62,6 +63,10 @@ describe('OtpService.issue — a send failure must never become a 500', () => {
         { provide: PrismaService, useValue: prismaMock },
         { provide: REDIS_CLIENT, useValue: redisMock },
         { provide: WHATSAPP_CHANNEL, useValue: { sendOtp } },
+        {
+          provide: EMAIL_CHANNEL,
+          useValue: { sendOtp: jest.fn().mockResolvedValue({ ok: true }) },
+        },
         MetricsService,
         { provide: ConfigService, useValue: { get: () => undefined } },
       ],
