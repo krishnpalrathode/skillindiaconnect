@@ -384,6 +384,12 @@ components:
         email:
           type: string
           format: email
+          nullable: true
+          description: >
+            NULL for an account created through phone signup, until onboarding
+            verifies an address. The phone number is the credential on that
+            path, so the column is genuinely empty rather than a placeholder —
+            clients must handle null and must not print it as "null".
         role:
           $ref: '#/components/schemas/UserRole'
 
@@ -512,6 +518,12 @@ components:
         email:
           type: string
           format: email
+          nullable: true
+          description: >
+            NULL for an account created through phone signup, until onboarding
+            verifies an address. The phone number is the credential on that
+            path, so the column is genuinely empty rather than a placeholder —
+            clients must handle null and must not print it as "null".
         role:
           $ref: '#/components/schemas/UserRole'
         fullName:
@@ -3577,6 +3589,344 @@ paths:
                 status: 401
                 detail: OTP is incorrect, expired, or too many attempts.
                 code: INVALID_OTP
+
+  # ── Auth: phone signup (candidates only) ──────────────────────────────────────
+  /auth/signup/phone/start:
+    post:
+      operationId: postAuthSignupPhoneStart
+      tags: [auth]
+      summary: Start creating a candidate account from a phone number
+      description: |
+        Sends a `purpose = PHONE_VERIFY` OTP to a number that does NOT yet have
+        an account.
+
+        **NOT enumeration-safe, deliberately — unlike `/auth/login/phone/start`.**
+        A registered number returns 409 `PHONE_ALREADY_IN_USE` so the client can
+        send the user to sign-in. A signup endpoint cannot hide this and still
+        work: silence would either create a second account on the number or
+        leave the user waiting for a code that will never arrive. The email
+        signup path already answers the same question with `EMAIL_TAKEN`.
+
+        Login is different and stays sealed, because there the silence costs the
+        user nothing — the sign-in screen offers email unconditionally.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone:
+                  type: string
+                  example: '+919876543210'
+      responses:
+        '200':
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [sent]
+                    properties:
+                      sent:
+                        type: boolean
+                        example: true
+        '409':
+          description: >
+            `PHONE_ALREADY_IN_USE` — the number already has an account, so this
+            is a sign-in, not a signup. `PHONE_NOT_ON_WHATSAPP` — the number
+            cannot receive the code; offer the email route instead.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: >
+            `OTP_SEND_FAILED` — the provider is down. Reported honestly rather
+            than as `sent: true`, so the client can offer a retry instead of
+            leaving the user waiting for a code that never left.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/signup/phone/verify:
+    post:
+      operationId: postAuthSignupPhoneVerify
+      tags: [auth]
+      summary: Complete phone signup — create the account and sign in
+      description: |
+        Verifies the `PHONE_VERIFY` OTP, creates the CANDIDATE account, and
+        issues tokens exactly as email signup does.
+
+        **The account is created with `email: null` and no password** — the
+        phone number is the credential. Onboarding then collects an address
+        (`/auth/email/verify/*`) and a password (`/auth/password/set`).
+
+        The user row and the profile carrying the verified phone are written in
+        ONE transaction: a user with no email, no password and no verified
+        number would be an account nobody could ever sign back in to.
+
+        `acceptedTerms` is captured HERE rather than at the start step, so
+        `termsAcceptedAt` dates the agreement to the moment the account came
+        into existence.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, otp, acceptedTerms]
+              properties:
+                phone:
+                  type: string
+                  example: '+919876543210'
+                otp:
+                  type: string
+                  example: '123456'
+                acceptedTerms:
+                  type: boolean
+                  enum: [true]
+      responses:
+        '200':
+          description: Account created — tokens issued. `user.email` is null.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AuthTokenResponse'
+        '401':
+          description: Invalid, expired, or over-attempted OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                type: about:blank
+                title: Invalid OTP
+                status: 401
+                detail: OTP is incorrect, expired, or too many attempts.
+                code: INVALID_OTP
+        '409':
+          description: >
+            `PHONE_ALREADY_IN_USE` — the number was claimed by someone else
+            while this code was still valid. Proving the code does not entitle
+            the caller to a number that has since been taken.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ── Auth: email verification (phone-signup onboarding) ────────────────────────
+  /auth/email/verify/start:
+    post:
+      operationId: postAuthEmailVerifyStart
+      tags: [auth]
+      summary: Send a verification code to an email address
+      description: |
+        For the SIGNED-IN candidate. Sends a `purpose = EMAIL_VERIFY` code to the
+        address supplied in the body.
+
+        The address is in the body rather than read from the account because the
+        account may not have one yet — that is the point of the phone-signup
+        path. Nothing is written to `users.email` until the code comes back
+        verified.
+
+        Unlike notification-tier email, this send happens INLINE in the API
+        process: the user is sitting at the code-entry box, so a queue hop would
+        only add latency to a request whose entire purpose is that code. This is
+        the same reasoning recorded for the WhatsApp OTP exception.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Code sent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [sent]
+                    properties:
+                      sent:
+                        type: boolean
+                        example: true
+        '409':
+          description: >
+            `EMAIL_ALREADY_REGISTERED` — the address belongs to another account.
+            Checked BEFORE sending, so a code is never mailed to an address the
+            caller could not attach anyway.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: '`OTP_SEND_FAILED` — the mail provider is down; offer a retry.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/email/verify/confirm:
+    post:
+      operationId: postAuthEmailVerifyConfirm
+      tags: [auth]
+      summary: Confirm the code and attach the address to the account
+      description: |
+        Verifies the `EMAIL_VERIFY` code and writes `email` and
+        `emailVerifiedAt` in a SINGLE update — an address is never stored
+        without the proof that it belongs to this person.
+
+        The collision check runs again here, after the code is proven, because
+        the address can be claimed by someone else during the five minutes the
+        code stays valid.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, otp]
+              properties:
+                email:
+                  type: string
+                  format: email
+                otp:
+                  type: string
+                  example: '123456'
+      responses:
+        '200':
+          description: Address verified and attached
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [email, emailVerifiedAt]
+                    properties:
+                      email:
+                        type: string
+                        format: email
+                      emailVerifiedAt:
+                        type: string
+                        format: date-time
+        '401':
+          description: Invalid, expired, or over-attempted code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: >
+            `EMAIL_ALREADY_REGISTERED` — claimed by another account while the
+            code was valid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/password/set:
+    post:
+      operationId: postAuthPasswordSet
+      tags: [auth]
+      summary: Set the first password on an account that has none
+      description: |
+        For the SIGNED-IN candidate, during phone-signup onboarding. Gives the
+        account a second way in, because a phone number can be lost, changed, or
+        left behind in another country.
+
+        **This is not "change password".** It takes no current password — the
+        access token is the only proof — which is sound only while there is no
+        credential to protect. An account that already has one (including a
+        Google-linked account) gets 409 `PASSWORD_ALREADY_SET`; otherwise a
+        stolen access token would be enough to lock someone out of their own
+        account. Changing an existing password goes through
+        `/auth/forgot-password` → `/auth/reset-password`, which proves control
+        of the mailbox.
+
+        The caller is taken from the token, never the body, so one account can
+        never set a password on another.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password:
+                  type: string
+                  minLength: 8
+                  description: >
+                    Same strength rules as signup: at least 8 characters, with
+                    an uppercase letter, a lowercase letter, and a digit.
+      responses:
+        '200':
+          description: Password set
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [passwordSet]
+                    properties:
+                      passwordSet:
+                        type: boolean
+                        example: true
+        '409':
+          description: >
+            `PASSWORD_ALREADY_SET` — the account already has a credential. Also
+            returned when a concurrent request won the race.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   # ── Auth: password reset ──────────────────────────────────────────────────────
   /auth/forgot-password:
