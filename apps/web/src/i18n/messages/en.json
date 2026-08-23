@@ -86,7 +86,6 @@
       "languages": "Languages",
       "experience": "Work experience",
       "noExperience": "No work experience added yet.",
-      "years": "{years}y {months}m",
       "skills": "Skills",
       "noSkills": "No skills added yet.",
       "documents": "Documents",
@@ -96,7 +95,9 @@
         "PASSPORT": "Passport",
         "EXPERIENCE_CERT": "Experience certificate",
         "EDUCATIONAL_CERT": "Educational certificate"
-      }
+      },
+      "durationYears": "{count, plural, one {# year} other {# years}}",
+      "durationMonths": "{count, plural, one {# month} other {# months}}"
     },
     "status": {
       "generatingTitle": "Generating your resume…",
@@ -534,7 +535,9 @@
       "monthsLabel": "Months",
       "softBlock": "Adding experience improves your match score",
       "saveExperience": "Save experience",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "durationYears": "{count, plural, one {# year} other {# years}}",
+      "durationMonths": "{count, plural, one {# month} other {# months}}"
     },
     "documentsSkills": {
       "title": "Documents & Skills",
@@ -971,8 +974,8 @@
           "title": "Work experience",
           "india": "India",
           "foreign": "International",
-          "years": "{count, plural, one {# yr} other {# yrs}}",
-          "months": "{count, plural, one {# mo} other {# mos}}"
+          "years": "{count, plural, one {# year} other {# years}}",
+          "months": "{count, plural, one {# month} other {# months}}"
         },
         "documents": {
           "title": "Documents",
@@ -1572,7 +1575,7 @@
     "matchShort": "{score}% match",
     "gulfBadge": "International experience",
     "ageYears": "{age} yrs",
-    "expYears": "{years} yrs exp",
+    "expYears": "{years, plural, one {# year experience} other {# years experience}}",
     "appliedAgo": "Applied {ago}",
     "showMore": "Show more",
     "showLess": "Show less",
@@ -1740,10 +1743,11 @@
         "experienceHeading": "Work experience",
         "experienceNone": "No work experience added.",
         "experiencePurged": "Experience records were destroyed when this account was purged.",
-        "experienceYears": "{years}y {months}m",
         "dangerZoneHeading": "Danger zone — permanently erase this person's data",
         "dangerZoneBody": "Purging anonymizes this account and destroys all personal data and documents. It cannot be undone.",
-        "purgeButton": "Purge this account…"
+        "purgeButton": "Purge this account…",
+        "durationYears": "{count, plural, one {# year} other {# years}}",
+        "durationMonths": "{count, plural, one {# month} other {# months}}"
       },
       "documents": {
         "heading": "Documents",

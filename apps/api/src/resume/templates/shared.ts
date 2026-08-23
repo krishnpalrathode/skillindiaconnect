@@ -221,11 +221,30 @@ export function documentLabel(type: string): string {
   }
 }
 
-/** "4 yr 2 mo" / "" — shared formatting, each template decides where it goes. */
+/**
+ * "4 years 2 months" / "1 year" / "" — shared formatting, each template decides
+ * where it goes.
+ *
+ * ── Spelled out, not "4 yr 2 mo" ───────────────────────────────────────────
+ * This is a document a candidate hands to an employer, often in a second
+ * language on both sides. "yr" and "mo" are compressions that save four
+ * characters of a line that was never short of room, and they cost fluency
+ * exactly where the reader is judging it. The cover letter beside it has always
+ * written "4 years 2 months" in full; the resume now matches.
+ *
+ * ── PLURALISED, which is not what "make it year" literally asked for ───────
+ * "4 year" is not English, and a grammatical error on a CV is read as the
+ * candidate's error, not the template's. So the count decides: one year, four
+ * years. This is also the convention the product already follows elsewhere —
+ * `jobs.detail.experienceYears` reads `one {# year} other {# years}`.
+ *
+ * Zero parts stay omitted, as before: "3 years" never becomes "3 years
+ * 0 months".
+ */
 export function durationLabel(years: number, months: number): string {
   const parts: string[] = [];
-  if (years > 0) parts.push(`${years} yr`);
-  if (months > 0) parts.push(`${months} mo`);
+  if (years > 0) parts.push(`${years} ${years === 1 ? 'year' : 'years'}`);
+  if (months > 0) parts.push(`${months} ${months === 1 ? 'month' : 'months'}`);
   return parts.join(' ');
 }
 
