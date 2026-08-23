@@ -366,11 +366,37 @@ export class NotificationProcessor extends WorkerHost {
 
   private async sendEmailDirect(
     userId: string,
-    toEmail: string,
+    toEmail: string | null,
     type: NotificationType,
     payload: NotifyPayload,
     reason: string,
   ): Promise<void> {
+    /*
+      No address to send to.
+
+      A candidate who signed up by phone has no email until onboarding collects
+      one, and this is also the WhatsApp FALLBACK path — so arriving here with a
+      null address means the notification has nowhere left to go.
+
+      That is recorded as a FAILED delivery, not swallowed. The rule is that we
+      never silently claim a notification was delivered; a missing address is a
+      delivery outcome like any other, and the audit row is what makes it
+      visible instead of a message that simply never arrives.
+    */
+    if (!toEmail) {
+      await this.auditService.log({
+        module: AUDIT_MODULES.NOTIFICATIONS,
+        action: AUDIT_ACTIONS.NOTIFICATION_DELIVERED,
+        status: AuditStatus.FAILED,
+        actorUserId: userId,
+        meta: { type, channel: 'email', reason: 'no_email_address', origin: reason },
+      });
+      this.logger.warn(
+        `email notification ${type} for user ${userId} skipped: no address on the account (${reason})`,
+      );
+      return;
+    }
+
     const msgRow = await this.prisma.emailMessage.create({
       data: {
         userId,

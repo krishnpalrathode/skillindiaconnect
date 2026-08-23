@@ -250,12 +250,29 @@ enum AuditStatus {
 enum OtpPurpose {
   PHONE_VERIFY
   LOGIN
+  /// Proving an email address, sent over email rather than WhatsApp. Used by
+  /// onboarding when the candidate signed up with a phone and has no address yet.
+  EMAIL_VERIFY
 }
 
 // ───────── IDENTITY & AUTH ─────────
 model User {
   id               String     @id @default(uuid())
-  email            String     @unique @db.Citext
+  /// NULLABLE since phone signup.
+  ///
+  /// A candidate who signs up with a phone number has no email at the moment the
+  /// account is created — onboarding collects and verifies one immediately
+  /// afterwards, so the null window is short but it is real. Everything that
+  /// reads this must tolerate null: the JWT payload, the notification email
+  /// tier, and the admin/resume mappers.
+  ///
+  /// Postgres allows many NULLs under a UNIQUE index, so uniqueness still holds
+  /// for every address that IS set.
+  email            String?    @unique @db.Citext
+  /// When the address above was proven, by an EMAIL_VERIFY OTP. Null means
+  /// unverified — which includes every account created before this existed, so
+  /// it must never be read as "this user is fake".
+  emailVerifiedAt  DateTime?
   passwordHash     String?
   googleId         String?    @unique
   role             UserRole
@@ -316,7 +333,12 @@ model PasswordResetToken {
 
 model OtpChallenge {
   id         String     @id @default(uuid())
-  phone      String
+  /// The destination, ONE of which is set — phone for PHONE_VERIFY/LOGIN, email
+  /// for EMAIL_VERIFY. Both are nullable rather than a single polymorphic
+  /// "destination" column so the indexes stay typed and a phone lookup can never
+  /// accidentally match an email row.
+  phone      String?
+  email      String?    @db.Citext
   userId     String?
   purpose    OtpPurpose @default(PHONE_VERIFY)
   codeHash   String
@@ -325,6 +347,7 @@ model OtpChallenge {
   consumedAt DateTime?
   createdAt  DateTime   @default(now())
   @@index([phone, purpose, createdAt])
+  @@index([email, purpose, createdAt])
   @@map("otp_challenges")
 }
 

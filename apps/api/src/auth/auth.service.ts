@@ -19,7 +19,8 @@ export interface GoogleUser {
 }
 
 interface AuthResult extends IssuedTokens {
-  user: { id: string; email: string; role: UserRole };
+  // email is nullable on the column since phone signup; the response mirrors it.
+  user: { id: string; email: string | null; role: UserRole };
 }
 
 interface GoogleCallbackResult extends IssuedTokens {
@@ -38,7 +39,8 @@ export class AuthService {
   async signup(dto: SignupDto, ip?: string, userAgent?: string): Promise<AuthResult> {
     const passwordHash = await this.passwordService.hashPassword(dto.password);
 
-    let user: { id: string; email: string; role: UserRole };
+    // email mirrors the column, which is nullable since phone signup.
+    let user: { id: string; email: string | null; role: UserRole };
     try {
       user = await this.prisma.user.create({
         data: {
