@@ -65,6 +65,50 @@ export class AuthService {
     return { user, ...tokens };
   }
 
+  /**
+   * Set the FIRST password on an account that has none.
+   *
+   * Phone signup creates an account with `passwordHash: null` — the phone is
+   * the credential. Onboarding then asks for a password so the account has a
+   * second way in (Decision 2), because a phone number can be lost, changed,
+   * or left behind in another country, and WhatsApp delivery is not something
+   * we control.
+   *
+   * ── Why it refuses when a password already exists ────────────────────────
+   * This endpoint takes no current password — the access token is the only
+   * proof. That is sound for an account with nothing to protect yet, and
+   * unsound the moment there is. If it were allowed to overwrite, a stolen or
+   * borrowed access token would be enough to change someone's password and
+   * lock them out of their own account. Changing an existing password keeps
+   * going through reset-password, which proves control of the mailbox.
+   *
+   * Google-only accounts are covered by the same rule for the same reason:
+   * they have a credential already, so this is not their path.
+   */
+  async setPassword(userId: string, password: string): Promise<void> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { passwordHash: true },
+    });
+
+    if (user.passwordHash) {
+      throw new ConflictException({ code: 'PASSWORD_ALREADY_SET' });
+    }
+
+    const passwordHash = await this.passwordService.hashPassword(password);
+
+    // Guarded on passwordHash still being null, so two concurrent requests
+    // cannot both pass the check above and race to write different hashes.
+    const { count } = await this.prisma.user.updateMany({
+      where: { id: userId, passwordHash: null },
+      data: { passwordHash },
+    });
+
+    if (count === 0) {
+      throw new ConflictException({ code: 'PASSWORD_ALREADY_SET' });
+    }
+  }
+
   async login(dto: LoginDto, ip?: string, userAgent?: string): Promise<AuthResult> {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
 
