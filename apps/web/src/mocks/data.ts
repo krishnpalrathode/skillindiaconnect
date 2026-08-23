@@ -195,8 +195,10 @@ export const PURGEABLE_CANDIDATE_USER_ID = 'mock-user-candidate-purgeable';
 
 export interface MockUser {
   id: string;
-  email: string;
-  passwordHash: string;
+  // Nullable, exactly as the real columns are: a phone-signup account has
+  // neither until onboarding collects them.
+  email: string | null;
+  passwordHash: string | null;
   role: 'CANDIDATE' | 'EMPLOYER' | 'ADMIN' | 'SUPER_ADMIN' | 'MODERATOR' | 'SUPPORT';
   status: 'ACTIVE' | 'SUSPENDED' | 'PENDING_DELETION';
 }
@@ -2689,7 +2691,7 @@ export function makeAccessToken(userId: string): string {
   const payload = btoa(
     JSON.stringify({
       sub: userId,
-      email: user?.email ?? '',
+      email: user?.email ?? null,
       role: user?.role ?? 'CANDIDATE',
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 900,

@@ -311,7 +311,17 @@
       "body": "You will need to sign in again to see your applications and job matches.",
       "confirm": "Log out",
       "cancel": "Stay signed in"
-    }
+    },
+    "identifierLabel": "Email address or mobile number",
+    "identifierPlaceholder": "you@example.com or 9876543210",
+    "employerNeedsEmail": "Employers sign up with a work email address.",
+    "verifyAndCreate": "Verify & create account",
+    "phoneTaken": "This number is already registered with another account. Please use a different number.",
+    "otpNotOnWhatsapp": "This number is not on WhatsApp. Please try another number.",
+    "otpSendFailed": "We couldn't send your code right now. Please try again, or sign up with an email address instead.",
+    "identifierHintPhone": "We'll send a WhatsApp OTP to confirm your number",
+    "phoneCodeSearch": "Search country or code",
+    "phoneCodeEmpty": "No country matches"
   },
   "profile": {
     "title": "My Profile",
