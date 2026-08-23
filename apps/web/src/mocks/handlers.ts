@@ -486,7 +486,14 @@ const authSignupPhoneVerify = http.post(`${BASE}/auth/signup/phone/verify`, asyn
   db.verifiedPhones.set(body.phone, id);
   db.candidates.set(id, {
     userId: id,
-    profile: buildProfile(id, '', { phone: body.phone, phoneVerifiedAt: new Date().toISOString() }),
+    profile: buildProfile(id, null, {
+      phone: body.phone,
+      phoneVerifiedAt: new Date().toISOString(),
+      // The shape onboarding then fills in — this is what makes the mock
+      // exercise the email + password steps rather than the phone one.
+      hasPassword: false,
+      hasGoogle: false,
+    }),
     resumeSettings: {
       language: 'en',
       showPhone: true,
@@ -553,7 +560,10 @@ const authEmailVerifyConfirm = http.post(
     const user = db.users.get(caller.id);
     if (user) user.email = body.email;
     const candidate = db.candidates.get(caller.id);
-    if (candidate) candidate.profile.email = body.email;
+    if (candidate) {
+      candidate.profile.email = body.email;
+      candidate.profile.emailVerifiedAt = new Date().toISOString();
+    }
 
     return HttpResponse.json({
       data: { email: body.email, emailVerifiedAt: new Date().toISOString() },
@@ -578,6 +588,10 @@ const authPasswordSet = http.post(`${BASE}/auth/password/set`, async ({ request 
   }
 
   user.passwordHash = 'hashed';
+  // Keep the profile the onboarding step reads in step with the user row,
+  // otherwise the password step would reappear on the next fetch.
+  const candidate = db.candidates.get(caller.id);
+  if (candidate) candidate.profile.hasPassword = true;
   return HttpResponse.json({ data: { passwordSet: true } });
 });
 

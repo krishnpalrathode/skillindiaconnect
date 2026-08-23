@@ -2661,7 +2661,8 @@ export function buildResumeView(candidate: MockCandidate, settings: ResumeSettin
 
 export function buildProfile(
   id: string,
-  email: string,
+  // Nullable, like the column: a phone-signup account has no address yet.
+  email: string | null,
   overrides: Partial<CandidateProfile>,
 ): CandidateProfile {
   return {
@@ -2671,6 +2672,11 @@ export function buildProfile(
     fullName: '',
     phone: undefined,
     phoneVerifiedAt: null,
+    emailVerifiedAt: email ? new Date().toISOString() : null,
+    // Defaults describe an EMAIL signup — the common case, and the one every
+    // existing fixture is. The phone-signup handler overrides both.
+    hasPassword: true,
+    hasGoogle: false,
     whatsappCapable: null,
     completionPct: 0,
     profileVisible: true,

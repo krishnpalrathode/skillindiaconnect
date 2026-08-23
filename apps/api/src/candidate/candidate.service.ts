@@ -370,6 +370,17 @@ export class CandidateService {
     userId: string,
   ): Promise<CandidateProfileWithRelations> {
     const include = {
+      /*
+        Onboarding has to know which credentials this account already has, and
+        the answer must survive a reload — so it is read from the user row here
+        rather than remembered client-side. SELECTED, not included whole: the
+        password hash must never travel further than this query, so only the
+        three fields the self mapper serializes are fetched, and `hasPassword`
+        is derived into a boolean before it reaches the wire.
+      */
+      user: {
+        select: { email: true, emailVerifiedAt: true, passwordHash: true, googleId: true },
+      },
       experiences: { orderBy: { createdAt: 'desc' as const } },
       skills: { orderBy: { name: 'asc' as const } },
       documents: { orderBy: { uploadedAt: 'desc' as const } },

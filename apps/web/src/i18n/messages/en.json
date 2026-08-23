@@ -612,6 +612,42 @@
       "MARRIED": "Married",
       "DIVORCED": "Divorced",
       "WIDOWED": "Widowed"
+    },
+    "emailVerify": {
+      "title": "Verify your email address",
+      "subtitle": "We'll send a 6-digit code to confirm your address",
+      "label": "Email address",
+      "placeholder": "you@example.com",
+      "send": "Send code",
+      "otpSent": "Enter the 6-digit code sent to your email",
+      "resend": "Resend code",
+      "resendIn": "Resend in {seconds}s",
+      "change": "Change",
+      "verified": "Email verified",
+      "emailTaken": "This email is already registered with another account. Please use a different one.",
+      "otpInvalid": "Invalid or expired code. Please try again.",
+      "sendFailed": "We couldn't send your code right now. Please try again in a moment.",
+      "rateLimited": "Too many codes requested. Please wait a little before trying again.",
+      "sendError": "Something went wrong. Please try again."
+    },
+    "setPassword": {
+      "title": "Set a password",
+      "subtitle": "So you can sign in with your email even if you change your phone number or lose your SIM.",
+      "label": "Password",
+      "confirmLabel": "Confirm password",
+      "placeholder": "At least 8 characters",
+      "save": "Save password",
+      "done": "Password set",
+      "doneHint": "You can now sign in with your email and password, or your phone number.",
+      "tooWeak": "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number.",
+      "mismatch": "The two passwords do not match.",
+      "error": "Something went wrong. Please try again.",
+      "strength": {
+        "weak": "Weak",
+        "fair": "Fair",
+        "good": "Good",
+        "strong": "Strong"
+      }
     }
   },
   "employer": {

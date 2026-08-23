@@ -3216,6 +3216,15 @@ export interface components {
             phone?: string;
             /** Format: date-time */
             phoneVerifiedAt?: string | null;
+            /**
+             * Format: date-time
+             * @description SELF VIEWER ONLY. When the address on the account was proved. Null on a phone-signup account until onboarding verifies one.
+             */
+            emailVerifiedAt?: string | null;
+            /** @description SELF VIEWER ONLY. Whether a password is set. A boolean, never the hash — that does not leave the server for any viewer, including the account owner. */
+            hasPassword?: boolean;
+            /** @description SELF VIEWER ONLY. Whether the account is linked to Google. A Google account has no password either, so hasPassword alone cannot tell it apart from a phone-signup account that still owes one — onboarding needs both to know whether the set-password step applies. */
+            hasGoogle?: boolean;
             /** @description Set to true when OTP verification succeeds via WhatsApp channel */
             whatsappCapable?: boolean | null;
             maritalStatus?: components["schemas"]["MaritalStatus"];
