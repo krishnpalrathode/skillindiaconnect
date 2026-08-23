@@ -18,6 +18,11 @@ export const QUEUE_NAMES = {
   INTEREST_NOTIFY: 'interest-notify',
   // Daily scan for candidates who have not signed in for 30 days.
   CANDIDATE_INACTIVITY: 'candidate-inactivity',
+  /**
+   * Hourly scan for candidates who registered but have not reached the apply
+   * threshold 24 hours later — the one-time "finish your profile" nudge.
+   */
+  PROFILE_NUDGE: 'profile-nudge',
 } as const;
 
 export const JOB_NAMES = {
@@ -31,6 +36,7 @@ export const JOB_NAMES = {
   AUTO_ARCHIVE_JOBS: 'auto-archive-jobs',
   PASSPORT_EXPIRY_SCAN: 'passport-expiry-scan',
   INACTIVITY_SCAN: 'inactivity-scan',
+  PROFILE_NUDGE_SCAN: 'profile-nudge-scan',
   SUBSCRIPTION_LIFECYCLE_SWEEP: 'subscription-lifecycle-sweep',
   // S7-B1
   GENERATE_RESUME: 'generate-resume',

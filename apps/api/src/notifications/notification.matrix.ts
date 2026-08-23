@@ -120,9 +120,19 @@ export const NOTIFICATION_MATRIX: Record<NotificationType, MatrixEntry> = {
     email: false,
   },
   // ── Profile / compliance reminders ────────────────────────────────────────────
+  /**
+   * The one-time "finish your profile" nudge, 24h after registering.
+   *
+   * WhatsApp is the primary channel deliberately: this audience reads WhatsApp
+   * and frequently does not read email, and the message is worthless if it is
+   * not seen. Email stays on as the fallback the fan-out already applies when
+   * `whatsappCapable` is false or the send fails.
+   */
   PROFILE_REMINDER: {
     inApp: true,
-    whatsapp: false,
+    whatsapp: true,
+    whatsappTemplate: 'wa.profile_reminder',
+    whatsappKind: WaMessageKind.STATUS_UPDATE,
     email: true,
   },
   PASSPORT_EXPIRY: {

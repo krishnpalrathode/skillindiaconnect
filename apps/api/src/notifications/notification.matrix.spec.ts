@@ -55,11 +55,27 @@ describe('NOTIFICATION_MATRIX — Phase-1 §6 locked spec', () => {
 
   // ── PROFILE / COMPLIANCE events ───────────────────────────────────────────
 
-  it('PROFILE_REMINDER → whatsapp ✗ · email ✓ · inApp ✓', () => {
+  /*
+    CHANGED DELIBERATELY, from whatsapp ✗ to ✓.
+
+    PROFILE_REMINDER was declared in the matrix with email copy and NO producer
+    — nothing in the system ever sent one. It is now the one-time "finish your
+    profile" nudge fired 24h after registering, and WhatsApp is its primary
+    channel because this audience reads WhatsApp and often does not read email;
+    a nudge nobody sees is not a nudge.
+
+    Email stays TRUE as the fallback the fan-out already applies when
+    `whatsappCapable` is false or the send fails, so a candidate without a
+    verified phone is still reached.
+  */
+  it('PROFILE_REMINDER → whatsapp ✓ · email ✓ · inApp ✓', () => {
     const e = NOTIFICATION_MATRIX[NotificationType.PROFILE_REMINDER];
     expect(e.inApp).toBe(true);
-    expect(e.whatsapp).toBe(false);
+    expect(e.whatsapp).toBe(true);
     expect(e.email).toBe(true);
+    // whatsapp:true without a template key reaches the Graph API as a raw enum
+    // name — the failure resolveMetaTemplate() exists to make loud.
+    expect(e.whatsappTemplate).toBe('wa.profile_reminder');
   });
 
   it('PASSPORT_EXPIRY → whatsapp ✗ · email ✓ · inApp ✓', () => {
