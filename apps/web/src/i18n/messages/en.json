@@ -441,6 +441,12 @@
       "errTooLarge": "That file is over {maxMb} MB. Record a shorter clip or use a lower quality setting.",
       "errTooLong": "That video is longer than {max}. Please record a shorter one.",
       "errUnreadable": "We couldn't read that video. Please try an MP4 recorded on your phone."
+    },
+    "applyUnlocked": {
+      "title": "You can now apply for jobs",
+      "body": "Your profile is {pct}% complete — that is enough to start applying. Browse open jobs and send your first application.",
+      "browseJobs": "Browse jobs",
+      "later": "Later"
     }
   },
   "document": {
