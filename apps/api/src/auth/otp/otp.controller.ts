@@ -25,6 +25,8 @@ import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { PhoneLoginStartDto } from './dto/phone-login-start.dto';
 import { PhoneLoginVerifyDto } from './dto/phone-login-verify.dto';
+import { EmailVerifyStartDto } from './dto/email-verify-start.dto';
+import { EmailVerifyConfirmDto } from './dto/email-verify-confirm.dto';
 
 const REFRESH_COOKIE = 'sic_refresh';
 
@@ -253,5 +255,71 @@ export class OtpController {
       path: '/api/v1/auth',
       maxAge: exp * 1000 - Date.now(),
     });
+  }
+
+  // ─── Email verification (onboarding, phone-signup path) ─────────────────────
+
+  /**
+   * Send an EMAIL_VERIFY code to an address the SIGNED-IN candidate is claiming.
+   *
+   * AUTHENTICATED, unlike the phone-login endpoints: the caller already has an
+   * account (created by phone signup) and is attaching an address to it. That
+   * also means there is nothing to enumerate — the address is the caller's own
+   * claim, not a lookup — so this reports the send outcome HONESTLY instead of
+   * the deliberately vague "if an account exists" used on the login path.
+   *
+   * Rejects an address already in use before sending, so the candidate is told
+   * immediately rather than after typing a code that could never have worked.
+   */
+  @Post('email/verify/start')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
+  async emailVerifyStart(
+    @Body() dto: EmailVerifyStartDto,
+    @CurrentUser() actor: CurrentUserPayload,
+    @Req() req: Request,
+  ) {
+    const taken = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (taken && taken.id !== actor.userId) {
+      throw new ConflictException({ code: 'EMAIL_ALREADY_REGISTERED' });
+    }
+
+    const result = await this.otpService.issueEmail(dto.email, req.ip ?? '0.0.0.0');
+
+    if (result.outcome === 'SEND_FAILED') {
+      throw new ServiceUnavailableException({ code: 'OTP_SEND_FAILED' });
+    }
+    return { data: { sent: true } };
+  }
+
+  /**
+   * Confirm the code and attach the address to the account.
+   *
+   * The write is the point: `email` and `emailVerifiedAt` are set together, in
+   * one update, so an address can never be stored without the proof that it
+   * belongs to this person.
+   */
+  @Post('email/verify/confirm')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
+  async emailVerifyConfirm(
+    @Body() dto: EmailVerifyConfirmDto,
+    @CurrentUser() actor: CurrentUserPayload,
+  ) {
+    await this.otpService.verifyEmail(dto.email, dto.otp);
+
+    // Re-checked AFTER the code is proven: the address could have been claimed
+    // by someone else during the five minutes the code was valid.
+    const taken = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (taken && taken.id !== actor.userId) {
+      throw new ConflictException({ code: 'EMAIL_ALREADY_REGISTERED' });
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: actor.userId },
+      data: { email: dto.email, emailVerifiedAt: new Date() },
+    });
+
+    return { data: { email: updated.email, emailVerifiedAt: updated.emailVerifiedAt } };
   }
 }
