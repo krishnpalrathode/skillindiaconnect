@@ -96,3 +96,64 @@ given those shapes; it cannot prove the shapes are right.
 **What would close it:** the blank runbook in
 [whatsapp-integration.md](./whatsapp-integration.md#live-smoke-test--fill-these-in).
 Fill it in with real results — a fabricated tick there is worse than an empty one.
+
+---
+
+## CR-NULLEMAIL — the phone-signup release cannot be rolled back through
+
+**Status: accepted 2026-08-24, at the merge of phone signup.**
+
+`20260823120000_phone_signup_email_otp` widens `users.email` and
+`otp_challenges.phone` from NOT NULL to NULL. Widening is the safe direction and
+the migration is expand-only, so **deploying forward is safe**: the release
+command applies migrations before new containers take traffic, and no NULL-email
+row can exist until the new code is the code creating accounts.
+
+Rolling **back** is the direction that does not work.
+
+### The consequence
+
+Prisma's query engine does not hand a `null` to a field its client types as
+non-nullable — it throws:
+
+```
+Error converting field "email" of expected non-nullable type "String",
+found incompatible value of "null".
+```
+
+So once a single candidate has signed up by phone, reverting to the release
+**before** this one breaks every query that returns that user's whole row —
+`phoneLoginVerify`'s `findUniqueOrThrow` among them. The old client cannot even
+route around it: `NOT: { email: null }` is rejected by its own generated types.
+
+| Rollback hop | Safe? |
+|---|---|
+| this release → the one before it, **before** any phone signup | Yes — no NULL rows exist |
+| this release → the one before it, **after** a phone signup | **No** — user queries throw |
+| any later release → this one | Yes — this client types email nullable |
+
+Verified empirically, not reasoned about: the previous release's Prisma client
+was generated against the migrated database and run. Narrow-`select` queries,
+`count()`, and `findUnique` by a real address all pass; anything selecting
+`email` across a NULL row throws. The three `user.findMany` sites in the API all
+use narrow selects that exclude `email`, so the background workers are unaffected.
+
+### Detection
+
+Not a monitored condition — it can only occur during a deliberate rollback. If a
+rollback is in progress and the API starts 500ing on login and admin user lists
+with the conversion error above, this is why.
+
+**Recover by rolling FORWARD**, not further back.
+
+### What would close it
+
+Shipping the migration and the phone-signup code as two separate releases: the
+first carrying the migration plus a client that tolerates NULL but with signup
+disabled, the second enabling it. That keeps every hop reversible. It was not
+done because the extra release cycle and feature flag buy little while the
+product is pre-launch — the odds of needing to roll back *through this specific
+boundary* are low, and the failure is loud and immediate rather than silent.
+
+Once a rollback through this boundary would matter, the cheaper close is simply
+never to go back that far: any release from this one onward is a safe target.
