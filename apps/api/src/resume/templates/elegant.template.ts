@@ -10,6 +10,8 @@ import {
   safePhotoSrc,
   summaryText,
   stickyFooterFrame,
+  watermarkFrame,
+  watermarkLayer,
 } from './shared';
 
 /**
@@ -115,6 +117,7 @@ export function renderElegant(view: ResumeViewDto): string {
 <meta charset="utf-8" />
 <style>
   ${pageFrame('19mm 18mm')}
+  ${watermarkFrame()}
   ${stickyFooterFrame()}
   body {
     font-family: Georgia, "Times New Roman", "Nimbus Roman", serif;
@@ -171,6 +174,7 @@ export function renderElegant(view: ResumeViewDto): string {
 </style>
 </head>
 <body>
+  ${watermarkLayer()}
   <header>
     ${photo}
     <h1>${esc(view.fullName)}</h1>

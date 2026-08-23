@@ -6,6 +6,8 @@ import { PassportExpiryCron } from './passport-expiry.cron';
 import { PassportExpiryProcessor } from './passport-expiry.processor';
 import { InactivityCron } from './inactivity.cron';
 import { InactivityProcessor } from './inactivity.processor';
+import { ProfileNudgeCron } from './profile-nudge.cron';
+import { ProfileNudgeProcessor } from './profile-nudge.processor';
 import { PurgeCron } from './purge/purge.cron';
 import { PurgeProcessor } from './purge/purge.processor';
 import { PurgeService } from './purge/purge.service';
@@ -47,6 +49,11 @@ import { MatchService } from '../applications/match/match.service';
     PassportExpiryProcessor, // BullMQ processor → scan + notify
     InactivityCron, // @Cron → enqueue the daily 30-day inactivity scan
     InactivityProcessor, // BullMQ processor → scan + "still looking?" fan-out
+    // The one-time "finish your profile" nudge, 24h after registering. Hourly
+    // rather than daily so "after 24 hours" means 24-25h and not 24-48h.
+    // CompletionService (already provided below) supplies the live threshold.
+    ProfileNudgeCron, // @Cron → enqueue the hourly nudge scan
+    ProfileNudgeProcessor, // BullMQ processor → scan + WhatsApp/email fan-out
     PurgeCron, // @Cron → enqueue the daily sweep
     PurgeProcessor, // BullMQ processor → sweep fan-out + per-user purge
     PurgeService, // the anonymization transaction + R2 destruction

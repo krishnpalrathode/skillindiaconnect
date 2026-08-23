@@ -57,7 +57,6 @@
       "languages": "भाषाएँ",
       "experience": "कार्य अनुभव",
       "noExperience": "अभी तक कोई कार्य अनुभव नहीं जोड़ा गया।",
-      "years": "{years} वर्ष {months} माह",
       "skills": "कौशल",
       "noSkills": "अभी तक कोई कौशल नहीं जोड़ा गया।",
       "documents": "दस्तावेज़",
@@ -67,7 +66,9 @@
         "PASSPORT": "पासपोर्ट",
         "EXPERIENCE_CERT": "अनुभव प्रमाणपत्र",
         "EDUCATIONAL_CERT": "शैक्षणिक प्रमाणपत्र"
-      }
+      },
+      "durationYears": "{count, plural, one {# वर्ष} other {# वर्ष}}",
+      "durationMonths": "{count, plural, one {# माह} other {# माह}}"
     },
     "status": {
       "generatingTitle": "आपका रिज्यूमे बन रहा है…",
@@ -426,7 +427,13 @@
       "salaryRangeError": "अधिकतम राशि न्यूनतम के बराबर या उससे ज़्यादा होनी चाहिए",
       "salaryLimitError": "{max, number} तक का मान दर्ज करें।"
     },
-    "settingsPageSubtitle": "तय करें कि कंपनियाँ क्या देख सकती हैं और हम आपसे कैसे संपर्क करें।"
+    "settingsPageSubtitle": "तय करें कि कंपनियाँ क्या देख सकती हैं और हम आपसे कैसे संपर्क करें।",
+    "applyUnlocked": {
+      "title": "अब आप नौकरियों के लिए आवेदन कर सकते हैं",
+      "body": "आपकी प्रोफ़ाइल {pct}% पूरी हो चुकी है — आवेदन शुरू करने के लिए यह पर्याप्त है। उपलब्ध नौकरियाँ देखें और अपना पहला आवेदन भेजें।",
+      "browseJobs": "नौकरियाँ देखें",
+      "later": "बाद में"
+    }
   },
   "document": {
     "upload": "[hi] Upload document",
@@ -511,7 +518,9 @@
       "monthsLabel": "महीने",
       "softBlock": "अनुभव जोड़ने से आपका मैच स्कोर बेहतर होता है",
       "saveExperience": "अनुभव सहेजें",
-      "cancel": "रद्द करें"
+      "cancel": "रद्द करें",
+      "durationYears": "{count, plural, one {# वर्ष} other {# वर्ष}}",
+      "durationMonths": "{count, plural, one {# माह} other {# माह}}"
     },
     "documentsSkills": {
       "title": "दस्तावेज़ और कौशल",
@@ -1563,7 +1572,7 @@
     "matchShort": "{score}% मैच",
     "gulfBadge": "अंतर्राष्ट्रीय अनुभव",
     "ageYears": "{age} वर्ष",
-    "expYears": "{years} वर्ष अनुभव",
+    "expYears": "{years, plural, one {# वर्ष का अनुभव} other {# वर्ष का अनुभव}}",
     "appliedAgo": "{ago} आवेदन किया",
     "showMore": "और दिखाएं",
     "showLess": "कम दिखाएं",
@@ -2050,5 +2059,13 @@
   "sorting": {
     "sortAscending": "{column} से क्रमबद्ध करें, आरोही",
     "sortDescending": "{column} से क्रमबद्ध करें, अवरोही"
+  },
+  "admin": {
+    "candidates": {
+      "profile": {
+        "durationYears": "{count, plural, one {# वर्ष} other {# वर्ष}}",
+        "durationMonths": "{count, plural, one {# माह} other {# माह}}"
+      }
+    }
   }
 }

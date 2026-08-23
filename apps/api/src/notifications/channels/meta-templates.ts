@@ -92,6 +92,23 @@ export const META_TEMPLATES = {
    * Params: {{1}} first name · {{2}} company name.
    */
   'wa.employer_interest': { name: 'employer_interest_notice', params: 2 },
+  /**
+   * ⚠️ NOT YET APPROVED IN WHATSAPP MANAGER — submit the copy in
+   * docs/whatsapp-profile-reminder-template.md and confirm with
+   * `pnpm whatsapp:templates` before trusting this in production.
+   *
+   * The one-time profile-completion nudge. Until Meta approves
+   * `profile_completion_reminder`, every send fails with 132001 and falls back
+   * to email — the candidate is still reached, just by the slower route.
+   *
+   * Params: {{1}} first name · {{2}} current completion % · {{3}} required %.
+   *
+   * The REQUIRED percentage is a parameter rather than literal copy on purpose:
+   * it comes from the `candidates.min_completion_pct` setting, and an approved
+   * template saying "70%" would silently become wrong the day an admin changes
+   * it — in a message that cannot be edited or recalled.
+   */
+  'wa.profile_reminder': { name: 'profile_completion_reminder', params: 3 },
 } as const satisfies Record<string, MetaTemplate>;
 
 export type MetaTemplateKey = keyof typeof META_TEMPLATES;

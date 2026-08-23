@@ -12,7 +12,11 @@
  */
 import { ResumeTemplate } from '@prisma/client';
 import { ResumeSource } from '../../candidate/candidate-read.service';
-import { RESUME_SETTINGS_DEFAULTS, ResumeRenderSettings, toResumeView } from '../resume-view.mapper';
+import {
+  RESUME_SETTINGS_DEFAULTS,
+  ResumeRenderSettings,
+  toResumeView,
+} from '../resume-view.mapper';
 import { buildCoverLetter, formatLetterDate } from './cover-letter.content';
 import { renderCoverLetter } from './cover-letter.template';
 
@@ -100,7 +104,7 @@ describe('buildCoverLetter — business-letter correctness', () => {
     expect(letter.paragraphs.join(' ')).toContain('4 years 2 months');
   });
 
-  it('leads with the candidate\'s own summary when they wrote one', () => {
+  it("leads with the candidate's own summary when they wrote one", () => {
     const letter = buildCoverLetter(view({ summary: 'I take pride in safe, tidy work.' }));
     expect(letter.paragraphs[0]).toBe('I take pride in safe, tidy work.');
   });
@@ -154,6 +158,27 @@ describe('renderCoverLetter — the printed page', () => {
     );
     expect(html).not.toContain('<script>alert(1)</script>');
     expect(html).toContain('&lt;script&gt;');
+  });
+
+  it('carries the Skill India Connect watermark, tiled and behind the text', () => {
+    /*
+      HTML-level, not PDF-level, and deliberately so: the cover letter has no
+      Chromium spec of its own (jest.chromium.config.ts matches only
+      browser-pool / resume-render / invoice-render), and the PRINT behaviour of
+      this exact helper is already proven on the PDF bytes for all nine resume
+      templates in resume-render.spec.ts. What is worth pinning here is that the
+      letter opts in at all, and opts in the same way.
+    */
+    const html = renderCoverLetter(buildCoverLetter(view()));
+
+    // Tiled, not a single stamp — one mark on a page is a typo, not a watermark.
+    const marks = html.split('>Skill India Connect<').length - 1;
+    expect(marks).toBeGreaterThanOrEqual(10);
+
+    // Behind the text: a watermark painted OVER a letter makes it unreadable.
+    expect(html).toMatch(/\.wm \{[^}]*z-index: -1/);
+    // Repeats on page two — the property the footer deliberately avoids.
+    expect(html).toMatch(/\.wm \{[^}]*position: fixed/);
   });
 
   it('is self-contained — Chromium must fetch nothing', () => {

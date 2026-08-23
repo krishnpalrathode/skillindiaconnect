@@ -37,9 +37,16 @@ interface DocumentsSkillsStepProps {
 
 /**
  * Step 3 — Documents & Skills.
- * Required to advance: currentLocation + nationality + noticePeriod.
- * Soft-block (non-blocking): documents, skills.
+ * Required to advance: currentLocation + nationality.
+ * Soft-block (non-blocking): noticePeriod, documents, skills.
  * Document uploads happen immediately via useUpload (presign → R2 → confirm).
+ *
+ * Notice period is OPTIONAL. It used to block the step, which stranded the
+ * candidates least able to answer it — someone between jobs, or in daily-wage
+ * work, has no notice period to state, and the only way past the form was to
+ * invent a number. The field was already optional everywhere else (nullable in
+ * the schema, `@IsOptional()` in the DTO, and deliberately excluded from the
+ * profile-completion score), so this screen was the sole place enforcing it.
  */
 export function DocumentsSkillsStep({
   profile,
@@ -53,15 +60,24 @@ export function DocumentsSkillsStep({
 
   const [location, setLocation] = useState(profile.currentLocation ?? '');
   const [nationality, setNationality] = useState(profile.nationality ?? '');
+  /*
+    `!= null` catches BOTH null and undefined — deliberately, and not a typo.
+
+    The API returns `null` for an unset notice period (the column is nullable),
+    and the previous `!== undefined` check let null through to `String(null)`,
+    seeding the state with the literal text "null". The number input rendered
+    that as blank, so it looked fine, while the value it submitted was
+    `Number("null")` — NaN. It also silently satisfied the old
+    "length > 0" gate, so the field could be advanced past without being filled.
+  */
   const [noticePeriod, setNoticePeriod] = useState(
-    profile.noticePeriod !== undefined ? String(profile.noticePeriod) : '',
+    profile.noticePeriod != null ? String(profile.noticePeriod) : '',
   );
   const [passportExpiry, setPassportExpiry] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canAdvance =
-    location.trim().length > 0 && nationality.trim().length > 0 && noticePeriod.trim().length > 0;
+  const canAdvance = location.trim().length > 0 && nationality.trim().length > 0;
 
   const hasPassport = (profile.documents ?? []).some((d) => d.type === 'PASSPORT');
   const hasSkills = (profile.skills?.length ?? 0) > 0;
@@ -99,10 +115,19 @@ export function DocumentsSkillsStep({
     setError(null);
     setSaving(true);
 
+    /*
+      Notice period is OMITTED when blank, never sent as a number.
+
+      `Number('')` is 0, so the obvious version of this records "available
+      immediately, 0 days notice" for every candidate who skipped the field —
+      a specific claim about their availability that they never made, shown to
+      employers as fact. Omitting the key leaves the value unset.
+    */
+    const trimmedNotice = noticePeriod.trim();
     const patch: PatchCandidateBody = {
       currentLocation: location.trim(),
       nationality: nationality.trim(),
-      noticePeriod: Number(noticePeriod),
+      ...(trimmedNotice.length > 0 && { noticePeriod: Number(trimmedNotice) }),
     };
 
     try {
@@ -152,12 +177,7 @@ export function DocumentsSkillsStep({
           />
         </Field>
 
-        <Field
-          id="ds-notice"
-          label={t('noticePeriodLabel')}
-          hint={t('noticePeriodPlaceholder')}
-          required
-        >
+        <Field id="ds-notice" label={t('noticePeriodLabel')} hint={t('noticePeriodPlaceholder')}>
           <Input
             type="number"
             min={0}

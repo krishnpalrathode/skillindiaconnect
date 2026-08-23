@@ -57,7 +57,6 @@
       "languages": "اللغات",
       "experience": "الخبرة العملية",
       "noExperience": "لم تتم إضافة أي خبرة عملية بعد.",
-      "years": "{years} سنة {months} شهر",
       "skills": "المهارات",
       "noSkills": "لم تتم إضافة أي مهارات بعد.",
       "documents": "المستندات",
@@ -67,7 +66,9 @@
         "PASSPORT": "جواز السفر",
         "EXPERIENCE_CERT": "شهادة خبرة",
         "EDUCATIONAL_CERT": "شهادة تعليمية"
-      }
+      },
+      "durationYears": "{count, plural, zero {# سنة} one {سنة واحدة} two {سنتان} few {# سنوات} many {# سنة} other {# سنة}}",
+      "durationMonths": "{count, plural, zero {# شهر} one {شهر واحد} two {شهران} few {# أشهر} many {# شهرًا} other {# شهر}}"
     },
     "status": {
       "generatingTitle": "جارٍ إنشاء سيرتك الذاتية…",
@@ -426,7 +427,13 @@
       "salaryRangeError": "يجب أن يكون الحد الأقصى مساوياً للحد الأدنى أو أكبر منه",
       "salaryLimitError": "أدخل قيمة لا تتجاوز {max, number}."
     },
-    "settingsPageSubtitle": "تحكّم في ما يمكن لأصحاب العمل رؤيته وكيف نتواصل معك."
+    "settingsPageSubtitle": "تحكّم في ما يمكن لأصحاب العمل رؤيته وكيف نتواصل معك.",
+    "applyUnlocked": {
+      "title": "يمكنك الآن التقديم على الوظائف",
+      "body": "اكتمل ملفك الشخصي بنسبة {pct}% — وهذا كافٍ لبدء التقديم. تصفّح الوظائف المتاحة وأرسل طلبك الأول.",
+      "browseJobs": "تصفّح الوظائف",
+      "later": "لاحقًا"
+    }
   },
   "document": {
     "upload": "[ar] Upload document",
@@ -511,7 +518,9 @@
       "monthsLabel": "أشهر",
       "softBlock": "إضافة الخبرة يحسّن نقاط المطابقة لديك",
       "saveExperience": "حفظ الخبرة",
-      "cancel": "إلغاء"
+      "cancel": "إلغاء",
+      "durationYears": "{count, plural, zero {# سنة} one {سنة واحدة} two {سنتان} few {# سنوات} many {# سنة} other {# سنة}}",
+      "durationMonths": "{count, plural, zero {# شهر} one {شهر واحد} two {شهران} few {# أشهر} many {# شهرًا} other {# شهر}}"
     },
     "documentsSkills": {
       "title": "الوثائق والمهارات",
@@ -964,8 +973,8 @@
           "title": "الخبرة العملية",
           "india": "الهند",
           "foreign": "دولي",
-          "years": "{count, plural, zero {# سنة} one {سنة} two {سنتان} few {# سنوات} many {# سنة} other {# سنوات}}",
-          "months": "{count, plural, zero {# شهر} one {شهر} two {شهران} few {# أشهر} many {# شهراً} other {# شهر}}"
+          "years": "{count, plural, zero {# سنة} one {سنة واحدة} two {سنتان} few {# سنوات} many {# سنة} other {# سنة}}",
+          "months": "{count, plural, zero {# شهر} one {شهر واحد} two {شهران} few {# أشهر} many {# شهرًا} other {# شهر}}"
         },
         "documents": {
           "title": "المستندات",
@@ -2050,5 +2059,13 @@
   "sorting": {
     "sortAscending": "ترتيب حسب {column}، تصاعدي",
     "sortDescending": "ترتيب حسب {column}، تنازلي"
+  },
+  "admin": {
+    "candidates": {
+      "profile": {
+        "durationYears": "{count, plural, zero {# سنة} one {سنة واحدة} two {سنتان} few {# سنوات} many {# سنة} other {# سنة}}",
+        "durationMonths": "{count, plural, zero {# شهر} one {شهر واحد} two {شهران} few {# أشهر} many {# شهرًا} other {# شهر}}"
+      }
+    }
   }
 }

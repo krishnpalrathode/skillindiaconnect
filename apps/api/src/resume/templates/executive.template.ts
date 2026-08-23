@@ -10,6 +10,8 @@ import {
   safePhotoSrc,
   summaryText,
   stickyFooterFrame,
+  watermarkFrame,
+  watermarkLayer,
 } from './shared';
 
 /**
@@ -119,6 +121,7 @@ export function renderExecutive(view: ResumeViewDto): string {
 <meta charset="utf-8" />
 <style>
   ${pageFrame('0')}
+  ${watermarkFrame()}
   ${stickyFooterFrame()}
   body {
     font-family: "Segoe UI", -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -186,6 +189,7 @@ export function renderExecutive(view: ResumeViewDto): string {
 </style>
 </head>
 <body>
+  ${watermarkLayer()}
   <header class="band">
     ${photo}
     <div class="who">
@@ -196,9 +200,11 @@ export function renderExecutive(view: ResumeViewDto): string {
   </header>
 
   <main>
-    ${/* Inside <main>, unlike the other templates: the page margin is 0 here and
+    ${
+      /* Inside <main>, unlike the other templates: the page margin is 0 here and
           every block supplies its own side padding, so a summary outside <main>
-          would sit flush against the paper edge. */ ''}
+          would sit flush against the paper edge. */ ''
+    }
     ${summary ? `<p class="summary">${summary}</p>` : ''}
     ${detailsSection(view)}
     ${experienceSection(view)}

@@ -10,6 +10,8 @@ import {
   safePhotoSrc,
   summaryText,
   stickyFooterFrame,
+  watermarkFrame,
+  watermarkLayer,
 } from './shared';
 
 /**
@@ -116,6 +118,7 @@ export function renderTimeline(view: ResumeViewDto): string {
 <meta charset="utf-8" />
 <style>
   ${pageFrame('17mm 16mm')}
+  ${watermarkFrame()}
   ${stickyFooterFrame()}
   body {
     font-family: "Segoe UI", -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -177,6 +180,7 @@ export function renderTimeline(view: ResumeViewDto): string {
 </style>
 </head>
 <body>
+  ${watermarkLayer()}
   <header>
     ${photo}
     <div class="who">
