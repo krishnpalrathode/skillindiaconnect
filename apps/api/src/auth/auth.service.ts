@@ -334,7 +334,7 @@ export class AuthService {
   private async linkAndTouch(
     provider: FederatedProvider,
     providerId: string,
-    user: { id: string; email: string; role: UserRole },
+    user: { id: string; email: string | null; role: UserRole },
   ) {
     return this.prisma.user.update({
       where: { id: user.id },
