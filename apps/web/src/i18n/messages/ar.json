@@ -318,7 +318,6 @@
       "LINKEDIN_PROFILE_FAILED": "تعذّر الوصول إلى LinkedIn الآن. يرجى المحاولة بعد قليل.",
       "LINKEDIN_FAILED": "لم يكتمل تسجيل الدخول عبر LinkedIn. يرجى المحاولة مرة أخرى.",
       "LINKEDIN_UNAVAILABLE": "تسجيل الدخول عبر LinkedIn غير متاح حاليًا. يرجى استخدام Google أو بريدك الإلكتروني وكلمة المرور."
-    }
     },
     "identifierLabel": "البريد الإلكتروني أو رقم الجوال",
     "identifierPlaceholder": "you@example.com أو 9876543210",

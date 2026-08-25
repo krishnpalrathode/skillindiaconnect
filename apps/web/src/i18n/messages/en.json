@@ -325,7 +325,6 @@
       "LINKEDIN_PROFILE_FAILED": "We couldn't reach LinkedIn just now. Please try again in a moment.",
       "LINKEDIN_FAILED": "LinkedIn sign-in didn't complete. Please try again.",
       "LINKEDIN_UNAVAILABLE": "LinkedIn sign-in is not available right now. Please use Google or your email and password."
-    }
     },
     "identifierLabel": "Email address or mobile number",
     "identifierPlaceholder": "you@example.com or 9876543210",

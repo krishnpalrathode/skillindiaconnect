@@ -318,7 +318,6 @@
       "LINKEDIN_PROFILE_FAILED": "अभी LinkedIn से संपर्क नहीं हो सका। कृपया थोड़ी देर बाद कोशिश करें।",
       "LINKEDIN_FAILED": "LinkedIn साइन-इन पूरा नहीं हुआ। कृपया दोबारा कोशिश करें।",
       "LINKEDIN_UNAVAILABLE": "LinkedIn साइन-इन अभी उपलब्ध नहीं है। कृपया Google या अपने ईमेल और पासवर्ड का उपयोग करें।"
-    }
     },
     "identifierLabel": "ईमेल पता या मोबाइल नंबर",
     "identifierPlaceholder": "you@example.com या 9876543210",
