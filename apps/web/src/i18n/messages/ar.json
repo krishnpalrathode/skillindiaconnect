@@ -1096,7 +1096,9 @@
       "unsave": "محفوظة",
       "newBadge": "جديدة",
       "marketGulf": "دولي",
-      "marketLocal": "الهند"
+      "marketLocal": "الهند",
+      "apply": "قدّم الآن",
+      "applyToJob": "تقدَّم لوظيفة {title}"
     },
     "benefits": {
       "pf": "PF",
