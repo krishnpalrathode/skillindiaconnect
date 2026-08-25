@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -10,6 +10,16 @@ import { SignupForm } from '@/components/auth/SignupForm';
 import { useAuth } from '@/lib/auth/auth-context';
 
 export default function SignupPage() {
+  // useSearchParams() opts the subtree into client-side rendering, and Next
+  // fails the production build unless it sits under a Suspense boundary.
+  return (
+    <Suspense fallback={<div className="h-48" aria-hidden />}>
+      <SignupPageInner />
+    </Suspense>
+  );
+}
+
+function SignupPageInner() {
   const t = useTranslations('auth');
   const router = useRouter();
   const searchParams = useSearchParams();

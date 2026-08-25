@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -23,6 +23,16 @@ type Method = 'email' | 'phone';
 type View = 'signIn' | 'forgot';
 
 export default function LoginPage() {
+  // useSearchParams() opts the subtree into client-side rendering, and Next
+  // fails the production build unless it sits under a Suspense boundary.
+  return (
+    <Suspense fallback={<div className="h-48" aria-hidden />}>
+      <LoginPageInner />
+    </Suspense>
+  );
+}
+
+function LoginPageInner() {
   const t = useTranslations('auth');
   const router = useRouter();
   const searchParams = useSearchParams();
