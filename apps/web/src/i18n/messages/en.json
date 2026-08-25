@@ -3187,5 +3187,36 @@
     "notificationsWithCount": "Notifications, {count} unread",
     "notificationsNone": "Notifications, none unread",
     "moreMenu": "More options"
+  },
+  "home": {
+    "hero": {
+      "headline": "Find your next job",
+      "subline": "Verified employers across India and the Gulf. Free to apply.",
+      "cta": "Search jobs"
+    },
+    "value": {
+      "ariaLabel": "Why workers choose Skill India Connect",
+      "reach": {
+        "title": "India and Gulf",
+        "body": "Work close to home or overseas."
+      }
+    },
+    "categories": {
+      "heading": "Browse by trade",
+      "slug": {
+        "electrician": "Electrician",
+        "mason": "Mason",
+        "hvac-technician": "HVAC Technician",
+        "driver": "Driver",
+        "plumber": "Plumber",
+        "welder": "Welder"
+      }
+    },
+    "featured": {
+      "heading": "Latest jobs",
+      "viewAll": "View all",
+      "emptyTitle": "No jobs open right now",
+      "emptyBody": "New jobs are posted often. Check back soon, or search to widen your options."
+    }
   }
 }
