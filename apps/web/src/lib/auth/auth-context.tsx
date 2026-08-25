@@ -3,7 +3,14 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { components } from '@skillindiaconnect/shared-types';
 import { setAccessToken, setRefreshFn } from '@/lib/api/client';
-import { postLogin, postLogout, postPhoneLoginVerify, postRefresh, postSignup } from './api';
+import {
+  postLogin,
+  postLogout,
+  postPhoneLoginVerify,
+  postPhoneSignupVerify,
+  postRefresh,
+  postSignup,
+} from './api';
 import type { SignupBody } from './api';
 
 type UserSummary = components['schemas']['UserSummary'];
@@ -12,16 +19,25 @@ type UserSummary = components['schemas']['UserSummary'];
 
 // Reads user claims from the JWT payload without signature verification.
 // Works for real JWTs (production) and the mock JWT-shaped tokens in dev/test.
+//
+// `email` is NOT required. A phone-signup account carries `email: null` in its
+// token until onboarding verifies an address, and this function used to reject
+// any payload with a falsy email — returning null, which every caller reads as
+// "not signed in". The effect was not a cosmetic one: `doRefresh` runs on every
+// page load and every 15-minute token renewal, so a candidate who signed up
+// with their phone would have been silently signed out on their first reload,
+// with a perfectly valid token in hand. Identity here is `sub` + `role`; the
+// email is a display detail that may legitimately not exist yet.
 function decodeToken(token: string): UserSummary | null {
   try {
     const parts = token.split('.');
     if (parts.length < 2) return null;
     const raw = parts[1]!.replace(/-/g, '+').replace(/_/g, '/');
     const payload = JSON.parse(atob(raw)) as Record<string, unknown>;
-    if (!payload['sub'] || !payload['email'] || !payload['role']) return null;
+    if (!payload['sub'] || !payload['role']) return null;
     return {
       id: payload['sub'] as string,
-      email: payload['email'] as string,
+      email: (payload['email'] as string | null | undefined) ?? null,
       role: payload['role'] as UserSummary['role'],
     };
   } catch {
@@ -46,6 +62,7 @@ export interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   loginWithPhone: (phone: string, otp: string) => Promise<void>;
   signup: (body: SignupBody) => Promise<void>;
+  signupWithPhone: (phone: string, otp: string, acceptedTerms: boolean) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -127,6 +144,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(result.user);
   }, []);
 
+  /**
+   * Phone signup returns the same token pair as every other entry point, so the
+   * session is established here identically — the ONLY difference is that
+   * `result.user.email` is null until onboarding verifies an address.
+   */
+  const signupWithPhone = useCallback(
+    async (phone: string, otp: string, acceptedTerms: boolean) => {
+      authGeneration.current++;
+      setIsLoggingOut(false);
+      const result = await postPhoneSignupVerify(phone, otp, acceptedTerms);
+      setAccessToken(result.accessToken);
+      setUser(result.user);
+    },
+    [],
+  );
+
   const logout = useCallback(async () => {
     authGeneration.current++;
     setIsLoggingOut(true);
@@ -140,7 +173,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, isLoggingOut, login, loginWithPhone, signup, logout }}
+      value={{
+        user,
+        isLoading,
+        isLoggingOut,
+        login,
+        loginWithPhone,
+        signup,
+        signupWithPhone,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import React, { useState } from 'react';
+import { formatDuration } from '@/lib/formatDuration';
 import { useTranslations } from 'next-intl';
 import { Globe, Briefcase } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
@@ -76,9 +77,7 @@ export function ExperienceSection({
               </p>
               {(exp.years !== undefined || exp.months !== undefined) && (
                 <p className="mt-1 inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
-                  {[exp.years && `${exp.years}y`, exp.months && `${exp.months}m`]
-                    .filter(Boolean)
-                    .join(' ')}
+                  {formatDuration(t, exp.years, exp.months)}
                 </p>
               )}
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { formatDuration } from '@/lib/formatDuration';
 import { useTranslations } from 'next-intl';
 import { Eye, Briefcase, Sparkles, FileText } from 'lucide-react';
 import type { components } from '@skillindiaconnect/shared-types';
@@ -123,7 +124,7 @@ export function ResumePreview({ profile, settings }: ResumePreviewProps) {
                     {exp.country && <span className="text-neutral-600"> · {exp.country}</span>}
                     <span className="text-neutral-600">
                       {' '}
-                      · {t('years', { years: exp.years ?? 0, months: exp.months ?? 0 })}
+                      · {formatDuration(t, exp.years, exp.months)}
                     </span>
                   </li>
                 ))}

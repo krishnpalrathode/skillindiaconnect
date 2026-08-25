@@ -24,6 +24,7 @@ import { QuickActions } from '@/components/dashboard/QuickActions';
 import type { CandidateStats } from '@/lib/api/dashboard';
 import { homePathForRole } from '@/lib/auth/home-path';
 import { PAGE_SHELL } from '@/lib/page-shell';
+import { candidateDisplayName } from '@/lib/format/display-name';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type CompletionResult = components['schemas']['CompletionResult'];
@@ -144,7 +145,7 @@ export default function DashboardPage() {
   return (
     <div className={PAGE_SHELL}>
       <DashboardHeader
-        name={profile.fullName ?? profile.email}
+        name={candidateDisplayName(profile)}
         photoUrl={profile.photoUrl}
         isAvailable={!!profile.isAvailable}
         unreadCount={unreadCount}

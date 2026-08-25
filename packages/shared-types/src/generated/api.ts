@@ -312,6 +312,161 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/signup/phone/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start creating a candidate account from a phone number
+         * @description Sends a `purpose = PHONE_VERIFY` OTP to a number that does NOT yet have
+         *     an account.
+         *
+         *     **NOT enumeration-safe, deliberately — unlike `/auth/login/phone/start`.**
+         *     A registered number returns 409 `PHONE_ALREADY_IN_USE` so the client can
+         *     send the user to sign-in. A signup endpoint cannot hide this and still
+         *     work: silence would either create a second account on the number or
+         *     leave the user waiting for a code that will never arrive. The email
+         *     signup path already answers the same question with `EMAIL_TAKEN`.
+         *
+         *     Login is different and stays sealed, because there the silence costs the
+         *     user nothing — the sign-in screen offers email unconditionally.
+         */
+        post: operations["postAuthSignupPhoneStart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/signup/phone/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete phone signup — create the account and sign in
+         * @description Verifies the `PHONE_VERIFY` OTP, creates the CANDIDATE account, and
+         *     issues tokens exactly as email signup does.
+         *
+         *     **The account is created with `email: null` and no password** — the
+         *     phone number is the credential. Onboarding then collects an address
+         *     (`/auth/email/verify/*`) and a password (`/auth/password/set`).
+         *
+         *     The user row and the profile carrying the verified phone are written in
+         *     ONE transaction: a user with no email, no password and no verified
+         *     number would be an account nobody could ever sign back in to.
+         *
+         *     `acceptedTerms` is captured HERE rather than at the start step, so
+         *     `termsAcceptedAt` dates the agreement to the moment the account came
+         *     into existence.
+         */
+        post: operations["postAuthSignupPhoneVerify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/email/verify/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a verification code to an email address
+         * @description For the SIGNED-IN candidate. Sends a `purpose = EMAIL_VERIFY` code to the
+         *     address supplied in the body.
+         *
+         *     The address is in the body rather than read from the account because the
+         *     account may not have one yet — that is the point of the phone-signup
+         *     path. Nothing is written to `users.email` until the code comes back
+         *     verified.
+         *
+         *     Unlike notification-tier email, this send happens INLINE in the API
+         *     process: the user is sitting at the code-entry box, so a queue hop would
+         *     only add latency to a request whose entire purpose is that code. This is
+         *     the same reasoning recorded for the WhatsApp OTP exception.
+         */
+        post: operations["postAuthEmailVerifyStart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/email/verify/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm the code and attach the address to the account
+         * @description Verifies the `EMAIL_VERIFY` code and writes `email` and
+         *     `emailVerifiedAt` in a SINGLE update — an address is never stored
+         *     without the proof that it belongs to this person.
+         *
+         *     The collision check runs again here, after the code is proven, because
+         *     the address can be claimed by someone else during the five minutes the
+         *     code stays valid.
+         */
+        post: operations["postAuthEmailVerifyConfirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/password/set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set the first password on an account that has none
+         * @description For the SIGNED-IN candidate, during phone-signup onboarding. Gives the
+         *     account a second way in, because a phone number can be lost, changed, or
+         *     left behind in another country.
+         *
+         *     **This is not "change password".** It takes no current password — the
+         *     access token is the only proof — which is sound only while there is no
+         *     credential to protect. An account that already has one (including a
+         *     Google-linked account) gets 409 `PASSWORD_ALREADY_SET`; otherwise a
+         *     stolen access token would be enough to lock someone out of their own
+         *     account. Changing an existing password goes through
+         *     `/auth/forgot-password` → `/auth/reset-password`, which proves control
+         *     of the mailbox.
+         *
+         *     The caller is taken from the token, never the body, so one account can
+         *     never set a password on another.
+         */
+        post: operations["postAuthPasswordSet"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/forgot-password": {
         parameters: {
             query?: never;
@@ -3024,8 +3179,11 @@ export interface components {
         UserSummary: {
             /** Format: uuid */
             id: string;
-            /** Format: email */
-            email: string;
+            /**
+             * Format: email
+             * @description NULL for an account created through phone signup, until onboarding verifies an address. The phone number is the credential on that path, so the column is genuinely empty rather than a placeholder — clients must handle null and must not print it as "null".
+             */
+            email: string | null;
             role: components["schemas"]["UserRole"];
         };
         /** @description Returned on successful signup, email/password login, Google OAuth, and OTP login. The `accessToken` (JWT, 15 min) must be stored by the client. A long-lived refresh token is delivered as the `sic_refresh` HttpOnly cookie (path `/api/v1/auth`) — do NOT try to read or send it manually. */
@@ -3100,8 +3258,11 @@ export interface components {
         CandidateProfile: {
             /** Format: uuid */
             id: string;
-            /** Format: email */
-            email: string;
+            /**
+             * Format: email
+             * @description NULL for an account created through phone signup, until onboarding verifies an address. The phone number is the credential on that path, so the column is genuinely empty rather than a placeholder — clients must handle null and must not print it as "null".
+             */
+            email: string | null;
             role: components["schemas"]["UserRole"];
             fullName?: string;
             /** @description Short-expiry SIGNED url for the profile photo (never the raw R2 key), or null when none is uploaded. Set via the /candidates/me/photo/presign + /confirm flow. */
@@ -3116,6 +3277,15 @@ export interface components {
             phone?: string;
             /** Format: date-time */
             phoneVerifiedAt?: string | null;
+            /**
+             * Format: date-time
+             * @description SELF VIEWER ONLY. When the address on the account was proved. Null on a phone-signup account until onboarding verifies one.
+             */
+            emailVerifiedAt?: string | null;
+            /** @description SELF VIEWER ONLY. Whether a password is set. A boolean, never the hash — that does not leave the server for any viewer, including the account owner. */
+            hasPassword?: boolean;
+            /** @description SELF VIEWER ONLY. Whether the account is linked to Google. A Google account has no password either, so hasPassword alone cannot tell it apart from a phone-signup account that still owes one — onboarding needs both to know whether the set-password step applies. */
+            hasGoogle?: boolean;
             /** @description Set to true when OTP verification succeeds via WhatsApp channel */
             whatsappCapable?: boolean | null;
             maritalStatus?: components["schemas"]["MaritalStatus"];
@@ -3491,6 +3661,12 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             publishedAt?: string | null;
+            /**
+             * Format: date-time
+             * @description When this job will be archived automatically. Stamped at PUBLISH from the `jobs.auto_archive_days` setting, so it reflects the platform's current job lifetime rather than a fixed period. NULL while a job is a draft or awaiting admin review — the clock only starts once the job is actually ACTIVE.
+             *     The API has always returned this; it was simply undocumented here.
+             */
+            autoArchiveAt?: string | null;
             /** Format: date-time */
             archivedAt?: string | null;
         };
@@ -5171,6 +5347,288 @@ export interface operations {
                      *       "code": "INVALID_OTP"
                      *     }
                      */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAuthSignupPhoneStart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @example +919876543210 */
+                    phone: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OTP sent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** @example true */
+                            sent: boolean;
+                        };
+                    };
+                };
+            };
+            /** @description `PHONE_ALREADY_IN_USE` — the number already has an account, so this is a sign-in, not a signup. `PHONE_NOT_ON_WHATSAPP` — the number cannot receive the code; offer the email route instead. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description `OTP_SEND_FAILED` — the provider is down. Reported honestly rather than as `sent: true`, so the client can offer a retry instead of leaving the user waiting for a code that never left. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAuthSignupPhoneVerify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @example +919876543210 */
+                    phone: string;
+                    /** @example 123456 */
+                    otp: string;
+                    /** @enum {boolean} */
+                    acceptedTerms: true;
+                };
+            };
+        };
+        responses: {
+            /** @description Account created — tokens issued. `user.email` is null. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AuthTokenResponse"];
+                    };
+                };
+            };
+            /** @description Invalid, expired, or over-attempted OTP */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Invalid OTP",
+                     *       "status": 401,
+                     *       "detail": "OTP is incorrect, expired, or too many attempts.",
+                     *       "code": "INVALID_OTP"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description `PHONE_ALREADY_IN_USE` — the number was claimed by someone else while this code was still valid. Proving the code does not entitle the caller to a number that has since been taken. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAuthEmailVerifyStart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Code sent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** @example true */
+                            sent: boolean;
+                        };
+                    };
+                };
+            };
+            /** @description `EMAIL_ALREADY_REGISTERED` — the address belongs to another account. Checked BEFORE sending, so a code is never mailed to an address the caller could not attach anyway. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description `OTP_SEND_FAILED` — the mail provider is down; offer a retry. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAuthEmailVerifyConfirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                    /** @example 123456 */
+                    otp: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Address verified and attached */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** Format: email */
+                            email: string;
+                            /** Format: date-time */
+                            emailVerifiedAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Invalid, expired, or over-attempted code */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description `EMAIL_ALREADY_REGISTERED` — claimed by another account while the code was valid. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postAuthPasswordSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Same strength rules as signup: at least 8 characters, with an uppercase letter, a lowercase letter, and a digit. */
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Password set */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** @example true */
+                            passwordSet: boolean;
+                        };
+                    };
+                };
+            };
+            /** @description `PASSWORD_ALREADY_SET` — the account already has a credential. Also returned when a concurrent request won the race. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["Error"];
                 };
             };

@@ -58,7 +58,13 @@ export class TokenService {
 
   async issue(
     userId: string,
-    email: string,
+    /**
+     * NULL for an account created by phone signup that has not yet added an
+     * address. The claim is carried as-is rather than defaulted to a
+     * placeholder — a token asserting an email the user does not have would be
+     * worse than one honestly saying there isn't one.
+     */
+    email: string | null,
     role: UserRole,
     ip?: string,
     userAgent?: string,

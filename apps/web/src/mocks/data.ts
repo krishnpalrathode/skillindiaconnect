@@ -195,8 +195,10 @@ export const PURGEABLE_CANDIDATE_USER_ID = 'mock-user-candidate-purgeable';
 
 export interface MockUser {
   id: string;
-  email: string;
-  passwordHash: string;
+  // Nullable, exactly as the real columns are: a phone-signup account has
+  // neither until onboarding collects them.
+  email: string | null;
+  passwordHash: string | null;
   role: 'CANDIDATE' | 'EMPLOYER' | 'ADMIN' | 'SUPER_ADMIN' | 'MODERATOR' | 'SUPPORT';
   status: 'ACTIVE' | 'SUSPENDED' | 'PENDING_DELETION';
 }
@@ -2659,7 +2661,8 @@ export function buildResumeView(candidate: MockCandidate, settings: ResumeSettin
 
 export function buildProfile(
   id: string,
-  email: string,
+  // Nullable, like the column: a phone-signup account has no address yet.
+  email: string | null,
   overrides: Partial<CandidateProfile>,
 ): CandidateProfile {
   return {
@@ -2669,6 +2672,11 @@ export function buildProfile(
     fullName: '',
     phone: undefined,
     phoneVerifiedAt: null,
+    emailVerifiedAt: email ? new Date().toISOString() : null,
+    // Defaults describe an EMAIL signup — the common case, and the one every
+    // existing fixture is. The phone-signup handler overrides both.
+    hasPassword: true,
+    hasGoogle: false,
     whatsappCapable: null,
     completionPct: 0,
     profileVisible: true,
@@ -2689,7 +2697,7 @@ export function makeAccessToken(userId: string): string {
   const payload = btoa(
     JSON.stringify({
       sub: userId,
-      email: user?.email ?? '',
+      email: user?.email ?? null,
       role: user?.role ?? 'CANDIDATE',
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 900,

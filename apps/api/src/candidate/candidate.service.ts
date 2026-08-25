@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
@@ -357,6 +358,17 @@ export class CandidateService {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         return this.prisma.candidateProfile.findUniqueOrThrow({ where: { userId }, include });
       }
+      // P2003 — the FK to users failed, i.e. the token is VALID but its user no
+      // longer exists. JwtAuthGuard verifies signature, type and blacklist but
+      // deliberately does NOT query the DB (one Redis EXISTS is the whole cost
+      // of an authenticated request), so a deleted user still gets past it and
+      // fails here instead. Left unhandled this surfaced as a 500 and the client
+      // sat on a dead page: the token stays valid for its full TTL, so
+      // "please refresh" could never work. A 401 is both true and useful — it
+      // drives the client's refresh → fail → logout path back to sign-in.
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2003') {
+        throw new UnauthorizedException({ code: 'USER_NO_LONGER_EXISTS' });
+      }
       throw err;
     }
   }
@@ -370,6 +382,17 @@ export class CandidateService {
     userId: string,
   ): Promise<CandidateProfileWithRelations> {
     const include = {
+      /*
+        Onboarding has to know which credentials this account already has, and
+        the answer must survive a reload — so it is read from the user row here
+        rather than remembered client-side. SELECTED, not included whole: the
+        password hash must never travel further than this query, so only the
+        three fields the self mapper serializes are fetched, and `hasPassword`
+        is derived into a boolean before it reaches the wire.
+      */
+      user: {
+        select: { email: true, emailVerifiedAt: true, passwordHash: true, googleId: true },
+      },
       experiences: { orderBy: { createdAt: 'desc' as const } },
       skills: { orderBy: { name: 'asc' as const } },
       documents: { orderBy: { uploadedAt: 'desc' as const } },
@@ -405,6 +428,17 @@ export class CandidateService {
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         return this.prisma.candidateProfile.findUniqueOrThrow({ where: { userId }, include });
+      }
+      // P2003 — the FK to users failed, i.e. the token is VALID but its user no
+      // longer exists. JwtAuthGuard verifies signature, type and blacklist but
+      // deliberately does NOT query the DB (one Redis EXISTS is the whole cost
+      // of an authenticated request), so a deleted user still gets past it and
+      // fails here instead. Left unhandled this surfaced as a 500 and the client
+      // sat on a dead page: the token stays valid for its full TTL, so
+      // "please refresh" could never work. A 401 is both true and useful — it
+      // drives the client's refresh → fail → logout path back to sign-in.
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2003') {
+        throw new UnauthorizedException({ code: 'USER_NO_LONGER_EXISTS' });
       }
       throw err;
     }

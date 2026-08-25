@@ -209,7 +209,13 @@ export function PhoneVerify({
         </span>
         <p className="text-sm font-bold text-neutral-800">{t('phoneVerifyTitle')}</p>
       </div>
-      <p className="text-xs text-neutral-600">{t('phoneVerifySubtitle')}</p>
+      {/*
+        Only while we are still ASKING for the number. Once the code is on its
+        way, "We'll send a WhatsApp OTP" is stale — it sat above "Enter the
+        6-digit code sent to your number", so the screen simultaneously promised
+        to send a code and asked for the one it had already sent.
+      */}
+      {stage === 'input' && <p className="text-xs text-neutral-600">{t('phoneVerifySubtitle')}</p>}
 
       {stage === 'input' && (
         <div className="flex flex-wrap gap-2">

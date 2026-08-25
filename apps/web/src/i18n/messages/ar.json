@@ -57,7 +57,6 @@
       "languages": "اللغات",
       "experience": "الخبرة العملية",
       "noExperience": "لم تتم إضافة أي خبرة عملية بعد.",
-      "years": "{years} سنة {months} شهر",
       "skills": "المهارات",
       "noSkills": "لم تتم إضافة أي مهارات بعد.",
       "documents": "المستندات",
@@ -67,7 +66,9 @@
         "PASSPORT": "جواز السفر",
         "EXPERIENCE_CERT": "شهادة خبرة",
         "EDUCATIONAL_CERT": "شهادة تعليمية"
-      }
+      },
+      "durationYears": "{count, plural, zero {# سنة} one {سنة واحدة} two {سنتان} few {# سنوات} many {# سنة} other {# سنة}}",
+      "durationMonths": "{count, plural, zero {# شهر} one {شهر واحد} two {شهران} few {# أشهر} many {# شهرًا} other {# شهر}}"
     },
     "status": {
       "generatingTitle": "جارٍ إنشاء سيرتك الذاتية…",
@@ -318,6 +319,17 @@
       "LINKEDIN_FAILED": "لم يكتمل تسجيل الدخول عبر LinkedIn. يرجى المحاولة مرة أخرى.",
       "LINKEDIN_UNAVAILABLE": "تسجيل الدخول عبر LinkedIn غير متاح حاليًا. يرجى استخدام Google أو بريدك الإلكتروني وكلمة المرور."
     }
+    },
+    "identifierLabel": "البريد الإلكتروني أو رقم الجوال",
+    "identifierPlaceholder": "you@example.com أو 9876543210",
+    "employerNeedsEmail": "يسجّل أصحاب العمل باستخدام بريد إلكتروني للعمل.",
+    "verifyAndCreate": "تحقّق وأنشئ الحساب",
+    "phoneTaken": "هذا الرقم مسجّل بالفعل في حساب آخر. يرجى استخدام رقم مختلف.",
+    "otpNotOnWhatsapp": "هذا الرقم غير متوفر على WhatsApp. يرجى تجربة رقم آخر.",
+    "otpSendFailed": "تعذّر إرسال الرمز الآن. يُرجى المحاولة مرة أخرى، أو التسجيل باستخدام بريد إلكتروني بدلاً من ذلك.",
+    "identifierHintPhone": "سنرسل رمز OTP عبر WhatsApp للتحقق من رقمك",
+    "phoneCodeSearch": "ابحث عن الدولة أو الرمز",
+    "phoneCodeEmpty": "لا توجد دولة مطابقة"
   },
   "profile": {
     "title": "ملفي الشخصي",
@@ -429,7 +441,13 @@
       "salaryRangeError": "يجب أن يكون الحد الأقصى مساوياً للحد الأدنى أو أكبر منه",
       "salaryLimitError": "أدخل قيمة لا تتجاوز {max, number}."
     },
-    "settingsPageSubtitle": "تحكّم في ما يمكن لأصحاب العمل رؤيته وكيف نتواصل معك."
+    "settingsPageSubtitle": "تحكّم في ما يمكن لأصحاب العمل رؤيته وكيف نتواصل معك.",
+    "applyUnlocked": {
+      "title": "يمكنك الآن التقديم على الوظائف",
+      "body": "اكتمل ملفك الشخصي بنسبة {pct}% — وهذا كافٍ لبدء التقديم. تصفّح الوظائف المتاحة وأرسل طلبك الأول.",
+      "browseJobs": "تصفّح الوظائف",
+      "later": "لاحقًا"
+    }
   },
   "document": {
     "upload": "[ar] Upload document",
@@ -514,7 +532,9 @@
       "monthsLabel": "أشهر",
       "softBlock": "إضافة الخبرة يحسّن نقاط المطابقة لديك",
       "saveExperience": "حفظ الخبرة",
-      "cancel": "إلغاء"
+      "cancel": "إلغاء",
+      "durationYears": "{count, plural, zero {# سنة} one {سنة واحدة} two {سنتان} few {# سنوات} many {# سنة} other {# سنة}}",
+      "durationMonths": "{count, plural, zero {# شهر} one {شهر واحد} two {شهران} few {# أشهر} many {# شهرًا} other {# شهر}}"
     },
     "documentsSkills": {
       "title": "الوثائق والمهارات",
@@ -583,6 +603,42 @@
       "MARRIED": "متزوج / متزوجة",
       "DIVORCED": "مطلق / مطلقة",
       "WIDOWED": "أرمل / أرملة"
+    },
+    "emailVerify": {
+      "title": "تحقّق من بريدك الإلكتروني",
+      "subtitle": "سنرسل رمزًا من 6 أرقام لتأكيد عنوانك",
+      "label": "البريد الإلكتروني",
+      "placeholder": "you@example.com",
+      "send": "إرسال الرمز",
+      "otpSent": "أدخل الرمز المكوّن من 6 أرقام المرسل إلى بريدك",
+      "resend": "إعادة إرسال الرمز",
+      "resendIn": "إعادة الإرسال خلال {seconds} ثانية",
+      "change": "تغيير",
+      "verified": "تم التحقق من البريد",
+      "emailTaken": "هذا البريد مسجّل بالفعل في حساب آخر. يُرجى استخدام بريد مختلف.",
+      "otpInvalid": "الرمز غير صحيح أو منتهي الصلاحية. يُرجى المحاولة مرة أخرى.",
+      "sendFailed": "تعذّر إرسال الرمز الآن. يُرجى المحاولة بعد قليل.",
+      "rateLimited": "تم طلب عدد كبير من الرموز. يُرجى الانتظار قليلاً.",
+      "sendError": "حدث خطأ ما. يُرجى المحاولة مرة أخرى."
+    },
+    "setPassword": {
+      "title": "اضبط كلمة المرور",
+      "subtitle": "حتى تتمكن من تسجيل الدخول ببريدك الإلكتروني إذا غيّرت رقم هاتفك أو فقدت شريحتك.",
+      "label": "كلمة المرور",
+      "confirmLabel": "تأكيد كلمة المرور",
+      "placeholder": "8 أحرف على الأقل",
+      "save": "حفظ كلمة المرور",
+      "done": "تم ضبط كلمة المرور",
+      "doneHint": "يمكنك الآن تسجيل الدخول ببريدك وكلمة المرور، أو برقم هاتفك.",
+      "tooWeak": "يجب ألا تقل كلمة المرور عن 8 أحرف وأن تتضمن حرفًا كبيرًا وحرفًا صغيرًا ورقمًا.",
+      "mismatch": "كلمتا المرور غير متطابقتين.",
+      "error": "حدث خطأ ما. يُرجى المحاولة مرة أخرى.",
+      "strength": {
+        "weak": "ضعيف",
+        "fair": "مقبول",
+        "good": "جيد",
+        "strong": "قوي"
+      }
     }
   },
   "employer": {
@@ -931,8 +987,8 @@
           "title": "الخبرة العملية",
           "india": "الهند",
           "foreign": "دولي",
-          "years": "{count, plural, zero {# سنة} one {سنة} two {سنتان} few {# سنوات} many {# سنة} other {# سنوات}}",
-          "months": "{count, plural, zero {# شهر} one {شهر} two {شهران} few {# أشهر} many {# شهراً} other {# شهر}}"
+          "years": "{count, plural, zero {# سنة} one {سنة واحدة} two {سنتان} few {# سنوات} many {# سنة} other {# سنة}}",
+          "months": "{count, plural, zero {# شهر} one {شهر واحد} two {شهران} few {# أشهر} many {# شهرًا} other {# شهر}}"
         },
         "documents": {
           "title": "المستندات",
@@ -2017,5 +2073,13 @@
   "sorting": {
     "sortAscending": "ترتيب حسب {column}، تصاعدي",
     "sortDescending": "ترتيب حسب {column}، تنازلي"
+  },
+  "admin": {
+    "candidates": {
+      "profile": {
+        "durationYears": "{count, plural, zero {# سنة} one {سنة واحدة} two {سنتان} few {# سنوات} many {# سنة} other {# سنة}}",
+        "durationMonths": "{count, plural, zero {# شهر} one {شهر واحد} two {شهران} few {# أشهر} many {# شهرًا} other {# شهر}}"
+      }
+    }
   }
 }

@@ -47,6 +47,10 @@ export const REDACTED_EMAIL = 'redacted@deleted.invalid';
 export function userAnonymizedFields(userId: string, now: Date): Prisma.UserUncheckedUpdateInput {
   return {
     email: purgedEmail(userId),
+    // The address it referred to no longer exists. Leaving the timestamp would
+    // assert that the TOMBSTONE address had been verified, which is false — and
+    // the date itself is a fact about the erased person.
+    emailVerifiedAt: null,
     passwordHash: null, // no credential survives; login is impossible
     // EVERY federated link is severed, not just the first one we shipped. A
     // surviving provider id is a live way back IN: the callback matches on it

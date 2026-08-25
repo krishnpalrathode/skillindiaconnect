@@ -29,6 +29,14 @@ Because every migration follows the expand → backfill → contract rule
 (see `.claude/rules/migrations.md`), the migration is always backward-compatible
 with the currently-running container version — zero-downtime deploys are safe.
 
+> **Forward-compatible is not the same as reversible.** A migration that widens a
+> column to NULL is safe to deploy forward, but the *data* the new code then
+> writes may be unreadable by the old code — Prisma throws rather than returning
+> a null for a field its client types non-nullable. One such boundary exists
+> today (phone signup, `users.email`); see
+> [CR-NULLEMAIL](../docs/known-deferrals.md#cr-nullemail--the-phone-signup-release-cannot-be-rolled-back-through).
+> **When a rollback goes wrong, recover by rolling forward.**
+
 **The `worker` service must NOT have a release command.** Exactly one migrator
 prevents concurrent double-apply.
 

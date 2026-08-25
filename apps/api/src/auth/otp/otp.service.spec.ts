@@ -8,6 +8,7 @@ import { PrismaService } from '../../core/prisma/prisma.service';
 import { MetricsService } from '../../core/observability/metrics.service';
 import { REDIS_CLIENT } from '../../core/redis/redis.provider';
 import { WHATSAPP_CHANNEL } from '../../notifications/channels/whatsapp.channel';
+import { EMAIL_CHANNEL } from '../../notifications/channels/email.channel';
 
 function sha256(s: string): string {
   return createHash('sha256').update(s).digest('hex');
@@ -76,6 +77,10 @@ describe('OtpService', () => {
         { provide: PrismaService, useValue: prismaMock },
         { provide: REDIS_CLIENT, useValue: redisMock },
         { provide: WHATSAPP_CHANNEL, useValue: whatsappMock },
+        {
+          provide: EMAIL_CHANNEL,
+          useValue: { sendOtp: jest.fn().mockResolvedValue({ ok: true }) },
+        },
         MetricsService,
         // Default: no OTP_DEV_CODE, so codes stay random as in production.
         { provide: ConfigService, useValue: { get: () => undefined } },
@@ -324,6 +329,10 @@ describe('OtpService', () => {
           { provide: PrismaService, useValue: prismaMock },
           { provide: REDIS_CLIENT, useValue: redisMock },
           { provide: WHATSAPP_CHANNEL, useValue: whatsappMock },
+          {
+            provide: EMAIL_CHANNEL,
+            useValue: { sendOtp: jest.fn().mockResolvedValue({ ok: true }) },
+          },
           MetricsService,
           { provide: ConfigService, useValue: { get: (k: string) => env[k] } },
         ],

@@ -19,6 +19,7 @@ import {
   toResumeView,
 } from '../resume-view.mapper';
 import { TEMPLATE_REGISTRY } from './registry';
+import { durationLabel } from './shared';
 
 const LONG_COMPANY = 'Al Habtoor Leighton Specialist Electromechanical Contracting Company LLC';
 const settings: ResumeRenderSettings = { ...RESUME_SETTINGS_DEFAULTS, showPhone: true };
@@ -194,5 +195,38 @@ describe.each(ALL)('%s — robustness', (template) => {
     expect(out).not.toMatch(/@import/);
     expect(out).not.toMatch(/src="https?:/);
     expect(out).not.toMatch(/url\(\s*['"]?https?:/);
+  });
+});
+
+describe('durationLabel — work-experience durations read as English', () => {
+  /*
+    This lands on a CV an employer reads. "4 yr 2 mo" saves four characters of a
+    line that was never short of room and costs fluency exactly where the reader
+    is forming an impression — and a grammar slip on a CV is read as the
+    CANDIDATE's, not the template's.
+  */
+  it('spells the units out in full — never "yr" or "mo"', () => {
+    expect(durationLabel(4, 2)).toBe('4 years 2 months');
+    expect(durationLabel(4, 2)).not.toMatch(/\byr\b|\bmo\b/);
+  });
+
+  it('agrees with the count: one year, four years', () => {
+    expect(durationLabel(1, 0)).toBe('1 year');
+    expect(durationLabel(4, 0)).toBe('4 years');
+    expect(durationLabel(0, 1)).toBe('1 month');
+    expect(durationLabel(0, 6)).toBe('6 months');
+    expect(durationLabel(1, 1)).toBe('1 year 1 month');
+  });
+
+  it('omits a zero part rather than printing "3 years 0 months"', () => {
+    expect(durationLabel(3, 0)).toBe('3 years');
+    expect(durationLabel(0, 0)).toBe('');
+  });
+
+  it('reaches the rendered page — no template formats durations itself', () => {
+    // A template that built its own string would silently keep the old wording.
+    const out = html(ResumeTemplate.MODERN, full);
+    expect(out).toContain('4 years 2 months');
+    expect(out).not.toMatch(/\d\s*yr\b/);
   });
 });

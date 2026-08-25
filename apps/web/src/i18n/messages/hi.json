@@ -57,7 +57,6 @@
       "languages": "भाषाएँ",
       "experience": "कार्य अनुभव",
       "noExperience": "अभी तक कोई कार्य अनुभव नहीं जोड़ा गया।",
-      "years": "{years} वर्ष {months} माह",
       "skills": "कौशल",
       "noSkills": "अभी तक कोई कौशल नहीं जोड़ा गया।",
       "documents": "दस्तावेज़",
@@ -67,7 +66,9 @@
         "PASSPORT": "पासपोर्ट",
         "EXPERIENCE_CERT": "अनुभव प्रमाणपत्र",
         "EDUCATIONAL_CERT": "शैक्षणिक प्रमाणपत्र"
-      }
+      },
+      "durationYears": "{count, plural, one {# वर्ष} other {# वर्ष}}",
+      "durationMonths": "{count, plural, one {# माह} other {# माह}}"
     },
     "status": {
       "generatingTitle": "आपका रिज्यूमे बन रहा है…",
@@ -318,6 +319,17 @@
       "LINKEDIN_FAILED": "LinkedIn साइन-इन पूरा नहीं हुआ। कृपया दोबारा कोशिश करें।",
       "LINKEDIN_UNAVAILABLE": "LinkedIn साइन-इन अभी उपलब्ध नहीं है। कृपया Google या अपने ईमेल और पासवर्ड का उपयोग करें।"
     }
+    },
+    "identifierLabel": "ईमेल पता या मोबाइल नंबर",
+    "identifierPlaceholder": "you@example.com या 9876543210",
+    "employerNeedsEmail": "नियोक्ता कार्य ईमेल पते से साइन अप करते हैं।",
+    "verifyAndCreate": "सत्यापित करें और खाता बनाएँ",
+    "phoneTaken": "यह नंबर पहले से किसी अन्य खाते से पंजीकृत है। कृपया कोई दूसरा नंबर उपयोग करें।",
+    "otpNotOnWhatsapp": "यह नंबर WhatsApp पर नहीं है। कृपया दूसरा नंबर आज़माएं।",
+    "otpSendFailed": "हम अभी आपका कोड नहीं भेज सके। कृपया पुनः प्रयास करें, या इसके बजाय ईमेल पते से साइन अप करें।",
+    "identifierHintPhone": "हम आपके नंबर की पुष्टि के लिए WhatsApp OTP भेजेंगे",
+    "phoneCodeSearch": "देश या कोड खोजें",
+    "phoneCodeEmpty": "कोई देश मेल नहीं खाता"
   },
   "profile": {
     "title": "मेरी प्रोफ़ाइल",
@@ -429,7 +441,13 @@
       "salaryRangeError": "अधिकतम राशि न्यूनतम के बराबर या उससे ज़्यादा होनी चाहिए",
       "salaryLimitError": "{max, number} तक का मान दर्ज करें।"
     },
-    "settingsPageSubtitle": "तय करें कि कंपनियाँ क्या देख सकती हैं और हम आपसे कैसे संपर्क करें।"
+    "settingsPageSubtitle": "तय करें कि कंपनियाँ क्या देख सकती हैं और हम आपसे कैसे संपर्क करें।",
+    "applyUnlocked": {
+      "title": "अब आप नौकरियों के लिए आवेदन कर सकते हैं",
+      "body": "आपकी प्रोफ़ाइल {pct}% पूरी हो चुकी है — आवेदन शुरू करने के लिए यह पर्याप्त है। उपलब्ध नौकरियाँ देखें और अपना पहला आवेदन भेजें।",
+      "browseJobs": "नौकरियाँ देखें",
+      "later": "बाद में"
+    }
   },
   "document": {
     "upload": "[hi] Upload document",
@@ -514,7 +532,9 @@
       "monthsLabel": "महीने",
       "softBlock": "अनुभव जोड़ने से आपका मैच स्कोर बेहतर होता है",
       "saveExperience": "अनुभव सहेजें",
-      "cancel": "रद्द करें"
+      "cancel": "रद्द करें",
+      "durationYears": "{count, plural, one {# वर्ष} other {# वर्ष}}",
+      "durationMonths": "{count, plural, one {# माह} other {# माह}}"
     },
     "documentsSkills": {
       "title": "दस्तावेज़ और कौशल",
@@ -583,6 +603,42 @@
       "MARRIED": "विवाहित",
       "DIVORCED": "तलाकशुदा",
       "WIDOWED": "विधवा/विधुर"
+    },
+    "emailVerify": {
+      "title": "अपना ईमेल पता सत्यापित करें",
+      "subtitle": "आपका पता पुष्ट करने के लिए हम 6 अंकों का कोड भेजेंगे",
+      "label": "ईमेल पता",
+      "placeholder": "you@example.com",
+      "send": "कोड भेजें",
+      "otpSent": "आपके ईमेल पर भेजा गया 6 अंकों का कोड दर्ज करें",
+      "resend": "कोड फिर भेजें",
+      "resendIn": "{seconds} सेकंड में फिर भेजें",
+      "change": "बदलें",
+      "verified": "ईमेल सत्यापित",
+      "emailTaken": "यह ईमेल पहले से किसी अन्य खाते से पंजीकृत है। कृपया दूसरा उपयोग करें।",
+      "otpInvalid": "कोड अमान्य या समाप्त हो चुका है। कृपया पुनः प्रयास करें।",
+      "sendFailed": "हम अभी आपका कोड नहीं भेज सके। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
+      "rateLimited": "बहुत अधिक कोड मांगे गए। कृपया थोड़ी प्रतीक्षा करें।",
+      "sendError": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।"
+    },
+    "setPassword": {
+      "title": "पासवर्ड सेट करें",
+      "subtitle": "ताकि फ़ोन नंबर बदलने या सिम खो जाने पर भी आप अपने ईमेल से साइन इन कर सकें।",
+      "label": "पासवर्ड",
+      "confirmLabel": "पासवर्ड की पुष्टि करें",
+      "placeholder": "कम से कम 8 अक्षर",
+      "save": "पासवर्ड सहेजें",
+      "done": "पासवर्ड सेट हो गया",
+      "doneHint": "अब आप अपने ईमेल और पासवर्ड से, या अपने फ़ोन नंबर से साइन इन कर सकते हैं।",
+      "tooWeak": "पासवर्ड कम से कम 8 अक्षर का होना चाहिए और उसमें एक बड़ा अक्षर, एक छोटा अक्षर और एक अंक होना चाहिए।",
+      "mismatch": "दोनों पासवर्ड मेल नहीं खाते।",
+      "error": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
+      "strength": {
+        "weak": "कमज़ोर",
+        "fair": "ठीक-ठाक",
+        "good": "अच्छा",
+        "strong": "मज़बूत"
+      }
     }
   },
   "employer": {
@@ -1530,7 +1586,7 @@
     "matchShort": "{score}% मैच",
     "gulfBadge": "अंतर्राष्ट्रीय अनुभव",
     "ageYears": "{age} वर्ष",
-    "expYears": "{years} वर्ष अनुभव",
+    "expYears": "{years, plural, one {# वर्ष का अनुभव} other {# वर्ष का अनुभव}}",
     "appliedAgo": "{ago} आवेदन किया",
     "showMore": "और दिखाएं",
     "showLess": "कम दिखाएं",
@@ -2017,5 +2073,13 @@
   "sorting": {
     "sortAscending": "{column} से क्रमबद्ध करें, आरोही",
     "sortDescending": "{column} से क्रमबद्ध करें, अवरोही"
+  },
+  "admin": {
+    "candidates": {
+      "profile": {
+        "durationYears": "{count, plural, one {# वर्ष} other {# वर्ष}}",
+        "durationMonths": "{count, plural, one {# माह} other {# माह}}"
+      }
+    }
   }
 }

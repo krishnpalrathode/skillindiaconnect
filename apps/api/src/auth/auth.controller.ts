@@ -24,6 +24,7 @@ import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { SetPasswordDto } from './dto/set-password.dto';
 import { PasswordResetService } from './password-reset.service';
 
 const REFRESH_COOKIE = 'sic_refresh';
@@ -133,6 +134,24 @@ export class AuthController {
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.passwordResetService.reset(dto.token, dto.password);
     return { data: { message: 'Password updated. Please sign in.' } };
+  }
+
+  /**
+   * Set the first password on an account that has none (phone-signup onboarding).
+   *
+   * Authenticated, and deliberately NOT @Public — the caller's own token is the
+   * authorisation, and the userId comes from that token rather than the body, so
+   * one account can never set a password on another.
+   *
+   * A repeat call gets 409 PASSWORD_ALREADY_SET rather than silently
+   * overwriting; see AuthService.setPassword for why that matters.
+   */
+  @Post('password/set')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
+  async setPassword(@Body() dto: SetPasswordDto, @CurrentUser() actor: CurrentUserPayload) {
+    await this.authService.setPassword(actor.userId, dto.password);
+    return { data: { passwordSet: true } };
   }
 
   // ─── Google OAuth ─────────────────────────────────────────────────────────────

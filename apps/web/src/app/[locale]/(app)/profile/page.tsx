@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import type { components } from '@skillindiaconnect/shared-types';
 import { BrandLoader } from '@/components/ui/brand-loader';
 import { ProfileHero } from '@/components/profile/ProfileHero';
+import { ApplyUnlockedDialog } from '@/components/profile/ApplyUnlockedDialog';
 import { ProfileStats } from '@/components/profile/ProfileStats';
 import { PersonalInfoSection } from '@/components/profile/sections/PersonalInfoSection';
 import { ExperienceSection } from '@/components/profile/sections/ExperienceSection';
@@ -97,6 +98,14 @@ export default function ProfilePage() {
 
   return (
     <div className={PAGE_SHELL}>
+      {/*
+        Fires once, on the edit that makes this profile good enough to apply
+        with. Mounted HERE because this is the screen where a candidate fills
+        the details — every section below refetches completion on save, so the
+        crossing is observed the moment it happens.
+      */}
+      <ApplyUnlockedDialog completion={completion} userId={user?.id ?? null} />
+
       <ProfileHero profile={profile} completion={completion} />
 
       <ProfileStats profile={profile} />

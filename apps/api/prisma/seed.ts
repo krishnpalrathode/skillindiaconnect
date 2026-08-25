@@ -56,7 +56,7 @@ async function main(): Promise<void> {
     ['worker_protection.accommodation_required', true, true],
     ['worker_protection.health_insurance_required', true, true],
     ['worker_protection.transportation_required', true, true],
-    ['jobs.auto_archive_days', 90, false],
+    ['jobs.auto_archive_days', 45, false],
     ['jobs.require_admin_approval', false, false],
     // The enforced Free cap (SubscriptionReadService.effectivePlan reads this,
     // never the FREE plan row). Super-Admin tunable on Screen 28.

@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import type { components } from '@skillindiaconnect/shared-types';
 import { CompletionRing } from '@/components/common/CompletionRing';
 import { Avatar } from '@/components/ui/avatar';
+import { candidateDisplayName } from '@/lib/format/display-name';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type CompletionResult = components['schemas']['CompletionResult'];
@@ -30,7 +31,7 @@ export function ProfileSummaryCard({ profile, completion }: ProfileSummaryCardPr
         {/* Avatar overlapping the banner */}
         <div className="rounded-full bg-white p-1 shadow-md">
           <Avatar
-            name={profile.fullName ?? profile.email}
+            name={candidateDisplayName(profile)}
             photoUrl={profile.photoUrl}
             className="size-20 text-xl"
           />
@@ -38,7 +39,7 @@ export function ProfileSummaryCard({ profile, completion }: ProfileSummaryCardPr
 
         <div className="text-center">
           <p className="max-w-[180px] truncate font-semibold text-neutral-900">
-            {profile.fullName ?? profile.email}
+            {candidateDisplayName(profile)}
           </p>
           {profile.isAvailable && (
             <span className="mt-1 inline-block rounded-full bg-success-bg px-2.5 py-0.5 text-xs font-medium text-success-fg">

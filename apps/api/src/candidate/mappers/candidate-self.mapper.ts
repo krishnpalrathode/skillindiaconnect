@@ -37,6 +37,27 @@ export interface CandidateSelfDto {
   phone: string | null;
   phoneVerifiedAt: string | null;
   whatsappCapable: boolean;
+  /**
+   * The account's OTHER credentials. SELF VIEWER ONLY — the employer and admin
+   * mappers are separate functions and none of this reaches them.
+   *
+   * Onboarding needs these to know which step a candidate is on, and it has to
+   * survive a page reload, so the server is the source of truth rather than
+   * something the client remembers. A phone-signup account starts with no
+   * email and no password and fills both in during onboarding; an email-signup
+   * account has both from the start.
+   */
+  email: string | null;
+  emailVerifiedAt: string | null;
+  /** Whether a password is set — never the hash, not even to the account owner. */
+  hasPassword: boolean;
+  /**
+   * Whether the account is linked to Google. Onboarding needs this to avoid
+   * demanding a password from someone who already has a durable way in: a
+   * Google account has no passwordHash either, and hasPassword alone cannot
+   * tell the two apart.
+   */
+  hasGoogle: boolean;
   maritalStatus: MaritalStatus | null;
   religion: string | null;
   languages: string[];
@@ -85,6 +106,18 @@ export interface CandidateDocumentDto {
 // ─── Relation type used by the mapper ────────────────────────────────────────
 
 export type CandidateProfileWithRelations = CandidateProfile & {
+  /**
+   * Optional so the lighter-include callers stay as they are. When absent the
+   * mapper reports no email and no password rather than guessing — the callers
+   * that omit it (PATCH responses, the availability toggle) are not the ones
+   * driving onboarding.
+   */
+  user?: {
+    email: string | null;
+    emailVerifiedAt: Date | null;
+    passwordHash: string | null;
+    googleId: string | null;
+  };
   experiences: WorkExperience[];
   skills: CandidateSkill[];
   /**
@@ -112,6 +145,13 @@ export function toSelf(
     dob: profile.dob ? profile.dob.toISOString().slice(0, 10) : null,
     phone: profile.phone,
     phoneVerifiedAt: profile.phoneVerifiedAt ? profile.phoneVerifiedAt.toISOString() : null,
+    email: profile.user?.email ?? null,
+    emailVerifiedAt: profile.user?.emailVerifiedAt
+      ? profile.user.emailVerifiedAt.toISOString()
+      : null,
+    // Boolean only. The hash never leaves the server, for any viewer.
+    hasPassword: Boolean(profile.user?.passwordHash),
+    hasGoogle: Boolean(profile.user?.googleId),
     whatsappCapable: profile.whatsappCapable,
     maritalStatus: profile.maritalStatus,
     religion: profile.religion,
