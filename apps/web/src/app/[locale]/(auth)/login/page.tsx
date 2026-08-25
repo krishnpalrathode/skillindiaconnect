@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { GoogleButton } from '@/components/auth/GoogleButton';
+import { LinkedinButton } from '@/components/auth/LinkedinButton';
+import { OAuthErrorNotice } from '@/components/auth/OAuthErrorNotice';
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { PhoneLoginFlow } from '@/components/auth/PhoneLoginFlow';
@@ -21,6 +23,16 @@ type Method = 'email' | 'phone';
 type View = 'signIn' | 'forgot';
 
 export default function LoginPage() {
+  // useSearchParams() opts the subtree into client-side rendering, and Next
+  // fails the production build unless it sits under a Suspense boundary.
+  return (
+    <Suspense fallback={<div className="h-48" aria-hidden />}>
+      <LoginPageInner />
+    </Suspense>
+  );
+}
+
+function LoginPageInner() {
   const t = useTranslations('auth');
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,6 +45,14 @@ export default function LoginPage() {
   // `next` lets callers (e.g. SaveJobButton on a public job page) send the
   // candidate back to where they were instead of always landing on /dashboard.
   const next = searchParams.get('next');
+
+  /*
+    A failed provider sign-in comes back HERE, as ?error=CODE — the OAuth
+    callback is a browser redirect, so the API has nowhere to put an error but
+    the URL. Before this the codes were sent and nothing read them, leaving a
+    refused user on a login page that gave no reason.
+  */
+  const oauthError = searchParams.get('error');
 
   // Already authenticated — redirect to dashboard.
   // Must run in an effect, not during render: calling router.replace() while
@@ -96,10 +116,18 @@ export default function LoginPage() {
         <ForgotPasswordForm onBackToLogin={() => setView('signIn')} />
       ) : (
         <>
-          <GoogleButton
-            label={t('googleLogin')}
-            className="h-12 rounded-xl border-neutral-300 font-semibold hover:border-neutral-400"
-          />
+          <OAuthErrorNotice code={oauthError} />
+
+          <div className="flex flex-col gap-2.5">
+            <GoogleButton
+              label={t('googleLogin')}
+              className="h-12 rounded-xl border-neutral-300 font-semibold hover:border-neutral-400"
+            />
+            <LinkedinButton
+              label={t('linkedinLogin')}
+              className="h-12 rounded-xl border-neutral-300 font-semibold hover:border-neutral-400"
+            />
+          </div>
 
           {/* Divider */}
           <div className="relative flex items-center gap-3">

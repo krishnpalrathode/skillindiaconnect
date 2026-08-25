@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  HttpException,
   HttpStatus,
   Post,
   Req,
@@ -13,9 +14,10 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
-import { AuthService, GoogleUser } from './auth.service';
+import { AuthService, GoogleUser, LinkedinUser } from './auth.service';
 import { TokenService } from './token.service';
 import { GoogleGuard } from './guards/google.guard';
+import { LinkedinGuard, isOAuthFailure, OAuthFailure } from './guards/linkedin.guard';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser, CurrentUserPayload } from './decorators/current-user.decorator';
 import { SignupDto } from './dto/signup.dto';
@@ -26,6 +28,35 @@ import { SetPasswordDto } from './dto/set-password.dto';
 import { PasswordResetService } from './password-reset.service';
 
 const REFRESH_COOKIE = 'sic_refresh';
+
+/**
+ * The codes an OAuth callback is allowed to convert into a redirect.
+ *
+ * An allowlist rather than "any ForbiddenException", so a refusal added
+ * elsewhere later cannot start silently swallowing itself into a redirect
+ * without someone deciding that is right.
+ */
+const REDIRECTABLE_OAUTH_CODES = new Set([
+  'GOOGLE_NOT_ALLOWED',
+  'LINKEDIN_NOT_ALLOWED',
+  'ACCOUNT_SUSPENDED',
+]);
+
+/**
+ * Pull the machine-readable `code` out of a thrown HttpException.
+ *
+ * Nest wraps the object passed to `new ForbiddenException({ code })` as the
+ * exception's `response`, so the code is not on the error directly. Returns null
+ * for anything that is not a redirectable refusal, which the caller treats as
+ * "rethrow".
+ */
+function extractErrorCode(err: unknown): string | null {
+  if (!(err instanceof HttpException)) return null;
+  const response = err.getResponse();
+  if (typeof response !== 'object' || response === null) return null;
+  const code = (response as { code?: unknown }).code;
+  return typeof code === 'string' && REDIRECTABLE_OAUTH_CODES.has(code) ? code : null;
+}
 
 @Controller('auth')
 export class AuthController {
@@ -139,13 +170,61 @@ export class AuthController {
     @Req() req: Request & { user: GoogleUser },
     @Res() res: Response,
   ): Promise<void> {
-    const result = await this.authService.handleGoogleCallback(
-      req.user,
-      req.ip,
-      req.headers['user-agent'],
+    /*
+      Wrapped so a refused sign-in ends on the LOGIN PAGE, not on a JSON body.
+
+      This route is the tail of a browser redirect chain. When the service threw
+      GOOGLE_NOT_ALLOWED — an employer or admin pressing the Google button — Nest
+      rendered a 403 JSON error into the browser on the API's domain: no styling,
+      no explanation, no link back. openapi.yaml has always DOCUMENTED the
+      redirect-with-`?error=` behaviour for this endpoint; it was simply never
+      implemented. This makes reality match the contract.
+    */
+    await this.completeOAuthCallback(res, () =>
+      this.authService.handleGoogleCallback(req.user, req.ip, req.headers['user-agent']),
     );
-    this.setRefreshCookie(res, result.refreshToken, result.refreshExp);
-    res.redirect(`${result.webAppUrl}/callback`);
+  }
+
+  // ─── LinkedIn OAuth (OpenID Connect) ─────────────────────────────────────────
+
+  /**
+   * Candidates only, exactly like Google — the role gate lives in AuthService.
+   *
+   * Both routes tolerate the provider being unconfigured. LINKEDIN_OAUTH_* are
+   * optional env vars (see env.schema.ts), so on a deployment that has not set
+   * them the strategy is never registered and `AuthGuard('linkedin')` would
+   * throw "Unknown authentication strategy" — a 500 for what is really a
+   * deliberate configuration state. The check turns that into an ordinary
+   * message on the login page.
+   */
+  @Public()
+  @Get('linkedin')
+  @UseGuards(LinkedinGuard)
+  linkedinInit(@Res() res: Response): void {
+    // Only reached when the provider is NOT configured: with the strategy
+    // registered, the guard has already redirected to LinkedIn and this body
+    // never runs.
+    this.redirectToLogin(res, 'LINKEDIN_UNAVAILABLE');
+  }
+
+  @Public()
+  @Get('linkedin/callback')
+  @UseGuards(LinkedinGuard)
+  async linkedinCallback(
+    @Req() req: Request & { user: LinkedinUser | OAuthFailure },
+    @Res() res: Response,
+  ): Promise<void> {
+    // The guard converts every handshake failure into this sentinel rather than
+    // throwing, so the user gets a page instead of a stack trace.
+    if (isOAuthFailure(req.user)) {
+      this.redirectToLogin(res, req.user.oauthError);
+      return;
+    }
+
+    const linkedinUser = req.user;
+    await this.completeOAuthCallback(res, () =>
+      this.authService.handleLinkedinCallback(linkedinUser, req.ip, req.headers['user-agent']),
+    );
   }
 
   // ─── Refresh ─────────────────────────────────────────────────────────────────
@@ -185,6 +264,44 @@ export class AuthController {
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Finish a provider callback: set the session cookie and land the browser on
+   * the app — or, if the sign-in was refused, on the login page with a code.
+   *
+   * Shared by both providers so an error path fixed for one cannot stay broken
+   * for the other.
+   *
+   * Only the `code` crosses the redirect, never the message. The message is
+   * server copy in one language; the code lets the web app show translated text,
+   * which matters for a product that ships ten locales.
+   */
+  private async completeOAuthCallback(
+    res: Response,
+    run: () => Promise<{ refreshToken: string; refreshExp: number; webAppUrl: string }>,
+  ): Promise<void> {
+    try {
+      const result = await run();
+      this.setRefreshCookie(res, result.refreshToken, result.refreshExp);
+      res.redirect(`${result.webAppUrl}/callback`);
+    } catch (err) {
+      /*
+        Only the deliberate refusals are turned into a redirect — a role gate or
+        a suspended account. Anything else (a database outage, a bug) is
+        rethrown so it is logged and reported as the 500 it is, rather than
+        being disguised as a tidy "please try again" that hides an incident.
+      */
+      const code = extractErrorCode(err);
+      if (!code) throw err;
+      this.redirectToLogin(res, code);
+    }
+  }
+
+  /** Back to the login screen with a machine-readable reason in the query. */
+  private redirectToLogin(res: Response, code: string): void {
+    const webAppUrl = this.configService.get<string>('WEB_APP_URL')!;
+    res.redirect(`${webAppUrl}/login?error=${encodeURIComponent(code)}`);
+  }
 
   private setRefreshCookie(res: Response, token: string, exp: number): void {
     const nodeEnv = this.configService.get<string>('NODE_ENV') ?? 'development';

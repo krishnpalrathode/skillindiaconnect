@@ -17,6 +17,31 @@ export const envSchema = z.object({
   GOOGLE_OAUTH_CLIENT_SECRET: z.string().min(1),
   GOOGLE_OAUTH_CALLBACK_URL: z.string().url(),
 
+  // ── LinkedIn OAuth / OpenID Connect (candidates only) ────────────────────
+  // OPTIONAL, unlike Google above, and deliberately so. Google's keys are
+  // required because every environment has always had them; making these
+  // required would mean an API that refuses to BOOT anywhere the LinkedIn app
+  // has not been provisioned yet — CI, a fresh clone, an existing production
+  // deploy on the release that introduces this. The provider is registered
+  // only when all three are present (auth.module.ts) and the routes degrade to
+  // a redirect rather than a 500 when they are absent.
+  //
+  // Blank strings are coerced to undefined: a deploy platform that renders an
+  // unset variable as "" would otherwise satisfy .min(1) and half-configure the
+  // provider, which fails later and further from the cause.
+  LINKEDIN_OAUTH_CLIENT_ID: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().min(1).optional(),
+  ),
+  LINKEDIN_OAUTH_CLIENT_SECRET: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().min(1).optional(),
+  ),
+  LINKEDIN_OAUTH_CALLBACK_URL: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().url().optional(),
+  ),
+
   // Frontend base URL — OAuth redirect + CORS origin
   WEB_APP_URL: z.string().url(),
 

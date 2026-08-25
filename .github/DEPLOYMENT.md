@@ -62,6 +62,31 @@ Required vars for `web`:
 | --------------------- | --------------------------------- |
 | `NEXT_PUBLIC_API_URL` | `https://api.staging.example.com` |
 
+### Optional: LinkedIn sign-in
+
+Unlike `GOOGLE_OAUTH_*`, the LinkedIn variables are **optional**. Leave them
+unset and the provider is simply not registered — the API boots normally and
+`/auth/linkedin` redirects to `/login?error=LINKEDIN_UNAVAILABLE`. Set all three
+to turn it on; setting only some counts as unset.
+
+| Variable                        | Example                                                  |
+| ------------------------------- | -------------------------------------------------------- |
+| `LINKEDIN_OAUTH_CLIENT_ID`      | From the LinkedIn app's Auth tab                          |
+| `LINKEDIN_OAUTH_CLIENT_SECRET`  | From the LinkedIn app's Auth tab                          |
+| `LINKEDIN_OAUTH_CALLBACK_URL`   | `https://api.example.com/api/v1/auth/linkedin/callback`   |
+
+Before the keys will work, in the [LinkedIn Developer Portal](https://www.linkedin.com/developers/apps):
+
+1. The app must be associated with a LinkedIn **Company Page**.
+2. Products tab → request **Sign In with LinkedIn using OpenID Connect**. The
+   keys alone are not enough — without this product LinkedIn rejects the
+   `openid` scope at the consent screen.
+3. Auth tab → add `LINKEDIN_OAUTH_CALLBACK_URL` to **Authorized redirect URLs**,
+   matching byte for byte including scheme and path.
+
+Each environment needs its OWN redirect URL registered; staging and production
+cannot share one entry.
+
 ## Deployment triggers
 
 | Branch    | Environment | Trigger                    |

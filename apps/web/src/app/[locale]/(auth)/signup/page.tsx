@@ -1,14 +1,25 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { GoogleButton } from '@/components/auth/GoogleButton';
+import { LinkedinButton } from '@/components/auth/LinkedinButton';
 import { SignupForm } from '@/components/auth/SignupForm';
 import { useAuth } from '@/lib/auth/auth-context';
 
 export default function SignupPage() {
+  // useSearchParams() opts the subtree into client-side rendering, and Next
+  // fails the production build unless it sits under a Suspense boundary.
+  return (
+    <Suspense fallback={<div className="h-48" aria-hidden />}>
+      <SignupPageInner />
+    </Suspense>
+  );
+}
+
+function SignupPageInner() {
   const t = useTranslations('auth');
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,13 +68,21 @@ export default function SignupPage() {
         <p className="mt-1.5 text-sm text-neutral-600 sm:text-base">{t('signupSubtitle')}</p>
       </div>
 
-      {/* Google OAuth — candidates only; UI note included */}
-      <div className="flex flex-col gap-1.5">
+      {/*
+        Social sign-up — candidates only, which is why ONE note sits under the
+        pair rather than one per button. Repeating "job seekers only" twice in
+        eight lines reads as two different rules.
+      */}
+      <div className="flex flex-col gap-2.5">
         <GoogleButton
           label={t('googleSignup')}
           className="h-12 rounded-xl border-neutral-300 font-semibold hover:border-neutral-400"
         />
-        <p className="text-center text-xs text-neutral-600">{t('googleCandidateOnly')}</p>
+        <LinkedinButton
+          label={t('linkedinSignup')}
+          className="h-12 rounded-xl border-neutral-300 font-semibold hover:border-neutral-400"
+        />
+        <p className="text-center text-xs text-neutral-600">{t('socialCandidateOnly')}</p>
       </div>
 
       {/* Divider */}
