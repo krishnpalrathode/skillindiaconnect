@@ -208,7 +208,8 @@
     "resumeBuilderShort": "[ar] Resume",
     "settings": "[ar] Settings",
     "logout": "[ar] Log out",
-    "login": "[ar] Log in"
+    "login": "[ar] Log in",
+    "primaryLabel": "التنقل الرئيسي"
   },
   "status": {
     "pending": "[ar] Pending",
@@ -2067,5 +2068,13 @@
         "durationMonths": "{count, plural, zero {# شهر} one {شهر واحد} two {شهران} few {# أشهر} many {# شهرًا} other {# شهر}}"
       }
     }
+  },
+  "appShell": {
+    "homeLink": "سكيل إنديا كونكت — الرئيسية",
+    "searchLabel": "ابحث عن وظائف",
+    "searchPlaceholder": "ابحث عن وظائف",
+    "notificationsWithCount": "الإشعارات، {count} غير مقروء",
+    "notificationsNone": "الإشعارات، لا يوجد غير مقروء",
+    "moreMenu": "خيارات إضافية"
   }
 }

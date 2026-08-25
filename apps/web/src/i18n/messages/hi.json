@@ -208,7 +208,8 @@
     "resumeBuilderShort": "[hi] Resume",
     "settings": "[hi] Settings",
     "logout": "[hi] Log out",
-    "login": "[hi] Log in"
+    "login": "[hi] Log in",
+    "primaryLabel": "मुख्य नेविगेशन"
   },
   "status": {
     "pending": "[hi] Pending",
@@ -2067,5 +2068,13 @@
         "durationMonths": "{count, plural, one {# माह} other {# माह}}"
       }
     }
+  },
+  "appShell": {
+    "homeLink": "स्किल इंडिया कनेक्ट — होम",
+    "searchLabel": "नौकरियाँ खोजें",
+    "searchPlaceholder": "नौकरियाँ खोजें",
+    "notificationsWithCount": "सूचनाएँ, {count} अपठित",
+    "notificationsNone": "सूचनाएँ, कोई अपठित नहीं",
+    "moreMenu": "अधिक विकल्प"
   }
 }

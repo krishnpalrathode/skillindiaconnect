@@ -215,7 +215,8 @@
     "resumeBuilderShort": "Resume",
     "settings": "Settings",
     "logout": "Log out",
-    "login": "Log in"
+    "login": "Log in",
+    "primaryLabel": "Main navigation"
   },
   "status": {
     "pending": "Pending",
@@ -3176,5 +3177,13 @@
       "action": "Add to home screen",
       "dismiss": "Not now"
     }
+  },
+  "appShell": {
+    "homeLink": "Skill India Connect — home",
+    "searchLabel": "Search jobs",
+    "searchPlaceholder": "Search jobs",
+    "notificationsWithCount": "Notifications, {count} unread",
+    "notificationsNone": "Notifications, none unread",
+    "moreMenu": "More options"
   }
 }
