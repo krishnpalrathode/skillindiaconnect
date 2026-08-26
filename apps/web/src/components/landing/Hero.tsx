@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { ShieldCheck, BadgeCheck, Search, UserRound, Globe } from 'lucide-react';
@@ -80,8 +81,40 @@ export function Hero({ locale }: { locale: string }) {
       {/* Text column gets a little more width than the carousel so the 60px
           headline has room without the nowrap accent phrase overflowing. */}
       <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.15fr_1fr] lg:gap-12 lg:py-28">
-        {/* ── Left column: copy + CTAs (entrance sequence unchanged) ── */}
-        <div className="max-w-3xl">
+        {/*
+          ── Left column: copy + CTAs (entrance sequence unchanged) ──
+
+          M4: below `lg` this becomes a centred app-entry screen; from `lg` up
+          every value is restored and the desktop landing is exactly what it
+          was. `lg` is the breakpoint the hero's own grid already switches on,
+          so "phone" here means precisely "the width at which the copy is the
+          full row".
+        */}
+        <div className="max-w-3xl text-center lg:text-start">
+          {/*
+            Mark + wordmark, phone only. The desktop landing already carries the
+            logo in its sticky header at a comfortable size; on a phone that
+            header is a 72px strip and this screen is the product's front door,
+            so the brand is stated once, properly, on the dark ground.
+
+            SIC_mark.png rather than logo.png: it is a 96px transparent mark, so
+            it sits on the navy without the light canvas that logo.png needs
+            `object-cover` to crop away. The wordmark is text — it scales, it
+            translates nowhere (a proper noun), and it costs no bytes.
+          */}
+          <div className="mb-6 flex items-center justify-center gap-2.5 lg:hidden">
+            <Image
+              src="/brand/SIC_mark.png"
+              alt=""
+              aria-hidden="true"
+              width={40}
+              height={40}
+              priority
+              className="size-10 shrink-0"
+            />
+            <span className="text-lg font-bold tracking-tight text-white">Skill India Connect</span>
+          </div>
+
           <h1
             className={cn(
               'hero-anim animate-hero-rise text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl',
@@ -109,18 +142,29 @@ export function Hero({ locale }: { locale: string }) {
           </h1>
 
           <p
-            className="hero-anim animate-hero-rise mt-6 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg lg:text-xl"
+            className="hero-anim animate-hero-rise mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/90 sm:text-lg lg:mx-0 lg:text-xl"
             style={{ animationDelay: '100ms' }}
           >
             {t('subline')}
           </p>
 
           <div
-            className="hero-anim animate-hero-rise-scale mt-8 flex flex-col gap-3 sm:flex-row sm:items-center"
+            className="hero-anim animate-hero-rise-scale mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start lg:items-center"
             style={{ animationDelay: '180ms' }}
           >
+            {/*
+              "Find Verified Jobs" goes to the JOB SEARCH, not to signup.
+
+              It used to route to `/signup`, which meant the one button on this
+              page promising jobs delivered a registration form instead. The
+              search is already public, crawlable and unauthenticated — there is
+              nothing to gate — and the strongest argument this page can make to
+              a stranger is simply that the listings are real. The header still
+              carries Sign up and Log in, so no path is lost; the button just
+              does what it says.
+            */}
             <Link
-              href={`/${locale}/signup`}
+              href={`/${locale}/jobs`}
               className={cn(
                 buttonVariants({ variant: 'primary', size: 'lg' }),
                 'group rounded-xl font-bold shadow-lg shadow-black/20',
@@ -136,7 +180,16 @@ export function Hero({ locale }: { locale: string }) {
               href={`/${locale}/signup?role=employer`}
               className={cn(
                 buttonVariants({ variant: 'outline', size: 'lg' }),
-                'rounded-xl border-2 border-white/40 bg-transparent font-bold text-white',
+                /*
+                  border-white/50, not /40. The outlined button's edge is the
+                  only thing that says it IS a button, so it is non-text UI and
+                  needs 3:1 against the ground. Measured on the lightest
+                  gradient stop (primary-700 #1a3c6e): /40 gives 3.12:1 — it
+                  passes, with almost nothing to spare, and any future darkening
+                  of the hero drops it below. /50 gives 4.02:1 and is visually
+                  indistinguishable.
+                */
+                'rounded-xl border-2 border-white/50 bg-transparent font-bold text-white',
                 'transition-[transform,background-color,border-color] duration-150 ease-out',
                 'hover:scale-[1.02] hover:border-white hover:bg-white/10 active:scale-[0.98] active:bg-white/20',
               )}
@@ -157,7 +210,7 @@ export function Hero({ locale }: { locale: string }) {
             instead of competing with it.
           */}
           <ul
-            className="hero-anim animate-hero-rise mt-5 flex flex-wrap items-center gap-x-5 gap-y-2"
+            className="hero-anim animate-hero-rise mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 lg:justify-start"
             style={{ animationDelay: '240ms' }}
           >
             {HERO_BADGES.map(({ key, Icon }) => (

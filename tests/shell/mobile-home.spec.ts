@@ -269,6 +269,18 @@ test.describe('Phone home — RTL, constrained, browser-walk', () => {
         return c!.y - h!.y;
       };
 
+      /*
+        Wait for FONTS before the first measurement.
+
+        Under slow-3G the web font arrives late and swaps; text metrics change,
+        the copy above the button re-wraps, and the button moves — for a reason
+        that has nothing to do with the image this test is about. Settling the
+        fonts first isolates the only thing being claimed: that the decorative
+        image cannot reflow the CTA.
+      */
+      await page.evaluate(async () => {
+        await document.fonts.ready;
+      });
       const before = await offsetInHero();
       expect((await cta.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 
