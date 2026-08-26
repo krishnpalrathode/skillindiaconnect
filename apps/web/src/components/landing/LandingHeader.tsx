@@ -23,7 +23,19 @@ export function LandingHeader() {
         <Link
           href={`/${locale}`}
           aria-label={t('home')}
-          className="relative block h-12 w-40 shrink-0 overflow-hidden rounded-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 sm:h-16 sm:w-52"
+          /*
+            w-28 below `sm`, not w-40.
+
+            At 360px the row did not fit: 160px of logo plus the Login and
+            Sign-Up buttons pushed the document to 397px, so the whole public
+            landing page scrolled sideways on the narrowest phones — every page
+            using this header, not just the home page. Narrowing the logo on
+            phone is the smallest fix that keeps BOTH buttons reachable, which
+            matters because Login is the only route a returning candidate has
+            from here. `object-cover` crops less at this ratio than at the old
+            one, so the mark reads no worse.
+          */
+          className="relative block h-11 w-28 shrink-0 overflow-hidden rounded-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70 sm:h-16 sm:w-52"
         >
           <Image
             src="/brand/logo.png"
@@ -50,11 +62,27 @@ export function LandingHeader() {
             {t('login')}
           </Link>
 
+          {/*
+            Sign Up is DESKTOP-ONLY in this header.
+
+            At 360px the row does not fit — and Arabic is the case that proves
+            it, because "إنشاء حساب مجاني" sets ~25% wider than "Sign Up Free"
+            and pushed the document to 441px. Shrinking the logo alone was not
+            enough for that locale, and a public landing page that scrolls
+            sideways on the narrowest phones is a real defect, not a cosmetic
+            one.
+
+            Sign Up is the right thing to drop rather than Login, because it is
+            the one that is offered elsewhere on every page: the hero carries
+            two prominent CTAs, and the footer carries both /signup and
+            /signup?role=employer. LOGIN is the only route a returning
+            candidate has from this chrome, so it stays at every width.
+          */}
           <Link
             href={`/${locale}/signup`}
             className={cn(
               buttonVariants({ variant: 'primary', size: 'md' }),
-              'rounded-xl font-semibold shadow-sm transition-all hover:shadow-md',
+              'hidden rounded-xl font-semibold shadow-sm transition-all hover:shadow-md sm:inline-flex',
             )}
           >
             {t('signUp')}

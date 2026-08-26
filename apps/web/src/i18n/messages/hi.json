@@ -208,7 +208,8 @@
     "resumeBuilderShort": "[hi] Resume",
     "settings": "[hi] Settings",
     "logout": "[hi] Log out",
-    "login": "[hi] Log in"
+    "login": "[hi] Log in",
+    "primaryLabel": "मुख्य नेविगेशन"
   },
   "status": {
     "pending": "[hi] Pending",
@@ -1108,7 +1109,9 @@
       "unsave": "सहेजी गई",
       "newBadge": "नई",
       "marketGulf": "अंतर्राष्ट्रीय",
-      "marketLocal": "भारत"
+      "marketLocal": "भारत",
+      "apply": "अभी आवेदन करें",
+      "applyToJob": "{title} के लिए आवेदन करें"
     },
     "benefits": {
       "pf": "PF",
@@ -2079,6 +2082,45 @@
         "durationYears": "{count, plural, one {# वर्ष} other {# वर्ष}}",
         "durationMonths": "{count, plural, one {# माह} other {# माह}}"
       }
+    }
+  },
+  "appShell": {
+    "homeLink": "स्किल इंडिया कनेक्ट — होम",
+    "searchLabel": "नौकरियाँ खोजें",
+    "searchPlaceholder": "नौकरियाँ खोजें",
+    "notificationsWithCount": "सूचनाएँ, {count} अपठित",
+    "notificationsNone": "सूचनाएँ, कोई अपठित नहीं",
+    "moreMenu": "अधिक विकल्प"
+  },
+  "home": {
+    "hero": {
+      "headline": "अपनी अगली नौकरी पाएँ",
+      "subline": "भारत और खाड़ी देशों में सत्यापित नियोक्ता। आवेदन नि:शुल्क।",
+      "cta": "नौकरियाँ खोजें"
+    },
+    "value": {
+      "ariaLabel": "श्रमिक स्किल इंडिया कनेक्ट क्यों चुनते हैं",
+      "reach": {
+        "title": "भारत और खाड़ी",
+        "body": "घर के पास या विदेश में काम।"
+      }
+    },
+    "categories": {
+      "heading": "काम के अनुसार देखें",
+      "slug": {
+        "electrician": "इलेक्ट्रीशियन",
+        "mason": "राजमिस्त्री",
+        "hvac-technician": "एचवीएसी तकनीशियन",
+        "driver": "ड्राइवर",
+        "plumber": "प्लंबर",
+        "welder": "वेल्डर"
+      }
+    },
+    "featured": {
+      "heading": "नवीनतम नौकरियाँ",
+      "viewAll": "सभी देखें",
+      "emptyTitle": "अभी कोई नौकरी उपलब्ध नहीं",
+      "emptyBody": "नई नौकरियाँ अक्सर आती रहती हैं। जल्द फिर देखें, या खोज कर विकल्प बढ़ाएँ।"
     }
   }
 }

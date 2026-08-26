@@ -25,6 +25,10 @@ import type { CandidateStats } from '@/lib/api/dashboard';
 import { homePathForRole } from '@/lib/auth/home-path';
 import { PAGE_SHELL } from '@/lib/page-shell';
 import { candidateDisplayName } from '@/lib/format/display-name';
+import { HomeHero } from '@/components/home/HomeHero';
+import { ValueStrip } from '@/components/home/ValueStrip';
+import { CategoryChips } from '@/components/home/CategoryChips';
+import { FeaturedJobs } from '@/components/home/FeaturedJobs';
 
 type CandidateProfile = components['schemas']['CandidateProfile'];
 type CompletionResult = components['schemas']['CompletionResult'];
@@ -171,9 +175,43 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-col gap-6 lg:col-span-2">
-          <RecommendedJobs jobs={recommendedJobs} />
+          {/*
+            Desktop keeps its existing recommended-jobs presentation. On a phone
+            the SAME jobs are shown by <FeaturedJobs> below, using the search
+            card — so this is hidden there rather than rendering the identical
+            three jobs twice on one screen.
+          */}
+          <div className="hidden lg:block">
+            <RecommendedJobs jobs={recommendedJobs} />
+          </div>
           <MyApplicationsMini />
         </div>
+      </div>
+
+      {/*
+        ── Phone discovery block (M2) ─────────────────────────────────────────
+
+        Below the personal content, deliberately. A signed-in candidate opened
+        the app to see where their applications stand and what their profile
+        still needs; that is what the greeting, the KPIs and the completion ring
+        answer, and pushing them under a hero would trade the reason they came
+        for the reason we would like them to stay. Discovery is the next thing
+        they do, so it sits next.
+
+        `lg:hidden` — one tree, responsive only. Above `lg` this block does not
+        render and the desktop dashboard is exactly what it was.
+
+        RESERVED PLACEMENT: the design also showed a four-tile row — Skill
+        Courses, Career Advice, Mentorship, Success Stories. None of those
+        features exist, so none is built; a tile that opens nothing is worse
+        than no tile. When one ships, it belongs here, between the category
+        chips and the featured jobs.
+      */}
+      <div className="flex flex-col gap-6 lg:hidden">
+        <HomeHero locale={locale} />
+        <ValueStrip />
+        <CategoryChips locale={locale} />
+        <FeaturedJobs jobs={recommendedJobs} locale={locale} />
       </div>
     </div>
   );
