@@ -215,7 +215,8 @@
     "resumeBuilderShort": "Resume",
     "settings": "Settings",
     "logout": "Log out",
-    "login": "Log in"
+    "login": "Log in",
+    "primaryLabel": "Main navigation"
   },
   "status": {
     "pending": "Pending",
@@ -1155,7 +1156,9 @@
       "unsave": "Saved",
       "newBadge": "New",
       "marketGulf": "International",
-      "marketLocal": "India"
+      "marketLocal": "India",
+      "apply": "Apply now",
+      "applyToJob": "Apply to {title}"
     },
     "benefits": {
       "pf": "PF",
@@ -3188,6 +3191,45 @@
       "body": "Opens like an app, loads faster, and works from your home screen.",
       "action": "Add to home screen",
       "dismiss": "Not now"
+    }
+  },
+  "appShell": {
+    "homeLink": "Skill India Connect — home",
+    "searchLabel": "Search jobs",
+    "searchPlaceholder": "Search jobs",
+    "notificationsWithCount": "Notifications, {count} unread",
+    "notificationsNone": "Notifications, none unread",
+    "moreMenu": "More options"
+  },
+  "home": {
+    "hero": {
+      "headline": "Find your next job",
+      "subline": "Verified employers across India and the Gulf. Free to apply.",
+      "cta": "Search jobs"
+    },
+    "value": {
+      "ariaLabel": "Why workers choose Skill India Connect",
+      "reach": {
+        "title": "India and Gulf",
+        "body": "Work close to home or overseas."
+      }
+    },
+    "categories": {
+      "heading": "Browse by trade",
+      "slug": {
+        "electrician": "Electrician",
+        "mason": "Mason",
+        "hvac-technician": "HVAC Technician",
+        "driver": "Driver",
+        "plumber": "Plumber",
+        "welder": "Welder"
+      }
+    },
+    "featured": {
+      "heading": "Latest jobs",
+      "viewAll": "View all",
+      "emptyTitle": "No jobs open right now",
+      "emptyBody": "New jobs are posted often. Check back soon, or search to widen your options."
     }
   }
 }

@@ -208,7 +208,8 @@
     "resumeBuilderShort": "[ar] Resume",
     "settings": "[ar] Settings",
     "logout": "[ar] Log out",
-    "login": "[ar] Log in"
+    "login": "[ar] Log in",
+    "primaryLabel": "التنقل الرئيسي"
   },
   "status": {
     "pending": "[ar] Pending",
@@ -1108,7 +1109,9 @@
       "unsave": "محفوظة",
       "newBadge": "جديدة",
       "marketGulf": "دولي",
-      "marketLocal": "الهند"
+      "marketLocal": "الهند",
+      "apply": "قدّم الآن",
+      "applyToJob": "تقدَّم لوظيفة {title}"
     },
     "benefits": {
       "pf": "PF",
@@ -2079,6 +2082,45 @@
         "durationYears": "{count, plural, zero {# سنة} one {سنة واحدة} two {سنتان} few {# سنوات} many {# سنة} other {# سنة}}",
         "durationMonths": "{count, plural, zero {# شهر} one {شهر واحد} two {شهران} few {# أشهر} many {# شهرًا} other {# شهر}}"
       }
+    }
+  },
+  "appShell": {
+    "homeLink": "سكيل إنديا كونكت — الرئيسية",
+    "searchLabel": "ابحث عن وظائف",
+    "searchPlaceholder": "ابحث عن وظائف",
+    "notificationsWithCount": "الإشعارات، {count} غير مقروء",
+    "notificationsNone": "الإشعارات، لا يوجد غير مقروء",
+    "moreMenu": "خيارات إضافية"
+  },
+  "home": {
+    "hero": {
+      "headline": "ابحث عن وظيفتك التالية",
+      "subline": "أصحاب عمل موثّقون في الهند ودول الخليج. التقديم مجاني.",
+      "cta": "ابحث عن وظائف"
+    },
+    "value": {
+      "ariaLabel": "لماذا يختار العمال سكيل إنديا كونكت",
+      "reach": {
+        "title": "الهند والخليج",
+        "body": "اعمل قريبًا من بيتك أو في الخارج."
+      }
+    },
+    "categories": {
+      "heading": "تصفَّح حسب المهنة",
+      "slug": {
+        "electrician": "كهربائي",
+        "mason": "بنّاء",
+        "hvac-technician": "فني تكييف",
+        "driver": "سائق",
+        "plumber": "سبّاك",
+        "welder": "لحّام"
+      }
+    },
+    "featured": {
+      "heading": "أحدث الوظائف",
+      "viewAll": "عرض الكل",
+      "emptyTitle": "لا توجد وظائف متاحة الآن",
+      "emptyBody": "تُضاف وظائف جديدة باستمرار. عد قريبًا، أو ابحث لتوسيع خياراتك."
     }
   }
 }

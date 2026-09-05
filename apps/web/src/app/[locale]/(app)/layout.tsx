@@ -20,6 +20,8 @@ import { useLogoutConfirm } from '@/lib/auth/logout-confirm';
 import { LanguageSwitcher } from '@/components/auth/LanguageSwitcher';
 import { BrandLoader } from '@/components/ui/brand-loader';
 import { cn } from '@/lib/utils';
+import { MobileAppHeader } from '@/components/app-shell/MobileAppHeader';
+import { MobileTabBar, buildMobileTabs } from '@/components/app-shell/MobileTabBar';
 
 interface NavItemProps {
   href: string;
@@ -256,78 +258,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* ── Mobile top header ─────────────────────────────────────────── */}
-      <header className="lg:hidden sticky top-0 z-10 flex items-center justify-between h-16 px-4 bg-white/95 backdrop-blur-sm border-b border-neutral-200 shadow-sm">
-        <div className="relative h-11 w-36 overflow-hidden rounded-md">
-          <Image
-            src="/brand/logo.png"
-            alt="SkillIndia Connect"
-            fill
-            priority
-            sizes="144px"
-            className="object-cover object-center"
-          />
-        </div>
-        <div className="flex items-center gap-1.5">
-          <LanguageSwitcher variant="light" />
-          <button
-            type="button"
-            onClick={() => requestLogout()}
-            aria-label={t('logout')}
-            className="flex items-center justify-center size-9 rounded-lg text-neutral-600 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70"
-          >
-            <LogOut className="size-5" aria-hidden="true" />
-          </button>
-        </div>
-      </header>
+      {/* ── Mobile app header (phone widths only) ─────────────────────── */}
+      <MobileAppHeader locale={locale} />
 
-      {/* ── Main content ──────────────────────────────────────────────── */}
-      <main className="flex-1 lg:ms-56 xl:ms-64 pb-20 lg:pb-0">{children}</main>
+      {/*
+        ── Main content ────────────────────────────────────────────────
 
-      {/* ── Mobile bottom nav ────────────────────────────────────────── */}
-      <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-10 flex items-center justify-around bg-white border-t border-neutral-200 h-16 px-2"
-        aria-label="Main navigation"
-      >
-        {navItems.slice(0, 5).map((item) =>
-          item.disabled ? (
-            <span
-              key={item.href}
-              // eslint-disable-next-line no-restricted-syntax -- DISABLED control — WCAG 1.4.3 explicitly exempts disabled UI, and darkening it would stop it reading as unavailable.
-              className="flex flex-1 min-w-0 flex-col items-center gap-0.5 px-1 py-1 text-neutral-400 cursor-not-allowed select-none"
-            >
-              <span className="size-5 opacity-50">{item.icon}</span>
-              <span className="max-w-full truncate text-[10px]">
-                {item.shortLabel ?? item.label}
-              </span>
-            </span>
-          ) : (
-            <Link
-              key={item.href}
-              href={item.href}
-              // The accessible name stays the FULL label — a screen reader must
-              // announce "Resume Builder", never the abbreviated bar text.
-              aria-label={item.label}
-              aria-current={item.active ? 'page' : undefined}
-              className={cn(
-                // flex-1 + min-w-0: five equal columns that cannot overflow the
-                // bar. At 360px that is ~72px each — comfortably past the 44px
-                // minimum target, with min-h-[44px] guaranteeing the vertical.
-                'flex flex-1 min-w-0 flex-col items-center gap-0.5 px-1 py-1 rounded-xl min-h-[44px] justify-center transition-colors',
-                'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/70',
-                item.active
-                  ? 'bg-gradient-to-r from-[#0F3D91] to-[#2E67B1] text-white shadow-md shadow-[#0F3D91]/25'
-                  : 'text-neutral-600',
-              )}
-            >
-              {item.icon}
-              <span aria-hidden="true" className="max-w-full truncate text-[10px] font-medium">
-                {item.shortLabel ?? item.label}
-              </span>
-            </Link>
-          ),
-        )}
-      </nav>
+        The bottom offset is derived from the SAME expression the tab bar pads
+        itself with, plus the bar's own height, so the two cannot drift out of
+        step. This is the bug this pattern always has: content that looks fine
+        on the dashboard and then hides the last row of a long list behind the
+        bar — it only shows at the very bottom of a long scroll, which is
+        exactly where nobody looks during a quick check.
+
+        `lg:pb-0` because above `lg` the bar is display:none and the offset
+        would be reserving space for nothing.
+      */}
+      <main className="flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom)+1rem)] lg:ms-56 lg:pb-0 xl:ms-64">
+        {children}
+      </main>
+
+      {/* ── Mobile tab bar (phone widths only) ────────────────────────── */}
+      <MobileTabBar tabs={buildMobileTabs(locale, pathname, t)} />
     </div>
   );
 }

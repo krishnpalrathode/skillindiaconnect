@@ -1,18 +1,24 @@
 /**
  * CR-001 F1 — the Resume Builder becomes a DESTINATION.
  *
- * Two things are worth testing here and one thing is not:
+ * ── Updated by M1 (the phone app shell) ──────────────────────────────────────
+ * The guarantee is unchanged and still the point of this file: a candidate on a
+ * cheap Android phone must be able to reach the Resume Builder. What changed is
+ * WHERE. The phone bar is now four tabs (Home · Jobs · Applications · Profile),
+ * so Resume Builder moved into the app header's overflow menu rather than
+ * losing its place entirely — which is what a literal four-tab reading would
+ * have done, and would have made it unreachable on phones altogether, since the
+ * sidebar that also carries it is desktop-only.
  *
- *  - The nav entry exists AND survives on mobile. The whole point of this unit
- *    is discoverability for candidates on cheap Android phones; an entry that
- *    only renders in the desktop sidebar would pass a naive test while failing
- *    the goal. So the mobile bar is asserted explicitly, at 5 items.
- *  - The mobile label is ABBREVIATED but the ACCESSIBLE NAME is not. Shortening
- *    visible text to fit five columns must not shorten what a screen reader
- *    announces.
- *  - Onboarding-unbroken is NOT re-tested here: resume.test.tsx already asserts
- *    PreviewExportStep's "Save & Continue reaches /dashboard without a resume".
- *    Duplicating it would create a second place to update.
+ * The abbreviation test that used to live here is gone with its subject: at
+ * five items the bar needed a shortened "Resume" label with the full accessible
+ * name preserved. At four items the labels fit as they are, and the menu item
+ * carries the full text, so visible text and accessible name are simply the
+ * same string and there is no divergence left to guard.
+ *
+ * Onboarding-unbroken is NOT re-tested here: resume.test.tsx already asserts
+ * PreviewExportStep's "Save & Continue reaches /dashboard without a resume".
+ * Duplicating it would create a second place to update.
  */
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -28,6 +34,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 import { screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { render } from '../../../../test-utils';
 import { db, makeAccessToken } from '../../../../mocks/data';
 import { setAccessToken, resetClient } from '../../../../lib/api/client';
@@ -48,7 +55,7 @@ function loginAs(userId: string) {
   db.sessions.set(token, { userId, accessToken: token });
 }
 
-/** Both navs share the "Main navigation" name; the mobile bar is the second. */
+/** Both navs share the "Main navigation" name, so the bar is found by test id. */
 async function renderShell() {
   render(
     // AppLayout's sign-out button reads useLogoutConfirm(), which the real app
@@ -65,7 +72,7 @@ async function renderShell() {
   );
   await waitFor(() => expect(screen.getAllByRole('navigation').length).toBeGreaterThan(1));
   const navs = screen.getAllByRole('navigation', { name: /main navigation/i });
-  return { sidebar: navs[0]!, mobileBar: navs[navs.length - 1]! };
+  return { sidebar: navs[0]!, mobileBar: screen.getByTestId('mobile-tab-bar') };
 }
 
 describe('F1 — Resume Builder navigation entry', () => {
@@ -82,25 +89,29 @@ describe('F1 — Resume Builder navigation entry', () => {
     expect(link).toHaveAttribute('href', '/en/resume');
   });
 
-  it('SURVIVES ON MOBILE — the bar carries five items including Resume Builder', async () => {
-    // The bar was widened from 4 to 5 for exactly this entry. A regression to
-    // slice(0, 4) would silently drop it on the devices our users actually have.
-    const { mobileBar } = await renderShell();
-    const links = within(mobileBar).getAllByRole('link');
-    expect(links).toHaveLength(5);
-    expect(within(mobileBar).getByRole('link', { name: /resume builder/i })).toHaveAttribute(
-      'href',
-      '/en/resume',
-    );
+  /**
+   * The guarantee CR-001 actually cares about, restated for the four-tab shell.
+   *
+   * The sidebar is desktop-only, so if the phone chrome does not carry Resume
+   * Builder somewhere, it is not reachable on a phone at all — which is the
+   * regression this test exists to catch, wherever the entry point happens to
+   * live.
+   */
+  it('SURVIVES ON MOBILE — reachable from the app header, with the full name', async () => {
+    const user = userEvent.setup();
+    await renderShell();
+
+    await user.click(screen.getByRole('button', { name: /more options/i }));
+
+    const link = within(screen.getByRole('menu')).getByRole('menuitem', {
+      name: 'Resume Builder',
+    });
+    expect(link).toHaveAttribute('href', '/en/resume');
   });
 
-  it('abbreviates the mobile LABEL without abbreviating the ACCESSIBLE NAME', async () => {
+  it('keeps the phone tab bar to the four specified destinations', async () => {
     const { mobileBar } = await renderShell();
-    const link = within(mobileBar).getByRole('link', { name: 'Resume Builder' });
-    // Visible text is the short form; the accessible name (asserted by the
-    // getByRole query above) is still the full one.
-    expect(link).toHaveTextContent('Resume');
-    expect(link).not.toHaveTextContent('Resume Builder');
+    expect(within(mobileBar).getAllByRole('link')).toHaveLength(4);
   });
 
   it('marks itself as the current page on /resume', async () => {
