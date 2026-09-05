@@ -84,7 +84,7 @@ function NavItem({ href, icon, label, active, disabled }: NavItemProps) {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations('nav');
   const { requestLogout } = useLogoutConfirm();
-  const { user, isLoading, isLoggingOut } = useAuth();
+  const { user, hasPassword, isLoading, isLoggingOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams<{ locale: string }>();
@@ -93,6 +93,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // /jobs (search + detail) is public — browsable unauthenticated for SEO/guests.
   // Every other route in this group is candidate-only.
   const isPublicPath = pathname.includes('/jobs');
+
+  // Onboarding-completion gate. A phone-signup CANDIDATE starts with no email
+  // and no password; both are carried in the access token (`email`, `hasPassword`
+  // — the latter flips true once they set one, after which EmailVerify/SetPassword
+  // refresh the token). Until BOTH are present they must finish onboarding —
+  // otherwise a hard refresh mid-onboarding lands them here unfinished, and a
+  // phone-only account with no password could never sign back in. Employers/admins
+  // always carry both, and /jobs stays public.
+  const needsOnboarding =
+    !!user && user.role === 'CANDIDATE' && (user.email === null || !hasPassword) && !isPublicPath;
 
   useEffect(() => {
     // `isLoggingOut` — a deliberate sign-out owns its own redirect (to the
@@ -103,6 +113,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [user, isLoading, isLoggingOut, router, locale, isPublicPath]);
 
+  useEffect(() => {
+    if (!isLoading && needsOnboarding && !isLoggingOut) {
+      router.replace(`/${locale}/onboarding`);
+    }
+  }, [needsOnboarding, isLoading, isLoggingOut, router, locale]);
+
   // Guest (or auth still resolving) on a public path: render the page as-is,
   // no sidebar chrome and no blocking spinner — SSR content must never be
   // hidden behind a client-only auth gate (see mock-setup.tsx for the same rule).
@@ -110,7 +126,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  if (isLoading || !user) {
+  // `needsOnboarding` holds the shell while the effect above redirects a
+  // not-yet-complete candidate to onboarding, so the dashboard never flashes.
+  if (isLoading || !user || needsOnboarding) {
     return (
       <div className="flex min-h-svh items-center justify-center bg-neutral-50">
         <BrandLoader size="lg" label="Loading…" />

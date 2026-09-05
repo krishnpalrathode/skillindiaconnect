@@ -13,6 +13,7 @@ import { PhoneVerify } from '@/components/onboarding/PhoneVerify';
 import { EmailVerify } from '@/components/onboarding/EmailVerify';
 import { SetPassword } from '@/components/onboarding/SetPassword';
 import { BrandLoader } from '@/components/ui/brand-loader';
+import { useAuth } from '@/lib/auth/auth-context';
 import {
   patchCandidateProfile,
   presignPhoto,
@@ -76,6 +77,7 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
   const tCal = useTranslations('common.calendar');
   const tToast = useTranslations('toast');
   const { showToast } = useToast();
+  const { refreshSession } = useAuth();
 
   const [fullName, setFullName] = useState(profile.fullName ?? '');
   const [dob, setDob] = useState(profile.dob ?? '');
@@ -412,6 +414,13 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
           onVerified={(email) => {
             setEmailVerified(true);
             onProfileUpdate({ ...profile, email });
+            // Re-issue the token so it carries the now-verified email. This is
+            // what releases the (app) shell's email-verification gate — without
+            // it, a phone-signup whose token still says `email: null` would be
+            // bounced back to onboarding forever. Fire-and-forget: the user
+            // stays on this step, and the refreshed token lands well before they
+            // reach the dashboard.
+            void refreshSession();
           }}
         />
       )}
@@ -438,6 +447,9 @@ export function PersonalInfoStep({ profile, onProfileUpdate, onNext }: PersonalI
           onSet={() => {
             setPasswordSet(true);
             onProfileUpdate({ ...profile, hasPassword: true });
+            // Re-issue the token so its `hasPassword` claim flips true — this is
+            // what releases the app's onboarding gate (mirrors EmailVerify).
+            void refreshSession();
           }}
         />
       )}

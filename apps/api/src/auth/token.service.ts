@@ -66,6 +66,13 @@ export class TokenService {
      */
     email: string | null,
     role: UserRole,
+    /**
+     * Whether the account has a usable password. Carried in the access token so
+     * the onboarding gate can require a phone-signup candidate to SET a password
+     * (their only recoverable credential) before reaching the app — the same way
+     * `email` is carried for the email-verified half of that gate.
+     */
+    hasPassword: boolean,
     ip?: string,
     userAgent?: string,
   ): Promise<IssuedTokens> {
@@ -81,7 +88,7 @@ export class TokenService {
     // access token alone on silent refresh (no user object in the refresh
     // response) — see apps/web/src/lib/auth/auth-context.tsx's decodeToken().
     const accessToken = this.jwtService.sign(
-      { sub: userId, email, role, jti: accessJti, type: 'access' },
+      { sub: userId, email, role, hasPassword, jti: accessJti, type: 'access' },
       { secret: accessSecret, expiresIn: accessTtl },
     );
 
@@ -186,7 +193,7 @@ export class TokenService {
         .catch(() => undefined);
     }
 
-    return this.issue(user.id, user.email, user.role, ip, userAgent);
+    return this.issue(user.id, user.email, user.role, !!user.passwordHash, ip, userAgent);
   }
 
   async revokeByToken(refreshToken: string): Promise<void> {

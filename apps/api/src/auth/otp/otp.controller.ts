@@ -247,6 +247,9 @@ export class OtpController {
       user.id,
       user.email,
       user.role,
+      // A phone signup starts with no password — the onboarding gate requires
+      // one before the app, so the token must say there isn't one yet.
+      false,
       req.ip,
       req.headers['user-agent'],
     );
@@ -340,6 +343,7 @@ export class OtpController {
       user.id,
       user.email,
       user.role,
+      !!user.passwordHash,
       req.ip,
       req.headers['user-agent'],
     );

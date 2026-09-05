@@ -28,7 +28,10 @@ type UserSummary = components['schemas']['UserSummary'];
 // with their phone would have been silently signed out on their first reload,
 // with a perfectly valid token in hand. Identity here is `sub` + `role`; the
 // email is a display detail that may legitimately not exist yet.
-function decodeToken(token: string): UserSummary | null {
+/** UserSummary plus the token-only claim the onboarding gate needs. */
+type SessionUser = UserSummary & { hasPassword: boolean };
+
+function decodeToken(token: string): SessionUser | null {
   try {
     const parts = token.split('.');
     if (parts.length < 2) return null;
@@ -39,6 +42,9 @@ function decodeToken(token: string): UserSummary | null {
       id: payload['sub'] as string,
       email: (payload['email'] as string | null | undefined) ?? null,
       role: payload['role'] as UserSummary['role'],
+      // Present on tokens issued after this change; absent (→ false) on any
+      // legacy token still in flight, which correctly reads as "no password yet".
+      hasPassword: payload['hasPassword'] === true,
     };
   } catch {
     return null;
@@ -49,6 +55,12 @@ function decodeToken(token: string): UserSummary | null {
 
 export interface AuthContextValue {
   user: UserSummary | null;
+  /**
+   * Whether the signed-in account has a usable password (a token claim). A phone
+   * signup starts `false` and flips `true` once they set one in onboarding — the
+   * app's gate requires it, so a phone-only account can always sign back in.
+   */
+  hasPassword: boolean;
   isLoading: boolean;
   /**
    * True from the moment a DELIBERATE sign-out starts until the next sign-in.
@@ -64,6 +76,12 @@ export interface AuthContextValue {
   signup: (body: SignupBody) => Promise<void>;
   signupWithPhone: (phone: string, otp: string, acceptedTerms: boolean) => Promise<void>;
   logout: () => Promise<void>;
+  /**
+   * Re-fetch the session token and refresh `user` from it. Used after onboarding
+   * verifies an email so the token (and therefore `user.email`) reflects the
+   * newly-verified address — which is what releases the app's email gate.
+   */
+  refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -72,6 +90,9 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserSummary | null>(null);
+  // Derived from the access-token claim, tracked alongside `user` so the gate can
+  // read it synchronously. Set at every point the token changes (below).
+  const [hasPassword, setHasPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   // The in-flight refresh, SHARED. Concurrent callers must AWAIT the same
@@ -95,13 +116,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const result = await postRefresh();
         setAccessToken(result.accessToken);
-        setUser(decodeToken(result.accessToken));
+        const decoded = decodeToken(result.accessToken);
+        setUser(decoded);
+        setHasPassword(decoded?.hasPassword ?? false);
         return result.accessToken;
       } catch {
         // Only clear auth state if no explicit login/signup/logout superseded us.
         if (authGeneration.current === myGeneration) {
           setAccessToken(null);
           setUser(null);
+          setHasPassword(false);
         }
         return null;
       } finally {
@@ -126,6 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const result = await postLogin({ email, password });
     setAccessToken(result.accessToken);
     setUser(result.user);
+    setHasPassword(decodeToken(result.accessToken)?.hasPassword ?? false);
   }, []);
 
   const loginWithPhone = useCallback(async (phone: string, otp: string) => {
@@ -134,6 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const result = await postPhoneLoginVerify(phone, otp);
     setAccessToken(result.accessToken);
     setUser(result.user);
+    setHasPassword(decodeToken(result.accessToken)?.hasPassword ?? false);
   }, []);
 
   const signup = useCallback(async (body: SignupBody) => {
@@ -142,6 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const result = await postSignup(body);
     setAccessToken(result.accessToken);
     setUser(result.user);
+    setHasPassword(decodeToken(result.accessToken)?.hasPassword ?? false);
   }, []);
 
   /**
@@ -156,6 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await postPhoneSignupVerify(phone, otp, acceptedTerms);
       setAccessToken(result.accessToken);
       setUser(result.user);
+      setHasPassword(decodeToken(result.accessToken)?.hasPassword ?? false);
     },
     [],
   );
@@ -168,13 +196,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setAccessToken(null);
       setUser(null);
+      setHasPassword(false);
     }
   }, []);
+
+  // Thin wrapper over the internal refresh so callers (e.g. the onboarding email
+  // verify) can force a token re-issue after a server-side change to the user —
+  // rotate() re-reads the row, so the new token carries the verified email.
+  const refreshSession = useCallback(async () => {
+    await doRefresh();
+  }, [doRefresh]);
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        hasPassword,
         isLoading,
         isLoggingOut,
         login,
@@ -182,6 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signup,
         signupWithPhone,
         logout,
+        refreshSession,
       }}
     >
       {children}

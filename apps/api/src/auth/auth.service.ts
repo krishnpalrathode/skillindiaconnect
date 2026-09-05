@@ -118,7 +118,16 @@ export class AuthService {
       throw err;
     }
 
-    const tokens = await this.tokenService.issue(user.id, user.email, user.role, ip, userAgent);
+    const tokens = await this.tokenService.issue(
+      user.id,
+      user.email,
+      user.role,
+      // An email signup is always created WITH a password (above), so this half
+      // of the onboarding gate is satisfied from the start.
+      true,
+      ip,
+      userAgent,
+    );
     return { user, ...tokens };
   }
 
@@ -209,7 +218,14 @@ export class AuthService {
       data: { lastLoginAt: new Date() },
     });
 
-    const tokens = await this.tokenService.issue(user.id, user.email, user.role, ip, userAgent);
+    const tokens = await this.tokenService.issue(
+      user.id,
+      user.email,
+      user.role,
+      !!user.passwordHash,
+      ip,
+      userAgent,
+    );
     return { user: { id: user.id, email: user.email, role: user.role }, ...tokens };
   }
 
@@ -296,7 +312,14 @@ export class AuthService {
       ? await this.linkAndTouch(provider, providerId, existing)
       : await this.createFederatedCandidate(provider, providerId, email);
 
-    const tokens = await this.tokenService.issue(user.id, user.email, user.role, ip, userAgent);
+    const tokens = await this.tokenService.issue(
+      user.id,
+      user.email,
+      user.role,
+      !!user.passwordHash,
+      ip,
+      userAgent,
+    );
     return { ...tokens, webAppUrl: this.configService.get<string>('WEB_APP_URL')! };
   }
 
@@ -308,11 +331,7 @@ export class AuthService {
    * matched on the stable identifier rather than on an address they may have
    * changed at the provider since.
    */
-  private async findFederatedUser(
-    provider: FederatedProvider,
-    providerId: string,
-    email: string,
-  ) {
+  private async findFederatedUser(provider: FederatedProvider, providerId: string, email: string) {
     const byProviderId = await this.prisma.user.findUnique({
       where: provider.whereProviderId(providerId),
     });

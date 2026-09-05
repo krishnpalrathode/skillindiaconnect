@@ -68,7 +68,7 @@ describe('TokenService', () => {
   describe('issue', () => {
     it('returns access + refresh tokens and persists a session', async () => {
       (prismaMock.refreshSession.create as jest.Mock).mockResolvedValue({});
-      const result = await service.issue(USER_ID, USER_EMAIL, ROLE, '127.0.0.1', 'jest');
+      const result = await service.issue(USER_ID, USER_EMAIL, ROLE, true, '127.0.0.1', 'jest');
       expect(result.accessToken).toBeTruthy();
       expect(result.refreshToken).toBeTruthy();
       expect(result.refreshExp).toBeGreaterThan(Date.now() / 1000);
@@ -77,11 +77,12 @@ describe('TokenService', () => {
 
     it('access token contains sub, email, role, jti, type=access', () => {
       (prismaMock.refreshSession.create as jest.Mock).mockResolvedValue({});
-      return service.issue(USER_ID, USER_EMAIL, ROLE).then(({ accessToken }) => {
+      return service.issue(USER_ID, USER_EMAIL, ROLE, true).then(({ accessToken }) => {
         const decoded = jwtService.decode(accessToken) as Record<string, unknown>;
         expect(decoded['sub']).toBe(USER_ID);
         expect(decoded['email']).toBe(USER_EMAIL);
         expect(decoded['role']).toBe(ROLE);
+        expect(decoded['hasPassword']).toBe(true);
         expect(decoded['type']).toBe('access');
         expect(typeof decoded['jti']).toBe('string');
       });
@@ -91,7 +92,7 @@ describe('TokenService', () => {
   describe('rotate', () => {
     it('revokes old session and issues a new token pair', async () => {
       (prismaMock.refreshSession.create as jest.Mock).mockResolvedValue({});
-      const { refreshToken } = await service.issue(USER_ID, USER_EMAIL, ROLE);
+      const { refreshToken } = await service.issue(USER_ID, USER_EMAIL, ROLE, true);
       const sessionId = (prismaMock.refreshSession.create as jest.Mock).mock.calls[0]![0].data
         .id as string;
 
@@ -120,7 +121,7 @@ describe('TokenService', () => {
 
     it('throws TOKEN_REUSE and revokes ALL sessions when replaying a revoked token', async () => {
       (prismaMock.refreshSession.create as jest.Mock).mockResolvedValue({});
-      const { refreshToken } = await service.issue(USER_ID, USER_EMAIL, ROLE);
+      const { refreshToken } = await service.issue(USER_ID, USER_EMAIL, ROLE, true);
       const sessionId = (prismaMock.refreshSession.create as jest.Mock).mock.calls[0]![0].data
         .id as string;
 
@@ -142,7 +143,7 @@ describe('TokenService', () => {
 
     it('throws INVALID_REFRESH for an unknown session', async () => {
       (prismaMock.refreshSession.create as jest.Mock).mockResolvedValue({});
-      const { refreshToken } = await service.issue(USER_ID, USER_EMAIL, ROLE);
+      const { refreshToken } = await service.issue(USER_ID, USER_EMAIL, ROLE, true);
       (prismaMock.refreshSession.findUnique as jest.Mock).mockResolvedValue(null);
 
       await expect(service.rotate(refreshToken)).rejects.toThrow(UnauthorizedException);
