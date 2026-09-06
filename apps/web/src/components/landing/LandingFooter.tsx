@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
-import { Mail, MapPin, Phone } from 'lucide-react';
+import { ExternalLink, Mail, MapPin, Phone } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/auth/LanguageSwitcher';
 
 // ── Contact + social (single source of truth) ────────────────────────────────
@@ -13,6 +13,15 @@ const CONTACT = {
   address: '107, Rohit House, Connaught Place, New Delhi - 110001, India',
   email: 'divyansh.intl@gmail.com',
   phones: ['011 4356 8626', '011 2373 3332'],
+};
+
+// The parent company. External site, so the footer link opens in a new tab. The
+// mark is the opaque Divyansh app icon (white glyph on their navy) shown as a
+// small rounded chip — the name stays real, legible text beside it.
+const PARENT_COMPANY = {
+  name: 'Divyansh International',
+  href: 'https://divyansh.international/',
+  mark: '/brand/divyansh-international-mark.png',
 };
 
 // lucide-react 1.x ships no brand glyphs, so socials use inline Simple Icons
@@ -215,12 +224,42 @@ export function LandingFooter() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-neutral-500">{t('rights', { year })}</p>
+        <div className="mt-12 border-t border-white/10 pt-6">
+          {/* Parent company — external site, opens in a new tab. The name is the
+              link's accessible label; the mark is decorative beside it. */}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="text-sm text-neutral-500">{t('parentCompany')}</span>
+            <a
+              href={PARENT_COMPANY.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex min-h-[44px] items-center gap-2 rounded text-sm font-medium text-neutral-200 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/40"
+            >
+              <Image
+                src={PARENT_COMPANY.mark}
+                alt=""
+                aria-hidden="true"
+                width={28}
+                height={28}
+                className="size-7 shrink-0 rounded-md ring-1 ring-white/10"
+              />
+              <span>{PARENT_COMPANY.name}</span>
+              <ExternalLink
+                className="size-3.5 text-neutral-500 transition-colors group-hover:text-neutral-300"
+                aria-hidden="true"
+              />
+              <span className="sr-only">({t('opensNewTab')})</span>
+            </a>
+          </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-neutral-500">{t('languageLabel')}</span>
-            <LanguageSwitcher variant="dark" />
+          {/* Copyright + language */}
+          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-neutral-500">{t('rights', { year })}</p>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-neutral-500">{t('languageLabel')}</span>
+              <LanguageSwitcher variant="dark" />
+            </div>
           </div>
         </div>
       </div>

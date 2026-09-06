@@ -18,14 +18,22 @@ import { Module } from '@nestjs/common';
 import { RedisModule } from '../core/redis/redis.module';
 import { JobsSearchController } from './jobs-search.controller';
 import { JobCategoriesController } from './job-categories.controller';
+import { AdminJobCategoriesController } from './admin-job-categories.controller';
 import { JobsSearchService } from './jobs-search.service';
+import { JobCategoryAdminService } from './job-category-admin.service';
 import { SearchCacheService } from './search-cache.service';
 import { SearchCacheSubscriber } from './search-cache.subscriber';
 import { SavedJobsService } from './saved-jobs.service';
 
 @Module({
   imports: [RedisModule],
-  controllers: [JobsSearchController, JobCategoriesController],
-  providers: [JobsSearchService, SearchCacheService, SearchCacheSubscriber, SavedJobsService],
+  controllers: [JobsSearchController, JobCategoriesController, AdminJobCategoriesController],
+  providers: [
+    JobsSearchService,
+    JobCategoryAdminService,
+    SearchCacheService,
+    SearchCacheSubscriber,
+    SavedJobsService,
+  ],
 })
 export class JobsSearchModule {}

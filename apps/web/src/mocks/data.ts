@@ -155,6 +155,8 @@ export const ALL_PERMISSION_KEYS: PermissionKey[] = [
   // now separate keys, neither granted to MODERATOR.
   'settings.view',
   'settings.manage',
+  // Admin-managed job-category taxonomy (the employer picker + search chips).
+  'job_categories.manage',
 ];
 
 /** Admin-side roles only — CANDIDATE/EMPLOYER are never matrix columns. */
@@ -378,6 +380,7 @@ const SEED_MATRIX: Record<
     'roles.manage': LOCKED_OFF, // matrix writes are SUPER_ADMIN-effective
     'settings.view': ON,
     'settings.manage': ON, // core rules stay SUPER_ADMIN-gated inside the service
+    'job_categories.manage': ON,
     'billing.manage': LOCKED_OFF,
     'subscriptions.manage': LOCKED_OFF,
     'admin_users.manage': LOCKED_OFF,

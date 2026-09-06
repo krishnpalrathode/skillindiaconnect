@@ -52,4 +52,7 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
   // that key would both show them the Settings item AND let the server serve it.
   // Read gates the link; `settings.manage` gates the save button inside (F2).
   { key: 'settings', permission: 'settings.view', icon: 'Settings' },
+  // Job-category taxonomy CRUD. Gated on the write key — there is no separate
+  // read grant, so anyone who can see the screen can also manage it.
+  { key: 'job-categories', permission: 'job_categories.manage', icon: 'Tags' },
 ] as const;

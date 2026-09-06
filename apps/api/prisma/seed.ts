@@ -41,10 +41,11 @@ async function main(): Promise<void> {
   // + 3 by S6a-B2 (jobs.moderate, roles.view, roles.manage)
   // + 2 by S6a-F1 (settings.view, settings.manage — retiring S2-B1's logs.view
   //   placeholder, which had let any MODERATOR write platform settings).
+  // + 1 for job_categories.manage (admin-managed job-category taxonomy).
   // This assertion is the tripwire that stops a key being DECLARED in code but
   // never granted to anyone — a permission with no matrix rows is a dead grant.
-  if (ALL_PERMS.length !== 27) {
-    throw new Error(`Expected 27 permission keys, got ${ALL_PERMS.length}.`);
+  if (ALL_PERMS.length !== 28) {
+    throw new Error(`Expected 28 permission keys, got ${ALL_PERMS.length}.`);
   }
   const permSet = new Set(ALL_PERMS);
 
@@ -249,6 +250,8 @@ async function main(): Promise<void> {
       // protection) stay SUPER_ADMIN-gated inside SettingsService regardless.
       'settings.view': on,
       'settings.manage': on,
+      // ADMIN curates the job-category taxonomy (the employer picker + search chips).
+      'job_categories.manage': on,
     },
     MODERATOR: {
       'candidates.view': on,
@@ -286,6 +289,7 @@ async function main(): Promise<void> {
       // Until now they could, because settings rode on logs.view — which they hold.
       'settings.view': off,
       'settings.manage': off,
+      'job_categories.manage': off,
     },
     SUPPORT: {
       'candidates.view': on,
@@ -315,6 +319,7 @@ async function main(): Promise<void> {
       'roles.manage': lockedOff,
       'settings.view': off,
       'settings.manage': off,
+      'job_categories.manage': off,
     },
   };
 

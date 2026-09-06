@@ -1343,6 +1343,39 @@ components:
             checkout uses `priceSubunits === 0` to decide purchasability, so it
             must stay at zero. The console disables the input rather than letting
             an admin discover the rule through a 422.
+    AdminJobCategory:
+      type: object
+      description: >
+        A job-category row as the admin console manages it. Carries `isActive`
+        (deactivating retires a trade from the employer picker and search chips
+        without orphaning jobs already filed under it) and `jobCount` (how many
+        jobs reference it — the console blocks hard-deleting an in-use category).
+      required: [id, slug, nameEn, nameHi, nameAr, isActive, jobCount]
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+          description: >
+            Stable machine key, set once at creation and never editable. The
+            employer form branches on `slug === 'other'`, which is why 'other'
+            is also protected from deletion.
+          example: welder
+        nameEn:
+          type: string
+          example: Welder
+        nameHi:
+          type: string
+          nullable: true
+        nameAr:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        jobCount:
+          type: integer
+          description: Jobs currently filed under this category.
     Setting:
       type: object
       required: [key, value, isCoreRule, updatedAt]
@@ -2394,7 +2427,8 @@ components:
         The RBAC permission keys (Screen 27). The first 20 are the S2-seeded set;
         5 were added by S6 (`logs.export`, `roles.view`, `roles.manage`,
         `candidates.view_documents`, `jobs.moderate`) and seeded by S6a-B2; and 2
-        more (`settings.view`, `settings.manage`) by S6a-F1.
+        more (`settings.view`, `settings.manage`) by S6a-F1; and
+        `job_categories.manage` for the admin-managed job-category taxonomy.
 
         The settings pair retires a placeholder: S2-B1 gated `/admin/settings` on
         `logs.view` because no settings key existed yet, and said so in its own
@@ -2434,6 +2468,7 @@ components:
         - settings.view
         - settings.manage
         - candidates.view_documents
+        - job_categories.manage
         - jobs.moderate
 
     AuditLogEntry:
@@ -7338,6 +7373,186 @@ paths:
                 $ref: '#/components/schemas/Error'
         '422':
           description: FREE_PLAN_NOT_PRICEABLE, PAID_PLAN_NEEDS_PRICE or PLAN_PRICE_INVALID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /admin/job-categories:
+    get:
+      operationId: getAdminJobCategories
+      tags: [admin]
+      summary: List all job categories (admin)
+      description: >
+        **RBAC: `job_categories.manage`.** Every category, active and inactive,
+        each with a `jobCount`. The public GET /job-categories returns only active
+        rows — this is the operator view.
+      responses:
+        '200':
+          description: All categories, ordered by English name
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminJobCategory'
+        '403':
+          description: Missing job_categories.manage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      operationId: createAdminJobCategory
+      tags: [admin]
+      summary: Create a job category (admin)
+      description: >
+        **RBAC: `job_categories.manage`.** `slug` is set once here and is not
+        editable afterwards. A duplicate slug is 409 `CATEGORY_SLUG_TAKEN`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slug, nameEn]
+              properties:
+                slug:
+                  type: string
+                  description: Lowercase, hyphen-separated; immutable after creation.
+                  example: rigger
+                nameEn:
+                  type: string
+                nameHi:
+                  type: string
+                nameAr:
+                  type: string
+                isActive:
+                  type: boolean
+      responses:
+        '201':
+          description: The created category
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminJobCategory'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Missing job_categories.manage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: CATEGORY_SLUG_TAKEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /admin/job-categories/{id}:
+    patch:
+      operationId: updateAdminJobCategory
+      tags: [admin]
+      summary: Edit a job category (admin)
+      description: >
+        **RBAC: `job_categories.manage`.** Edits display names and active state;
+        `slug` is intentionally not editable. An empty-string translation clears
+        it (stored as null; the UI falls back to English).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nameEn:
+                  type: string
+                nameHi:
+                  type: string
+                nameAr:
+                  type: string
+                isActive:
+                  type: boolean
+      responses:
+        '200':
+          description: The updated category
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminJobCategory'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Missing job_categories.manage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: CATEGORY_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      operationId: deleteAdminJobCategory
+      tags: [admin]
+      summary: Delete a job category (admin)
+      description: >
+        **RBAC: `job_categories.manage`.** Hard-deletes ONLY when nothing
+        references the category. 409 `CATEGORY_IN_USE` when jobs still reference it
+        (deactivate instead); 409 `CATEGORY_PROTECTED` for the reserved `other` row.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: Missing job_categories.manage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: CATEGORY_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: CATEGORY_IN_USE or CATEGORY_PROTECTED
           content:
             application/json:
               schema:
