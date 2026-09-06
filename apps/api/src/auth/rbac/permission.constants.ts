@@ -51,6 +51,12 @@ export const Permission = {
   // SettingsService regardless of this key — that gate is separate and unchanged.
   SETTINGS_VIEW: 'settings.view',
   SETTINGS_MANAGE: 'settings.manage',
+  // Job-category taxonomy CRUD. The employer post-a-job picker and the public
+  // search chips both read this table (GET /job-categories, isActive only), so
+  // one write key governs what every category consumer sees. Its own key rather
+  // than settings.manage: a category edit can hide a live trade from the whole
+  // marketplace, which is a distinct act from tuning a platform number.
+  JOB_CATEGORIES_MANAGE: 'job_categories.manage',
 } as const;
 
 export type PermissionKey = (typeof Permission)[keyof typeof Permission];

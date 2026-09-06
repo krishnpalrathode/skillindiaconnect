@@ -1763,6 +1763,118 @@ const getJobCategories = http.get(`${BASE}/job-categories`, () =>
   HttpResponse.json({ data: MOCK_JOB_CATEGORIES }),
 );
 
+// ─── Admin job-category CRUD (job_categories.manage) ─────────────────────────
+// A mutable store so the admin manager can be exercised end-to-end in tests.
+// Carries isActive + jobCount, which the real GET /admin/job-categories returns.
+interface AdminJobCategoryMock {
+  id: string;
+  slug: string;
+  nameEn: string;
+  nameHi: string | null;
+  nameAr: string | null;
+  isActive: boolean;
+  jobCount: number;
+}
+
+let adminJobCategories: AdminJobCategoryMock[] = [
+  {
+    id: 'cat-welder',
+    slug: 'welder',
+    nameEn: 'Welder',
+    nameHi: null,
+    nameAr: null,
+    isActive: true,
+    jobCount: 3,
+  },
+  {
+    id: 'cat-driver',
+    slug: 'driver',
+    nameEn: 'Driver',
+    nameHi: null,
+    nameAr: null,
+    isActive: false,
+    jobCount: 0,
+  },
+  {
+    id: 'cat-other',
+    slug: 'other',
+    nameEn: 'Other',
+    nameHi: null,
+    nameAr: null,
+    isActive: true,
+    jobCount: 0,
+  },
+];
+
+const adminGetJobCategories = http.get(`${BASE}/admin/job-categories`, () =>
+  HttpResponse.json({ data: adminJobCategories }),
+);
+
+const adminCreateJobCategory = http.post(`${BASE}/admin/job-categories`, async ({ request }) => {
+  const b = (await request.json()) as {
+    slug: string;
+    nameEn: string;
+    nameHi?: string;
+    nameAr?: string;
+    isActive?: boolean;
+  };
+  if (adminJobCategories.some((c) => c.slug === b.slug)) {
+    return errorResponse(409, 'CATEGORY_SLUG_TAKEN', 'Conflict', 'That slug is already in use.');
+  }
+  const created: AdminJobCategoryMock = {
+    id: `cat-${b.slug}`,
+    slug: b.slug,
+    nameEn: b.nameEn,
+    nameHi: b.nameHi?.trim() || null,
+    nameAr: b.nameAr?.trim() || null,
+    isActive: b.isActive ?? true,
+    jobCount: 0,
+  };
+  adminJobCategories = [...adminJobCategories, created];
+  return HttpResponse.json({ data: created }, { status: 201 });
+});
+
+const adminUpdateJobCategory = http.patch(
+  `${BASE}/admin/job-categories/:id`,
+  async ({ request, params }) => {
+    const idx = adminJobCategories.findIndex((c) => c.id === params.id);
+    if (idx === -1)
+      return errorResponse(404, 'CATEGORY_NOT_FOUND', 'Not found', 'No such category.');
+    const b = (await request.json()) as Partial<{
+      nameEn: string;
+      nameHi: string;
+      nameAr: string;
+      isActive: boolean;
+    }>;
+    const current = adminJobCategories[idx]!;
+    const updated: AdminJobCategoryMock = {
+      ...current,
+      ...(b.nameEn !== undefined ? { nameEn: b.nameEn } : {}),
+      ...(b.nameHi !== undefined ? { nameHi: b.nameHi.trim() || null } : {}),
+      ...(b.nameAr !== undefined ? { nameAr: b.nameAr.trim() || null } : {}),
+      ...(b.isActive !== undefined ? { isActive: b.isActive } : {}),
+    };
+    adminJobCategories = adminJobCategories.map((c) => (c.id === params.id ? updated : c));
+    return HttpResponse.json({ data: updated });
+  },
+);
+
+const adminDeleteJobCategory = http.delete(`${BASE}/admin/job-categories/:id`, ({ params }) => {
+  const cat = adminJobCategories.find((c) => c.id === params.id);
+  if (!cat) return errorResponse(404, 'CATEGORY_NOT_FOUND', 'Not found', 'No such category.');
+  if (cat.slug === 'other')
+    return errorResponse(
+      409,
+      'CATEGORY_PROTECTED',
+      'Conflict',
+      'The "Other" category is required.',
+    );
+  if (cat.jobCount > 0)
+    return errorResponse(409, 'CATEGORY_IN_USE', 'Conflict', 'Category is used by jobs.');
+  adminJobCategories = adminJobCategories.filter((c) => c.id !== params.id);
+  return new HttpResponse(null, { status: 204 });
+});
+
 // ─── S2: Jobs — employer CRUD + lifecycle ────────────────────────────────────
 
 const postJobs = http.post(`${BASE}/employers/me/jobs`, async ({ request }) => {
@@ -5235,6 +5347,10 @@ export const handlers = [
   getJobs,
   getJobById,
   getJobCategories,
+  adminGetJobCategories,
+  adminCreateJobCategory,
+  adminUpdateJobCategory,
+  adminDeleteJobCategory,
   // S2: Jobs — employer CRUD + lifecycle
   postJobs,
   getMyJobById,

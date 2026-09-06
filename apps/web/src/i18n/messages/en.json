@@ -1722,7 +1722,8 @@
       "applications": "Applications",
       "logs": "Audit log",
       "roles": "Roles & permissions",
-      "settings": "Settings"
+      "settings": "Settings",
+      "job-categories": "Job Categories"
     },
     "guard": {
       "checking": "Checking access…",
@@ -2751,6 +2752,47 @@
           "funnelWhy": "The application state machine is Pending → Shortlisted → Selected/Rejected. There is no interview or withdrawn status to count."
         }
       }
+    },
+    "jobCategories": {
+      "title": "Job Categories",
+      "subtitle": "The trades shown in the employer post-a-job picker and public search. Changes here take effect immediately.",
+      "loading": "Loading categories…",
+      "count": "{count} categories",
+      "add": "Add category",
+      "colName": "Name",
+      "colSlug": "Slug",
+      "colStatus": "Status",
+      "colJobs": "Jobs",
+      "colActions": "Actions",
+      "active": "Active",
+      "inactive": "Inactive",
+      "editAria": "Edit {name}",
+      "deleteAria": "Delete {name}",
+      "loadFailed": "Couldn’t load categories.",
+      "retry": "Retry",
+      "createTitle": "Add job category",
+      "editTitle": "Edit job category",
+      "create": "Add",
+      "save": "Save",
+      "cancel": "Cancel",
+      "fieldSlug": "Slug",
+      "fieldSlugHint": "Lowercase, hyphen-separated. Set once — it can’t be changed later.",
+      "fieldNameEn": "Name (English)",
+      "fieldNameHi": "Name (Hindi)",
+      "fieldNameAr": "Name (Arabic)",
+      "fieldActive": "Active — shown to employers",
+      "errSlugTaken": "That slug is already in use.",
+      "errGeneric": "Something went wrong. Please try again.",
+      "toastCreated": "Category added",
+      "toastUpdated": "Category updated",
+      "toastDeleted": "Deleted “{name}”",
+      "deleteTitle": "Delete category?",
+      "deleteBody": "Delete “{name}”? This can’t be undone.",
+      "deleteConfirm": "Delete",
+      "cannotDeleteTitle": "Can’t delete this category",
+      "inUseBody": "“{name}” is used by {count} job(s) and can’t be deleted. Deactivate it instead to hide it from new posts.",
+      "protectedBody": "The “Other” category is required and can’t be deleted.",
+      "ok": "OK"
     }
   },
   "billing": {
@@ -2956,7 +2998,9 @@
       "followUs": "Follow us",
       "callUs": "Call us",
       "visitUs": "Our office",
-      "resumeBuilder": "Resume Builder"
+      "resumeBuilder": "Resume Builder",
+      "parentCompany": "Parent company",
+      "opensNewTab": "opens in a new tab"
     },
     "carousel": {
       "label": "Skilled workers on Skill India Connect",
@@ -3011,17 +3055,30 @@
     },
     "about": {
       "metaTitle": "About us",
-      "metaDescription": "We connect skilled Indian workers with verified employers in India and the Gulf, and protect workers from recruitment fraud.",
+      "metaDescription": "SkillIndiaConnect connects India's skilled workers with verified employers in India and the Gulf, on terms that protect them.",
       "title": "About Skill India Connect",
-      "lead": "We help skilled Indian workers find safe jobs in India and the Gulf — without paying bribes, losing their documents, or being lied to about the job.",
-      "missionHeading": "Our mission",
-      "missionBody": "Millions of Indian workers look for work abroad every year. Too many are cheated by fake agents who take money, hold passports, or promise a job that does not exist. We built Skill India Connect so a worker can deal directly with a checked employer, see the real terms of the job before applying, and keep their own documents.",
-      "protectionHeading": "What we guarantee",
-      "protectionBody": "Every job posted here must include a place to stay, health insurance, and transport. This is not a promise we ask employers to make — our system blocks any job that leaves one of them out. We also check each company before its first job goes live.",
-      "freeHeading": "Free for workers",
-      "freeBody": "Workers never pay us. Making a profile, uploading documents, and applying for jobs are all free. We earn from employers who pay to post jobs.",
+      "lead": "SkillIndiaConnect is a recruitment platform for India's skilled workforce — electricians, welders, drivers, plumbers, construction and technical workers — connecting them with verified employers in India and the Gulf.",
+      "visionHeading": "Vision",
+      "visionStatement": "A world where every skilled worker can find safe, dignified work — wherever the opportunity is.",
+      "visionBody": "Millions of India's skilled workers take jobs far from home, often on the strength of a promise made by someone they've never met. We believe finding good work shouldn't require that leap of faith.",
+      "missionHeading": "Mission",
+      "missionStatement": "To connect India's skilled workers with verified employers, on terms that protect them.",
+      "missionBody": "We verify every employer before their job goes live. We require every job to guarantee accommodation, health insurance, and transport. And we give workers control over their own information — so applying for a job never means giving up their privacy.",
+      "missionFree": "The platform is free for workers. It always will be.",
+      "whyHeading": "Why we exist",
+      "whyBody1": "Skilled workers looking for jobs abroad, or in another state, face a familiar problem: it's hard to know which offers are real, and harder to know what conditions you'll actually find on arrival. Promises made at the point of hiring aren't always kept.",
+      "whyBody2": "We built SkillIndiaConnect to change what a job listing means.",
+      "differentHeading": "How we're different",
+      "different1Lead": "Every employer is verified.",
+      "different1Body": "Companies submit registration documents and are reviewed by our team before they can post a single job.",
+      "different2Lead": "Every job must protect the worker.",
+      "different2Body": "Accommodation, health insurance, and transport aren't optional extras — they're requirements built into the platform. A job that doesn't provide them cannot be published. Not by an employer, not by an administrator.",
+      "different3Lead": "Workers control their own information.",
+      "different3Body": "You decide what employers can see. Hide your phone number, and it's genuinely hidden — not stored behind a setting we might change our minds about.",
+      "different4Lead": "Free for workers, always.",
+      "different4Body": "Employers pay to hire. Workers never pay to find work.",
       "whoHeading": "Who we serve",
-      "whoBody": "Construction workers, drivers, electricians, welders, plumbers, carpenters, hospitality and housekeeping staff — the skilled trades that build and run cities across India and the Gulf."
+      "whoBody": "Skilled and semi-skilled workers across trades, and employers in India and the Gulf who want to hire them properly. We work in English, Hindi, and Arabic, and we built the platform for the phones our users actually carry — not the ones in a design studio."
     },
     "contact": {
       "metaTitle": "Contact us",

@@ -1932,6 +1932,54 @@ export interface paths {
         patch: operations["patchAdminPlanPrice"];
         trace?: never;
     };
+    "/admin/job-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all job categories (admin)
+         * @description **RBAC: `job_categories.manage`.** Every category, active and inactive, each with a `jobCount`. The public GET /job-categories returns only active rows — this is the operator view.
+         */
+        get: operations["getAdminJobCategories"];
+        put?: never;
+        /**
+         * Create a job category (admin)
+         * @description **RBAC: `job_categories.manage`.** `slug` is set once here and is not editable afterwards. A duplicate slug is 409 `CATEGORY_SLUG_TAKEN`.
+         */
+        post: operations["createAdminJobCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/job-categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a job category (admin)
+         * @description **RBAC: `job_categories.manage`.** Hard-deletes ONLY when nothing references the category. 409 `CATEGORY_IN_USE` when jobs still reference it (deactivate instead); 409 `CATEGORY_PROTECTED` for the reserved `other` row.
+         */
+        delete: operations["deleteAdminJobCategory"];
+        options?: never;
+        head?: never;
+        /**
+         * Edit a job category (admin)
+         * @description **RBAC: `job_categories.manage`.** Edits display names and active state; `slug` is intentionally not editable. An empty-string translation clears it (stored as null; the UI falls back to English).
+         */
+        patch: operations["updateAdminJobCategory"];
+        trace?: never;
+    };
     "/admin/settings": {
         parameters: {
             query?: never;
@@ -3754,6 +3802,23 @@ export interface components {
             /** @description False for the zero-priced Free plan, whose price is structural — checkout uses `priceSubunits === 0` to decide purchasability, so it must stay at zero. The console disables the input rather than letting an admin discover the rule through a 422. */
             priceEditable: boolean;
         };
+        /** @description A job-category row as the admin console manages it. Carries `isActive` (deactivating retires a trade from the employer picker and search chips without orphaning jobs already filed under it) and `jobCount` (how many jobs reference it — the console blocks hard-deleting an in-use category). */
+        AdminJobCategory: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description Stable machine key, set once at creation and never editable. The employer form branches on `slug === 'other'`, which is why 'other' is also protected from deletion.
+             * @example welder
+             */
+            slug: string;
+            /** @example Welder */
+            nameEn: string;
+            nameHi: string | null;
+            nameAr: string | null;
+            isActive: boolean;
+            /** @description Jobs currently filed under this category. */
+            jobCount: number;
+        };
         /**
          * @description Platform configuration setting — EXACTLY the persisted row, no
          *     presentation metadata.
@@ -4325,7 +4390,8 @@ export interface components {
          * @description The RBAC permission keys (Screen 27). The first 20 are the S2-seeded set;
          *     5 were added by S6 (`logs.export`, `roles.view`, `roles.manage`,
          *     `candidates.view_documents`, `jobs.moderate`) and seeded by S6a-B2; and 2
-         *     more (`settings.view`, `settings.manage`) by S6a-F1.
+         *     more (`settings.view`, `settings.manage`) by S6a-F1; and
+         *     `job_categories.manage` for the admin-managed job-category taxonomy.
          *
          *     The settings pair retires a placeholder: S2-B1 gated `/admin/settings` on
          *     `logs.view` because no settings key existed yet, and said so in its own
@@ -4340,7 +4406,7 @@ export interface components {
          *     creation reuses `jobs.post_admin`.
          * @enum {string}
          */
-        PermissionKey: "candidates.view" | "candidates.edit" | "candidates.delete" | "candidates.onboard_manual" | "candidates.export" | "employers.view" | "employers.approve_reject" | "employers.suspend" | "employers.delete" | "jobs.view" | "jobs.post_admin" | "jobs.archive" | "applications.manage" | "applications.change_status" | "applications.notes" | "reports.view" | "logs.view" | "billing.manage" | "subscriptions.manage" | "admin_users.manage" | "logs.export" | "roles.view" | "roles.manage" | "settings.view" | "settings.manage" | "candidates.view_documents" | "jobs.moderate";
+        PermissionKey: "candidates.view" | "candidates.edit" | "candidates.delete" | "candidates.onboard_manual" | "candidates.export" | "employers.view" | "employers.approve_reject" | "employers.suspend" | "employers.delete" | "jobs.view" | "jobs.post_admin" | "jobs.archive" | "applications.manage" | "applications.change_status" | "applications.notes" | "reports.view" | "logs.view" | "billing.manage" | "subscriptions.manage" | "admin_users.manage" | "logs.export" | "roles.view" | "roles.manage" | "settings.view" | "settings.manage" | "candidates.view_documents" | "job_categories.manage" | "jobs.moderate";
         /**
          * @description One audit row (Screen 29). `meta` is ALREADY REDACTED at write time by
          *     the S2-B2 denylist — no raw PII (passport numbers, phones, emails,
@@ -8671,6 +8737,207 @@ export interface operations {
             };
             /** @description FREE_PLAN_NOT_PRICEABLE, PAID_PLAN_NEEDS_PRICE or PLAN_PRICE_INVALID */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getAdminJobCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description All categories, ordered by English name */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminJobCategory"][];
+                    };
+                };
+            };
+            /** @description Missing job_categories.manage */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    createAdminJobCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description Lowercase, hyphen-separated; immutable after creation.
+                     * @example rigger
+                     */
+                    slug: string;
+                    nameEn: string;
+                    nameHi?: string;
+                    nameAr?: string;
+                    isActive?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description The created category */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminJobCategory"];
+                    };
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Missing job_categories.manage */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description CATEGORY_SLUG_TAKEN */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deleteAdminJobCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing job_categories.manage */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description CATEGORY_NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description CATEGORY_IN_USE or CATEGORY_PROTECTED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    updateAdminJobCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    nameEn?: string;
+                    nameHi?: string;
+                    nameAr?: string;
+                    isActive?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description The updated category */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminJobCategory"];
+                    };
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Missing job_categories.manage */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description CATEGORY_NOT_FOUND */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

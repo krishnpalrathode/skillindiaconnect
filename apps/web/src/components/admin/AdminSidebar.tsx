@@ -12,6 +12,7 @@ import {
   ScrollText,
   Settings,
   ShieldCheck,
+  Tags,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -29,6 +30,7 @@ const ICONS: Record<string, LucideIcon> = {
   ScrollText,
   ShieldCheck,
   Settings,
+  Tags,
 };
 
 /**
