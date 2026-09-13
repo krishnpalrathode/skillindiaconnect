@@ -80,8 +80,21 @@ const SOCIALS: { name: string; href: string; color: string; path: string }[] = [
 // The badges are non-clickable "coming soon" placeholders (no live listing yet).
 const APPLE_PATH =
   'M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z';
-const PLAY_PATH =
-  'M3.6 2.1a1 1 0 0 0-.6.92v17.96a1 1 0 0 0 .6.92l10.02-9.9L3.6 2.1zm11.44 8.06 2.6-2.57-8.9-5.05a1 1 0 0 0-.5-.14l6.8 7.76zm0 3.68-6.8 7.76a1 1 0 0 0 .5-.14l8.9-5.05-2.6-2.57zm5.02-4.53-2.03-1.15-2.83 2.79 2.83 2.79 2.03-1.15a1 1 0 0 0 0-1.28z';
+// The Google Play mark in its brand colours: the folded triangle split into
+// four segments (viewBox 24). The left triangle carries a blue→green gradient;
+// the two side flaps are red (top) and amber (bottom); the tip blends the two.
+const PLAY_SEGMENTS: { d: string; fill: string }[] = [
+  {
+    d: 'M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.61 3,21.09 3,20.5Z',
+    fill: 'url(#gp-spine)',
+  },
+  { d: 'M16.81,8.88L6.05,2.66L14.54,11.15L16.81,8.88Z', fill: '#ff3d00' },
+  { d: 'M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12Z', fill: '#ffc400' },
+  {
+    d: 'M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81Z',
+    fill: 'url(#gp-tip)',
+  },
+];
 
 /** Strip a phone label down to a tel:-safe digit string. */
 const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
@@ -105,32 +118,20 @@ export function LandingFooter() {
   const locale = params?.locale ?? 'en';
   const year = new Date().getFullYear();
 
-  // Mirrors the reference footer's three columns exactly (7 items each). Items
-  // whose dedicated page does not exist yet are routed to the nearest real page
-  // so nothing 404s — see the delivery notes for which are placeholder-routed.
+  // Quick Links merges the seeker + employer actions into one column (7 items,
+  // balanced across both audiences); Company is the second nav column. Each href
+  // points at a real, existing route.
   const columns = [
     {
-      heading: t('forJobSeekers'),
+      heading: t('quickLinks'),
       links: [
         { label: t('findJobs'), href: `/${locale}/signup` },
         { label: t('createProfile'), href: `/${locale}/signup` },
         { label: t('resumeBuilder'), href: `/${locale}/resume` },
-        { label: t('careerGuidance'), href: `/${locale}/signup` },
-        { label: t('skillDevelopment'), href: `/${locale}/signup` },
-        { label: t('successStories'), href: `/${locale}/about` },
-        { label: t('helpSupport'), href: `/${locale}/contact` },
-      ],
-    },
-    {
-      heading: t('forEmployers'),
-      links: [
         { label: t('hireSkilledWorkers'), href: `/${locale}/signup?role=employer` },
         { label: t('postJob'), href: `/${locale}/signup?role=employer` },
         { label: t('browseProfiles'), href: `/${locale}/signup?role=employer` },
-        { label: t('employerSolutions'), href: `/${locale}/signup?role=employer` },
-        { label: t('pricing'), href: `/${locale}/signup?role=employer` },
-        { label: t('resources'), href: `/${locale}/about` },
-        { label: t('employerSupport'), href: `/${locale}/contact` },
+        { label: t('helpSupport'), href: `/${locale}/contact` },
       ],
     },
     {
@@ -159,7 +160,7 @@ export function LandingFooter() {
   // (non-clickable); the QR below points at the live website.
   const appBadges = [
     { name: 'App Store', tagline: 'Download on the', path: APPLE_PATH },
-    { name: 'Google Play', tagline: 'GET IT ON', path: PLAY_PATH },
+    { name: 'Google Play', tagline: 'GET IT ON', path: null },
   ];
 
   return (
@@ -180,8 +181,8 @@ export function LandingFooter() {
       />
 
       <div className="relative mx-auto max-w-screen-2xl px-4 py-10 sm:px-6 lg:py-12">
-        {/* ── Top: brand · job seekers · employers · company · contact · app ─── */}
-        <div className="grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-3 xl:grid-cols-[1.5fr_1fr_1fr_1fr_1.3fr_1.2fr] xl:gap-x-6">
+        {/* ── Top: brand · quick links · company · contact · app ───────────── */}
+        <div className="grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-3 xl:grid-cols-[1.9fr_1.1fr_1.1fr_1.4fr_1.2fr] xl:gap-x-8">
           {/* Brand block */}
           <div className="col-span-2 md:col-span-3 xl:col-span-1">
             <Link
@@ -260,9 +261,6 @@ export function LandingFooter() {
                 </li>
               ))}
             </ul>
-            <p className="mt-3 max-w-sm text-xs leading-relaxed text-neutral-500">
-              {t('followUpdates')}
-            </p>
           </div>
 
           {/* Navigation columns */}
@@ -343,14 +341,32 @@ export function LandingFooter() {
                   aria-label={t('appComingSoonAria', { app: b.name })}
                   className="inline-flex w-40 max-w-full cursor-default items-center gap-2.5 rounded-lg bg-black px-3 py-2 ring-1 ring-white/15"
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="size-6 shrink-0 text-white"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path d={b.path} />
-                  </svg>
+                  {b.name === 'Google Play' ? (
+                    <svg viewBox="0 0 24 24" className="size-6 shrink-0" aria-hidden="true">
+                      <defs>
+                        <linearGradient id="gp-spine" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0" stopColor="#00c3ff" />
+                          <stop offset="1" stopColor="#00e676" />
+                        </linearGradient>
+                        <linearGradient id="gp-tip" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0" stopColor="#ff3d00" />
+                          <stop offset="1" stopColor="#ffc400" />
+                        </linearGradient>
+                      </defs>
+                      {PLAY_SEGMENTS.map((seg) => (
+                        <path key={seg.d} d={seg.d} fill={seg.fill} />
+                      ))}
+                    </svg>
+                  ) : (
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="size-6 shrink-0 text-white"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d={b.path ?? ''} />
+                    </svg>
+                  )}
                   <span className="flex flex-col text-start leading-none">
                     <span className="text-[9px] uppercase tracking-wide text-neutral-300">
                       {b.tagline}
@@ -378,14 +394,9 @@ export function LandingFooter() {
           </div>
         </div>
 
-        {/* Brand promise — decorative script, over the skyline (reference
-            places it on the right, just above the bottom bar). */}
-        <p className="mt-6 text-center font-serif text-base italic text-primary-200/90 sm:text-end">
-          {t('strongerIndia')}
-        </p>
-
-        {/* ── Bottom bar — one compact band: copyright · trust badges · controls ── */}
-        <div className="mt-4 flex flex-col gap-x-6 gap-y-4 border-t border-white/10 pt-5 xl:flex-row xl:items-center xl:justify-between">
+        {/* ── Bottom bar — one compact band: copyright · trust badges · controls ──
+            The top margin leaves the skyline backdrop room to show through. */}
+        <div className="mt-16 flex flex-col gap-x-6 gap-y-4 border-t border-white/10 pt-5 xl:flex-row xl:items-center xl:justify-between">
           {/* Copyright + Made in India */}
           <div className="shrink-0 space-y-1">
             <p className="text-sm text-neutral-500">{t('rights', { year })}</p>

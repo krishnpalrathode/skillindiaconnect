@@ -3027,7 +3027,7 @@
       "statReachLabel": "Global Opportunities",
       "followUpdates": "Follow us for updates, opportunities and success stories.",
       "downloadApp": "Download Our App",
-      "appTagline": "Find jobs, apply and stay updated on the go.",
+      "appTagline": "Find jobs, apply and stay updated",
       "helpSupport": "Help & Support",
       "browseCandidates": "Browse Candidates",
       "employerSupport": "Employer Support",
@@ -3044,7 +3044,8 @@
       "hireSkilledWorkers": "Hire Skilled Workers",
       "aboutUs": "About Us",
       "termsOfService": "Terms of Service",
-      "scanToDownload": "Scan to Download App"
+      "scanToDownload": "Scan to Download App",
+      "quickLinks": "Quick Links"
     },
     "carousel": {
       "label": "Skilled workers on Skill India Connect",

@@ -1878,7 +1878,7 @@
       "statReachLabel": "فرص عالمية",
       "followUpdates": "تابعنا للحصول على التحديثات والفرص وقصص النجاح.",
       "downloadApp": "حمّل تطبيقنا",
-      "appTagline": "ابحث عن الوظائف وقدّم وابقَ على اطلاع أثناء تنقلك.",
+      "appTagline": "ابحث عن الوظائف وقدّم وابقَ على اطلاع",
       "helpSupport": "المساعدة والدعم",
       "browseCandidates": "تصفّح المرشحين",
       "employerSupport": "دعم أصحاب العمل",
@@ -1895,7 +1895,8 @@
       "hireSkilledWorkers": "توظيف عمال مهرة",
       "aboutUs": "من نحن",
       "termsOfService": "شروط الخدمة",
-      "scanToDownload": "امسح لتنزيل التطبيق"
+      "scanToDownload": "امسح لتنزيل التطبيق",
+      "quickLinks": "روابط سريعة"
     },
     "carousel": {
       "label": "عمال مهرة على سكيل إنديا كونكت",
