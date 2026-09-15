@@ -84,8 +84,10 @@ export const mb = (bytes: number) => Math.round(bytes / 1024 / 1024);
  *
  * Deliberate: auth is rate-limited to 5/min/IP (api-conventions.md), so a load
  * script that logged in would measure the throttler, not the path under test.
- * The payload matches TokenService.issue() exactly — {sub, email, role, jti,
- * type:'access'}, HS256, JWT_ACCESS_SECRET.
+ * The payload carries every claim the API reads from TokenService.issue() —
+ * {sub, email, role, jti, type:'access'}, HS256, JWT_ACCESS_SECRET. The
+ * `hasPassword` / `hasGoogle` claims are omitted on purpose: only the web app's
+ * onboarding gate reads them, and no load script goes through the web app.
  */
 export function mintAccessToken(userId: string, email: string, role: string): string {
   const secret = process.env.JWT_ACCESS_SECRET;

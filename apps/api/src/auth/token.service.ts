@@ -73,6 +73,13 @@ export class TokenService {
      * `email` is carried for the email-verified half of that gate.
      */
     hasPassword: boolean,
+    /**
+     * Whether the account is linked to Google. The other half of "can this
+     * candidate sign back in without their phone": a Google account has no
+     * password hash, and onboarding deliberately never asks it for one, so a gate
+     * reading `hasPassword` alone traps it in onboarding forever.
+     */
+    hasGoogle: boolean,
     ip?: string,
     userAgent?: string,
   ): Promise<IssuedTokens> {
@@ -88,7 +95,7 @@ export class TokenService {
     // access token alone on silent refresh (no user object in the refresh
     // response) — see apps/web/src/lib/auth/auth-context.tsx's decodeToken().
     const accessToken = this.jwtService.sign(
-      { sub: userId, email, role, hasPassword, jti: accessJti, type: 'access' },
+      { sub: userId, email, role, hasPassword, hasGoogle, jti: accessJti, type: 'access' },
       { secret: accessSecret, expiresIn: accessTtl },
     );
 
@@ -193,7 +200,15 @@ export class TokenService {
         .catch(() => undefined);
     }
 
-    return this.issue(user.id, user.email, user.role, !!user.passwordHash, ip, userAgent);
+    return this.issue(
+      user.id,
+      user.email,
+      user.role,
+      !!user.passwordHash,
+      !!user.googleId,
+      ip,
+      userAgent,
+    );
   }
 
   async revokeByToken(refreshToken: string): Promise<void> {

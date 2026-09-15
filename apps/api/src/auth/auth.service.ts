@@ -125,6 +125,7 @@ export class AuthService {
       // An email signup is always created WITH a password (above), so this half
       // of the onboarding gate is satisfied from the start.
       true,
+      false,
       ip,
       userAgent,
     );
@@ -223,6 +224,7 @@ export class AuthService {
       user.email,
       user.role,
       !!user.passwordHash,
+      !!user.googleId,
       ip,
       userAgent,
     );
@@ -317,6 +319,7 @@ export class AuthService {
       user.email,
       user.role,
       !!user.passwordHash,
+      !!user.googleId,
       ip,
       userAgent,
     );

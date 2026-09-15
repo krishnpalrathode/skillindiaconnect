@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { components } from '@skillindiaconnect/shared-types';
@@ -28,8 +28,16 @@ type UserSummary = components['schemas']['UserSummary'];
 // with their phone would have been silently signed out on their first reload,
 // with a perfectly valid token in hand. Identity here is `sub` + `role`; the
 // email is a display detail that may legitimately not exist yet.
-/** UserSummary plus the token-only claim the onboarding gate needs. */
-type SessionUser = UserSummary & { hasPassword: boolean };
+/** The token-only claims the onboarding gate needs. */
+interface CredentialClaims {
+  hasPassword: boolean;
+  hasGoogle: boolean;
+}
+
+/** UserSummary plus the token-only claims the onboarding gate needs. */
+type SessionUser = UserSummary & CredentialClaims;
+
+const NO_CREDENTIALS: CredentialClaims = { hasPassword: false, hasGoogle: false };
 
 function decodeToken(token: string): SessionUser | null {
   try {
@@ -42,13 +50,26 @@ function decodeToken(token: string): SessionUser | null {
       id: payload['sub'] as string,
       email: (payload['email'] as string | null | undefined) ?? null,
       role: payload['role'] as UserSummary['role'],
-      // Present on tokens issued after this change; absent (→ false) on any
-      // legacy token still in flight, which correctly reads as "no password yet".
+      // Both present on tokens issued after they were added; absent (→ false) on
+      // any older token still in flight, which reads as "no credential yet" and
+      // at worst shows onboarding once until the next refresh re-issues it.
       hasPassword: payload['hasPassword'] === true,
+      hasGoogle: payload['hasGoogle'] === true,
     };
   } catch {
     return null;
   }
+}
+
+/**
+ * Both claims from one token, together. They are held as ONE piece of state so
+ * the gate can never read a fresh `hasPassword` beside a stale `hasGoogle`.
+ */
+function claimsOf(token: string): CredentialClaims {
+  const decoded = decodeToken(token);
+  return decoded
+    ? { hasPassword: decoded.hasPassword, hasGoogle: decoded.hasGoogle }
+    : NO_CREDENTIALS;
 }
 
 // ─── Context shape ────────────────────────────────────────────────────────────
@@ -61,6 +82,12 @@ export interface AuthContextValue {
    * app's gate requires it, so a phone-only account can always sign back in.
    */
   hasPassword: boolean;
+  /**
+   * Whether the signed-in account is linked to Google (a token claim). Google is
+   * a durable way back in, so it satisfies the gate's password requirement — the
+   * same rule onboarding applies when it decides not to ask for a password.
+   */
+  hasGoogle: boolean;
   isLoading: boolean;
   /**
    * True from the moment a DELIBERATE sign-out starts until the next sign-in.
@@ -90,9 +117,9 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserSummary | null>(null);
-  // Derived from the access-token claim, tracked alongside `user` so the gate can
-  // read it synchronously. Set at every point the token changes (below).
-  const [hasPassword, setHasPassword] = useState(false);
+  // Derived from the access-token claims, tracked alongside `user` so the gate
+  // can read them synchronously. Set at every point the token changes (below).
+  const [claims, setClaims] = useState<CredentialClaims>(NO_CREDENTIALS);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   // The in-flight refresh, SHARED. Concurrent callers must AWAIT the same
@@ -116,16 +143,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const result = await postRefresh();
         setAccessToken(result.accessToken);
-        const decoded = decodeToken(result.accessToken);
-        setUser(decoded);
-        setHasPassword(decoded?.hasPassword ?? false);
+        setUser(decodeToken(result.accessToken));
+        setClaims(claimsOf(result.accessToken));
         return result.accessToken;
       } catch {
         // Only clear auth state if no explicit login/signup/logout superseded us.
         if (authGeneration.current === myGeneration) {
           setAccessToken(null);
           setUser(null);
-          setHasPassword(false);
+          setClaims(NO_CREDENTIALS);
         }
         return null;
       } finally {
@@ -150,7 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const result = await postLogin({ email, password });
     setAccessToken(result.accessToken);
     setUser(result.user);
-    setHasPassword(decodeToken(result.accessToken)?.hasPassword ?? false);
+    setClaims(claimsOf(result.accessToken));
   }, []);
 
   const loginWithPhone = useCallback(async (phone: string, otp: string) => {
@@ -159,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const result = await postPhoneLoginVerify(phone, otp);
     setAccessToken(result.accessToken);
     setUser(result.user);
-    setHasPassword(decodeToken(result.accessToken)?.hasPassword ?? false);
+    setClaims(claimsOf(result.accessToken));
   }, []);
 
   const signup = useCallback(async (body: SignupBody) => {
@@ -168,7 +194,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const result = await postSignup(body);
     setAccessToken(result.accessToken);
     setUser(result.user);
-    setHasPassword(decodeToken(result.accessToken)?.hasPassword ?? false);
+    setClaims(claimsOf(result.accessToken));
   }, []);
 
   /**
@@ -183,7 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await postPhoneSignupVerify(phone, otp, acceptedTerms);
       setAccessToken(result.accessToken);
       setUser(result.user);
-      setHasPassword(decodeToken(result.accessToken)?.hasPassword ?? false);
+      setClaims(claimsOf(result.accessToken));
     },
     [],
   );
@@ -196,7 +222,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setAccessToken(null);
       setUser(null);
-      setHasPassword(false);
+      setClaims(NO_CREDENTIALS);
     }
   }, []);
 
@@ -211,7 +237,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        hasPassword,
+        hasPassword: claims.hasPassword,
+        hasGoogle: claims.hasGoogle,
         isLoading,
         isLoggingOut,
         login,

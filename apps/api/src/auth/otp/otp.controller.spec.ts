@@ -271,6 +271,8 @@ describe('OtpController', () => {
         'user-1',
         'candidate@example.com',
         UserRole.CANDIDATE,
+        false, // hasPassword — makeUser() has no passwordHash
+        false, // hasGoogle — nor a googleId
         '1.2.3.4',
         undefined,
       );

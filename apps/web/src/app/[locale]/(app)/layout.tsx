@@ -86,7 +86,7 @@ function NavItem({ href, icon, label, active, disabled }: NavItemProps) {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations('nav');
   const { requestLogout } = useLogoutConfirm();
-  const { user, hasPassword, isLoading, isLoggingOut } = useAuth();
+  const { user, hasPassword, hasGoogle, isLoading, isLoggingOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams<{ locale: string }>();
@@ -103,8 +103,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // otherwise a hard refresh mid-onboarding lands them here unfinished, and a
   // phone-only account with no password could never sign back in. Employers/admins
   // always carry both, and /jobs stays public.
+  //
+  // A Google account satisfies the password half. It has no password hash, and
+  // onboarding deliberately never asks it for one (PersonalInfoStep's
+  // `needsPassword`), so requiring `hasPassword` alone trapped every Google
+  // candidate here: Save & Continue sent them to /dashboard and this gate sent
+  // them straight back, with no step anywhere that could release them.
   const needsOnboarding =
-    !!user && user.role === 'CANDIDATE' && (user.email === null || !hasPassword) && !isPublicPath;
+    !!user &&
+    user.role === 'CANDIDATE' &&
+    (user.email === null || (!hasPassword && !hasGoogle)) &&
+    !isPublicPath;
 
   useEffect(() => {
     // `isLoggingOut` — a deliberate sign-out owns its own redirect (to the

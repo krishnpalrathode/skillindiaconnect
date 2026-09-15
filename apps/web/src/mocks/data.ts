@@ -201,6 +201,8 @@ export interface MockUser {
   // neither until onboarding collects them.
   email: string | null;
   passwordHash: string | null;
+  /** Set only on a Google-linked account; absent on every seeded user. */
+  googleId?: string | null;
   role: 'CANDIDATE' | 'EMPLOYER' | 'ADMIN' | 'SUPER_ADMIN' | 'MODERATOR' | 'SUPPORT';
   status: 'ACTIVE' | 'SUSPENDED' | 'PENDING_DELETION';
 }
@@ -2702,6 +2704,11 @@ export function makeAccessToken(userId: string): string {
       sub: userId,
       email: user?.email ?? null,
       role: user?.role ?? 'CANDIDATE',
+      // The same credential claims the real API issues (token.service.ts). Without
+      // them every mock candidate read as "no password", and the app shell's
+      // onboarding gate redirected even a fully signed-up one.
+      hasPassword: !!user?.passwordHash,
+      hasGoogle: !!user?.googleId,
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 900,
     }),
