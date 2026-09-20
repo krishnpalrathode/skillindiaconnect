@@ -97,9 +97,19 @@ export function MobileAppHeader({ locale }: { locale: string }) {
   const badgeText = count > 99 ? '99+' : String(count);
   const bellLabel = count > 0 ? t('notificationsWithCount', { count }) : t('notificationsNone');
 
+  /*
+    The job search belongs ONLY on the dashboard (the home screen), not on every
+    authenticated page. The /jobs screen has its own search controls, and the
+    other screens (profile, applications, notifications, settings, resume, job
+    detail) have nothing to search here — a persistent search box on all of them
+    read as clutter. When it is hidden the top row carries the header's bottom
+    padding so the chrome keeps its height.
+  */
+  const showSearch = pathname.endsWith('/dashboard');
+
   return (
     <header className="lg:hidden sticky top-0 z-30 bg-primary-700 text-white">
-      <div className="flex items-center gap-2 px-3 pt-3">
+      <div className={cn('flex items-center gap-2 px-3 pt-3', !showSearch && 'pb-3')}>
         <Link
           href={`/${locale}/dashboard`}
           aria-label={t('homeLink')}
@@ -197,30 +207,32 @@ export function MobileAppHeader({ locale }: { locale: string }) {
         </div>
       </div>
 
-      <form onSubmit={onSearchSubmit} role="search" className="px-3 pb-3 pt-2">
-        <label htmlFor="app-search" className="sr-only">
-          {t('searchLabel')}
-        </label>
-        <div className="relative">
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-neutral-600"
-          >
-            <Search className="size-4" />
-          </span>
-          <input
-            id="app-search"
-            type="search"
-            inputMode="search"
-            enterKeyHint="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t('searchPlaceholder')}
-            // eslint-disable-next-line no-restricted-syntax -- PLACEHOLDER text, which WCAG 1.4.3 exempts and the rule names as exempt. The value the user types is text-neutral-900; keeping the placeholder lighter is what distinguishes a hint from an entry.
-            className="h-11 w-full rounded-xl border border-white/20 bg-white ps-10 pe-3 text-sm text-neutral-900 placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60"
-          />
-        </div>
-      </form>
+      {showSearch && (
+        <form onSubmit={onSearchSubmit} role="search" className="px-3 pb-3 pt-2">
+          <label htmlFor="app-search" className="sr-only">
+            {t('searchLabel')}
+          </label>
+          <div className="relative">
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-neutral-600"
+            >
+              <Search className="size-4" />
+            </span>
+            <input
+              id="app-search"
+              type="search"
+              inputMode="search"
+              enterKeyHint="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t('searchPlaceholder')}
+              // eslint-disable-next-line no-restricted-syntax -- PLACEHOLDER text, which WCAG 1.4.3 exempts and the rule names as exempt. The value the user types is text-neutral-900; keeping the placeholder lighter is what distinguishes a hint from an entry.
+              className="h-11 w-full rounded-xl border border-white/20 bg-white ps-10 pe-3 text-sm text-neutral-900 placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60"
+            />
+          </div>
+        </form>
+      )}
     </header>
   );
 }

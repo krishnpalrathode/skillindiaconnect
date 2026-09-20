@@ -146,6 +146,18 @@ describe('MobileAppHeader', () => {
     expect(push).toHaveBeenCalledWith('/en/jobs');
   });
 
+  it('shows the job search ONLY on the dashboard, not on other authenticated pages', () => {
+    // Dashboard (the default mocked path) — the search is the home discovery entry.
+    const { unmount } = render(<MobileAppHeader locale="en" />);
+    expect(screen.getByLabelText('Search jobs')).toBeInTheDocument();
+    unmount();
+
+    // Any other page (/jobs has its own search; the rest have nothing to search).
+    mockPathname = '/en/profile';
+    render(<MobileAppHeader locale="en" />);
+    expect(screen.queryByLabelText('Search jobs')).not.toBeInTheDocument();
+  });
+
   /**
    * The count comes from the notifications endpoint's `meta.total` under
    * `unread=true` — the same source the notifications page reads. A badge that

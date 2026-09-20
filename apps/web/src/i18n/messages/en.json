@@ -2910,6 +2910,38 @@
         "qatar": "Qatar",
         "singapore": "Singapore",
         "more": "& More"
+      },
+      "mobileHeadline": "Your Skills Can Take You <hl>Anywhere</hl>",
+      "mobileSubline": "Safe, verified jobs for skilled workers in India and around the world.",
+      "ctaFindJobs": "Find Jobs",
+      "ctaCreateProfile": "Create Your Profile",
+      "features": {
+        "verified": {
+          "title": "Verified Employers",
+          "desc": "Real companies. Real jobs."
+        },
+        "free": {
+          "title": "Free for Workers",
+          "desc": "No registration fees."
+        },
+        "global": {
+          "title": "India & Global Opportunities",
+          "desc": "Build a better future."
+        }
+      },
+      "statsBar": {
+        "workers": {
+          "value": "1M+",
+          "label": "Skilled Workers"
+        },
+        "employers": {
+          "value": "10K+",
+          "label": "Verified Employers"
+        },
+        "countries": {
+          "value": "50+",
+          "label": "Countries"
+        }
       }
     },
     "trust": {

@@ -48,9 +48,10 @@ export function LandingHeader() {
         </Link>
 
         <div className="flex items-center gap-1 sm:gap-3">
-          <div className="hidden sm:block">
-            <LanguageSwitcher variant="light" />
-          </div>
+          {/* Language switcher shows at ALL widths now: on a phone it moved up
+              here from the footer so the footer can be shorter. It fits because
+              Sign-Up is desktop-only and the logo is narrow (w-28) on phones. */}
+          <LanguageSwitcher variant="light" />
 
           <Link
             href={`/${locale}/login`}

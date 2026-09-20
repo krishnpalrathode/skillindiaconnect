@@ -66,7 +66,7 @@ export default async function HomePage({ params }: Props) {
           unmeasured statistics. All `lg:hidden`, so desktop is untouched.
         */}
         <div className="lg:hidden">
-          <MobileHero />
+          <MobileHero locale={locale} />
           <HeroSearchPanel locale={locale} />
           <MobileValueStrip />
         </div>

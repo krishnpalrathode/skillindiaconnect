@@ -1761,6 +1761,38 @@
         "qatar": "قطر",
         "singapore": "سنغافورة",
         "more": "والمزيد"
+      },
+      "mobileHeadline": "مهاراتك يمكن أن تأخذك <hl>إلى أي مكان</hl>",
+      "mobileSubline": "وظائف آمنة وموثّقة للعمال المهرة في الهند وحول العالم.",
+      "ctaFindJobs": "ابحث عن وظائف",
+      "ctaCreateProfile": "أنشئ ملفك الشخصي",
+      "features": {
+        "verified": {
+          "title": "أصحاب عمل موثّقون",
+          "desc": "شركات حقيقية. وظائف حقيقية."
+        },
+        "free": {
+          "title": "مجاني للعمال",
+          "desc": "لا رسوم تسجيل."
+        },
+        "global": {
+          "title": "الهند وفرص عالمية",
+          "desc": "ابنِ مستقبلاً أفضل."
+        }
+      },
+      "statsBar": {
+        "workers": {
+          "value": "1M+",
+          "label": "عامل ماهر"
+        },
+        "employers": {
+          "value": "10K+",
+          "label": "أصحاب عمل موثّقون"
+        },
+        "countries": {
+          "value": "50+",
+          "label": "دولة"
+        }
       }
     },
     "trust": {
