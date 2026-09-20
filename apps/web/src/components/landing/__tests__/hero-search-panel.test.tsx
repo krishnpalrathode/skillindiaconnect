@@ -28,7 +28,10 @@ describe('HeroSearchPanel', () => {
     const tablist = screen.getByRole('tablist');
     const tabs = within(tablist).getAllByRole('tab');
     expect(tabs).toHaveLength(2);
-    expect(screen.getByRole('tab', { name: /find a job/i })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: /find a job/i })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     // The find panel and its labelled search input are shown; hire panel hidden.
     expect(screen.getByLabelText(/job title, skill or keyword/i)).toBeInTheDocument();
   });
@@ -37,7 +40,10 @@ describe('HeroSearchPanel', () => {
     const user = userEvent.setup();
     render(<HeroSearchPanel locale="en" />);
     await user.click(screen.getByRole('tab', { name: /hire talent/i }));
-    expect(screen.getByRole('tab', { name: /hire talent/i })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: /hire talent/i })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     const cta = screen.getByRole('link', { name: /hire talent/i });
     expect(cta).toHaveAttribute('href', '/en/signup?role=employer');
   });
@@ -48,7 +54,10 @@ describe('HeroSearchPanel', () => {
     const find = screen.getByRole('tab', { name: /find a job/i });
     find.focus();
     await user.keyboard('{ArrowRight}');
-    expect(screen.getByRole('tab', { name: /hire talent/i })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: /hire talent/i })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
   });
 
   it('the Find-a-Job form targets the existing public /jobs search with real params', () => {
