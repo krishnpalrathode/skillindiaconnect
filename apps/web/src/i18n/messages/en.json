@@ -2900,6 +2900,16 @@
         "verified": "Verified Employers",
         "free": "Free for Workers",
         "global": "India & Global Opportunities"
+      },
+      "globalScript": "Your Skills, Our Global Opportunities",
+      "imageAlt": "Skilled workers ready for verified jobs in India and the Gulf",
+      "signpost": {
+        "india": "India",
+        "uae": "UAE",
+        "saudi": "Saudi Arabia",
+        "qatar": "Qatar",
+        "singapore": "Singapore",
+        "more": "& More"
       }
     },
     "trust": {
@@ -3045,7 +3055,9 @@
       "aboutUs": "About Us",
       "termsOfService": "Terms of Service",
       "scanToDownload": "Scan to Download App",
-      "quickLinks": "Quick Links"
+      "quickLinks": "Quick Links",
+      "connectTagline": "Connecting People. Creating Global Opportunities.",
+      "buildBetterWorld": "Skills Build a Better World"
     },
     "carousel": {
       "label": "Skilled workers on Skill India Connect",
@@ -3090,6 +3102,50 @@
       "employers": "Verified Employers",
       "placements": "Successful Placements",
       "countries": "Countries with Job Opportunities"
+    },
+    "search": {
+      "tablistLabel": "What are you looking for?",
+      "tabFindJob": "Find a Job",
+      "tabHireTalent": "Hire Talent",
+      "keywordLabel": "Job title, skill or keyword",
+      "keywordPlaceholder": "Job title, skill or keyword",
+      "locationLabel": "Location",
+      "locationAll": "All locations",
+      "locationIndia": "India",
+      "locationGulf": "Gulf",
+      "submit": "Search Jobs",
+      "popularLabel": "Popular searches",
+      "hireTitle": "Hiring skilled workers?",
+      "hireBody": "Post a job and reach verified workers across India and the Gulf.",
+      "hireCta": "Hire Talent",
+      "chips": {
+        "driver": "Driver",
+        "electrician": "Electrician",
+        "plumber": "Plumber",
+        "welder": "Welder",
+        "mason": "Mason",
+        "carpenter": "Carpenter",
+        "helper": "Helper"
+      }
+    },
+    "valueStrip": {
+      "ariaLabel": "Why Skill India Connect",
+      "verified": {
+        "a": "100%",
+        "b": "Verified employers"
+      },
+      "free": {
+        "a": "Free",
+        "b": "For workers"
+      },
+      "stay": {
+        "a": "Guaranteed",
+        "b": "Accommodation"
+      },
+      "reach": {
+        "a": "India & Gulf",
+        "b": "Jobs worldwide"
+      }
     }
   },
   "staticPages": {

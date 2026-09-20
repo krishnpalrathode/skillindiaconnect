@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { LandingHeader } from '@/components/landing/LandingHeader';
 import { Hero } from '@/components/landing/Hero';
+import { MobileHero } from '@/components/landing/MobileHero';
+import { HeroSearchPanel } from '@/components/landing/HeroSearchPanel';
+import { MobileValueStrip } from '@/components/landing/MobileValueStrip';
 import { TrustStrip } from '@/components/landing/TrustStrip';
 import { AnnouncementBar } from '@/components/landing/AnnouncementBar';
 import { StatsBand } from '@/components/landing/StatsBand';
@@ -11,6 +14,7 @@ import { WorkerProtection } from '@/components/landing/WorkerProtection';
 import { ForEmployers } from '@/components/landing/ForEmployers';
 import { JobCategories } from '@/components/landing/JobCategories';
 import { LandingFooter } from '@/components/landing/LandingFooter';
+import { MobileFooter } from '@/components/landing/MobileFooter';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -46,8 +50,26 @@ export default async function HomePage({ params }: Props) {
         {/* Claim bar → hero → proof. The band and the stats card bracket the
             hero top and bottom, which is what stops the light hero from
             floating unanchored between two white sections. */}
-        <AnnouncementBar />
-        <Hero locale={locale} />
+        {/*
+          Desktop landing (unchanged): the claim bar + the existing hero. Both
+          are hidden below `lg`, where the phone mockup rebuild takes over.
+        */}
+        <div className="hidden lg:block">
+          <AnnouncementBar />
+          <Hero locale={locale} />
+        </div>
+        {/*
+          Phone-only richer landing (mockup rebuild): a hero that mirrors the
+          mockup (verified pill, headline, worker photo with destination
+          signpost, value promises), the tabbed search panel + popular-search
+          chips, then an honest four-cell value strip in place of the mockup's
+          unmeasured statistics. All `lg:hidden`, so desktop is untouched.
+        */}
+        <div className="lg:hidden">
+          <MobileHero />
+          <HeroSearchPanel locale={locale} />
+          <MobileValueStrip />
+        </div>
         {/*
           The stats band is DESKTOP ONLY (M4).
 
@@ -83,7 +105,11 @@ export default async function HomePage({ params }: Props) {
         <JobCategories locale={locale} />
       </main>
 
-      <LandingFooter />
+      {/* Full multi-column footer on desktop; a simple banner footer on phones. */}
+      <div className="hidden lg:block">
+        <LandingFooter />
+      </div>
+      <MobileFooter locale={locale} />
     </>
   );
 }
