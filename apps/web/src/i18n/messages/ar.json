@@ -1751,6 +1751,16 @@
         "verified": "جهات عمل موثّقة",
         "free": "مجاني للعمال",
         "global": "فرص في الهند والعالم"
+      },
+      "globalScript": "مهاراتك، فرصنا العالمية",
+      "imageAlt": "عمّال مهرة جاهزون لوظائف موثّقة في الهند والخليج",
+      "signpost": {
+        "india": "الهند",
+        "uae": "الإمارات",
+        "saudi": "السعودية",
+        "qatar": "قطر",
+        "singapore": "سنغافورة",
+        "more": "والمزيد"
       }
     },
     "trust": {
@@ -1896,7 +1906,9 @@
       "aboutUs": "من نحن",
       "termsOfService": "شروط الخدمة",
       "scanToDownload": "امسح لتنزيل التطبيق",
-      "quickLinks": "روابط سريعة"
+      "quickLinks": "روابط سريعة",
+      "connectTagline": "نربط الناس. نصنع الفرص العالمية.",
+      "buildBetterWorld": "المهارات تبني عالمًا أفضل"
     },
     "carousel": {
       "label": "عمال مهرة على سكيل إنديا كونكت",
@@ -1941,6 +1953,50 @@
       "employers": "جهة عمل موثّقة",
       "placements": "توظيف ناجح",
       "countries": "دولة بها فرص عمل"
+    },
+    "search": {
+      "tablistLabel": "عمّا تبحث؟",
+      "tabFindJob": "ابحث عن وظيفة",
+      "tabHireTalent": "وظّف المواهب",
+      "keywordLabel": "المسمى الوظيفي أو المهارة أو كلمة مفتاحية",
+      "keywordPlaceholder": "المسمى الوظيفي أو المهارة أو كلمة مفتاحية",
+      "locationLabel": "الموقع",
+      "locationAll": "جميع المواقع",
+      "locationIndia": "الهند",
+      "locationGulf": "الخليج",
+      "submit": "ابحث عن وظائف",
+      "popularLabel": "عمليات البحث الشائعة",
+      "hireTitle": "هل توظّف عمالاً مهرة؟",
+      "hireBody": "انشر وظيفة وتواصل مع عمّال موثّقين في الهند والخليج.",
+      "hireCta": "وظّف عمالاً",
+      "chips": {
+        "driver": "سائق",
+        "electrician": "كهربائي",
+        "plumber": "سبّاك",
+        "welder": "لحّام",
+        "mason": "بنّاء",
+        "carpenter": "نجّار",
+        "helper": "مساعد"
+      }
+    },
+    "valueStrip": {
+      "ariaLabel": "لماذا سكِل إنديا كونكت",
+      "verified": {
+        "a": "100%",
+        "b": "أصحاب عمل موثّقون"
+      },
+      "free": {
+        "a": "مجاني",
+        "b": "للعمّال"
+      },
+      "stay": {
+        "a": "مضمون",
+        "b": "السكن"
+      },
+      "reach": {
+        "a": "الهند والخليج",
+        "b": "وظائف"
+      }
     }
   },
   "staticPages": {
