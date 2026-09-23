@@ -2282,7 +2282,8 @@
     "searchPlaceholder": "नौकरियाँ खोजें",
     "notificationsWithCount": "सूचनाएँ, {count} अपठित",
     "notificationsNone": "सूचनाएँ, कोई अपठित नहीं",
-    "moreMenu": "अधिक विकल्प"
+    "moreMenu": "अधिक विकल्प",
+    "accountMenu": "खाता मेनू"
   },
   "home": {
     "hero": {

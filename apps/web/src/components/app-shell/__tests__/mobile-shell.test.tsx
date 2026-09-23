@@ -116,48 +116,6 @@ describe('MobileTabBar', () => {
 });
 
 describe('MobileAppHeader', () => {
-  it('routes the search into the EXISTING job search with the existing param', async () => {
-    const user = userEvent.setup();
-    render(<MobileAppHeader locale="en" />);
-
-    await user.type(screen.getByLabelText('Search jobs'), 'welder');
-    await user.keyboard('{Enter}');
-
-    expect(push).toHaveBeenCalledWith('/en/jobs?q=welder');
-  });
-
-  it('escapes the query rather than building a broken URL', async () => {
-    const user = userEvent.setup();
-    render(<MobileAppHeader locale="en" />);
-
-    await user.type(screen.getByLabelText('Search jobs'), 'heavy & light');
-    await user.keyboard('{Enter}');
-
-    expect(push).toHaveBeenCalledWith('/en/jobs?q=heavy%20%26%20light');
-  });
-
-  it('an empty search goes to the unfiltered list, not ?q=', async () => {
-    const user = userEvent.setup();
-    render(<MobileAppHeader locale="en" />);
-
-    await user.type(screen.getByLabelText('Search jobs'), '   ');
-    await user.keyboard('{Enter}');
-
-    expect(push).toHaveBeenCalledWith('/en/jobs');
-  });
-
-  it('shows the job search ONLY on the dashboard, not on other authenticated pages', () => {
-    // Dashboard (the default mocked path) — the search is the home discovery entry.
-    const { unmount } = render(<MobileAppHeader locale="en" />);
-    expect(screen.getByLabelText('Search jobs')).toBeInTheDocument();
-    unmount();
-
-    // Any other page (/jobs has its own search; the rest have nothing to search).
-    mockPathname = '/en/profile';
-    render(<MobileAppHeader locale="en" />);
-    expect(screen.queryByLabelText('Search jobs')).not.toBeInTheDocument();
-  });
-
   /**
    * The count comes from the notifications endpoint's `meta.total` under
    * `unread=true` — the same source the notifications page reads. A badge that
@@ -176,19 +134,24 @@ describe('MobileAppHeader', () => {
     expect(bell).toHaveAttribute('href', '/en/notifications');
   });
 
-  // ── The overflow menu ────────────────────────────────────────────────────
+  // ── The account menu (opened from the user avatar) ───────────────────────
   //
-  // Resume Builder, language and sign-out are reachable ONLY from this chrome
-  // on a phone: the sidebar that holds them is desktop-only. These tests are
-  // the guard against a future four-tab tidy-up stranding them again.
+  // Profile, Resume Builder, language and sign-out are reachable from the
+  // avatar here; Resume Builder / language / sign-out are reachable ONLY from
+  // this chrome on a phone (the sidebar that holds them is desktop-only), so
+  // these guard against a future tidy-up stranding them again.
 
-  it('keeps Resume Builder, language and sign-out reachable on a phone', async () => {
+  it('keeps Profile, Resume Builder, language and sign-out reachable from the avatar', async () => {
     const user = userEvent.setup();
     render(<MobileAppHeader locale="en" />);
 
-    await user.click(screen.getByRole('button', { name: 'More options' }));
+    await user.click(screen.getByRole('button', { name: 'Account menu' }));
     const menu = screen.getByRole('menu');
 
+    expect(within(menu).getByRole('menuitem', { name: /profile/i })).toHaveAttribute(
+      'href',
+      '/en/profile',
+    );
     expect(within(menu).getByRole('menuitem', { name: /resume builder/i })).toHaveAttribute(
       'href',
       '/en/resume',
@@ -202,7 +165,7 @@ describe('MobileAppHeader', () => {
     const user = userEvent.setup();
     render(<MobileAppHeader locale="en" />);
 
-    const button = screen.getByRole('button', { name: 'More options' });
+    const button = screen.getByRole('button', { name: 'Account menu' });
     expect(button).toHaveAttribute('aria-expanded', 'false');
     await user.click(button);
     expect(button).toHaveAttribute('aria-expanded', 'true');
@@ -216,7 +179,7 @@ describe('MobileAppHeader', () => {
     const user = userEvent.setup();
     render(<MobileAppHeader locale="en" />);
 
-    const button = screen.getByRole('button', { name: 'More options' });
+    const button = screen.getByRole('button', { name: 'Account menu' });
     await user.click(button);
     expect(screen.getByRole('menu')).toBeInTheDocument();
 
@@ -229,10 +192,16 @@ describe('MobileAppHeader', () => {
     const user = userEvent.setup();
     render(<MobileAppHeader locale="en" />);
 
-    await user.click(screen.getByRole('button', { name: 'More options' }));
+    await user.click(screen.getByRole('button', { name: 'Account menu' }));
     await user.click(screen.getByRole('menuitem', { name: /log out/i }));
 
     expect(requestLogout).toHaveBeenCalled();
+  });
+
+  it('has no job search box (it lives on the dashboard page, not this header)', () => {
+    render(<MobileAppHeader locale="en" />);
+    expect(screen.queryByRole('search')).toBeNull();
+    expect(screen.queryByLabelText('Search jobs')).toBeNull();
   });
 
   it('is hidden at desktop widths — one tree, responsive only', () => {

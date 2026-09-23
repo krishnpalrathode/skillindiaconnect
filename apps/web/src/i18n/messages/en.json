@@ -3389,7 +3389,8 @@
     "searchPlaceholder": "Search jobs",
     "notificationsWithCount": "Notifications, {count} unread",
     "notificationsNone": "Notifications, none unread",
-    "moreMenu": "More options"
+    "moreMenu": "More options",
+    "accountMenu": "Account menu"
   },
   "home": {
     "hero": {

@@ -68,7 +68,9 @@ export function DashboardHeader({
         <p className="mt-1 text-sm text-neutral-600">{t('subtitle')}</p>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3">
+      {/* Desktop only: on phones the bell + avatar live in the sticky app
+          header (MobileAppHeader), so the greeting here stays clean. */}
+      <div className="hidden items-center gap-3 lg:flex">
         {/* Notification bell */}
         <Link
           href={`/${locale}/notifications`}

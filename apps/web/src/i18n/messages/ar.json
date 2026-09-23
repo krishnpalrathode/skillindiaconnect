@@ -2282,7 +2282,8 @@
     "searchPlaceholder": "ابحث عن وظائف",
     "notificationsWithCount": "الإشعارات، {count} غير مقروء",
     "notificationsNone": "الإشعارات، لا يوجد غير مقروء",
-    "moreMenu": "خيارات إضافية"
+    "moreMenu": "خيارات إضافية",
+    "accountMenu": "قائمة الحساب"
   },
   "home": {
     "hero": {
