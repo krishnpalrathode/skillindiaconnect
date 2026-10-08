@@ -24,12 +24,7 @@ export default async function TermsPage({ params }: Props) {
   );
 
   return (
-    <StaticPageShell
-      locale={locale}
-      title={t('title')}
-      lead={t('lead')}
-      lastUpdated={lastUpdated}
-    >
+    <StaticPageShell locale={locale} title={t('title')} lead={t('lead')} lastUpdated={lastUpdated}>
       <LegalSections sections={sections} />
     </StaticPageShell>
   );
