@@ -50,7 +50,7 @@ describe('Hero — the promise', () => {
     expect(items.map((i) => i.textContent)).toEqual([
       'Verified Employers',
       'Free for Workers',
-      'India & Global Opportunities',
+      'India & Worldwide',
     ]);
   });
 });

@@ -26,7 +26,7 @@ describe('MobileHero', () => {
     expect(screen.getByText('Real companies. Real jobs.')).toBeInTheDocument();
     expect(screen.getByText('Free for Workers')).toBeInTheDocument();
     expect(screen.getByText('No registration fees.')).toBeInTheDocument();
-    expect(screen.getByText('India & Global Opportunities')).toBeInTheDocument();
+    expect(screen.getByText('India & Worldwide')).toBeInTheDocument();
     expect(screen.getByText('Build a better future.')).toBeInTheDocument();
   });
 
@@ -39,12 +39,12 @@ describe('MobileHero', () => {
     );
   });
 
-  it('shows the stats bar figures', () => {
+  it('shows the stats bar with its labels', () => {
     render(<MobileHero locale="en" />);
-    expect(screen.getByText('1M+')).toBeInTheDocument();
-    expect(screen.getByText('10K+')).toBeInTheDocument();
-    expect(screen.getByText('50+')).toBeInTheDocument();
+    // Figures are currently zeroed (all three read "0+") pending real counts.
+    expect(screen.getAllByText('0+')).toHaveLength(3);
     expect(screen.getByText('Skilled Workers')).toBeInTheDocument();
+    expect(screen.getByText('Countries')).toBeInTheDocument();
   });
 
   it('gives the banner artwork real alt text (not decorative)', () => {

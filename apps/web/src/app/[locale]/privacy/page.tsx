@@ -4,7 +4,7 @@ import { StaticPageShell } from '@/components/landing/StaticPageShell';
 import { LegalSections, type LegalSection } from '@/components/landing/LegalSections';
 
 /** Draft date for the policy text below. Bump when the copy changes. */
-const LAST_UPDATED_ISO = '2026-08-02';
+const LAST_UPDATED_ISO = '2026-10-08';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -24,13 +24,7 @@ export default async function PrivacyPage({ params }: Props) {
   );
 
   return (
-    <StaticPageShell
-      locale={locale}
-      title={t('title')}
-      lead={t('lead')}
-      lastUpdated={lastUpdated}
-      draftNotice
-    >
+    <StaticPageShell locale={locale} title={t('title')} lead={t('lead')} lastUpdated={lastUpdated}>
       <LegalSections sections={sections} />
     </StaticPageShell>
   );

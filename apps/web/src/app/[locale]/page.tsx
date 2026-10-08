@@ -7,7 +7,6 @@ import { HeroSearchPanel } from '@/components/landing/HeroSearchPanel';
 import { MobileValueStrip } from '@/components/landing/MobileValueStrip';
 import { TrustStrip } from '@/components/landing/TrustStrip';
 import { AnnouncementBar } from '@/components/landing/AnnouncementBar';
-import { StatsBand } from '@/components/landing/StatsBand';
 import { RecentJobs } from '@/components/landing/RecentJobs';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { WorkerProtection } from '@/components/landing/WorkerProtection';
@@ -69,24 +68,6 @@ export default async function HomePage({ params }: Props) {
           <MobileHero locale={locale} />
           <HeroSearchPanel locale={locale} />
           <MobileValueStrip />
-        </div>
-        {/*
-          The stats band is DESKTOP ONLY (M4).
-
-          Below `lg` the hero is an app-style entry screen whose whole argument
-          is that we do not invent things — every job carries accommodation,
-          insurance and transport, and every employer is checked. Following that
-          immediately with "25,000+ workers · 5,000+ employers · 10,000+
-          placements" undercuts it in one scroll, because those four figures are
-          editorial claims that nothing in this app measures (see the warning at
-          the top of StatsBand.tsx).
-
-          Hidden rather than removed: the desktop landing is unchanged, and the
-          markup still ships, so nothing is deleted from the page while the
-          numbers themselves are being decided on.
-        */}
-        <div className="hidden lg:block">
-          <StatsBand />
         </div>
         <TrustStrip />
         {/*

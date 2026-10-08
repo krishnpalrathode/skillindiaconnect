@@ -22,7 +22,7 @@ import { SOCIALS } from './socials';
 // Real business details. Update here only; every page's footer reads from this.
 const CONTACT = {
   address: '107, Rohit House, Connaught Place, New Delhi - 110001, India',
-  email: 'divyansh.intl@gmail.com',
+  email: 'support@skillindiaconnect.com',
   phones: ['011 4356 8626', '011 2373 3332'],
 };
 
@@ -97,9 +97,7 @@ export function LandingFooter() {
       heading: t('company'),
       links: [
         { label: t('aboutUs'), href: `/${locale}/about` },
-        { label: t('ourMission'), href: `/${locale}/about` },
-        { label: t('impact'), href: `/${locale}/about` },
-        { label: t('blogNews'), href: `/${locale}/about` },
+        { label: t('ourMission'), href: `/${locale}/about#about-mission` },
         { label: t('privacy'), href: `/${locale}/privacy` },
         { label: t('termsOfService'), href: `/${locale}/terms` },
         { label: t('contactUs'), href: `/${locale}/contact` },
@@ -294,45 +292,52 @@ export function LandingFooter() {
             </p>
             <div className="mt-4 flex flex-col gap-2.5">
               {appBadges.map((b) => (
-                <span
-                  key={b.name}
-                  role="img"
-                  aria-label={t('appComingSoonAria', { app: b.name })}
-                  className="inline-flex w-40 max-w-full cursor-default items-center gap-2.5 rounded-lg bg-black px-3 py-2 ring-1 ring-white/15"
-                >
-                  {b.name === 'Google Play' ? (
-                    <svg viewBox="0 0 24 24" className="size-6 shrink-0" aria-hidden="true">
-                      <defs>
-                        <linearGradient id="gp-spine" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0" stopColor="#00c3ff" />
-                          <stop offset="1" stopColor="#00e676" />
-                        </linearGradient>
-                        <linearGradient id="gp-tip" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0" stopColor="#ff3d00" />
-                          <stop offset="1" stopColor="#ffc400" />
-                        </linearGradient>
-                      </defs>
-                      {PLAY_SEGMENTS.map((seg) => (
-                        <path key={seg.d} d={seg.d} fill={seg.fill} />
-                      ))}
-                    </svg>
-                  ) : (
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="size-6 shrink-0 text-white"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path d={b.path ?? ''} />
-                    </svg>
-                  )}
-                  <span className="flex flex-col text-start leading-none">
-                    <span className="text-[9px] uppercase tracking-wide text-neutral-300">
-                      {b.tagline}
+                <div key={b.name} className="flex items-center gap-2">
+                  <span
+                    role="img"
+                    aria-label={t('appComingSoonAria', { app: b.name })}
+                    className="inline-flex w-40 max-w-full cursor-default items-center gap-2.5 rounded-lg bg-black px-3 py-2 opacity-80 ring-1 ring-white/15"
+                  >
+                    {b.name === 'Google Play' ? (
+                      <svg viewBox="0 0 24 24" className="size-6 shrink-0" aria-hidden="true">
+                        <defs>
+                          <linearGradient id="gp-spine" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stopColor="#00c3ff" />
+                            <stop offset="1" stopColor="#00e676" />
+                          </linearGradient>
+                          <linearGradient id="gp-tip" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stopColor="#ff3d00" />
+                            <stop offset="1" stopColor="#ffc400" />
+                          </linearGradient>
+                        </defs>
+                        {PLAY_SEGMENTS.map((seg) => (
+                          <path key={seg.d} d={seg.d} fill={seg.fill} />
+                        ))}
+                      </svg>
+                    ) : (
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="size-6 shrink-0 text-white"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path d={b.path ?? ''} />
+                      </svg>
+                    )}
+                    <span className="flex flex-col text-start leading-none">
+                      <span className="text-[9px] uppercase tracking-wide text-neutral-300">
+                        {b.tagline}
+                      </span>
+                      <span className="mt-0.5 text-sm font-semibold text-white">{b.name}</span>
                     </span>
-                    <span className="mt-0.5 text-sm font-semibold text-white">{b.name}</span>
                   </span>
-                </span>
+                  <span
+                    aria-hidden="true"
+                    className="shrink-0 rounded-full bg-accent-500 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white"
+                  >
+                    {t('comingSoon')}
+                  </span>
+                </div>
               ))}
             </div>
 
