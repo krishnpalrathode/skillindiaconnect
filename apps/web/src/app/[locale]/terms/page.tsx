@@ -29,7 +29,6 @@ export default async function TermsPage({ params }: Props) {
       title={t('title')}
       lead={t('lead')}
       lastUpdated={lastUpdated}
-      draftNotice
     >
       <LegalSections sections={sections} />
     </StaticPageShell>

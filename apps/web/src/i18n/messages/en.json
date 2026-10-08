@@ -722,7 +722,7 @@
     "login": {
       "metaTitle": "Employer Login",
       "pageTitle": "Hire Verified Blue-Collar Workers",
-      "pageSubtitle": "Connect with skilled, verified workers across India and the Gulf.",
+      "pageSubtitle": "Connect with skilled, verified workers in India and around the world.",
       "trustBadge1": "Verified Worker Profiles",
       "trustBadge2": "Secure Hiring Process",
       "trustBadge3": "India and International Markets",
@@ -866,7 +866,7 @@
       },
       "postJobCta": {
         "title": "Post your first job",
-        "body": "Reach thousands of verified blue-collar workers across India and the Gulf.",
+        "body": "Reach thousands of verified blue-collar workers in India and around the world.",
         "button": "Post a Job",
         "pendingTooltip": "Available after company approval"
       },
@@ -1102,7 +1102,7 @@
   },
   "jobs": {
     "metaTitle": "Find Jobs",
-    "metaDescription": "Browse thousands of blue-collar jobs in India and the Gulf. Filter by location, salary, and category.",
+    "metaDescription": "Browse thousands of blue-collar jobs in India and around the world. Filter by location, salary, and category.",
     "pageTitle": "Find Jobs",
     "pageSubtitle": "Explore opportunity across India and Beyond",
     "filtersLabel": "Job filters",
@@ -2881,8 +2881,8 @@
   },
   "landing": {
     "meta": {
-      "title": "Skill India Connect — Safe, verified jobs in India and the Gulf",
-      "description": "Find verified jobs in India and the Gulf. Every job includes accommodation, health insurance, and transport. Free for workers."
+      "title": "Skill India Connect — Safe, verified jobs in India and around the world",
+      "description": "Find verified jobs in India and around the world. Every job includes accommodation, health insurance, and transport. Free for workers."
     },
     "nav": {
       "login": "Login",
@@ -2899,10 +2899,10 @@
       "badges": {
         "verified": "Verified Employers",
         "free": "Free for Workers",
-        "global": "India & Global Opportunities"
+        "global": "India & Worldwide"
       },
       "globalScript": "Your Skills, Our Global Opportunities",
-      "imageAlt": "Skilled workers ready for verified jobs in India and the Gulf",
+      "imageAlt": "Skilled workers ready for verified jobs in India and around the world",
       "signpost": {
         "india": "India",
         "uae": "UAE",
@@ -2925,21 +2925,21 @@
           "desc": "No registration fees."
         },
         "global": {
-          "title": "India & Global Opportunities",
+          "title": "India & Worldwide",
           "desc": "Build a better future."
         }
       },
       "statsBar": {
         "workers": {
-          "value": "1M+",
+          "value": "0+",
           "label": "Skilled Workers"
         },
         "employers": {
-          "value": "10K+",
+          "value": "0+",
           "label": "Verified Employers"
         },
         "countries": {
-          "value": "50+",
+          "value": "0+",
           "label": "Countries"
         }
       }
@@ -2983,10 +2983,10 @@
     },
     "employers": {
       "heading": "Hiring skilled workers?",
-      "body": "Post a job and reach verified workers across India. Browse profiles with checked documents and real work history. Built for hiring in India and the Gulf.",
+      "body": "Post a job and reach verified workers across India. Browse profiles with checked documents and real work history. Built for hiring in India and around the world.",
       "point1": "Post jobs and get matched applicants",
       "point2": "Browse candidates with verified documents",
-      "point3": "Clear rules for India and Gulf hiring",
+      "point3": "Clear rules for hiring in India and around the world",
       "cta": "Hire Workers"
     },
     "protection": {
@@ -3020,7 +3020,7 @@
       "cta": "See jobs for your trade"
     },
     "footer": {
-      "tagline": "Connecting skilled Indian workers with verified employers in India and the Gulf. Empowering careers. Building brighter futures.",
+      "tagline": "Connecting skilled Indian workers with verified employers in India and around the world. Empowering careers. Building brighter futures.",
       "company": "Company",
       "about": "About",
       "contact": "Contact",
@@ -3050,7 +3050,7 @@
       "postJob": "Post a Job",
       "contactUs": "Contact Us",
       "getInTouch": "Get in Touch",
-      "hours": "Mon – Sat, 9:00 AM – 6:00 PM (IST)",
+      "hours": "Mon – Sat, 10:00 AM – 6:00 PM (IST)",
       "getApp": "Get the App",
       "comingSoon": "Coming soon",
       "appComingSoonAria": "{app} — coming soon",
@@ -3065,7 +3065,7 @@
       "statSeekersLabel": "Job Seekers",
       "statEmployersValue": "10K+",
       "statEmployersLabel": "Verified Employers",
-      "statReachValue": "Gulf & India",
+      "statReachValue": "India & Worldwide",
       "statReachLabel": "Global Opportunities",
       "followUpdates": "Follow us for updates, opportunities and success stories.",
       "downloadApp": "Download Our App",
@@ -3116,7 +3116,7 @@
     },
     "recentJobs": {
       "heading": "Latest jobs, posted this week",
-      "subheading": "Real openings from verified employers in the Gulf and across India. Browse freely — you only need an account to apply.",
+      "subheading": "Real openings from verified employers across India and around the world. Browse freely — you only need an account to apply.",
       "apply": "Apply now",
       "browseAll": "See all jobs",
       "noFee": "You never pay a fee. Not to us, not to any employer on this platform.",
@@ -3144,11 +3144,11 @@
       "locationLabel": "Location",
       "locationAll": "All locations",
       "locationIndia": "India",
-      "locationGulf": "Gulf",
+      "locationGulf": "International",
       "submit": "Search Jobs",
       "popularLabel": "Popular searches",
       "hireTitle": "Hiring skilled workers?",
-      "hireBody": "Post a job and reach verified workers across India and the Gulf.",
+      "hireBody": "Post a job and reach verified workers in India and around the world.",
       "hireCta": "Hire Talent",
       "chips": {
         "driver": "Driver",
@@ -3175,8 +3175,8 @@
         "b": "Accommodation"
       },
       "reach": {
-        "a": "India & Gulf",
-        "b": "Jobs worldwide"
+        "a": "India & Worldwide",
+        "b": "Jobs"
       }
     }
   },
@@ -3188,9 +3188,9 @@
     },
     "about": {
       "metaTitle": "About us",
-      "metaDescription": "SkillIndiaConnect connects India's skilled workers with verified employers in India and the Gulf, on terms that protect them.",
+      "metaDescription": "SkillIndiaConnect connects India's skilled workers with verified employers in India and around the world, on terms that protect them.",
       "title": "About Skill India Connect",
-      "lead": "SkillIndiaConnect is a recruitment platform for India's skilled workforce — electricians, welders, drivers, plumbers, construction and technical workers — connecting them with verified employers in India and the Gulf.",
+      "lead": "SkillIndiaConnect is a recruitment platform for India's skilled workforce — electricians, welders, drivers, plumbers, construction and technical workers — connecting them with verified employers in India and around the world.",
       "visionHeading": "Vision",
       "visionStatement": "A world where every skilled worker can find safe, dignified work — wherever the opportunity is.",
       "visionBody": "Millions of India's skilled workers take jobs far from home, often on the strength of a promise made by someone they've never met. We believe finding good work shouldn't require that leap of faith.",
@@ -3211,7 +3211,7 @@
       "different4Lead": "Free for workers, always.",
       "different4Body": "Employers pay to hire. Workers never pay to find work.",
       "whoHeading": "Who we serve",
-      "whoBody": "Skilled and semi-skilled workers across trades, and employers in India and the Gulf who want to hire them properly. We work in English, Hindi, and Arabic, and we built the platform for the phones our users actually carry — not the ones in a design studio."
+      "whoBody": "Skilled and semi-skilled workers across trades, and employers in India and around the world who want to hire them properly. We work in English, Hindi, and Arabic, and we built the platform for the phones our users actually carry — not the ones in a design studio."
     },
     "contact": {
       "metaTitle": "Contact us",
@@ -3236,7 +3236,7 @@
       "sections": [
         {
           "heading": "Who we are",
-          "body": "Skill India Connect is a job platform that connects skilled workers in India with verified employers in India and the Gulf. We decide how your personal information is used on this platform, and we are responsible for keeping it safe. [Registered company name, registered address and company registration number to be added before launch.]"
+          "body": "Skill India Connect is a job platform that connects skilled workers in India with verified employers in India and around the world. We decide how your personal information is used on this platform, and we are responsible for keeping it safe. This platform is operated by Divyansh International, a recruitment agency with its registered office at 107, Rohit House, Connaught Place, New Delhi - 110001, India, holding Recruiting Agent Licence No. B-1065/DEL/PER/1000+/5/9355/2018, issued by the Government of India, Ministry of External Affairs."
         },
         {
           "heading": "You must be 18 or older",
@@ -3308,7 +3308,7 @@
         },
         {
           "heading": "Contact and complaints",
-          "body": "For any question about your privacy or this policy, email support@skillindiaconnect.com. If you are unhappy with our answer, you can escalate to our Grievance Officer at the same address with ‘Grievance’ in the subject line. We will acknowledge your complaint within 24 hours and aim to resolve it within 15 days, as required under Indian law. [Grievance Officer’s name and direct contact details to be added before launch.]"
+          "body": "For any question about your privacy or this policy, email support@skillindiaconnect.com. If you are unhappy with our answer, you can escalate to our Grievance Officer at the same address with ‘Grievance’ in the subject line. We will acknowledge your complaint within 24 hours and aim to resolve it within 15 days, as required under Indian law. You can also reach the Grievance Officer by phone at 011 4356 8626 (Mon – Sat, 10:00 AM – 6:00 PM IST)."
         }
       ]
     },
@@ -3395,13 +3395,13 @@
   "home": {
     "hero": {
       "headline": "Find your next job",
-      "subline": "Verified employers across India and the Gulf. Free to apply.",
+      "subline": "Verified employers in India and around the world. Free to apply.",
       "cta": "Search jobs"
     },
     "value": {
       "ariaLabel": "Why workers choose Skill India Connect",
       "reach": {
-        "title": "India and Gulf",
+        "title": "India & Worldwide",
         "body": "Work close to home or overseas."
       }
     },
