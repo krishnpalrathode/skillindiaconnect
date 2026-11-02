@@ -35,5 +35,7 @@ import { SavedJobsService } from './saved-jobs.service';
     SearchCacheSubscriber,
     SavedJobsService,
   ],
+  // listCountries() feeds the public landing stats (PublicStatsModule).
+  exports: [JobsSearchService],
 })
 export class JobsSearchModule {}

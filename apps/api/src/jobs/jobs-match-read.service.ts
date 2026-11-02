@@ -14,6 +14,8 @@ export interface JobForMatching {
   experienceRequiredYears: number | null;
   location: string;
   companyName: string;
+  /** Tiebreaker: among equally good matches the alert prefers the newest. */
+  publishedAt: Date | null;
 }
 
 /**
@@ -62,6 +64,7 @@ export class JobsMatchReadService {
         categoryId: true,
         experienceRequiredYears: true,
         location: true,
+        publishedAt: true,
         company: { select: { name: true } },
       },
     });
@@ -74,6 +77,7 @@ export class JobsMatchReadService {
       experienceRequiredYears: j.experienceRequiredYears,
       location: j.location,
       companyName: j.company.name,
+      publishedAt: j.publishedAt,
     }));
   }
 }

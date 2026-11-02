@@ -1,9 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 import { ShieldCheck, Briefcase, Globe, ArrowRight, Users, Building2, Globe2 } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button-variants';
 import { cn } from '@/lib/utils';
+import type { LandingStats } from '@/lib/api/stats';
 
 /**
  * Mobile-only hero (below `lg`) matching the marketing mockup: verified pill,
@@ -16,9 +17,8 @@ import { cn } from '@/lib/utils';
  * `priority` — the headline/CTAs are HTML and paint first — and its box is
  * reserved so it shifts nothing on arrival (CLS 0).
  *
- * ⚠️ The stats bar (1M+, 10K+, 50+) are MARKETING figures from the mockup, not
- * counts this app measures (see the warning in StatsBand.tsx). They live here as
- * data so replacing them is a one-line edit; confirm them before launch.
+ * The stats bar shows an editorial baseline PLUS the live counts from
+ * GET /stats — both composed in `lib/api/stats.ts`, fetched by the page.
  *
  * Server component, zero client JS.
  */
@@ -34,8 +34,9 @@ const STATS = [
   { key: 'countries', Icon: Globe2 },
 ] as const;
 
-export function MobileHero({ locale }: { locale: string }) {
+export function MobileHero({ locale, stats }: { locale: string; stats: LandingStats }) {
   const t = useTranslations('landing');
+  const format = useFormatter();
 
   return (
     <section className="relative isolate overflow-hidden bg-gradient-to-br from-primary-800 via-primary-700 to-primary-900">
@@ -135,7 +136,7 @@ export function MobileHero({ locale }: { locale: string }) {
             >
               <Icon className="size-5 text-primary-600" aria-hidden="true" />
               <p dir="ltr" className="text-base font-bold leading-none text-neutral-900">
-                {t(`hero.statsBar.${key}.value`)}
+                {format.number(stats[key])}+
               </p>
               <p className="text-[11px] leading-tight text-neutral-600">
                 {t(`hero.statsBar.${key}.label`)}

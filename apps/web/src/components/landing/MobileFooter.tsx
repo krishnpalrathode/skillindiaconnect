@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { ShieldCheck, BadgeCheck, Globe } from 'lucide-react';
-import { SOCIALS } from './socials';
+import { POWERED_BY_HREF, SOCIALS } from './socials';
 
 /**
  * Mobile-only footer (below `lg`): a simple, single-column footer over the
@@ -143,6 +143,22 @@ export function MobileFooter({ locale }: { locale: string }) {
             </span>
             <span aria-hidden="true">·</span>
             <span>{t('footer.rights', { year })}</span>
+            <span aria-hidden="true">·</span>
+            <span>
+              {t.rich('footer.poweredBy', {
+                link: (chunks) => (
+                  <a
+                    href={POWERED_BY_HREF}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-white underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                  >
+                    {chunks}
+                    <span className="sr-only"> ({t('footer.opensNewTab')})</span>
+                  </a>
+                ),
+              })}
+            </span>
           </p>
         </div>
       </div>

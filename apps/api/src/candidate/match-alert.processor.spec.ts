@@ -24,6 +24,7 @@ function mkJob(id: string, title: string, opts: Partial<JobForMatching> = {}): J
     experienceRequiredYears: 2,
     location: 'Dubai',
     companyName: 'Gulf Star',
+    publishedAt: new Date('2026-10-01T00:00:00Z'),
     ...opts,
   };
 }
@@ -125,6 +126,29 @@ describe('MatchAlertProcessor', () => {
     const sentIds = notify.mock.calls[0]![2].data.jobIds as string[];
     expect(sentIds).toHaveLength(3);
     expect(sentIds).toEqual(['j2', 'j4', 'j5']);
+  });
+
+  it('among equally good matches, picks the newest jobs, newest first', async () => {
+    // Five equal-score jobs for three slots: publish date must decide, and a
+    // higher-scoring OLD job must still beat a lower-scoring new one.
+    const { processor, notify } = build({
+      profile: mkProfile(),
+      jobs: [
+        mkJob('j1', 'Gulf old', { publishedAt: new Date('2026-09-01T00:00:00Z') }),
+        mkJob('j2', 'Gulf newest', { publishedAt: new Date('2026-10-30T00:00:00Z') }),
+        mkJob('j3', 'Local brand new', {
+          market: JobMarket.LOCAL,
+          publishedAt: new Date('2026-11-01T00:00:00Z'),
+        }),
+        mkJob('j4', 'Gulf older', { publishedAt: new Date('2026-08-01T00:00:00Z') }),
+        mkJob('j5', 'Gulf newer', { publishedAt: new Date('2026-10-15T00:00:00Z') }),
+      ],
+    });
+
+    await processor.process(bullJob());
+
+    const sentIds = notify.mock.calls[0]![2].data.jobIds as string[];
+    expect(sentIds).toEqual(['j2', 'j5', 'j1']);
   });
 
   it('carries WhatsApp templateVars even though the channel is still off', async () => {

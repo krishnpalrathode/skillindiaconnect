@@ -1782,15 +1782,12 @@
       },
       "statsBar": {
         "workers": {
-          "value": "0+",
           "label": "عامل ماهر"
         },
         "employers": {
-          "value": "0+",
           "label": "أصحاب عمل موثّقون"
         },
         "countries": {
-          "value": "0+",
           "label": "دولة"
         }
       }
@@ -1882,6 +1879,7 @@
       "emailLabel": "راسلنا",
       "languageLabel": "اللغة",
       "rights": "© {year} سكيل إنديا كونكت. جميع الحقوق محفوظة.",
+      "poweredBy": "مدعوم من <link>Genrock Technologies</link>",
       "getStarted": "ابدأ الآن",
       "findJobs": "ابحث عن وظيفة",
       "hireWorkers": "وظّف عمالاً",

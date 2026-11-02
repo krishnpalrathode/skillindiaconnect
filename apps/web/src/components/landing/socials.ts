@@ -8,6 +8,10 @@
  * (24×24 viewBox, single path, currentColor). `color` is the brand hue used as
  * the resting chip background.
  */
+
+/** "Powered by" credit in both footers — the team that builds the platform. */
+export const POWERED_BY_HREF = 'https://genrocktechnologies.com/';
+
 export const SOCIALS: { name: string; href: string; color: string; path: string }[] = [
   {
     name: 'LinkedIn',

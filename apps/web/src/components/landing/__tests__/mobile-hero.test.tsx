@@ -4,6 +4,8 @@ import { screen } from '@testing-library/react';
 import { render } from '../../../test-utils';
 import { MobileHero } from '../MobileHero';
 
+const STATS = { workers: 2000, employers: 10, countries: 50 };
+
 /**
  * The phone hero that mirrors the marketing mockup. Its claims are load-bearing,
  * so the test asserts on the copy, the promises and where the buttons go — not
@@ -11,7 +13,7 @@ import { MobileHero } from '../MobileHero';
  */
 describe('MobileHero', () => {
   it('leads with the verified pill, the headline and the subline', () => {
-    render(<MobileHero locale="en" />);
+    render(<MobileHero locale="en" stats={STATS} />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       /your skills can take you anywhere/i,
     );
@@ -20,7 +22,7 @@ describe('MobileHero', () => {
   });
 
   it('shows the three feature rows with their true subtitles', () => {
-    render(<MobileHero locale="en" />);
+    render(<MobileHero locale="en" stats={STATS} />);
     // "Verified Employers" also appears as a stats-bar label, so allow >1.
     expect(screen.getAllByText('Verified Employers').length).toBeGreaterThan(0);
     expect(screen.getByText('Real companies. Real jobs.')).toBeInTheDocument();
@@ -31,7 +33,7 @@ describe('MobileHero', () => {
   });
 
   it('routes the two CTAs to the existing job search and signup', () => {
-    render(<MobileHero locale="en" />);
+    render(<MobileHero locale="en" stats={STATS} />);
     expect(screen.getByRole('link', { name: /find jobs/i })).toHaveAttribute('href', '/en/jobs');
     expect(screen.getByRole('link', { name: /create your profile/i })).toHaveAttribute(
       'href',
@@ -39,10 +41,11 @@ describe('MobileHero', () => {
     );
   });
 
-  it('shows the stats bar with its labels', () => {
-    render(<MobileHero locale="en" />);
-    // Figures are currently zeroed (all three read "0+") pending real counts.
-    expect(screen.getAllByText('0+')).toHaveLength(3);
+  it('shows the stats bar with the figures it is given and its labels', () => {
+    render(<MobileHero locale="en" stats={{ workers: 2034, employers: 13, countries: 52 }} />);
+    expect(screen.getByText('2,034+')).toBeInTheDocument();
+    expect(screen.getByText('13+')).toBeInTheDocument();
+    expect(screen.getByText('52+')).toBeInTheDocument();
     expect(screen.getByText('Skilled Workers')).toBeInTheDocument();
     expect(screen.getByText('Countries')).toBeInTheDocument();
   });
@@ -50,7 +53,7 @@ describe('MobileHero', () => {
   it('gives the banner artwork real alt text (not decorative)', () => {
     // The destination signpost + skyline are baked into this raster banner, so
     // they are conveyed to assistive tech via the image alt.
-    render(<MobileHero locale="en" />);
+    render(<MobileHero locale="en" stats={STATS} />);
     const img = screen.getByRole('img');
     expect(img).toHaveAttribute('alt', expect.stringMatching(/skilled workers/i));
   });

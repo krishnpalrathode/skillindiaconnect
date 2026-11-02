@@ -20,6 +20,7 @@ import { JobsSearchModule } from './jobs-search/jobs-search.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ResumeModule } from './resume/resume.module';
+import { PublicStatsModule } from './public-stats/public-stats.module';
 import { RATE_LIMITS } from './core/config/rate-limits';
 import { JwtAuthGuard } from './auth/guards/auth.guard';
 import { PermissionsGuard } from './auth/rbac/permissions.guard';
@@ -55,6 +56,8 @@ import { PermissionsGuard } from './auth/rbac/permissions.guard';
     // AdminModule carries the dashboard + document grants and owns no tables.
     AuditQueryModule,
     AdminModule,
+    // Landing-page stats bar (GET /stats). Owns no tables, like AdminModule.
+    PublicStatsModule,
     EventEmitterModule.forRoot(),
     // S8-H1: the 100/min contract value now lives in RATE_LIMITS (env-tunable,
     // same default). The in-memory-storage caveat above still stands.
