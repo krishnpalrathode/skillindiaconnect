@@ -1763,6 +1763,11 @@ const getJobCategories = http.get(`${BASE}/job-categories`, () =>
   HttpResponse.json({ data: MOCK_JOB_CATEGORIES }),
 );
 
+// Raw live counts — the landing page adds its baseline on top.
+const getPublicStats = http.get(`${BASE}/stats`, () =>
+  HttpResponse.json({ data: { candidates: 34, companies: 3, countries: 2 } }),
+);
+
 // ─── Admin job-category CRUD (job_categories.manage) ─────────────────────────
 // A mutable store so the admin manager can be exercised end-to-end in tests.
 // Carries isActive + jobCount, which the real GET /admin/job-categories returns.
@@ -5347,6 +5352,7 @@ export const handlers = [
   getJobs,
   getJobById,
   getJobCategories,
+  getPublicStats,
   adminGetJobCategories,
   adminCreateJobCategory,
   adminUpdateJobCategory,

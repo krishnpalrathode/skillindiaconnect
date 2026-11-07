@@ -2931,15 +2931,12 @@
       },
       "statsBar": {
         "workers": {
-          "value": "0+",
           "label": "Skilled Workers"
         },
         "employers": {
-          "value": "0+",
           "label": "Verified Employers"
         },
         "countries": {
-          "value": "0+",
           "label": "Countries"
         }
       }
@@ -3031,6 +3028,7 @@
       "emailLabel": "Email us",
       "languageLabel": "Language",
       "rights": "© {year} Skill India Connect. All rights reserved.",
+      "poweredBy": "Powered by <link>Genrock Technologies</link>",
       "getStarted": "Get Started",
       "findJobs": "Find Jobs",
       "hireWorkers": "Hire Workers",

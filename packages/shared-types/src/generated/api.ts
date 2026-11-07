@@ -1592,6 +1592,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Live platform counts for the landing-page stats bar
+         * @description Raw, measured counts only — the landing page adds its own editorial
+         *     baseline on top. `candidates` is ACTIVE candidate profiles, `companies`
+         *     is APPROVED companies, `countries` is distinct countries with at least
+         *     one ACTIVE job (the same set as `GET /jobs/countries`).
+         *
+         *     Public: no auth. Rate-limited like search.
+         */
+        get: operations["getPublicStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/jobs/{id}": {
         parameters: {
             query?: never;
@@ -7968,6 +7993,35 @@ export interface operations {
                             /** @example 1 */
                             count: number;
                         }[];
+                    };
+                };
+            };
+        };
+    };
+    getPublicStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current platform counts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** @example 34 */
+                            candidates: number;
+                            /** @example 3 */
+                            companies: number;
+                            /** @example 2 */
+                            countries: number;
+                        };
                     };
                 };
             };

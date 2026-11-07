@@ -24,6 +24,11 @@ export interface MatchAlertResult {
   jobCount?: number;
 }
 
+/** Publish time for ordering; an unpublished (null) job sorts as oldest. */
+function publishedMs(job: JobForMatching): number {
+  return job.publishedAt?.getTime() ?? 0;
+}
+
 /** A scored job, ready to render into the alert. */
 interface ScoredJob {
   job: JobForMatching;
@@ -151,9 +156,15 @@ export class MatchAlertProcessor extends WorkerHost {
       }).score,
     }));
 
-    // `id` breaks ties so the chosen three are stable across runs rather than
-    // depending on the order Postgres happened to return.
-    scored.sort((a, b) => b.score - a.score || a.job.id.localeCompare(b.job.id));
+    // Best match first; among equal scores the NEWEST job wins — the score is
+    // coarse, so ties are common and "newest" is what decides most alerts.
+    // `id` is the last resort so the chosen three are stable across runs.
+    scored.sort(
+      (a, b) =>
+        b.score - a.score ||
+        publishedMs(b.job) - publishedMs(a.job) ||
+        a.job.id.localeCompare(b.job.id),
+    );
     return scored.slice(0, MATCH_ALERT_JOB_COUNT);
   }
 

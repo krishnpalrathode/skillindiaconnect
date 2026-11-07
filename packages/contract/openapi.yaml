@@ -6557,6 +6557,42 @@ paths:
                           type: integer
                           example: 1
 
+  /stats:
+    get:
+      operationId: getPublicStats
+      tags: [jobs]
+      summary: Live platform counts for the landing-page stats bar
+      description: |
+        Raw, measured counts only — the landing page adds its own editorial
+        baseline on top. `candidates` is ACTIVE candidate profiles, `companies`
+        is APPROVED companies, `countries` is distinct countries with at least
+        one ACTIVE job (the same set as `GET /jobs/countries`).
+
+        Public: no auth. Rate-limited like search.
+      security: []
+      responses:
+        '200':
+          description: Current platform counts
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [candidates, companies, countries]
+                    properties:
+                      candidates:
+                        type: integer
+                        example: 34
+                      companies:
+                        type: integer
+                        example: 3
+                      countries:
+                        type: integer
+                        example: 2
+
   /jobs/{id}:
     get:
       operationId: getJobById

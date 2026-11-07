@@ -11,14 +11,13 @@ import { cn } from '@/lib/utils';
  * public/hero/README.md). Each file is pre-cropped to 4:3 so it drops straight
  * into the fixed-ratio frame without a client-side resize.
  *
- * The ORDER is the pitch: the group shot first, then the six trades we actually
- * recruit for. Someone who only sees the first slide before scrolling should
- * already have seen a worker they recognise as themselves — which is the whole
- * reason this is a carousel and not one photograph.
+ * The ORDER is the pitch: the group shot first, then single-trade slides.
+ * Someone who only sees the first slide before scrolling should already have
+ * seen a worker they recognise as themselves — which is the whole reason this
+ * is a carousel and not one photograph.
  *
- * Hospitality is deliberately not in the rotation any more: at six slides the
- * strip already runs 30 seconds, and the trades below are the ones the job feed
- * is actually weighted towards. The file stays in /public/hero for reuse.
+ * Hospitality, technician, healthcare and driving are deliberately not in the
+ * rotation any more. Their files stay in /public/hero for reuse.
  */
 const SLIDES = [
   /*
@@ -36,9 +35,6 @@ const SLIDES = [
   { src: '/hero/worker-team.jpg', categoryKey: 'team' },
   { src: '/hero/worker-electrical.jpg', categoryKey: 'electrical' },
   { src: '/hero/worker-welding.jpg', categoryKey: 'welding' },
-  { src: '/hero/worker-technician.jpg', categoryKey: 'technician' },
-  { src: '/hero/worker-healthcare.jpg', categoryKey: 'healthcare' },
-  { src: '/hero/worker-driving.jpg', categoryKey: 'driving' },
   { src: '/hero/worker-construction.jpg', categoryKey: 'construction' },
 ] as const;
 

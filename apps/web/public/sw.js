@@ -35,7 +35,8 @@
   invalidate themselves; this version only exists so an activate can drop caches
   written by an older version of this file.
 */
-const CACHE = 'sic-shell-v1';
+// v2: drops dev-time caches of unhashed /_next/static files (see ServiceWorkerRegistrar).
+const CACHE = 'sic-shell-v2';
 
 const OFFLINE_URL = '/offline.html';
 

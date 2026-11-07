@@ -24,6 +24,23 @@ export function ServiceWorkerRegistrar() {
     if (process.env.NEXT_PUBLIC_API_MOCKING === 'enabled') return;
     if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
 
+    // Production only. sw.js serves /_next/static/* cache-first, which is safe
+    // only because production filenames are content-hashed. `next dev` reuses
+    // the SAME filenames across edits, so the worker would keep serving stale
+    // client JS forever — server HTML and client code then disagree and React
+    // throws a hydration error. In dev, also remove any worker a previous
+    // session installed, so the fix takes effect without manual cleanup.
+    if (process.env.NODE_ENV !== 'production') {
+      void navigator.serviceWorker
+        .getRegistrations()
+        .then((regs) =>
+          regs
+            .filter((r) => r.active?.scriptURL.endsWith('/sw.js'))
+            .forEach((r) => void r.unregister()),
+        );
+      return;
+    }
+
     // `scope: '/'` is explicit rather than implied: the worker lives at the root
     // and must control every locale prefix (/en, /hi, /ar …), not just its own
     // directory.

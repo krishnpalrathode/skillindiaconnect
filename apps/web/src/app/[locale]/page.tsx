@@ -7,6 +7,8 @@ import { HeroSearchPanel } from '@/components/landing/HeroSearchPanel';
 import { MobileValueStrip } from '@/components/landing/MobileValueStrip';
 import { TrustStrip } from '@/components/landing/TrustStrip';
 import { AnnouncementBar } from '@/components/landing/AnnouncementBar';
+import { StatsBand } from '@/components/landing/StatsBand';
+import { getLandingStatsServer } from '@/lib/api/stats';
 import { RecentJobs } from '@/components/landing/RecentJobs';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { WorkerProtection } from '@/components/landing/WorkerProtection';
@@ -32,7 +34,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  */
 export default async function HomePage({ params }: Props) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'landing.nav' });
+  const [t, stats] = await Promise.all([
+    getTranslations({ locale, namespace: 'landing.nav' }),
+    // Never throws — falls back to the baseline if the API is down.
+    getLandingStatsServer(),
+  ]);
 
   return (
     <>
@@ -56,6 +62,7 @@ export default async function HomePage({ params }: Props) {
         <div className="hidden lg:block">
           <AnnouncementBar />
           <Hero locale={locale} />
+          <StatsBand stats={stats} />
         </div>
         {/*
           Phone-only richer landing (mockup rebuild): a hero that mirrors the
@@ -65,7 +72,7 @@ export default async function HomePage({ params }: Props) {
           unmeasured statistics. All `lg:hidden`, so desktop is untouched.
         */}
         <div className="lg:hidden">
-          <MobileHero locale={locale} />
+          <MobileHero locale={locale} stats={stats} />
           <HeroSearchPanel locale={locale} />
           <MobileValueStrip />
         </div>

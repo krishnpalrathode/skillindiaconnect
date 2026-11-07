@@ -16,7 +16,7 @@ import {
   Sprout,
 } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/auth/LanguageSwitcher';
-import { SOCIALS } from './socials';
+import { POWERED_BY_HREF, SOCIALS } from './socials';
 
 // ── Contact + social (single source of truth) ────────────────────────────────
 // Real business details. Update here only; every page's footer reads from this.
@@ -364,6 +364,21 @@ export function LandingFooter() {
           {/* Copyright + Made in India */}
           <div className="shrink-0 space-y-1">
             <p className="text-sm text-neutral-500">{t('rights', { year })}</p>
+            <p className="text-sm text-neutral-500">
+              {t.rich('poweredBy', {
+                link: (chunks) => (
+                  <a
+                    href={POWERED_BY_HREF}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded font-medium text-neutral-300 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/40"
+                  >
+                    {chunks}
+                    <span className="sr-only"> ({t('opensNewTab')})</span>
+                  </a>
+                ),
+              })}
+            </p>
             <p className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500">
               <span
                 aria-hidden="true"

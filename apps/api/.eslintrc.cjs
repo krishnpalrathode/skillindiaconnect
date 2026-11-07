@@ -328,6 +328,14 @@ module.exports = {
             message:
               'Employer approval is an S2-B4 mutation surface — S6a-B1 is read-only; do not import.',
           },
+          // ── Public stats ─────────────────────────────────────────────────
+          // Same shape as admin: owns no tables, composes public services only.
+          {
+            target: './src/public-stats',
+            from: './src/jobs-search/search-cache.service.ts',
+            message:
+              'Use JobsSearchService.listCountries() — never read the search cache directly.',
+          },
           // ── Resume module (S7-B1/B2) ─────────────────────────────────────
           // The rendering half is WORKER-ONLY: PdfModule carries Chromium, so
           // an API-side import would put a browser in every API replica. The
